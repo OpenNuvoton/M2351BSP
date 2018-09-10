@@ -1,0 +1,74 @@
+
+; 0 ~ 128KB
+FLASH 0x00000000    0x20000
+{
+    FLASH +0    0x20000
+    {
+        NuBL2_startup_M2351.o(RESET, +First)
+        * (+RO)    
+    }
+
+    ; 32~64KB~
+    SRAM 0x20006000 0xC000
+    {  
+        *(+RW, +ZI)
+    }
+}
+
+; 192KB~
+XOM0    0x00030000 ; 
+{
+    XOM0_FLASH  +0  0x8000
+    {
+        * (+XO)
+    }    
+}
+
+; 480KB ~
+FWINFO_REGION   0x00078000  208
+{
+    FWINFO +0
+    {
+        NuBL2_FWinfo.o
+    }
+    
+    ; We should not use RW/ZI in XOM. Add zero section to detect them.
+    ; 0x21000000 is not an available memory space.
+    FWINFO_SRAM 0x21000000 0x0
+    {
+        NuBL2_FWinfo.o (+RW, +ZI)
+    }
+}
+
+KEYSTOGAGE 0x0005F000   ; located in 380K
+{
+    LoadKeyStorage.bin +0
+    {
+        LoadKeyStorage.o
+    }
+}
+
+
+; 176 ~ 192KB
+NUBL2_LIB0 0x0002C000 0x4000
+{
+    NUBL2_LIB0_ROM +0   0x4000
+    {
+        NuBL2_lib0.o
+        NuBL_crypto.o
+    }
+    ; default __NONSECURE_ENTRY_WEAK APIs in clk.c
+    NSC_ROM +0
+    {
+        *(Veneer$$CMSE)
+    }
+        
+    ; We should not use RW/ZI in XOM. Add zero section to detect them.
+    ; 0x21000000 is not an available memory space.
+    NUBL2_LIB0_SRAM 0x21000000  0x0
+    {
+        NuBL2_lib0.o (+RW, +ZI)
+        NuBL_crypto.o (+RW, +ZI)
+    }
+}
+

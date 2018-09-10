@@ -1,0 +1,41 @@
+
+; 256~384KB~
+FLASH 0x00040000    0x20000
+{
+    FLASH +0    0x20000
+    {
+        NuBL32_startup_M2351.o(RESET, +First)
+        * (+RO)    
+    }
+
+    ; 32~48KB~
+    SRAM 0x2000A000 0x6000
+    {  
+        *(+RW, +ZI)
+    }
+}
+
+FWINFO_REGION   0x00048000  352
+{
+    FWINFO +0
+    {
+        NuBL32_FwInfo.o
+    }
+    
+    ; We should not use RW/ZI in XOM. Add zero section to detect them.
+    ; 0x21000000 is not an available memory space.
+    ;FWINFO_SRAM 0x21000000 0x0
+    ;{
+        ;NuBL32_FwInfo.o (+RW, +ZI)
+    ;}
+}
+
+; 376KB(0x5E000) ~ 382KB
+LR_NSC 0x47000  0x1000
+{
+    NSC_ROM +0
+    {
+        *(Veneer$$CMSE)
+    }
+}
+

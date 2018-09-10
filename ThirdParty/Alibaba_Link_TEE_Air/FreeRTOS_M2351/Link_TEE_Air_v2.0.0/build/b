@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2015-2017 Alibaba Group Holding Limited
+#
+
+TOP=..
+SRV_PATH_LIST=./srv_path_list
+OUT=$TOP/out
+TEST_BED=$TOP/test/test_bed
+PLAT=m2351
+
+if [ "$1" = "clean" ];
+then
+    CLEAN="clean"
+
+    rm -rf $OUT
+else
+    CLEAN=""
+fi
+
+################################################################################
+# build trusted world
+
+while IFS='' read -r line || [[ -n "$line" ]];
+do
+    if [ ${line:0:1} == "#" ];
+    then
+        continue;
+    fi
+    pushd $line
+    make $CLEAN
+    popd
+done < $SRV_PATH_LIST
+
+## append srv in srv_path_list
+if [ ! -e "$OUT" ];
+then
+    mkdir $OUT
+fi
+rm -f $OUT/tee_tw.bin
+
+if [ "$CLEAN" != "clean" ];
+then
+cmd="$TOP/tools/build_tw/build_tw -s $TOP/src/tw/platform/$PLAT/sw.elf $appd_ta"
+while IFS='' read -r line || [[ -n "$line" ]]; do
+    if [ ${line:0:1} == "#" ];
+    then
+        continue;
+    fi
+    cmd="$cmd -a $line/built-in.o"
+done < $SRV_PATH_LIST
+cmd="$cmd -o $OUT/tee_tw.bin"
+echo "integ-cmd = $cmd"
+eval $cmd
+fi
+

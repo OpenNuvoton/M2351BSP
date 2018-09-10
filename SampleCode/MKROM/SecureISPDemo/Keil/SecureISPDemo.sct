@@ -1,0 +1,21 @@
+FLASH 0x0
+{
+    FLASH   +0
+    {
+        *.o(RESET, +First)
+        *(+RO)
+    }
+    
+    SRAM    0x20000000
+    {
+        *(+RW, +ZI)
+    }	
+}
+
+XOM0 0x10000    ; located in 64K
+{
+    XOM0_ROM +0
+    {
+        * (+XO)
+    }    
+}

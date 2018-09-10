@@ -1,0 +1,30 @@
+
+
+FLASH 0x00000000
+{
+    FLASH +0
+    {
+        startup_M2351.o(RESET, +First)
+        * (+RO)    
+    }
+
+  SRAM1 0x20000000
+    {  
+        * (+RW)
+    }
+
+  ZI +0
+  {
+    *(+ZI)
+  }
+}
+
+FLASH1 0x00100000
+{
+
+    FLASH1 +0
+    {
+         ld_code.o        
+    }
+
+}

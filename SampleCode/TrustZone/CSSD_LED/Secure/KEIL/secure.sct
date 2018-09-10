@@ -1,0 +1,21 @@
+LR_ROM 0x0
+{
+    EXE_ROM +0 0x40000
+    {
+        *.o(RESET, +First)
+        *(+RO)
+    }
+    
+    EXE_RAM 0x20000000 0x8000
+    {
+        *(+RW, +ZI)
+    }
+}
+
+LR_NSC 0x3F000
+{
+    NSC +0
+    {
+		*(Veneer$$CMSE)
+    }
+}

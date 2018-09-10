@@ -1,0 +1,34 @@
+LR_ROM 0x0
+{
+    EXE_ROM +0 0x40000
+    {
+        *.o(RESET, +First)
+        *(+RO)
+    }
+    
+    EXE_RAM 0x20000000 0x10000
+    {
+        *(+RW, +ZI)
+    }
+	
+	NSC_RAM 0x2000FC00 1024
+	{
+		*(Veneer$$CMSE)
+	}
+}
+
+
+
+;LR_IROM1 0x00000000 0x0003FF00  {    ; load region size_region
+;  ER_IROM1 0x00000000 0x0003FF00  {  ; load address = execution address
+;   *.o (RESET, +First)
+;   *(InRoot$$Sections)
+;   .ANY (+RO)
+;    *(Veneer$$CMSE)                   ; check with partition.h
+;  }
+;  
+;  RW_IRAM1 0x20000000 0x00010000  {  ; RW data
+;   .ANY (+RW +ZI)
+;  }
+;}
+

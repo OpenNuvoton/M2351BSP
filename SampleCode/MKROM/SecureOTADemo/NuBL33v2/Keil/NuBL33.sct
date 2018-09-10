@@ -1,0 +1,25 @@
+   
+; 384~512KB (Non-secure code)
+NS_ROM 0x10060000   0x20000
+{
+    EXE_ROM +0  0x20000
+    {
+        *.o(RESET, +First)
+        *(+RO)
+    }
+    
+    ; 64~96KB~
+    EXE_RAM 0x30010000 0x8000
+    {
+        *(+RW, +ZI)
+    }	
+}
+
+; 192KB~
+FWINFO_REGION   0x10060000+0x10000  352
+{
+    FWINFO +0
+    {
+        NuBL33_FwInfo.o
+    }
+}

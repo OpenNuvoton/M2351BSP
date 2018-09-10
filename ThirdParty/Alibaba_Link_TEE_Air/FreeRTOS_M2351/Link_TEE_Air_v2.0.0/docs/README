@@ -1,0 +1,67 @@
+Alibaba TrustZone/TEE Software Development Kit For IoT Devices
+Version 2.0
+
+DESCRIPTION
+
+The software package is the Software Development Kit (SDK) of Alibaba TrustZone/TEE solution. It is the development environment of YoC devices.
+
+LAYOUT
+
+$
+├── build                   -- the build-related materials
+│   ├── b                   -- the build script
+│   └── srv_path_list       -- the file to describe the services integrated to the TEE binary
+├── docs                    -- the document set of the SDK
+│   └── README              -- this file
+├── samples                 -- the sample code set
+│   └── xor                 -- the sample code of building a Client Application (CA) and its Trusted Application (TA)
+├── src                     -- the code and binary of the SDK
+│   ├── app                 -- the application set (CA and TA) of Alibaba TEE solution
+│   ├── ntw                 -- the non-secure code and its binary
+│   └── tw                  -- the secure code and its binary
+├── test                    -- the tese cases and sample test bed
+│   ├── test_bed            -- the sample non-secure test bed.
+│   └── testcases           -- the tee test cases, include CA/TA.
+└── tools                   -- the toolkit
+    └── build_tw            -- the tool to build secure binary
+
+TOOLCHAIN
+
+Alibaba TrustZone/TEE SDK is built according to the architecture that the SDK serves. Now it is for M2351 on cortex-m23 and its toolchain version is "Version 6-2017-q2-update", download link https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads.
+
+SAMPLE
+
+There is a sample code for developping a CA and its TA accordingly. You could find it in $/samples/xor.
+
+BUILD
+
+Go into $/build and run:
+   ./b
+The outputs are:
+1. secure world (or trusted world)
+There is one binary file for secure world: $/out/tee_tw.bin
+
+REE integration
+REE must support the following apis
+
+int osa_strcmp(const char *s1, const char *s2)
+int osa_strncmp(const char *s1, const char *s2, size_t n)
+size_t osa_strlen(const char * s)
+char *osa_strcpy(char *dest, const char *src)
+char *osa_strncpy(char *dest, const char *src, size_t count)
+void *osa_memmove(void *dest, const void *src, size_t count)
+void *osa_memcpy(void *dest, const void *src, size_t count)
+void *osa_memset(void *s, int c, size_t n)
+int osa_memcmp(const void *s1, const void *s2, size_t n)
+
+void *osa_malloc(size_t size)
+void osa_free(const void *ptr)
+int printf(const char *format, ...)
+
+void *osa_sem_init(uint32_t init_val)
+void osa_sem_destroy(void *mutex)
+uint32_t osa_sem_wait(void *mutex, int32_t msec)
+void osa_sem_release(void *mutex)
+
+Copyright (C) 2015-2017 Alibaba Group Holding Limited
+

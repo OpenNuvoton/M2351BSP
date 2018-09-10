@@ -1,0 +1,45 @@
+NUBL2 0x0
+{
+    NuBL2.bin +0
+    {
+        NuBL2_startup.o(RESET, +First)
+        * (+RO)
+    }
+    
+    RAM 0x20000000
+    {
+        * (+ZI, +RW)
+    }
+}
+
+XOM0 0x10000    ; located in 64K
+{
+    XOM0_ROM +0
+    {
+        * (+XO)
+    }    
+}
+
+NUBL2_INFO 0x18000  ; located in 96K
+{
+    FwInfo.bin +0
+    {
+        fwinfo.o
+    }
+}
+
+NUBL3x_KEYSTOGAGE 0x1C000   ; located in 112K
+{
+    NuBL3xKeyStorage.bin +0
+    {
+        NuBL3xKeyStorage.o
+    }
+}
+
+NUBL2_NSC 0x1F800 0x800 ; located in 126K (size: 2KB)
+{
+    NSC_ROM +0
+    {
+        *(Veneer$$CMSE)
+    }
+}

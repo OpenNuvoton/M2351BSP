@@ -1,0 +1,21 @@
+NUBL33 0x10040000   ; located in 256K
+{
+    NuBL33.bin +0
+    {
+        startup_M2351.o(RESET, +First)
+        * (+RO)
+    }
+    
+    RAM 0x30010000 0x8000
+    {
+        * (+ZI, +RW)
+    }
+}
+
+NUBL33_INFO 0x10078000  ; located in 480K
+{
+    FwInfo.bin +0
+    {
+        FwInfo.o
+    }
+}

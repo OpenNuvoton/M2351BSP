@@ -1,0 +1,29 @@
+NUBL32 0x20000  ; located in 128K
+{
+    NuBL32.bin +0
+    {
+        startup_M2351.o(RESET, +First)
+        * (+RO)
+    }
+    
+    RAM 0x20000000
+    {
+        * (+ZI, +RW)
+    }
+}
+
+NUBL32_INFO 0x38000 ; located in 224K
+{
+    FwInfo.bin +0
+    {
+        FwInfo.o
+    }
+}
+
+NUBL32_NSC 0x3F800 0x800 ; located in 254K (size: 2KB)
+{
+    NSC_ROM +0
+    {
+        *(Veneer$$CMSE)
+    }
+}
