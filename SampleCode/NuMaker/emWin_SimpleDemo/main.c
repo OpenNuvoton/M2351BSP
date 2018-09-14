@@ -1,6 +1,6 @@
 /****************************************************************************
  * @file     main.c
- * @version  V1.00
+ * @version  V1.01
  * @brief    To utilize emWin library to demonstrate interactive feature.
  *
  * @note
@@ -119,12 +119,12 @@ void TMR0_IRQHandler(void)
 #endif
     if((g_enable_Touch == 1) && (OS_TimeMS % 200 == 0))
     {
-        if(PB6 == 0)
+        if(PB5 == 0)
         {
             Key = GUI_KEY_TAB;
             GUI_StoreKeyMsg(Key, 1);
         }
-        if((PB7 == 0) || (PB5 == 0))
+        if((PB4 == 0) || (PB7 == 0))
         {
             Key = GUI_KEY_ENTER;
             GUI_StoreKeyMsg(Key, 1);
@@ -134,7 +134,7 @@ void TMR0_IRQHandler(void)
             Key = GUI_KEY_UP;
             GUI_StoreKeyMsg(Key, 1);
         }
-        if(PB4 == 0)
+        if(PB6 == 0)
         {
             Key = GUI_KEY_DOWN;
             GUI_StoreKeyMsg(Key, 1);
