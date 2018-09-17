@@ -28,7 +28,7 @@ LR_XOM0 0x8000 0x1000
 {
     XOM0_ROM +0
     {
-        xom0_func.o
+        xom0_func.o(.text.XOM0_Func)
     }
 }
 
@@ -36,6 +36,6 @@ LR_XOM1 0x9000 0x1000
 {
     XOM1_ROM +0
     {
-        xom1_func.o
+        xom1_func.o(.text.XOM1_Func)
     }
 }
