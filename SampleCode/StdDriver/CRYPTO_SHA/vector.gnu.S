@@ -5,16 +5,16 @@
 ;/*---------------------------------------------------------------------------------------------------------*/
 
 	.section .rodata
-	.globl	VectorDataBase
-	.globl	VectorDataLimit
+	.globl	g_u32VectorDataBase
+	.globl	g_u32VectorDataLimit
 
 	.align	4
  
 	.text
         
-VectorDataBase:
+g_u32VectorDataBase:
     .incbin  "../../sha_test_vector"
-VectorDataLimit:
+g_u32VectorDataLimit:
     .space   4
     
     .end
