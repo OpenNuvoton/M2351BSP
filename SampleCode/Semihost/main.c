@@ -69,7 +69,7 @@ int32_t main()
     */
 
     UART0_Init();
-# if defined (__GNUC__)
+#if (defined (__GNUC__) && (!(defined(__ARMCC_VERSION))))
     initialise_monitor_handles();
 #endif
     /*
