@@ -18,7 +18,7 @@ const uint32_t g_InitialFWinfo[] =
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 
-    /* metadata data - includes authenticate configuration, F/W regions and extend info */
+    /* metadata data - includes Mode selection, F/W region and Extend info */
     0x00000001, 0x00000008, 0x00020000, 0x00000000, // 0x00020000: NuBL32 F/W base
     0x0000000C, 0x20180824, 0x00001111, 0x22223333, // 0x20180824/0x00001111/0x22223333: Extend info 
     

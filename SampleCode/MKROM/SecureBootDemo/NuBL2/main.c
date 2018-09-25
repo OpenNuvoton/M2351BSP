@@ -18,7 +18,7 @@ volatile FW_INFO_T  g_NuBL3xFwInfo = {0};
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Check Booting status and show F/W info data                                                            */
 /*---------------------------------------------------------------------------------------------------------*/
-extern uint32_t g_InfoDataBase, g_InfoDataLimit;
+extern const uint32_t g_InitialFWinfo[];
 static int32_t CheckBootingStatus(void)
 {
     int32_t     i;
@@ -36,7 +36,7 @@ static int32_t CheckBootingStatus(void)
     
     if((u32CFG0&BIT5) == BIT5)
     {              
-        printf("This image is booting from %s. NOT booting from Secure Bootloader(NuBL1).\n\n", 
+        printf("Device is booting from %s. NOT booting from Secure Bootloader(NuBL1).\n\n", 
             FMC_GetBootSource()==0?"APROM":"LDROM");
         
 #if 0 // enable to configure booting from Secure Bootloader
@@ -59,7 +59,7 @@ static int32_t CheckBootingStatus(void)
         return -1;
     }
     
-    printf("[Secure Boot from Secure Bootloader(NuBL1) was success and device PID is 0x%08x]\n\n", FMC_ReadPID());
+    printf("[Device is successfully booting from Secure Bootloader(NuBL1) and device PID is 0x%08x]\n\n", FMC_ReadPID());
     
     
     /* Read NuBL2 ECC public key hash */
@@ -76,8 +76,8 @@ static int32_t CheckBootingStatus(void)
     
     
     /* Show NuBL2 F/W info data */
-    pu32Info = (uint32_t *)&g_InfoDataBase;
-    u32Size = (uint32_t)&g_InfoDataLimit - (uint32_t)&g_InfoDataBase;
+    pu32Info = (uint32_t *)g_InitialFWinfo;
+    u32Size = sizeof(FW_INFO_T);
     
     printf("NuBL2 F/W info in 0x%08x.\nData are:\n", (uint32_t)pu32Info);
     for(i=0; i<(u32Size/4); i+=4)
@@ -96,7 +96,7 @@ static int32_t CheckBootingStatus(void)
 void EnableXOM0(void)
 {
     int32_t i32Status;
-    uint32_t u32Base, u32Pase;
+    uint32_t u32Base = 0x10000, u32Page = 4;
     
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -107,21 +107,18 @@ void EnableXOM0(void)
     
     if((FMC->XOMSTS & 0x1) != 0x1)
     {
-        extern uint32_t Image$$XOM0_ROM$$XO$$Base;
-        extern uint32_t Image$$XOM0_ROM$$XO$$Length;
-        u32Base = (uint32_t)&Image$$XOM0_ROM$$XO$$Base;
-        u32Pase = (((uint32_t)&Image$$XOM0_ROM$$XO$$Length + (FMC_FLASH_PAGE_SIZE-1)) / FMC_FLASH_PAGE_SIZE);
+        printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u32Page);
         
         if(FMC_GetXOMState(XOMR0) == 0)
         {
-            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u32Pase);
+            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u32Page);
             if(i32Status == 0)
             {
-                printf("Configure XOMR0 Success.\n");
+                printf("Configure XOM0 Success.\n");
             }
             else
             {
-                printf("Configure XOMR0 FAIL.\n");
+                printf("Configure XOM0 FAIL.\n");
                 while(1) {}
             }
         }
@@ -140,7 +137,7 @@ void EnableXOM0(void)
     }
     else
     {
-        printf("XOMR0 region is already actived.\n");
+        printf("XOM0 region is already actived.\n\n");
     }
 }
 
@@ -213,7 +210,6 @@ int main(void)
     printf("+------------------------------------------+\n");
     printf("|    SecureBootDemo - NuBL2 Sample Code    |\n");
     printf("+------------------------------------------+\n\n");
-
     
     /* Show booting status */
     CheckBootingStatus();

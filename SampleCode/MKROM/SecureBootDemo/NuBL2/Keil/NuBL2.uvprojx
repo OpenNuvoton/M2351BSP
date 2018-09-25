@@ -373,9 +373,9 @@
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
             <Misc>--map --first='NuBL2_startup.o(RESET)' --datacompressor=off --info=inline --entry Reset_Handler
+--keep=FwInfo.o(*)
 --keep=VerifyNuBL3x.o(*)
---import-cmse-lib-out ..\lib\nsclib_NuBL2.o
-</Misc>
+--import-cmse-lib-out ..\lib\nsclib_NuBL2.o</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings>6340</DisabledWarnings>
           </LDads>
@@ -411,9 +411,9 @@
               <FilePath>..\partition_M2351.h</FilePath>
             </File>
             <File>
-              <FileName>FwInfo.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\FwInfo\FwInfo.s</FilePath>
+              <FileName>FwInfo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FwInfo\FwInfo.c</FilePath>
             </File>
             <File>
               <FileName>VerifyNuBL3x.c</FileName>
