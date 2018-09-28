@@ -22,8 +22,7 @@ XOM0 0x10000
 {
     XOM0_ROM +0
     {
-        * (.xom)
-        xom.o
+        * (+XO)
     }
     
     ; We should not use RW/ZI in XOM. Add zero section to detect them.
