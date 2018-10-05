@@ -24,7 +24,7 @@ NUBL2_INFO 0x18000  ; located in 96K
 {
     FwInfo.bin +0
     {
-        fwinfo.o
+        FwInfo.o
     }
 }
 

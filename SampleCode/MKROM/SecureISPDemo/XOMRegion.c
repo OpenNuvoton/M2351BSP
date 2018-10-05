@@ -15,6 +15,9 @@
 //#define ECC_CURVE_TYPE      CURVE_P_256
 //#define ECC_KEY_SIZE        256     /* Select ECC P-256 curve, 256-bits key length */
 
+#if defined ( __ICCARM__ )
+#pragma default_function_attributes = __root
+#endif
 
 static uint8_t Byte2Char(uint8_t c)
 {
@@ -135,5 +138,9 @@ int32_t XOM_CalIDsECDSA(char *pOutR, char *pOutS)
     memset(m, 0x0, sizeof(k));
     return 0;
 }
+
+#if defined ( __ICCARM__ )
+#pragma default_function_attributes = 
+#endif
 
 /*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/

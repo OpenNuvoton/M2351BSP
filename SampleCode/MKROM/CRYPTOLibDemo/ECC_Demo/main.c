@@ -83,7 +83,7 @@ int main(void)
 {
     int32_t i, j, m;
     int32_t i32NBits, i32Err;
-    BL_RNG_T rng;
+    XTRNG_T rng;
     uint8_t au8r[ECC_KEY_SIZE / 8];
     uint32_t u32Ticks;
 
@@ -108,12 +108,12 @@ int main(void)
     i32NBits = ECC_KEY_SIZE;
 
     /* Initial TRNG */
-    BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
+    XTRNG_RandomInit(&rng, XTRNG_PRNG | XTRNG_LIRC32K);
 
     do
     {
         /* Generate random number for private key */
-        BL_Random(&rng, au8r, i32NBits / 8);
+        XTRNG_Random(&rng, au8r, i32NBits / 8);
 
         for(i = 0, j = 0; i < i32NBits / 8; i++)
         {
@@ -162,7 +162,7 @@ int main(void)
         printf("//-------------------------------------------------------------------------//\n");
 
         /* Generate random number k */
-        BL_Random(&rng, au8r, i32NBits / 8);
+        XTRNG_Random(&rng, au8r, i32NBits / 8);
 
         for(i = 0, j = 0; i < i32NBits / 8; i++)
         {

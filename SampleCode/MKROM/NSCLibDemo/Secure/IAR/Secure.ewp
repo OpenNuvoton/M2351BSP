@@ -1002,7 +1002,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>Secure_import_lib.o</state>
+                    <state>nsclib_Secure_IAR.o</state>
                 </option>
             </data>
         </settings>

@@ -22,7 +22,7 @@ char Qx2[68], Qy2[68];              /* temporary buffer used to keep output publ
 char k[68];                         /* random integer k form [1, n-1]                */
 char k2[68];                        /* random integer k form [1, n-1]                */
 
-void GenPrivateKey(BL_RNG_T *rng, char *d, int32_t i32NBits)
+void GenPrivateKey(XTRNG_T *rng, char *d, int32_t i32NBits)
 {
     int32_t i, j;
     uint8_t au8r[(ECC_KEY_SIZE + 7) / 8];
@@ -30,7 +30,7 @@ void GenPrivateKey(BL_RNG_T *rng, char *d, int32_t i32NBits)
     do
     {
         /* Generate random number for private key */
-        BL_Random(rng, au8r, (i32NBits + 7) / 8);
+        XTRNG_Random(rng, au8r, (i32NBits + 7) / 8);
 
         for(i = 0, j = 0; i < (i32NBits + 7) / 8; i++)
         {
@@ -126,7 +126,7 @@ void UART_Init(void)
  *----------------------------------------------------------------------------*/
 int main(void)
 {
-    BL_RNG_T rng;
+    XTRNG_T rng;
     int32_t i32Ticks;
 
     /* Unlock protected registers */
@@ -148,7 +148,7 @@ int main(void)
     ECC_ENABLE_INT(CRPT);
 
     /* Initial TRNG */
-    BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
+    XTRNG_RandomInit(&rng, XTRNG_PRNG | XTRNG_LIRC32K);
 
 //------------------------------------------------------------------------
     // Generate a private key A
