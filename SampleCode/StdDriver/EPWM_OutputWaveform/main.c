@@ -63,8 +63,8 @@ void SYS_Init(void)
     /* EPWM clock frequency configuration                                                                      */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    CLK_SetModuleClock(EPWM0_MODULE, CLK_CLKSEL2_EPWM0SEL_PCLK0, NULL);
-    CLK_SetModuleClock(EPWM1_MODULE, CLK_CLKSEL2_EPWM1SEL_PCLK1, NULL);
+    CLK_SetModuleClock(EPWM0_MODULE, CLK_CLKSEL2_EPWM0SEL_PCLK0, 0);
+    CLK_SetModuleClock(EPWM1_MODULE, CLK_CLKSEL2_EPWM1SEL_PCLK1, 0);
 
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);

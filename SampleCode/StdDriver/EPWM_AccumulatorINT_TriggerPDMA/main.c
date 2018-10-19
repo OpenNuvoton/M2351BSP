@@ -94,7 +94,7 @@ void SYS_Init(void)
     /* EPWM clock frequency configuration                                                                      */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    CLK_SetModuleClock(EPWM1_MODULE, CLK_CLKSEL2_EPWM1SEL_PCLK1, NULL);
+    CLK_SetModuleClock(EPWM1_MODULE, CLK_CLKSEL2_EPWM1SEL_PCLK1, 0);
 
     /* Enable PDMA module clock */
     CLK_EnableModuleClock(PDMA0_MODULE);
