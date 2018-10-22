@@ -66,7 +66,7 @@ void UART_Init(void)
 int main(void)
 {
     int32_t  i;
-    BL_RNG_T rng;
+    XTRNG_T rng;
     uint32_t au32RandVal[BYTE_COUNT/4];
     uint8_t *pu8Buf;
     
@@ -87,12 +87,12 @@ int main(void)
 
     
     /* Initial TRNG */
-    BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
+    XTRNG_RandomInit(&rng, XTRNG_PRNG | XTRNG_LIRC32K);
     
     pu8Buf = (uint8_t *)au32RandVal;
     
     /* Generate random number 1 */
-    BL_Random(&rng, pu8Buf, BYTE_COUNT);
+    XTRNG_Random(&rng, pu8Buf, BYTE_COUNT);
     
     printf("Random numbers 1:\n");
     for(i=0; i<(BYTE_COUNT/4); i++)
@@ -103,7 +103,7 @@ int main(void)
 
 
     /* Generate random number 2 */
-    BL_Random(&rng, pu8Buf, BYTE_COUNT);
+    XTRNG_Random(&rng, pu8Buf, BYTE_COUNT);
     
     printf("Random numbers 2:\n");
     for(i=0; i<(BYTE_COUNT/4); i++)
@@ -114,7 +114,7 @@ int main(void)
         
 
     /* Generate random number 3 */
-    BL_Random(&rng, pu8Buf, BYTE_COUNT);
+    XTRNG_Random(&rng, pu8Buf, BYTE_COUNT);
     
     printf("Random numbers 3:\n");
     for(i=0; i<(BYTE_COUNT/4); i++)

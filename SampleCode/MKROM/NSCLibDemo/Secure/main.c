@@ -21,18 +21,6 @@ typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 void Nonsecure_Init(void);
 
 
-# if defined (__ICCARM__)
-/* Dummy function to avoid IAR compiler error in Non-secure Callable function */
-void DummyFunction(void)
-{
-    uint32_t pdid0, pdid1;
-    pdid0 = SYS->PDID;
-    pdid1 = SYS->PDID;
-    pdid0++;
-    pdid1++;
-}
-#endif
-
 /*----------------------------------------------------------------------------
   Secure function for NonSecure callbacks exported to NonSecure application
   Must place in Non-secure Callable
@@ -40,11 +28,6 @@ void DummyFunction(void)
 __NONSECURE_ENTRY
 uint32_t GetSystemCoreClock(void)
 {
-# if defined (__ICCARM__)
-    /* Immediate return will caused IAR compiler error in Non-secure Callable function */
-    DummyFunction();
-#endif
-
     return SystemCoreClock;
 }
 
@@ -165,8 +148,9 @@ int main(void)
 
     
     /* Jump to perform MKROM Non-secure API in Non-secure region */
-    printf("Hit any key, then jump to perform MKROM Non-secure API in Non-secure region.\n\n");
-    getchar();
+    printf("Jump to perform MKROM Non-secure API in Non-secure region.\n\n");
+    //printf("Hit any key, then jump to perform MKROM Non-secure API in Non-secure region.\n\n");
+    //getchar();
     
     Nonsecure_Init(); /* Jump to Non-secure code */
     

@@ -1047,7 +1047,7 @@
             <name>$PROJ_DIR$\..\..\..\..\..\Library\StdDriver\src\MKROMLib_IAR.a</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\Secure\lib\nsclib_Secure_IAR.o</name>
+            <name>$PROJ_DIR$\..\..\Secure\IAR\Release\Exe\nsclib_Secure_IAR.o</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Library\StdDriver\src\retarget.c</name>

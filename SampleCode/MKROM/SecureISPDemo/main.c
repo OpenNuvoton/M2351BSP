@@ -137,14 +137,8 @@ static int32_t ConfigureUART1ISP(uint32_t mode)
 
 void EnableXOM0(void)
 {
-#if (defined( __ICCARM__ ) || defined ( __GNUC__ ))
-    /* 
-        Not supports in IAR and GCC yet. 
-        Use Nuvoton NuMicro ICP Programming Tool to set XOM for this demo.
-    */
-#else    
     int32_t i32Status;
-    uint32_t u32Base, u32Pase;
+    uint32_t u32Base = 0x10000, u32Page = 2;
     
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -155,21 +149,18 @@ void EnableXOM0(void)
     
     if((FMC->XOMSTS & 0x1) != 0x1)
     {
-        extern uint32_t Image$$XOM0_ROM$$XO$$Base;
-        extern uint32_t Image$$XOM0_ROM$$XO$$Length;
-        u32Base = (uint32_t)&Image$$XOM0_ROM$$XO$$Base;
-        u32Pase = (((uint32_t)&Image$$XOM0_ROM$$XO$$Length + (FMC_FLASH_PAGE_SIZE-1)) / FMC_FLASH_PAGE_SIZE);
+        printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u32Page);
         
         if(FMC_GetXOMState(XOMR0) == 0)
         {
-            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u32Pase);
+            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u32Page);
             if(i32Status == 0)
             {
-                printf("Configure XOMR0 Success.\n");
+                printf("Configure XOM0 Success.\n");
             }
             else
             {
-                printf("Configure XOMR0 FAIL.\n");
+                printf("Configure XOM0 FAIL.\n");
                 while(1) {}
             }
         }
@@ -188,9 +179,8 @@ void EnableXOM0(void)
     }
     else
     {
-        printf("XOMR0 region is already actived.\n\n");
+        printf("XOM0 region is already actived.\n\n");
     }
-#endif    
 }
 
 void SYS_Init(void)
@@ -260,9 +250,9 @@ int main(void)
     UART_Init();
 
     printf("\n\nCPU @ %d Hz\n", SystemCoreClock);
-    printf("+------------------------------------------------+\n");
-    printf("|    Initial USBD/UART1 SecureISP Sample Code    |\n");
-    printf("+------------------------------------------------+\n\n");
+    printf("+---------------------------------------------------+\n");
+    printf("|    Initialize USBD/UART1 SecureISP Sample Code    |\n");
+    printf("+---------------------------------------------------+\n\n");
     
     /* Enable XOM0 */
     EnableXOM0();
@@ -273,8 +263,8 @@ int main(void)
     /* Configure UART1 ISP */
     u32UartClkFreq = ConfigureUART1ISP(0x0);
                 
-    printf("\n[Hit any key to enter SecureISP function]\n\n");
-    getchar();    
+    //printf("\n[Hit any key to enter SecureISP]\n\n");
+    //getchar();    
 
     while(1) 
     {
@@ -293,7 +283,7 @@ int main(void)
         }
         else
         {
-            printf("Initial and enter SecureISP......\n");
+            printf("Initialize and enter SecureISP......\n");
             
             /* Clear global variables */   
             memset((void *)&g_ISPInfo, 0x0, sizeof(ISP_INFO_T));
@@ -314,7 +304,7 @@ int main(void)
         /* Configure to mask specify command */
         g_ISPInfo.u32CmdMask = 0;
                 
-        /* Initial and start USBD and UART1 SecureISP function */
+        /* Initialize and start USBD and UART1 SecureISP function */
         ret = BL_SecureISPInit(&g_ISPInfo, &g_USBDInfo, (E_ISP_MODE)u32ISPmode);  
         if(ret == 0x8000) // 0x8000 is Re-sync command
             continue;

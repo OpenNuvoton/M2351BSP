@@ -5,9 +5,9 @@
 define symbol __ICFEDIT_intvec_start__ = 0x00000000;
 /*-Memory Regions-*/
 define symbol __ICFEDIT_region_IROM1_start__ = 0x00000000;
-define symbol __ICFEDIT_region_IROM1_end__   = 0x0007FFFF;
-define symbol __ICFEDIT_region_IROM2_start__ = 0x0;
-define symbol __ICFEDIT_region_IROM2_end__   = 0x0;
+define symbol __ICFEDIT_region_IROM1_end__   = 0x0000FFFF;
+define symbol __ICFEDIT_region_IROM2_start__ = 0x00010000;
+define symbol __ICFEDIT_region_IROM2_end__   = 0x00010FFF;
 define symbol __ICFEDIT_region_EROM1_start__ = 0x0;
 define symbol __ICFEDIT_region_EROM1_end__   = 0x0;
 define symbol __ICFEDIT_region_EROM2_start__ = 0x0;
@@ -33,8 +33,7 @@ define symbol __ICFEDIT_size_heap__          = 0x0;
 /**** End of ICF editor section. ###ICF###*/
 
 define memory mem with size = 4G;
-define region IROM_region   =   mem:[from __ICFEDIT_region_IROM1_start__ to __ICFEDIT_region_IROM1_end__]
-                              | mem:[from __ICFEDIT_region_IROM2_start__ to __ICFEDIT_region_IROM2_end__];
+define region IROM_region   =   mem:[from __ICFEDIT_region_IROM1_start__ to __ICFEDIT_region_IROM1_end__];
 define region EROM_region   =   mem:[from __ICFEDIT_region_EROM1_start__ to __ICFEDIT_region_EROM1_end__]
                               | mem:[from __ICFEDIT_region_EROM2_start__ to __ICFEDIT_region_EROM2_end__]
                               | mem:[from __ICFEDIT_region_EROM3_start__ to __ICFEDIT_region_EROM3_end__];
@@ -43,6 +42,8 @@ define region IRAM_region   =   mem:[from __ICFEDIT_region_IRAM1_start__ to __IC
 define region ERAM_region   =   mem:[from __ICFEDIT_region_ERAM1_start__ to __ICFEDIT_region_ERAM1_end__]
                               | mem:[from __ICFEDIT_region_ERAM2_start__ to __ICFEDIT_region_ERAM2_end__]
                               | mem:[from __ICFEDIT_region_ERAM3_start__ to __ICFEDIT_region_ERAM3_end__];
+
+define region XOM_region    =   mem:[from __ICFEDIT_region_IROM2_start__ to __ICFEDIT_region_IROM2_end__];
 
 define block CSTACK        with alignment = 8, size = __ICFEDIT_size_cstack__        { };
 define block PROC_STACK_S  with alignment = 8, size = __ICFEDIT_size_proc_s_stack__  { };
@@ -64,3 +65,5 @@ place in IROM_region  { readonly };
 place in EROM_region  { readonly section application_specific_ro };
 place in IRAM_region  { readwrite, block CSTACK, block PROC_STACK_S, block MAIN_STACK_NS, block PROC_STACK_NS, block HEAP };
 place in ERAM_region  { readwrite section application_specific_rw };
+
+place in XOM_region   { readonly object XOMRegion.o };
