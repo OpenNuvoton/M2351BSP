@@ -254,8 +254,9 @@ int main(void)
     printf("|    Initialize USBD/UART1 SecureISP Sample Code    |\n");
     printf("+---------------------------------------------------+\n\n");
     
-    /* Enable XOM0 */
-    EnableXOM0();
+// Remove XO setting in Keil v5.26.2.0 (Nuvoton Edition)
+//    /* Enable XOM0 */
+//    EnableXOM0();
 
     /* Configure USBD ISP */
     ConfigureUSBDISP();
