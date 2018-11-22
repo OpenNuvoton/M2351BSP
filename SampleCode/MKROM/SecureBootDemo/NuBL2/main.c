@@ -214,8 +214,9 @@ int main(void)
     /* Show booting status */
     CheckBootingStatus();
     
-    /* Enable XOM0 */
-    EnableXOM0();
+// Remove XO setting in Keil v5.26.2.0 (Nuvoton Edition)
+//    /* Enable XOM0 */
+//    EnableXOM0();
     
 
     /* Verify NuBL32 identity and F/W integrity */
