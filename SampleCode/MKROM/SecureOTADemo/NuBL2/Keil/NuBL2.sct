@@ -15,14 +15,16 @@ FLASH 0x00000000    0x20000
     }
 }
 
-; 192KB~
-XOM0    0x00030000 ; 
-{
-    XOM0_FLASH  +0  0x8000
-    {
-        * (+XO)
-    }    
-}
+;Comment XOM configure first, because keil free license for Nuvoton does not support(it has build errors).
+;User can recomment these code after license issue was fixed. And checked Execute-only Code option of NuBL2_lib.c and NuBL_crypto.c.
+;; 192KB~ 
+;XOM0    0x00030000 ; 
+;{
+;    XOM0_FLASH  +0  0x8000
+;    {
+;        * (+XO)
+;    }    
+;}
 
 ; 480KB ~
 FWINFO_REGION   0x00078000  208
