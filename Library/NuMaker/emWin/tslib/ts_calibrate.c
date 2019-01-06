@@ -250,10 +250,18 @@ static void get_sample(calibration *cal, int index, int x, int y, char *name)
     }
 #ifdef __DEMO_160x128__
 #else
+#if 0
     put_string_center(xres / 2, yres / 4,
                       "TSLIB calibration utility", 1);
     put_string_center(xres / 2, yres / 4 + 20,
                       "Touch crosshair to calibrate", 2);
+#else
+    GUI_SetColor(palette [1]);
+    GUI_DispStringHCenterAt("TSLIB calibration utility", xres / 2, yres / 4);
+
+    GUI_SetColor(palette [2]);
+    GUI_DispStringHCenterAt("Touch crosshair to calibrate", xres / 2, yres / 4 + 20);
+#endif
 #endif
 
     put_cross(x, y, 2 | XORMODE);

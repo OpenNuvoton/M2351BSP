@@ -49,7 +49,7 @@ Purpose     : Display controller configuration (single layer)
 #include "GUIDRV_FlexColor.h"
 
 #include "NuMicro.h"
-
+#ifdef __DEMO_320x240__
 #include "M2351TouchPanel.h"
 
 #include "lcm.h"
@@ -368,3 +368,4 @@ void _InitController(void)
 
     ILI9341_LED = 1;
 }
+#endif
