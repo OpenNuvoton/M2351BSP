@@ -51,7 +51,6 @@ __heap_limit
                 EXPORT  __Vectors
                 EXPORT  __Vectors_End
                 EXPORT  __Vectors_Size
-				IMPORT  SendChar_ToUART
 
 __Vectors       DCD     __initial_sp               ;     Top of Stack
                 DCD     Reset_Handler              ;     Reset Handler
