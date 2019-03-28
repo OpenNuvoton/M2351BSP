@@ -1,10 +1,10 @@
 /****************************************************************************
  * @file     main.c
- * @version  V1.01
+ * @version  V2.00
  * @brief    To utilize emWin library to demonstrate  widgets feature.
  *
  * @note
- * Copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
  *
  ******************************************************************************/
 #include <stdio.h>
