@@ -78,7 +78,7 @@
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
-                    <state>M2351	Nuvoton M2351</state>
+                    <state>M2351 series	Nuvoton M2351 series</state>
                 </option>
                 <option>
                     <name>GenLowLevelInterface</name>
@@ -138,7 +138,7 @@
                 </option>
                 <option>
                     <name>GFPUDeviceSlave</name>
-                    <state>M2351	Nuvoton M2351</state>
+                    <state>M2351 series	Nuvoton M2351 series</state>
                 </option>
                 <option>
                     <name>FPU2</name>
