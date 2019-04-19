@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>WWDT_CompareINT.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>

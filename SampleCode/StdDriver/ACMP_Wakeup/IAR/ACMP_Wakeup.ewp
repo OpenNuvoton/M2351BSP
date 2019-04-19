@@ -1042,7 +1042,7 @@
     <group>
         <name>Library</name>
         <file>
-            <name>$PROJ_DIR$\..\..\..\..\Library\StdDriver\src\acmp.c</name>
+            <name>$PROJ_DIR$\..\..\..\..\Library\StdDriver\src\ACMP_Wakeup.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\Library\StdDriver\src\clk.c</name>

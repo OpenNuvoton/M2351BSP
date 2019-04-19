@@ -643,7 +643,7 @@
                 </option>
                 <option>
                     <name>OCOutputOverride</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
@@ -1042,7 +1042,7 @@
     <group>
         <name>Library</name>
         <file>
-            <name>$PROJ_DIR$\..\..\..\..\Library\StdDriver\src\acmp.c</name>
+            <name>$PROJ_DIR$\..\..\..\..\Library\StdDriver\src\ACMP_CompareDAC.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\Library\StdDriver\src\clk.c</name>
