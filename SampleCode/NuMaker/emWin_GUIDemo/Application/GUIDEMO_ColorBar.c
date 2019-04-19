@@ -61,6 +61,7 @@ Purpose     : Draws color bars
 *
 *       GUIDEMO_ColorBar
 */
+extern U8 g_u8GUIItem;
 void GUIDEMO_ColorBar(void)
 {
     GUI_COLOR ColorStartBlack;
@@ -95,6 +96,7 @@ void GUIDEMO_ColorBar(void)
         yStep = 10;
     }
     GUIDEMO_ConfigureDemo(acTitle, acDesc, GUIDEMO_SHOW_CURSOR | GUIDEMO_SHOW_CONTROL);
+    g_u8GUIItem = 2;
     GUIDEMO_DrawBk();
     //
     // Heading
@@ -187,6 +189,7 @@ void GUIDEMO_ColorBar(void)
         GUI_DrawGradientH(ScreenX0, ScreenY0 + yStep * 13, xSize - ScreenX0, (ScreenY0 + yStep * 14) - 1, GUI_MAGENTA, ColorStartWhite);
 #endif
     }
+    g_u8GUIItem = 0;
 }
 
 #else

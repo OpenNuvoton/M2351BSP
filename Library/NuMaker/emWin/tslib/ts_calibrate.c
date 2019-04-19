@@ -19,16 +19,12 @@
 //#include <sys/ioctl.h>
 //#include <sys/mman.h>
 //#include <sys/time.h>
+#include "NuMicro.h"
 #include "tslib.h"
 #include "fbutils.h"
 #include "testutils.h"
-//#include "wbio.h"
-//#include "wbtypes.h"
-//#include "wblib.h"
-//#include "LCDconf.h"
 #include "GUI.h"
 #include "M2351TouchPanel.h"
-//#include "nvtfat.h"
 
 typedef struct
 {

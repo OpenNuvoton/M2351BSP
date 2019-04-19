@@ -65,7 +65,7 @@
 *
 *       _aDialogCreate
 */
-static const GUI_WIDGET_CREATE_INFO _aDialogCreate[7] =
+static const GUI_WIDGET_CREATE_INFO _aDialogCreate[8] =
 {
 #ifdef __DEMO_160x128__
     { FRAMEWIN_CreateIndirect, "Framewin", ID_FRAMEWIN_0, 0, 0, 160, 128, 0, 0x0  },
