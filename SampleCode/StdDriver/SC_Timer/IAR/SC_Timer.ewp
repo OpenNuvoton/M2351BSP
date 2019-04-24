@@ -648,7 +648,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>SC_Timer.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>

@@ -1,11 +1,7 @@
 
 #include "NuMicro.h"
 
-//#include "stdlib.h"
-#include "GUI.h"
-//#include "W55FA93_adc.h"
 #include "M2351TouchPanel.h"
-//#include "lcdconf.h"
 
 
 
@@ -132,7 +128,7 @@ int Read_TouchPanel(int *x, int *y)
 {
     *x = Get_TP_X();
     *y = Get_TP_Y();
-    if((*x == 0xFFF) || (*y == 0xFFF))
+    if(((*x & 0x0F00) >= 0x0F00) || ((*y & 0x0F00) >= 0x0F00))
         return 0;
     else
         return 1;

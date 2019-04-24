@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>EBI_SRAM.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>

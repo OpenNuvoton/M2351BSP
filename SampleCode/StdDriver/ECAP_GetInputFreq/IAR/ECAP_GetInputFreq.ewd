@@ -44,7 +44,7 @@
                 </option>
                 <option>
                     <name>MemFile</name>
-                    <state>$TOOLKIT_DIR$\CONFIG\debugger\Nuvoton\M2351.ddf</state>
+                    <state>$TOOLKIT_DIR$\CONFIG\debugger\Nuvoton\iom2351ae.ddf</state>
                 </option>
                 <option>
                     <name>RunToEnable</name>
@@ -112,7 +112,7 @@
                 </option>
                 <option>
                     <name>FlashLoadersV3</name>
-                    <state>$TOOLKIT_DIR$\config\flashloader\Nuvoton\FlashM2351APROM.board</state>
+                    <state>$TOOLKIT_DIR$\config\flashloader\Nuvoton\M2351_APROM.board</state>
                 </option>
                 <option>
                     <name>OCImagesSuppressCheck1</name>

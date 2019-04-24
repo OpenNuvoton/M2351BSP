@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>WDT_TimeoutWakeupAndReset.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>

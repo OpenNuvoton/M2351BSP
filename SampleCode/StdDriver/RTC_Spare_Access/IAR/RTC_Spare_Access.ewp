@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>RTC_Spare_Access.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>

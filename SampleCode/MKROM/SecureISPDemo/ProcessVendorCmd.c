@@ -10,39 +10,34 @@
 #include "NuMicro.h"
 
 
+/*
+    Provides the below vendor functions for USBH_SecureISP and PC VendorCmdSample Tool:
+            Command ID      Description             Usage of Host
+        1.  0x1000          Get Chip IDs            [Cmd ID]
+        2.  0x2000          Read flash data         [Cmd ID, Addr, Size]
+        3.  0x3000          Program flash           [Cmd ID, Addr, Size, Data0, Data1...]
+*/  
+
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables for initial SecureISP function                                                         */
 /*---------------------------------------------------------------------------------------------------------*/
 extern ISP_INFO_T   g_ISPInfo;
-volatile char g_acIDsR[65], g_acIDsS[65];
-
-extern int32_t XOM_CalIDsECDSA(char *pOutR, char *pOutS);
-
-static void BytesSwap(char *buf, int32_t len)
-{
-    int32_t i;
-    char    tmp;
-
-    for(i = 0; i < (len / 2); i++)
-    {
-        tmp = buf[len - i - 1];
-        buf[len - i - 1] = buf[i];
-        buf[i] = tmp;
-    }
-}
 
 void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len)
 {
     uint32_t i, au32Data[12];
-    uint32_t au32Sign[8];
+    uint32_t u32Addr;
             
     memset((void *)au32Data, 0x0, sizeof(au32Data));
     BL_GetVendorData((uint32_t *)&g_ISPInfo, au32Data, pu32Buf);
     
-    printf("Received data are :\n");
+#if 0    
+    printf("Vendor data in :\n");
     for(i=0; i<(u32Len/4); i++)
         printf("0x%08x, ", au32Data[i]);
     printf("\n\n");
+#endif
     
     if(au32Data[0] == 0x1000) // return IDs
     {        
@@ -58,35 +53,30 @@ void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len)
         BL_ReturnVendorData(au32Data, u32Len, pu32Buf);
     }
     
-    if(au32Data[0] == 0x2000) // process and return IDs ECDSA signature-R
-    {
-        memset((char *)g_acIDsR, 0x0, sizeof(g_acIDsR));
-        memset((char *)g_acIDsS, 0x0, sizeof(g_acIDsS));
-        XOM_CalIDsECDSA((char *)g_acIDsR, (char *)g_acIDsS);
-        printf("IDs R: %s\n", g_acIDsR);
-        printf("IDs S: %s\n", g_acIDsS);
-        
-        u32Len = sizeof(au32Sign); // 256-bits
-        
-        memset((void *)au32Data, 0x0, sizeof(au32Data));
-        memset((void *)au32Sign, 0x0, sizeof(au32Sign));
-        XECC_Hex2Reg((char *)g_acIDsR, (uint32_t *)au32Sign);
-        BytesSwap((char *)au32Sign, sizeof(au32Sign));
-        memcpy(au32Data, au32Sign, sizeof(au32Sign));
-        
+    if(au32Data[0] == 0x2000) // read flash
+    {        
+        u32Addr = au32Data[1];
+        u32Len = au32Data[2];
+        for(i=0; i<(u32Len/4); i++)
+            au32Data[i] = FMC_Read(u32Addr + (i*4));
+
         BL_ReturnVendorData(au32Data, u32Len, pu32Buf);
     }
     
-    if(au32Data[0] == 0x2001) // process and return IDs ECDSA signature-S
-    {
-        u32Len = sizeof(au32Sign); // 256-bits
+    if(au32Data[0] == 0x3000) // write flash
+    {   
+        FMC_ENABLE_ISP();
+        FMC_ENABLE_AP_UPDATE();
         
+        u32Addr = au32Data[1];
+        u32Len = au32Data[2];
+        for(i=0; i<(u32Len/4); i++)
+            FMC_Write(u32Addr + (i*4), au32Data[3+i]);
+        
+        FMC_DISABLE_AP_UPDATE();
+        
+        u32Len = 0;
         memset((void *)au32Data, 0x0, sizeof(au32Data));
-        memset((void *)au32Sign, 0x0, sizeof(au32Sign));
-        XECC_Hex2Reg((char *)g_acIDsS, (uint32_t *)au32Sign);
-        BytesSwap((char *)au32Sign, sizeof(au32Sign));
-        memcpy(au32Data, au32Sign, sizeof(au32Sign));
-        
         BL_ReturnVendorData(au32Data, u32Len, pu32Buf);
     }
 }

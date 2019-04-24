@@ -180,7 +180,7 @@ static void _Open_SPI(void)
     GPIO_SetMode(GPIOPORT_LCM_DC, PINMASK_LCM_DC, GPIO_MODE_OUTPUT);
     GPIO_SetMode(GPIOPORT_LCM_RESET, PINMASK_LCM_RESET, GPIO_MODE_OUTPUT);
     GPIO_SetMode(PC, BIT11, GPIO_MODE_OUTPUT);
-    GPIO_SetMode(GPIOPORT_SPI1_SS, PINMASK_SPI1_SS, GPIO_MODE_OUTPUT); //cs pin for gpiod
+//    GPIO_SetMode(GPIOPORT_SPI1_SS, PINMASK_SPI1_SS, GPIO_MODE_OUTPUT); //cs pin for gpiod
 
     /* Setup SPI1 multi-function pins */
     SYS->GPE_MFPL &= ~(SYS_GPE_MFPL_PE0MFP_Msk       | SYS_GPE_MFPL_PE1MFP_Msk);
@@ -203,8 +203,8 @@ static void _Open_SPI(void)
     SPI_LCD_PORT->CTL &= (~SPI_CTL_SUSPITV_Msk);
     SPI_LCD_PORT->CTL |= (0 << SPI_CTL_SUSPITV_Pos);
 
-    /* Disable auto SS function, control SS signal manually. */
-    SPI_EnableAutoSS(SPI_LCD_PORT, SPI_SS, QSPI_SS_ACTIVE_LOW);
+    /* Enable auto SS function */
+    SPI_EnableAutoSS(SPI_LCD_PORT, SPI_SS, SPI_SS_ACTIVE_LOW);
     SPI_ENABLE(SPI_LCD_PORT);
 }
 

@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>CRC_CRC32.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>

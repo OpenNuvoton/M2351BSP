@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>acmp.bin</state>
+                    <state>TIMER_PWM_ChangeDuty.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
