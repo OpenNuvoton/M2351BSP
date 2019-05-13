@@ -50,7 +50,11 @@ const uint8_t gu8DeviceDescriptor[] =
 {
     LEN_DEVICE,     /* bLength */
     DESC_DEVICE,    /* bDescriptorType */
+#ifdef SUPPORT_LPM
+    0x01, 0x02,     /* bcdUSB >= 0x0201 to support LPM */
+#else
     0x10, 0x01,     /* bcdUSB */
+#endif
     0x00,           /* bDeviceClass */
     0x00,           /* bDeviceSubClass */
     0x00,           /* bDeviceProtocol */
@@ -152,8 +156,16 @@ const uint8_t gu8BOSDescriptor[] =
     /* Device Capability */
     LEN_BOSCAP,     /* bLength */
     DESC_CAPABILITY,/* bDescriptorType */
-    CAP_USB20_EXT,  /* bDevCapabilityType */
-    0x02, 0x00, 0x00, 0x00  /* bmAttributes */
+    CAP_USB20_EXT,  /* bDevCapabilityType, 0x02 is USB 2.0 Extension */
+    0x06, 0x04, 0x00, 0x00  /* bmAttributes, 32 bits */
+                            /* bit 0 : Reserved. Must 0. */
+                            /* bit 1 : 1 to support LPM. */
+                            /* bit 2 : 1 to support BSL & Alternat HIRD. */
+                            /* bit 3 : 1 to recommend Baseline BESL. */
+                            /* bit 4 : 1 to recommand Deep BESL. */
+                            /* bit 11:8 : Recommend Baseline BESL value. Ignore by bit3 is zero. */
+                            /* bit 15:12 : Recommend Deep BESL value. Ignore by bit4 is zero. */
+                            /* bit 31:16 : Reserved. Must 0. */
 };
 
 const uint8_t *gpu8UsbString[4] =
