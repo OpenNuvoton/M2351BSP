@@ -281,7 +281,7 @@
                 <option>
                     <name>CCAllowList</name>
                     <version>1</version>
-                    <state>11111110</state>
+                    <state>10010100</state>
                 </option>
                 <option>
                     <name>CCDebugInfo</name>
@@ -345,11 +345,11 @@
                 </option>
                 <option>
                     <name>CCIncludePath2</name>
+                    <state>$PROJ_DIR$\..</state>
+                    <state>$PROJ_DIR$\..\..</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Library\CMSIS\Include</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Library\Device\Nuvoton\M2351\Include</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Library\StdDriver\inc</state>
-                    <state>$PROJ_DIR$\..</state>
-                    <state>$PROJ_DIR$\..\..</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -365,7 +365,7 @@
                 </option>
                 <option>
                     <name>CCOptLevel</name>
-                    <state>3</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CCOptStrategy</name>
@@ -374,7 +374,7 @@
                 </option>
                 <option>
                     <name>CCOptLevelSlave</name>
-                    <state>3</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CompilerMisraRules98</name>
@@ -680,7 +680,7 @@
             <archiveVersion>1</archiveVersion>
             <data>
                 <prebuild></prebuild>
-                <postbuild></postbuild>
+                <postbuild>cmd.exe /c copy "$PROJ_DIR$\Release\Exe\nsclib_Secure_IAR.o" "$PROJ_DIR$\..\lib"</postbuild>
             </data>
         </settings>
         <settings>
