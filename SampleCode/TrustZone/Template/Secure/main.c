@@ -100,7 +100,7 @@ int32_t LED_Off(void)
  *----------------------------------------------------------------------------*/
 void SysTick_Handler(void)
 {
-    static uint32_t u32Ticks;
+    static uint32_t u32Ticks = 501;
 
     switch(u32Ticks++)
     {

@@ -36,14 +36,14 @@ extern int32_t Secure_LED_Off(uint32_t num);
 int32_t NonSecure_LED_On(uint32_t num)
 {
     printf("Nonsecure LED On call by Secure\n");
-    PC0_NS = 0;
+    PC0 = 0;
     return 0;
 }
 
 int32_t NonSecure_LED_Off(uint32_t num)
 {
     printf("Nonsecure LED Off call by Secure\n");
-    PC0_NS = 1;
+    PC0 = 1;
     return 0;
 }
 
@@ -53,13 +53,13 @@ int32_t NonSecure_LED_Off(uint32_t num)
 void LED_On(uint32_t us)
 {
     printf("Nonsecure LED On\n");
-    PC1_NS = 0;
+    PC1 = 0;
 }
 
 void LED_Off(uint32_t us)
 {
     printf("Nonsecure LED Off\n");
-    PC1_NS = 1;
+    PC1 = 1;
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -98,8 +98,6 @@ void SysTick_Handler(void)
  *----------------------------------------------------------------------------*/
 int main(void)
 {
-    DEBUG_PORT_Init();
-
     printf("\n");
     printf("+---------------------------------------------+\n");
     printf("|           Nonsecure is running ...          |\n");
@@ -108,7 +106,7 @@ int main(void)
     Secure_func();
 
     /* Init PC for Nonsecure LED control */
-    GPIO_SetMode(PC_NS, BIT1 | BIT0, GPIO_MODE_OUTPUT);
+    GPIO_SetMode(PC, BIT1 | BIT0, GPIO_MODE_OUTPUT);
 
     /* register NonSecure callbacks in Secure application */
     Secure_LED_On_callback(&NonSecure_LED_On);

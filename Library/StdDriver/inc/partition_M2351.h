@@ -35,8 +35,8 @@
 //                                         <0x16000=> 88KB
 //                                         <0x18000=> 96KB
 */
-#define SCU_SECURE_SRAM_SIZE      0x08000
-#define NON_SECURE_SRAM_BASE     (0x30000000 + SCU_SECURE_SRAM_SIZE)
+#define SCU_SECURE_SRAM_SIZE      0x18000
+#define NON_SECURE_SRAM_BASE    (0x30000000 + SCU_SECURE_SRAM_SIZE)
 
 
 
@@ -50,9 +50,9 @@
 //     <o>Secure Flash ROM Size <0x800-0x80000:0x800>
 */
 
-#define FMC_SECURE_ROM_SIZE      0x40000
-#define FMC_NON_SECURE_BASE     (0x10000000 + FMC_SECURE_ROM_SIZE)
+#define FMC_SECURE_ROM_SIZE      0x80000
 
+#define FMC_NON_SECURE_BASE     (0x10000000 + FMC_SECURE_ROM_SIZE)
 
 /*--------------------------------------------------------------------------------------------------------*/
 
@@ -123,7 +123,7 @@
 //   <o.21>  UART5      <0=> Secure <1=> Non-Secure
 //   </h>
 */
-#define SCU_INIT_PNSSET3_VAL      0x10000
+#define SCU_INIT_PNSSET3_VAL      0x00000
 /*
     PNSSET4
 */
@@ -194,7 +194,7 @@
 //   <o.6>  PG      <0=> Secure <1=> Non-Secure
 //   <o.7>  PH      <0=> Secure <1=> Non-Secure
 */
-#define SCU_INIT_IONSSET_VAL      0x4
+#define SCU_INIT_IONSSET_VAL      0x0
 /*
 // </h>
 */
@@ -206,7 +206,7 @@
 /*
 // <e>Secure Attribute Unit (SAU) Control
 */
-#define SAU_INIT_CTRL 1
+#define SAU_INIT_CTRL 0
 
 /*
 //   <q> Enable SAU
@@ -306,7 +306,7 @@
 //   <e>SAU Region 3
 //   <i> Setup SAU Region 3
 */
-#define SAU_INIT_REGION3    1
+#define SAU_INIT_REGION3    0
 /*
 //     <o>Start Address <0-0xFFFFFFE0>
 */
