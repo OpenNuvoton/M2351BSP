@@ -94,7 +94,7 @@
 //   <o.8>  I2S0      <0=> Secure <1=> Non-Secure
 //   <o.13>  OTG      <0=> Secure <1=> Non-Secure
 //   <o.17>  TMR23      <0=> Secure <1=> Non-Secure
-//   <h> EPWM
+//   <h> PWM
 //   <o.24>  EPWM0      <0=> Secure <1=> Non-Secure
 //   <o.25>  EPWM1      <0=> Secure <1=> Non-Secure
 //   <o.26>  BPWM0      <0=> Secure <1=> Non-Secure

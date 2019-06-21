@@ -660,24 +660,6 @@ extern void SystemInit(void);
 # define EADC EADC_S
 #endif
 
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT3 )
-# define EADC EADC_NS
-#else
-# define EADC EADC_S
-#endif
-
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT3 )
-# define EADC EADC_NS
-#else
-# define EADC EADC_S
-#endif
-
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT3 )
-# define EADC EADC_NS
-#else
-# define EADC EADC_S
-#endif
-
 #if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT5 )
 # define ACMP01 ACMP01_NS
 #else
@@ -685,11 +667,11 @@ extern void SystemInit(void);
 #endif
 
 #if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT7 )
-# define DAC DAC0_NS
 # define DAC0 DAC0_NS
+# define DAC1 DAC1_NS
 #else
-# define DAC DAC0_S
 # define DAC0 DAC0_S
+# define DAC1 DAC1_S
 #endif
 
 #if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT8 )
@@ -716,30 +698,6 @@ extern void SystemInit(void);
 # define EPWM0 EPWM0_NS
 #else
 # define EPWM0 EPWM0_S
-#endif
-
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT24)
-# define EPWM0 EPWM0_NS
-#else
-# define EPWM0 EPWM0_S
-#endif
-
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT24)
-# define EPWM0 EPWM0_NS
-#else
-# define EPWM0 EPWM0_S
-#endif
-
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT25)
-# define EPWM1 EPWM1_NS
-#else
-# define EPWM1 EPWM1_S
-#endif
-
-#if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT25)
-# define EPWM1 EPWM1_NS
-#else
-# define EPWM1 EPWM1_S
 #endif
 
 #if defined (SCU_INIT_PNSSET2_VAL) && (SCU_INIT_PNSSET2_VAL & BIT25)
