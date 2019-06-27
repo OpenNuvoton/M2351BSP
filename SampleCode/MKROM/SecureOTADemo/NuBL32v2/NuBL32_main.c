@@ -456,7 +456,7 @@ int main(void)
     SYS_UnlockReg();
     /* Enable FMC ISP function */
     FMC_Open();
-    printf("[Secure regon boundary: 0x%x]\n\n", SCU->FNSADDR);
+    printf("[Secure region boundary: 0x%x]\n\n", SCU->FNSADDR);
 
     /* Init GPIO Port A for secure LED control */
     GPIO_SetMode(PA, BIT11 | BIT10, GPIO_MODE_OUTPUT);    

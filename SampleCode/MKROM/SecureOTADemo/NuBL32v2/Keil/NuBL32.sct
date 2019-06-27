@@ -2,10 +2,15 @@
 ; 256~384KB~
 FLASH 0x00040000    0x20000
 {
-    FLASH +0    0x20000
+    FLASH +0
     {
         NuBL32_startup_M2351.o(RESET, +First)
         * (+RO)    
+    }
+
+    NSC_ROM +0
+    {
+        *(Veneer$$CMSE)
     }
 
     ; 32~48KB~
@@ -28,14 +33,5 @@ FWINFO_REGION   0x00048000  352
     ;{
         ;NuBL32_FwInfo.o (+RW, +ZI)
     ;}
-}
-
-; 376KB(0x5E000) ~ 382KB
-LR_NSC 0x47000  0x1000
-{
-    NSC_ROM +0
-    {
-        *(Veneer$$CMSE)
-    }
 }
 

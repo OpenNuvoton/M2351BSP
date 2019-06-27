@@ -35,7 +35,7 @@ const FW_INFO_T g_InitialFWinfo =
     },
     {/* metadata data - includes authenticate configuration, F/W regions and extend info */
         0x00000001, 0x00000010, NUBL32_FW_BASE, 0x00000000,
-        NUBL32_LIB_BASE, 0x00000000, 0x00000094, NUBL32_VER,
+        0x00000000, 0x00000000, 0x00000094, NUBL32_VER,
         0x00000000, 0x00000000, 0x00000000, 0x00000000,
         0x00000000, 0x00000000, 0x00000000, 0x00000000,
         0x00000000, 0x00000000, 0x00000000, 0x00000000,

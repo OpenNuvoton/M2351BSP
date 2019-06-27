@@ -361,7 +361,7 @@ int main(void)
     /* Enable FMC ISP function */
     FMC_Open();
 
-    printf("[Secure regon boundary: 0x%x]\n\n", SCU->FNSADDR);
+    printf("[Secure region boundary: 0x%x]\n\n", SCU->FNSADDR);
 
     printf("OTA and WIfi init...\n");
     /* init OTA */

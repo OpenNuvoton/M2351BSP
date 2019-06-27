@@ -52,6 +52,7 @@ __heap_limit
                 EXPORT  __Vectors_End
                 EXPORT  __Vectors_Size
 				IMPORT  SendChar_ToUART
+                IMPORT  SCU_IRQHandler
 
 __Vectors       DCD     __initial_sp               ;     Top of Stack
                 DCD     Reset_Handler              ;     Reset Handler
@@ -338,7 +339,7 @@ Default_Handler PROC
                ;EXPORT  0                         [WEAK] ; 96 
                ;EXPORT  0                         [WEAK] ; 97 
                 EXPORT  PDMA1_IRQHandler          [WEAK] ; 98 
-                EXPORT  SCU_IRQHandler            [WEAK] ; 99 
+               ;EXPORT  SCU_IRQHandler            [WEAK] ; 99 
                ;EXPORT  0                         [WEAK] ; 100
                 EXPORT  TRNG_IRQHandler           [WEAK] ; 101
 				
@@ -445,7 +446,7 @@ SDH1_IRQHandler            ; 90
 ;0                          ; 96 
 ;0                          ; 97 
 PDMA1_IRQHandler           ; 98 
-SCU_IRQHandler             ; 99 
+;SCU_IRQHandler             ; 99 
 ;0                         ; 100
 TRNG_IRQHandler            ; 101
 DEFAULT_IRQHandler

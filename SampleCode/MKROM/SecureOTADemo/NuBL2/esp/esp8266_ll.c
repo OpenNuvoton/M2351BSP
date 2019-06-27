@@ -91,13 +91,13 @@ uint8_t ESP_LL_Callback(ESP_LL_Control_t ctrl, void* param, void* result) {
             if (state == ESP_RESET_SET) {           /* Check state value */
                 if (ESP_RESET_PORT == PE)
                 {
-                    GPIO_PIN_DATA(4, ESP_RESET_PIN) = 0;
+                    GPIO_PIN_DATA_S(4, ESP_RESET_PIN) = 0;
                 }
                 //TM_GPIO_SetPinLow(ESP_RESET_PORT, ESP_RESET_PIN);
             } else {
                 if (ESP_RESET_PORT == PE)
                 {
-                    GPIO_PIN_DATA(4, ESP_RESET_PIN) = 1;
+                    GPIO_PIN_DATA_S(4, ESP_RESET_PIN) = 1;
                 }
                 //TM_GPIO_SetPinHigh(ESP_RESET_PORT, ESP_RESET_PIN);
             }
