@@ -11,6 +11,23 @@
 #ifndef PARTITION_M2351
 #define PARTITION_M2351
 
+#if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3U)
+
+/* 
+   Default M2351 pritition configuration file is for non-TrustZone sample code only.
+   If user wants to use TrurstZone, they should have their partition_m2351.h.
+   For TrustZone projects, path of local partition_m2351.h should be in the 
+   front of the include path list to make sure local partition_m2351.h is used.
+   
+   It also apply to non-secure project of the TrustZone projects.
+   
+*/
+# error "Link to default partition_m2351.h in secure mode. Please check your include path."
+
+#endif
+
+
+
 /*
 //-------- <<< Use Configuration Wizard in Context Menu >>> -----------------
 */
