@@ -176,8 +176,8 @@ int32_t main(void)
        The upper boundary value should be more than 512*(HXT/HIRC).
        The low boundary value should be less than 512*(HXT/HIRC).
     */
-    CLK->CDUPB = 515;
-    CLK->CDLOWB = 509;
+    CLK->CDUPB = 527;
+    CLK->CDLOWB = 496;
 
     /* Set clock fail detector function enabled and interrupt enabled */
     CLK->CLKDCTL = CLK_CLKDCTL_HXTFDEN_Msk |
