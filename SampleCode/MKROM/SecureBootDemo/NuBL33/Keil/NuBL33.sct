@@ -1,4 +1,8 @@
-NUBL33 0x10040000   ; located in 256K
+#! armclang --target=arm-arm-none-eabi -march=armv8-m.base -E -xc
+#define SCATTER_FILE
+#include "..\..\NuBL32\partition_M2351.h"
+
+NUBL33 FMC_NON_SECURE_BASE
 {
     NuBL33.bin +0
     {
@@ -6,13 +10,14 @@ NUBL33 0x10040000   ; located in 256K
         * (+RO)
     }
     
-    RAM 0x30010000 0x8000
+    RAM NON_SECURE_SRAM_BASE 0x8000
     {
         * (+ZI, +RW)
     }
 }
 
-NUBL33_INFO 0x10078000  ; located in 480K
+;NUBL33_INFO 0x10078000  ; located in 480K
+NUBL33_INFO FMC_NON_SECURE_BASE+0x38000  ; located in 480K
 {
     FwInfo.bin +0
     {
