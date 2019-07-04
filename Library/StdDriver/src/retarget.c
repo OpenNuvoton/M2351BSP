@@ -323,7 +323,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
     if((!secure) && ((addr & NS_OFFSET) == 0) )
     {
         printf("  Non-secure CPU try to fetch secure code in 0x%x\n", addr);
-        printf("  Try to check NSC region\n");
+        printf("  Try to check NSC region or SAU settings.\n");
         
         eFlag = 1;
     }else if(inst == 0xBEAB)

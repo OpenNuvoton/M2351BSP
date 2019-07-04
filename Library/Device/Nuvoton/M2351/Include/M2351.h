@@ -1,6 +1,6 @@
 /**************************************************************************//**
  * @file     M2351.h
- * @version  V1.0
+ * @version  V1.1
  * @brief    Peripheral Access Layer Header File
  *
  * @note

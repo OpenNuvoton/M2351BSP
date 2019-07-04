@@ -1,34 +1,23 @@
-LR_ROM 0x0
+#! armclang --target=arm-arm-none-eabi -march=armv8-m.base -E -xc
+#define SCATTER_FILE
+#include "..\..\partition_M2351.h"
+    
+LR_ROM 0x0 FMC_SECURE_ROM_SIZE
 {
-    EXE_ROM +0 0x40000
+
+    EXE_ROM +0
     {
         *.o(RESET, +First)
         *(+RO)
     }
+    NSC_ROM +0
+    {
+        *(Veneer$$CMSE)
+    }
     
-    EXE_RAM 0x20000000 0x10000
+    EXE_RAM 0x20000000 SCU_SECURE_SRAM_SIZE
     {
         *(+RW, +ZI)
     }
 	
-	NSC_RAM 0x2000FC00 1024
-	{
-		*(Veneer$$CMSE)
-	}
 }
-
-
-
-;LR_IROM1 0x00000000 0x0003FF00  {    ; load region size_region
-;  ER_IROM1 0x00000000 0x0003FF00  {  ; load address = execution address
-;   *.o (RESET, +First)
-;   *(InRoot$$Sections)
-;   .ANY (+RO)
-;    *(Veneer$$CMSE)                   ; check with partition.h
-;  }
-;  
-;  RW_IRAM1 0x20000000 0x00010000  {  ; RW data
-;   .ANY (+RW +ZI)
-;  }
-;}
-

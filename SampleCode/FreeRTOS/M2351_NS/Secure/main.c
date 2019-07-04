@@ -14,7 +14,7 @@ typedef __attribute__((cmse_nonsecure_call)) int32_t (*NonSecure_funcptr)(uint32
 #define FMC_SECURE_BOUNDARY     0x40000UL
 #define NON_SECURE_BASE         (0x10000000ul+FMC_SECURE_BOUNDARY) /* Base Address of Non-secure Image */
 #define SRAM_SECURE_BOUNDARY    0x10000UL
-#define NON_SECURE_SRAM_BASE    (0x30000000UL+SRAM_SECURE_BOUNDARY)/* Base Address of Non-secure SRAM */
+
 
 
 void SYS_Init(void);

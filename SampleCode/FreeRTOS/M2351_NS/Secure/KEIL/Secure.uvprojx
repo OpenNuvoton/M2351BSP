@@ -10,18 +10,18 @@
       <TargetName>Secure</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6070000::V6.7::.\ARMCLANG</pCCUsed>
+      <pCCUsed>6120000::V6.12::.\ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>M2351KIAAE</Device>
           <Vendor>Nuvoton</Vendor>
-          <PackID>Nuvoton.NuMicro_DFP.1.3.0</PackID>
+          <PackID>Nuvoton.NuMicro_DFP.1.3.4</PackID>
           <PackURL>http://www.nuvoton.com/hq/enu/Documents/KEILSoftwarePack</PackURL>
           <Cpu>IRAM(0x20000000,0x8000) IRAM2(0x30008000,0x10000) IROM(0x00000000,0x40000) IROM2(0x10040000,0x40000) CPUTYPE("Cortex-M23") TZ CLOCK(12000000) ESEL ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
-          <FlashDriverDll>UL2V8M(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0M2351_AP_512 -FS00 -FL080000 -FP0($$Device:M2351KIAAE$Flash\M2351_AP_512.FLM))</FlashDriverDll>
+          <FlashDriverDll>UL2V8M(-S0 -C0 -P0 -FD20000000 -FC1200 -FN1 -FF0M2351_AP_512 -FS00 -FL080000 -FP0($$Device:M2351KIAAE$Flash\M2351_AP_512.FLM))</FlashDriverDll>
           <DeviceId>0</DeviceId>
           <RegisterFile>$$Device:M2351KIAAE$Device\M2351\Include\M2351.h</RegisterFile>
           <MemoryEnv></MemoryEnv>
@@ -134,11 +134,11 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4098</DriverSelection>
+            <DriverSelection>4101</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2V8M.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4>.\nonsecure.ini</Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -321,14 +321,14 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>0</wLevel>
+            <wLevel>3</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>0</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
-            <v6Lang>5</v6Lang>
-            <v6LangP>0</v6LangP>
+            <v6Lang>3</v6Lang>
+            <v6LangP>3</v6LangP>
             <vShortEn>0</vShortEn>
             <vShortWch>0</vShortWch>
             <v6Lto>0</v6Lto>
@@ -336,9 +336,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>-mfloat-abi=soft -Wno-documentation -Wno-reserved-id-macro</MiscControls>
-              <Define>DEBUG_PORT = UART0_NS</Define>
+              <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\..\Library\CMSIS\Include;..\..\..\..\..\Library\StdDriver\inc;..\..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\Secure</IncludePath>
+              <IncludePath>..\..\;..\..\Secure;..\..\..\..\..\Library\CMSIS\Include;..\..\..\..\..\Library\StdDriver\inc;..\..\..\..\..\Library\Device\Nuvoton\M2351\Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -390,7 +390,7 @@
             <File>
               <FileName>partition_M2351.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\partition_M2351.h</FilePath>
+              <FilePath>..\..\partition_M2351.h</FilePath>
             </File>
           </Files>
         </Group>
