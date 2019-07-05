@@ -33,7 +33,7 @@ int32_t main(void);
 extern char GetChar(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* Clear buffer funcion                                                                                    */
+/* Clear buffer function                                                                                    */
 /*---------------------------------------------------------------------------------------------------------*/
 void ClearBuf(uint32_t u32Addr, uint32_t u32Length, uint8_t u8Pattern)
 {
