@@ -45,9 +45,9 @@ int main(void)
     do
     {
         printf("+-------------------------------------------------------+\n");
-        printf("| [0] Write address 0x10040000 to generate hard fault  |\n");
-        printf("| [1] Write secure I/O port to generate hard fault     |\n");
-        printf("| [2] Read secure SRAM to generate hard fault          |\n");
+        printf("| [0] Write address 0x10040000 to generate hard fault   |\n");
+        printf("| [1] Write secure I/O port to generate hard fault      |\n");
+        printf("| [2] Read secure SRAM to generate hard fault           |\n");
         printf("| [3] Toggle non-secure I/O                             |\n");
         printf("+-------------------------------------------------------+\n");
         ch = getchar();

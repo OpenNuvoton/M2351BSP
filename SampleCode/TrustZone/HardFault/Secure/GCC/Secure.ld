@@ -121,7 +121,23 @@ SECTIONS
 	} > FLASH
 	*/
 
+
+	__start_NSC = .;
+	.gnu.sgstubs : 
+	{
+	    . = ALIGN(4);
+	    *(.gnu.sgstubs.*)
+	
+	} > FLASH
+	__end_NSC = .;
+	
+
+
 	__etext = .;
+
+
+
+
 
 	.data : AT (__etext)
 	{
@@ -198,4 +214,8 @@ SECTIONS
 
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
+    
+    
+	
+
 }
