@@ -18,16 +18,11 @@
 /* typedef for NonSecure callback functions */
 typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 
-#define FMC_SECURE_BOUNDARY     0x40000UL
-#define NON_SECURE_BASE         (0x10000000ul+FMC_SECURE_BOUNDARY) /* Base Address of Non-secure Image */
-#define SRAM_SECURE_BOUNDARY    0x10000UL
-#define NON_SECURE_SRAM_BASE    (0x30000000UL+SRAM_SECURE_BOUNDARY)/* Base Address of Non-secure SRAM */
-
 
 void SYS_Init(void);
 void UART0_Init(void);
 void Boot_Init(uint32_t u32BootBase);
-
+char GetChar(void);
 
 /*----------------------------------------------------------------------------
   Secure functions exported to NonSecure application
@@ -68,7 +63,7 @@ int main(void)
     */
 
     /* SCB_NS.VTOR points to the Non-secure vector table base address. */
-    SCB_NS->VTOR = NON_SECURE_BASE;
+    SCB_NS->VTOR = FMC_NON_SECURE_BASE;
 
     /* 1st Entry in the vector table is the Non-secure Main Stack Pointer. */
     __TZ_set_MSP_NS(*((uint32_t *)SCB_NS->VTOR));      /* Set up MSP in Non-secure code */
@@ -107,7 +102,7 @@ int main(void)
         dbg("| [2] Write 0 to address 0x10040000 to generate hard fault  |\n");
         dbg("| [3] Write 0 to address 0x20040000 to generate hard fault  |\n");
         dbg("+-----------------------------------------------------------+\n");
-        ch = getchar();
+        ch = GetChar();
 
         switch(ch)
         {
