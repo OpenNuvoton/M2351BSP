@@ -1047,9 +1047,6 @@
             <name>$PROJ_DIR$\..\..\..\..\..\Library\StdDriver\src\clk.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\DrvUART.c</name>
-        </file>
-        <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Library\StdDriver\src\fmc.c</name>
         </file>
         <file>

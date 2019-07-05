@@ -11,16 +11,22 @@
 #include <stdio.h>
 #include "NuMicro.h"
 #include "NuDB_common.h"
-#include "DrvUART.h"
 
 #define PLL_CLOCK       64000000
 
-
 /* APROM bank1 address is 1/2 APROM size.   */
-#define DB_PROG_LEN                 (4 * FMC_FLASH_PAGE_SIZE)  /* background program length  */
-#define CRC32_LOOP_CNT              50           /* Loop count                               */
-
-
+#define DB_PROG_LEN        (4 * FMC_FLASH_PAGE_SIZE)  /* background program length  */
+#define CRC32_LOOP_CNT     50           /* Loop count                               */
+#define TXBUFSIZE          0x213c
+/* UART1 settings */
+#define UART_CLK_SRC_HXT   0
+#define UART_CLK_SRC_PLL   1
+#define UART_CLK_SRC_LXT   2
+#define UART_CLK_SRC_HIRC  3
+#define UART_CLK_DIV(x)     (x)-1
+#define UART_WAIT_TXEMPTYF_RXIDLE(uart) \
+    while( ((uart)->FIFOSTS & (UART_FIFOSTS_TXEMPTYF_Msk|UART_FIFOSTS_RXIDLE_Msk)) \
+                            !=(UART_FIFOSTS_TXEMPTYF_Msk|UART_FIFOSTS_RXIDLE_Msk))
 
 /*
  *  Dual bank background program state
@@ -34,17 +40,36 @@ enum
     DB_STATE_FAIL                                /* ISP command failed or verify error       */
 };
 
+typedef void (PFN_DRVUART_CALLBACK)(void);
+/*---------------------------------------------------------------------------------------------------------*/
+/* Global variables                                                                                        */
+/*---------------------------------------------------------------------------------------------------------*/
+
 static volatile int  g_i8DbState = DB_STATE_DONE;    /* dual bank background program state       */
 static volatile uint32_t  g_u32DbLength;             /* dual bank program remaining length       */
 static volatile uint32_t  g_u32DbAddr;               /* dual bank program current flash address  */
-
 volatile uint32_t  g_u32TickCnt;                     /* timer ticks - 100 ticks per second       */
 uint32_t g_u32TmpData, g_u32TmpCnt;
-
 volatile uint32_t g_u32TxIndex, g_u32RxIndex;
-uint8_t u8RxData[TXBUFSIZE];
-UART_T *u32TestPortTx, *u32TestPort, *u32TestPortRx;
 
+uint8_t u8RxData[TXBUFSIZE];
+static PFN_DRVUART_CALLBACK *g_pfnUART1callback = NULL;
+
+/*---------------------------------------------------------------------------------------------------------*/
+/* Global Functions                                                                                        */
+/*---------------------------------------------------------------------------------------------------------*/
+void UART_Init(UART_T* uart, uint32_t u32ClkSrc, uint32_t u32ClkDiv, uint32_t u32BaudRate);
+/*---------------------------------------------------------------------------------------------------------*/
+/* Interrupt Handler                                                                                       */
+/*---------------------------------------------------------------------------------------------------------*/
+
+void UART1_IRQHandler(void)
+{
+    if(g_pfnUART1callback != NULL)
+    {
+        g_pfnUART1callback();
+    }
+}
 
 void SysTick_Handler(void)
 {
@@ -153,6 +178,28 @@ void WDT_IRQHandler(void)
 
 }
 
+void UART_Init(UART_T* uart, uint32_t u32ClkSrc, uint32_t u32ClkDiv, uint32_t u32BaudRate)
+{
+    uint32_t u32ClkTbl[4] = {__HXT, 0, __LXT, __HIRC};
+
+    /* UART clock source and clock divider setting */
+
+    CLK->CLKSEL1 = (CLK->CLKSEL1 & (~CLK_CLKSEL1_UART1SEL_Msk)) | (u32ClkSrc << CLK_CLKSEL1_UART1SEL_Pos);
+    CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_UART1DIV_Msk)) | (u32ClkDiv << CLK_CLKDIV0_UART1DIV_Pos);
+
+
+    /* Set UART line configuration */
+    uart->LINE = UART_WORD_LEN_8 | UART_PARITY_NONE | UART_STOP_BIT_1;
+
+    /* Get PLL clock frequency if UART clock source selection is PLL */
+    if(u32ClkSrc == 1)
+        u32ClkTbl[1] = CLK_GetPLLClockFreq();
+
+    /* Set UART baud rate */
+    if(u32BaudRate != 0)
+        uart->BAUD = (UART_BAUD_MODE2 | UART_BAUD_MODE2_DIVIDER((u32ClkTbl[u32ClkSrc]) / (u32ClkDiv + 1), u32BaudRate));
+
+}
 
 
 void SYS_Init(void)
@@ -248,61 +295,31 @@ uint32_t  get_timer0_counter()
 void RecevieAndSendBack_Callback()
 {
     PA4 ^= 1;
-    UART_Read(u32TestPort, &u8RxData[g_u32RxIndex++], 1);
+    UART_Read(UART1, &u8RxData[g_u32RxIndex++], 1);
 }
 
 /*===== for Tx and Rx data =====*/
 
 
-void RecevieAndSendBack(E_UART_PORT u32Port)
+void RecevieAndSendBack(UART_T * tUART)
 {
     uint32_t u32TestBR;
-
-    UART_T * tUART;
-    tUART = (UART_T *)(UART0_BASE + u32Port);
 
     printf("=== Get FW from PC ===\n");
     printf("[PB6 : UART1 RX] \n");
     printf("[PB7 : UART1 TX] \n\n");
     printf(" Connect PC<-->");
-    switch(u32Port)
-    {
-        case UART_PORT0:
-            printf("UART0.\n");
-            u32TestPort = UART0;
-            break;
-        case UART_PORT1:
-            printf("UART1.\n");
-            u32TestPort = UART1;
-            break;
-        case UART_PORT2:
-            printf("UART2.\n");
-            u32TestPort = UART2;
-            break;
-        case UART_PORT3:
-            printf("UART3.\n");
-            u32TestPort = UART3;
-            break;
-        case UART_PORT4:
-            printf("UART4.\n");
-            u32TestPort = UART4;
-            break;
-        case UART_PORT5:
-            printf("UART5.\n");
-            u32TestPort = UART5;
-            break;
-    }
+
 #if !defined(NO_LINE_DEBUG_HINT)
     printf(" Enter any key to continue.\n\n");
-    GetChar();
+    getchar();
 #else
     printf("\n");
 #endif
 
     /* setting before test */
     UART_WAIT_TXEMPTYF_RXIDLE(DEBUG_PORT);
-    BackupCLKSetting();
-    BackupUARTSetting(u32Port);
+
     UART_Init(tUART, UART_CLK_SRC_HXT, UART_CLK_DIV(1), 0);
 
     /* baud rate setting */
@@ -310,8 +327,8 @@ void RecevieAndSendBack(E_UART_PORT u32Port)
     u32TestBR = 115200;
 
     /* Enable Rx ready interrupt */
-    DrvUART_EnableInt(u32Port, DRVUART_RDAINT, (PFN_DRVUART_CALLBACK*)RecevieAndSendBack_Callback);
-
+    UART_EnableInt(UART1, UART_INTSTS_RDAIF_Msk);
+    g_pfnUART1callback = (PFN_DRVUART_CALLBACK*)RecevieAndSendBack_Callback;
     /* Prepare Rx data */
     for(g_u32RxIndex = 0; g_u32RxIndex < TXBUFSIZE; g_u32RxIndex++)
     {
@@ -324,16 +341,14 @@ void RecevieAndSendBack(E_UART_PORT u32Port)
     printf("total [%d] bytes \n", g_u32RxIndex);
 
     /* Disable Rx ready interrupt */
-    DrvUART_DisableInt(u32Port, DRVUART_RDAINT);
-
+    UART_DisableInt(UART1, UART_INTSTS_RDAIF_Msk);
+    g_pfnUART1callback = NULL;
     /* end of test */
     UART_WAIT_TXEMPTYF_RXIDLE(DEBUG_PORT);
     UART_WAIT_TXEMPTYF_RXIDLE(tUART);
-    RestoreCLKSetting();
-    RestoreUARTSetting(u32Port);
+
 
 }
-
 
 
 int32_t main(void)
@@ -408,7 +423,7 @@ int32_t main(void)
         if(u32ch == 'y')
         {
 
-            RecevieAndSendBack(UART_PORT1);
+            RecevieAndSendBack(UART1);
             printf("\nBank0 processing, downloaad data to bank1.\n");
             g_i8DbState = DB_STATE_DONE;          /* dual bank program state idle                   */
 
