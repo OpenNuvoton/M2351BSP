@@ -15,7 +15,7 @@ define symbol __ICFEDIT_region_EROM2_end__   = 0x0;
 define symbol __ICFEDIT_region_EROM3_start__ = 0x0;
 define symbol __ICFEDIT_region_EROM3_end__   = 0x0;
 define symbol __ICFEDIT_region_IRAM1_start__ = 0x20000000;
-define symbol __ICFEDIT_region_IRAM1_end__   = 0x2002FFFF;
+define symbol __ICFEDIT_region_IRAM1_end__   = 0x2000FFFF;
 define symbol __ICFEDIT_region_IRAM2_start__ = 0x0;
 define symbol __ICFEDIT_region_IRAM2_end__   = 0x0;
 define symbol __ICFEDIT_region_ERAM1_start__ = 0x0;
@@ -25,7 +25,7 @@ define symbol __ICFEDIT_region_ERAM2_end__   = 0x0;
 define symbol __ICFEDIT_region_ERAM3_start__ = 0x0;
 define symbol __ICFEDIT_region_ERAM3_end__   = 0x0;
 /*-Sizes-*/
-define symbol __ICFEDIT_size_cstack__        = 0x1000;
+define symbol __ICFEDIT_size_cstack__        = 0x800;
 define symbol __ICFEDIT_size_proc_s_stack__  = 0x0;
 define symbol __ICFEDIT_size_main_ns_stack__ = 0x0;
 define symbol __ICFEDIT_size_proc_ns_stack__ = 0x0;
