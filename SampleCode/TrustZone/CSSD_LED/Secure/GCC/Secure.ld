@@ -121,6 +121,15 @@ SECTIONS
 	} > FLASH
 	*/
 
+	__start_NSC = .;
+	.gnu.sgstubs :
+	{
+	    . = ALIGN(4);
+	    *(.gnu.sgstubs.*)
+
+	} > FLASH
+	__end_NSC = .;
+
 	__etext = .;
 
 	.data : AT (__etext)
@@ -190,10 +199,10 @@ SECTIONS
 	__StackTop = ORIGIN(RAM) + LENGTH(RAM);
 	__StackLimit = __StackTop - SIZEOF(.stack_dummy);
 	*/
-	
+
 	__StackTop = __HeapLimit + SIZEOF(.stack_dummy);
 	__StackLimit = __HeapLimit;
-	
+
 	PROVIDE(__stack = __StackTop);
 
 	/* Check if data + heap + stack exceeds RAM limit */

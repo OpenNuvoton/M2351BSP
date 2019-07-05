@@ -345,10 +345,10 @@
                 </option>
                 <option>
                     <name>CCIncludePath2</name>
+                    <state>$PROJ_DIR$\..</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Library\CMSIS\Include</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Library\Device\Nuvoton\M2351\Include</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Library\StdDriver\inc</state>
-                    <state>$PROJ_DIR$\..</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -679,7 +679,7 @@
             <archiveVersion>1</archiveVersion>
             <data>
                 <prebuild></prebuild>
-                <postbuild></postbuild>
+                <postbuild>cmd.exe /c copy "$PROJ_DIR$\Release\Exe\nsclib_IAR.o" "$PROJ_DIR$\..\lib"</postbuild>
             </data>
         </settings>
         <settings>
@@ -1000,7 +1000,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>Secure_import_lib.o</state>
+                    <state>nsclib_IAR.o</state>
                 </option>
             </data>
         </settings>

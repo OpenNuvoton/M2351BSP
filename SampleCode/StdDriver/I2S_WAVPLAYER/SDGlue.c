@@ -31,7 +31,7 @@ void SDH_Open_Disk(SDH_T *sdh, uint32_t u32CardDetSrc)
 
     _Path[1] = ':';
     _Path[2] = 0;
-    if((sdh == SDH0) || (sdh == SDH0_NS))
+    if(sdh == SDH0)
     {
         _Path[0] = '0';
         f_mount(&_FatfsVolSd0, _Path, 1);
@@ -46,7 +46,7 @@ void SDH_Open_Disk(SDH_T *sdh, uint32_t u32CardDetSrc)
 
 void SDH_Close_Disk(SDH_T *sdh)
 {
-    if((sdh == SDH0) || (sdh == SDH0_NS))
+    if(sdh == SDH0)
     {
         memset(&SD0, 0, sizeof(SDH_INFO_T));
         f_mount(NULL, _Path, 1);
