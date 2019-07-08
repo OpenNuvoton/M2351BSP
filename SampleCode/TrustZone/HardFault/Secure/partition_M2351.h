@@ -194,7 +194,7 @@
 //   <o.6>  PG      <0=> Secure <1=> Non-Secure
 //   <o.7>  PH      <0=> Secure <1=> Non-Secure
 */
-#define SCU_INIT_IONSSET_VAL      0x4
+#define SCU_INIT_IONSSET_VAL      0x0
 /*
 // </h>
 */

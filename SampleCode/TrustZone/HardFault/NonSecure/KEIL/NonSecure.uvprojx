@@ -369,7 +369,7 @@
             <TextAddressRange>0x10040000</TextAddressRange>
             <DataAddressRange>0x30010000</DataAddressRange>
             <pXoBase></pXoBase>
-            <ScatterFile>..\..\..\..\..\..\M2351BSP_Copy\SampleCode\TrustZone\HardFault\NonSecure\KEIL\nonsecure.sct</ScatterFile>
+            <ScatterFile>.\nonsecure.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
             <Misc></Misc>

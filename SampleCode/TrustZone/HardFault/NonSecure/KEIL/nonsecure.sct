@@ -17,20 +17,3 @@ LR_ROM FMC_NON_SECURE_BASE
     }
 	
 }
-
-
-LR_XOM2 0x10044000 0x1000
-{
-    XOM2_ROM +0
-    {
-        xom2_func.o(+XO)
-    }
-}
-
-LR_XOM3 0x10045000 0x1000
-{
-    XOM3_ROM +0
-    {
-        xom3_func.o(+XO)
-    }
-}
