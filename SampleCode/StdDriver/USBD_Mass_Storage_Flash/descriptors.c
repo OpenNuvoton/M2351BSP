@@ -38,7 +38,7 @@ uint8_t gu8ConfigDescriptor[] =
 {
     LEN_CONFIG,                                         // bLength
     DESC_CONFIG,                                        // bDescriptorType
-    (LEN_CONFIG+LEN_INTERFACE+LEN_ENDPOINT*2), 0x00,    // wTotalLength
+    (LEN_CONFIG + LEN_INTERFACE + LEN_ENDPOINT * 2), 0x00,    // wTotalLength
     0x01,                                               // bNumInterfaces
     0x01,                                               // bConfigurationValue
     0x00,                                               // iConfiguration

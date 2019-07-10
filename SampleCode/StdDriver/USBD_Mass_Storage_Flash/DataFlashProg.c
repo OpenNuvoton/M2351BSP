@@ -99,14 +99,14 @@ void DataFlashWrite(uint32_t addr, uint32_t size, uint32_t buffer)
     {
         do
         {
-            alignAddr = addr & 0xFFF000;
+            alignAddr = addr & 0xFFF800;
 
             /* Get the sector offset*/
             offset = (addr & (FLASH_PAGE_SIZE - 1));
 
             if(offset || (size < FLASH_PAGE_SIZE))
             {
-                /* Not 4096-byte alignment. Read the destination page for modification. Note: It needs to avoid adding MASS_STORAGE_OFFSET twice. */
+                /* Not 2048-byte alignment. Read the destination page for modification. Note: It needs to avoid adding MASS_STORAGE_OFFSET twice. */
                 DataFlashReadPage(alignAddr - MASS_STORAGE_OFFSET, /*FLASH_PAGE_SIZE,*/ (uint32_t)&g_sectorBuf[0]);
 
             }
