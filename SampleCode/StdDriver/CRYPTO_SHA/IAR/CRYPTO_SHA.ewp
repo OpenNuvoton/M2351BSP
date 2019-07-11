@@ -718,7 +718,7 @@
                 </option>
                 <option>
                     <name>IlinkRawBinarySymbol</name>
-                    <state>VectorDataBase</state>
+                    <state>g_u32VectorDataBase</state>
                 </option>
                 <option>
                     <name>IlinkRawBinarySegment</name>
@@ -999,7 +999,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>###Unitialized###</state>
+                    <state>CRYPTO_SHA_import_lib.o</state>
                 </option>
             </data>
         </settings>

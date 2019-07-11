@@ -214,7 +214,7 @@ void Note_Configure()
     printf("|  |--------|       |-----------| CANBUS  |-----------|       |--------| |\n");
     printf("|  |        |------>|           |<------->|           |<------|        | |\n");
     printf("|  |        |CAN_TX |   CAN     |  CAN_H  |   CAN     |CAN_TX |        | |\n");
-    printf("|  |  M480  |       |Transceiver|         |Transceiver|       |  M480  | |\n");
+    printf("|  |  MCU0  |       |Transceiver|         |Transceiver|       |  MCU1  | |\n");
     printf("|  |        |<------|           |<------->|           |------>|        | |\n");
     printf("|  |        |CAN_RX |           |  CAN_L  |           |CAN_RX |        | |\n");
     printf("|  |--------|       |-----------|         |-----------|       |--------| |\n");

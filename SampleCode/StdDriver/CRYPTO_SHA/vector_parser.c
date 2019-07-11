@@ -34,7 +34,7 @@ void OpenTestVector(void)
     /* Get test vector base */
     g_pu8FileBase = (uint8_t *)&g_u32VectorDataBase;
 #ifdef __ICCARM__
-    _u32FileSize = 0x213f;
+    g_u32FileSize = 0x213f;
 #else
     /* Get vector size */
     g_u32FileSize = (uint32_t)&g_u32VectorDataLimit - (uint32_t)&g_u32VectorDataBase;
