@@ -1060,7 +1060,10 @@
     <group>
         <name>User</name>
         <file>
-            <name>$PROJ_DIR$\..\main.c</name>
+            <name>$PROJ_DIR$\..\exeinsram.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\main_exesram.c</name>
         </file>
     </group>
 </project>
