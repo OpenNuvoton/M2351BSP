@@ -5,9 +5,9 @@
 define symbol __ICFEDIT_intvec_start__ = 0x00000000;
 /*-Memory Regions-*/
 define symbol __ICFEDIT_region_IROM1_start__ = 0x0;
-define symbol __ICFEDIT_region_IROM1_end__   = 0x7FFFF;
-define symbol __ICFEDIT_region_IROM2_start__ = 0x20004000;
-define symbol __ICFEDIT_region_IROM2_end__   = 0x20010000;
+define symbol __ICFEDIT_region_IROM1_end__   = 0x8000;
+define symbol __ICFEDIT_region_IROM2_start__ = 0x8000;
+define symbol __ICFEDIT_region_IROM2_end__   = 0x10000;
 define symbol __ICFEDIT_region_EROM1_start__ = 0x0;
 define symbol __ICFEDIT_region_EROM1_end__   = 0x0;
 define symbol __ICFEDIT_region_EROM2_start__ = 0x0;
@@ -59,8 +59,8 @@ if (isdefinedsymbol(__USE_DLIB_PERTHREAD))
 }
 
 place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
-place at address mem:0x20004000 { readonly object main.o};
-place at address mem:0x20006000 { readonly object fmc.o};
+place at address mem:0x8000 { readonly object main.o};
+place at address mem:0xA000 { readonly object fmc.o};
 
 place in IROM_region  { readonly };
 place in EROM_region  { readonly section application_specific_ro };

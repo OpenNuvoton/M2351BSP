@@ -1033,7 +1033,7 @@
     <group>
         <name>Src</name>
         <file>
-            <name>$PROJ_DIR$\..\xomlib.c</name>
+            <name>$PROJ_DIR$\..\xomlibIAR.c</name>
         </file>
     </group>
 </project>
