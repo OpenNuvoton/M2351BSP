@@ -64,13 +64,13 @@ static int32_t CheckBootingStatus(void)
     
     /* Read NuBL2 ECC public key hash */
     FMC_Read_OTP(0, &au32OTP[0], &au32OTP[1]);
-    FMC_Read_OTP(1, &au32OTP[2], &au32OTP[2]);
-    FMC_Read_OTP(2, &au32OTP[4], &au32OTP[3]);
-    FMC_Read_OTP(3, &au32OTP[6], &au32OTP[4]);
+    FMC_Read_OTP(1, &au32OTP[2], &au32OTP[3]);
+    FMC_Read_OTP(2, &au32OTP[4], &au32OTP[5]);
+    FMC_Read_OTP(3, &au32OTP[6], &au32OTP[7]);
     printf("NuBL2 ECC public key hash are:\n");
     for(i=0; i<8; i++)
     {
-        printf("    0x%08x\n", au32OTP[0]);
+        printf("    0x%08x\n", au32OTP[i]);
     }
     printf("\n");
     
