@@ -18,57 +18,41 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Macro, type and constant definitions                                                                    */
 /*---------------------------------------------------------------------------------------------------------*/
-
+uint32_t g_u32Tag = (uint32_t) - 1;
 uint32_t g_sectorBuf[FLASH_PAGE_SIZE / 4];
 
 void DataFlashRead(uint32_t addr, uint32_t size, uint32_t buffer)
 {
     /* This is low level read function of USB Mass Storage */
-    int32_t len;
-    uint32_t i;
-    uint32_t * pu32Buf = (uint32_t *)buffer;
+    uint32_t alignAddr, offset, *pu32;
+    int32_t i;
 
     /* Modify the address to MASS_STORAGE_OFFSET */
     addr += MASS_STORAGE_OFFSET;
 
-    len = (int32_t)size;
+    /* Get address base on page size alignment */
+    alignAddr = addr & (~(FLASH_PAGE_SIZE - 1));
 
-    while(len >= BUFFER_PAGE_SIZE)
+    /* Get the sector offset*/
+    offset = (addr & (FLASH_PAGE_SIZE - 1));
+
+    pu32 = (uint32_t *)buffer;
+
+    for(i = 0; i < size / 4; i++)
     {
-        //FMC_ReadPage(addr, (uint32_t *)buffer);
-        for(i = 0; i < BUFFER_PAGE_SIZE / 4; i++)
-            pu32Buf[i] = FMC_Read(addr + i * 4);
-        addr   += BUFFER_PAGE_SIZE;
-        buffer += BUFFER_PAGE_SIZE;
-        len  -= BUFFER_PAGE_SIZE;
-        pu32Buf = (uint32_t *)buffer;
+        /* Read from cache */
+        if(((alignAddr + i * 4) >= g_u32Tag) && ((alignAddr + i * 4) < g_u32Tag + FLASH_PAGE_SIZE))
+        {
+            offset = (addr + i * 4 - g_u32Tag) / 4;
+            pu32[i] = g_sectorBuf[offset];
+        }
+        else
+        {
+            /* Read from flash */
+            pu32[i] = M32(addr + i * 4);
+        }
     }
 }
-
-void DataFlashReadPage(uint32_t addr, uint32_t buffer)
-{
-    uint32_t i;
-    uint32_t * pu32Buf = (uint32_t *)buffer;
-
-    /* Modify the address to MASS_STORAGE_OFFSET */
-    addr += MASS_STORAGE_OFFSET;
-
-    for(i = 0; i < FLASH_PAGE_SIZE / 4; i++)
-        pu32Buf[i] = FMC_Read(addr + i * 4);
-}
-
-uint32_t DataFlashProgramPage(uint32_t u32StartAddr, uint32_t * u32Buf)
-{
-    uint32_t i;
-
-    for(i = 0; i < FLASH_PAGE_SIZE / 4; i++)
-    {
-        FMC_Write(u32StartAddr + i * 4, u32Buf[i]);
-    }
-
-    return 0;
-}
-
 
 void DataFlashWrite(uint32_t addr, uint32_t size, uint32_t buffer)
 {
@@ -82,58 +66,52 @@ void DataFlashWrite(uint32_t addr, uint32_t size, uint32_t buffer)
 
     len = (int32_t)size;
 
-    if((len == FLASH_PAGE_SIZE) && ((addr & (FLASH_PAGE_SIZE - 1)) == 0))
+    do
     {
-        /* Page erase */
-        FMC_Erase(addr);
+        /* Get address base on page size alignment */
+        alignAddr = addr & (~(FLASH_PAGE_SIZE - 1));
 
-        while(len >= FLASH_PAGE_SIZE)
+        /* Get the sector offset*/
+        offset = (addr & (FLASH_PAGE_SIZE - 1));
+
+        /* check cache buffer */
+        if(g_u32Tag != alignAddr)
         {
-            DataFlashProgramPage(addr, (uint32_t *) buffer);
-            len    -= FLASH_PAGE_SIZE;
-            buffer += FLASH_PAGE_SIZE;
-            addr   += FLASH_PAGE_SIZE;
-        }
-    }
-    else
-    {
-        do
-        {
-            alignAddr = addr & 0xFFF800;
-
-            /* Get the sector offset*/
-            offset = (addr & (FLASH_PAGE_SIZE - 1));
-
-            if(offset || (size < FLASH_PAGE_SIZE))
+            if(g_u32Tag != (uint32_t) - 1)
             {
-                /* Not 2048-byte alignment. Read the destination page for modification. Note: It needs to avoid adding MASS_STORAGE_OFFSET twice. */
-                DataFlashReadPage(alignAddr - MASS_STORAGE_OFFSET, /*FLASH_PAGE_SIZE,*/ (uint32_t)&g_sectorBuf[0]);
+                /* We need to flush out cache before update it */
+                FMC_Erase(g_u32Tag);
 
+                for(i = 0; i < FLASH_PAGE_SIZE / 4; i++)
+                {
+                    FMC_Write(g_u32Tag + i * 4, g_sectorBuf[i]);
+                }
             }
 
-            /* Source buffer */
-            pu32 = (uint32_t *)buffer;
-            /* Get the update length */
-            len = FLASH_PAGE_SIZE - offset;
-            if(size < len)
-                len = size;
-            /* Update the destination buffer */
-            for(i = 0; i < len / 4; i++)
+            /* Load data to cache buffer */
+            for(i = 0; i < FLASH_PAGE_SIZE / 4; i++)
             {
-                g_sectorBuf[offset / 4 + i] = pu32[i];
+                g_sectorBuf[i] = FMC_Read(alignAddr + i * 4);
             }
-
-            /* Page erase */
-            FMC_Erase(alignAddr);
-            /* Write to the destination page */
-            DataFlashProgramPage(alignAddr, (uint32_t *) g_sectorBuf);
-
-            size -= len;
-            addr += len;
-            buffer += len;
-
+            g_u32Tag = alignAddr;
         }
-        while(size > 0);
+
+        /* Source buffer */
+        pu32 = (uint32_t *)buffer;
+        /* Get the update length */
+        len = FLASH_PAGE_SIZE - offset;
+        if(size < len)
+            len = size;
+        /* Update the destination buffer */
+        for(i = 0; i < len / 4; i++)
+        {
+            g_sectorBuf[offset / 4 + i] = pu32[i];
+        }
+
+        size -= len;
+        addr += len;
+        buffer += len;
     }
+    while(size > 0);
 }
 

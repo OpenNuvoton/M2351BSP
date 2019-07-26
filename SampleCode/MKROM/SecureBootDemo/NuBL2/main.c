@@ -11,14 +11,17 @@
 #include "NuMicro.h"
 #include "NuBL2.h"
 
+#define SET_SECURE_BOOT     (0) // Set 1 to support modify CFG0[5] MBS 0 for booting from Secure Bootloader 
+#define ENABLE_XOM0_REGION  (0) // Set 1 to configure VerifyNuBL3x.c code in XOM0 region, and cannot trace VerifyNuBL3x.c flow in ICE debug mode
 
-volatile FW_INFO_T  g_NuBL3xFwInfo = {0};
+
+extern const uint32_t g_InitialFWinfo[]; // A global variable to store NuBL2 FWINFO address, declared in FwInfo.c
+volatile FW_INFO_T  g_NuBL3xFwInfo = {0}; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
 
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Check Booting status and show F/W info data                                                            */
 /*---------------------------------------------------------------------------------------------------------*/
-extern const uint32_t g_InitialFWinfo[];
 static int32_t CheckBootingStatus(void)
 {
     int32_t     i;
@@ -39,7 +42,7 @@ static int32_t CheckBootingStatus(void)
         printf("Device is booting from %s. NOT booting from Secure Bootloader(NuBL1).\n\n", 
             FMC_GetBootSource()==0?"APROM":"LDROM");
         
-#if 0 // enable to configure booting from Secure Bootloader
+#if (SET_SECURE_BOOT == 1) // enable to configure booting from Secure Bootloader
         {
             char ch;
             printf("Hit [S/s] to configure booting from Secure Bootloader(NuBL1).\n\n");
@@ -61,6 +64,19 @@ static int32_t CheckBootingStatus(void)
     
     printf("[Device is successfully booting from Secure Bootloader(NuBL1) and device PID is 0x%08x]\n\n", FMC_ReadPID());
     
+    /*
+        Notes of NuBL2 ECC public key and its SHA-256 Key hash:
+        * Public Key 1 = 755B3819F05A3E9F32D4D599062834AAC5220F75955378414A8F63716A152CE2
+          Public Key 2 = 91C413F1915ED7B47473FD797647BA3D83E8224377909AF5B30C530EAAD79FD7
+        * The Key hash = 145e73e48865222fa4d9741671c0c670ed45fe06b24cdb5dd507d7ab35ee9363
+        * Stored in M2351 OTP0~3 for identification in secure boot are: 
+                Index   Low word    High word
+            --------------------------------------
+                OTP0:   0xe4735e14, 0x2f226588
+                OTP1:   0x1674d9a4, 0x70c6c071
+                OTP2:   0x06fe45ed, 0x5ddb4cb2
+                OTP3:   0xabd707d5, 0x6393ee35
+    */
     
     /* Read NuBL2 ECC public key hash */
     FMC_Read_OTP(0, &au32OTP[0], &au32OTP[1]);
@@ -214,11 +230,11 @@ int main(void)
     /* Show booting status */
     CheckBootingStatus();
     
-// Remove XO setting in Keil v5.26.2.0 (Nuvoton Edition)
-//    /* Enable XOM0 */
-//    EnableXOM0();
+#if (ENABLE_XOM0_REGION == 1)
+    /* Enable XOM0, and all the functions in VerifyNuBL3x.c cannot trace in ICE debug mode  */
+    EnableXOM0();
+#endif    
     
-
     /* Verify NuBL32 identity and F/W integrity */
     memcpy((void *)&g_NuBL3xFwInfo, (void *)NUBL32_FW_INFO_BASE, sizeof(FW_INFO_T));
     if(VerifyNuBL3x((uint32_t *)&g_NuBL3xFwInfo, NUBL32_FW_INFO_BASE) == -1)

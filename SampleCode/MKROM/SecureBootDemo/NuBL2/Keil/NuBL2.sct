@@ -12,14 +12,13 @@ NUBL2 0x0
     }
 }
 
-; Remove XO attribute in Keil v5.26.2.0 (Nuvoton Edition)
-;XOM0 0x10000    ; located in 64K
-;{
-;    XOM0_ROM +0
-;    {
-;        * (+XO)
-;    }    
-;}
+XOM0 0x10000    ; located in 64K
+{
+    XOM0_ROM +0
+    {
+        * (+XO)
+    }    
+}
 
 NUBL2_INFO 0x18000  ; located in 96K
 {

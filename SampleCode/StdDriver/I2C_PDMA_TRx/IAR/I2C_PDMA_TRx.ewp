@@ -647,7 +647,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>I2C_Master_PDMA.bin</state>
+                    <state>I2C_PDMA_TRx.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -702,7 +702,7 @@
                 </option>
                 <option>
                     <name>IlinkOutputFile</name>
-                    <state>I2C_Master_PDMA.out</state>
+                    <state>I2C_PDMA_TRx.out</state>
                 </option>
                 <option>
                     <name>IlinkDebugInfoEnable</name>
@@ -999,7 +999,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>###Unitialized###</state>
+                    <state>I2C_PDMA_TRx_import_lib.o</state>
                 </option>
             </data>
         </settings>
