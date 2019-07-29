@@ -224,7 +224,7 @@ void USBD_GetDescriptor(void)
         /* Get BOS Descriptor */
         case DESC_BOS:
         {
-            if (g_USBD_sInfo->gu8BosDesc == 0)
+            if(g_USBD_sInfo->gu8BosDesc == 0)
             {
                 USBD_SET_EP_STALL(EP0);
                 USBD_SET_EP_STALL(EP1);
@@ -633,8 +633,9 @@ void USBD_CtrlOut(void)
     uint32_t u32Size;
     uint32_t u32Addr;
 
-    if (g_USBD_u32CtrlOutToggle != (USBD->EPSTS0 & USBD_EPSTS0_EPSTS1_Msk))
+    if(g_USBD_u32CtrlOutToggle != (USBD->EPSTS0 & USBD_EPSTS0_EPSTS1_Msk))
     {
+        g_USBD_u32CtrlOutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS1_Msk;
         if(g_USBD_u32CtrlOutSize < g_USBD_u32CtrlOutSizeLimit)
         {
             u32Size = USBD_GET_PAYLOAD_LEN(EP1);

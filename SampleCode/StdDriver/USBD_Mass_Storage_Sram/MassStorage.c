@@ -326,7 +326,7 @@ void MSC_Init(void)
        However, window may fail to recognize the devices if PID/VID and serial number are all the same
        when plug them to Windows at the sample time.
        Therefore, we must generate different serial number for each device to avoid conflict
-       when plug more then 2 MassStorage devices to Windows at the same time.
+       when plug more than 2 MassStorage devices to Windows at the same time.
 
        NOTE: We use compiler predefine macro "__TIME__" to generate different number for serial
        at each build but each device here for a demo.

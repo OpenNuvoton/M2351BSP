@@ -11,6 +11,7 @@
 #include "ccid.h"
 #include "ccid_if.h"
 
+uint32_t volatile g_u32OutToggle = 0;
 
 /*--------------------------------------------------------------------------*/
 void USBD_IRQHandler(void)
@@ -54,6 +55,7 @@ void USBD_IRQHandler(void)
             /* Bus reset */
             USBD_ENABLE_USB();
             USBD_SwReset();
+            g_u32OutToggle = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
@@ -204,45 +206,53 @@ void EP3_Handler(void)
     static int offset = 0;
     uint32_t len;
 
-    len = USBD_GET_PAYLOAD_LEN(EP3);
-
-    USBD_MemCopy(&UsbMessageBuffer[offset], (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3)), len);
-
-    if((len >= 0x0A && len != 0xFF) || offset != 0)
+    if(g_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
     {
-        if(offset == 0)
-        {
-            /* Calculate number of byte to receive to finish the message  */
-            gi32UsbdMessageLength = USB_MESSAGE_HEADER_SIZE + make32(&UsbMessageBuffer[OFFSET_DWLENGTH]);
-        }
-
-        gi32UsbdMessageLength -= (int) len;
-        /* Prepare next reception if whole message not received */
-        if(gi32UsbdMessageLength > 0)
-        {
-            pUsbMessageBuffer = UsbMessageBuffer + len;
-            offset += len;
-        }
-
-        if(gi32UsbdMessageLength == 0)
-        {
-            gu8IsBulkOutReady = 1;
-            offset = 0;
-        }
-        if(gi32UsbdMessageLength < 0)
-        {
-            UsbMessageBuffer[OFFSET_DWLENGTH] = 0xFF;
-            UsbMessageBuffer[OFFSET_DWLENGTH + 1] = 0xFF;
-            UsbMessageBuffer[OFFSET_DWLENGTH + 2] = 0xFF;
-            UsbMessageBuffer[OFFSET_DWLENGTH + 3] = 0xFF;
-            gu8IsBulkOutReady = 1;
-        }
-    }
-    CCID_DispatchMessage();
-
-    /* trigger next out packet */
-    if(gi32UsbdMessageLength > 0)
         USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
+    }
+    else
+    {
+        g_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
+        len = USBD_GET_PAYLOAD_LEN(EP3);
+
+        USBD_MemCopy(&UsbMessageBuffer[offset], (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3)), len);
+
+        if((len >= 0x0A && len != 0xFF) || offset != 0)
+        {
+            if(offset == 0)
+            {
+                /* Calculate number of byte to receive to finish the message  */
+                gi32UsbdMessageLength = USB_MESSAGE_HEADER_SIZE + make32(&UsbMessageBuffer[OFFSET_DWLENGTH]);
+            }
+
+            gi32UsbdMessageLength -= (int) len;
+            /* Prepare next reception if whole message not received */
+            if(gi32UsbdMessageLength > 0)
+            {
+                pUsbMessageBuffer = UsbMessageBuffer + len;
+                offset += len;
+            }
+
+            if(gi32UsbdMessageLength == 0)
+            {
+                gu8IsBulkOutReady = 1;
+                offset = 0;
+            }
+            if(gi32UsbdMessageLength < 0)
+            {
+                UsbMessageBuffer[OFFSET_DWLENGTH] = 0xFF;
+                UsbMessageBuffer[OFFSET_DWLENGTH + 1] = 0xFF;
+                UsbMessageBuffer[OFFSET_DWLENGTH + 2] = 0xFF;
+                UsbMessageBuffer[OFFSET_DWLENGTH + 3] = 0xFF;
+                gu8IsBulkOutReady = 1;
+            }
+        }
+        CCID_DispatchMessage();
+
+        /* trigger next out packet */
+        if(gi32UsbdMessageLength > 0)
+            USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
+    }
 }
 
 void EP4_Handler(void)
