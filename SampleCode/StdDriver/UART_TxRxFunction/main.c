@@ -150,13 +150,21 @@ void UART_TEST_HANDLE(void)
     uint8_t u8InChar = 0xFF;
     uint32_t u32IntSts = UART0->INTSTS;
 
-    if(u32IntSts & UART_INTSTS_RDAINT_Msk)
-    {
+    /* Receive Data Available Interrupt Handle */
+    if(u32IntSts & UART_INTSTS_RDAINT_Msk)      
+    {                 
         printf("\nInput:");
 
         /* Get all the input characters */
-        while(UART_IS_RX_READY(UART0))
-        {
+        while( UART_GET_RX_EMPTY(UART0) == 0 )
+        {         
+            /* Receive Line Status Error Handle */ 
+            if(u32IntSts & UART_INTSTS_RLSINT_Msk)
+            {                
+                /* Clear Receive Line Status Interrupt */
+                UART_ClearIntFlag(UART0, UART_INTSTS_RLSINT_Msk);   
+            }             
+            
             /* Get the character from UART Buffer */
             u8InChar = UART_READ(UART0);
 
@@ -174,28 +182,32 @@ void UART_TEST_HANDLE(void)
                 g_u8RecData[g_u32comRtail] = u8InChar;
                 g_u32comRtail = (g_u32comRtail == (RXBUFSIZE - 1)) ? 0 : (g_u32comRtail + 1);
                 g_u32comRbytes++;
-            }
-        }
-        printf("\nTransmission Test:");
+            }               
+            
+            printf("\nTransmission Test:");                
+        }           
     }
 
-    if(u32IntSts & UART_INTSTS_THREINT_Msk)
+    /* Transmit Holding Register Empty Interrupt Handle */    
+    if(u32IntSts & UART_INTSTS_THREINT_Msk)     
     {
         uint16_t u16Tmp;
         u16Tmp = g_u32comRtail;
         if(g_u32comRhead != u16Tmp)
         {
             u8InChar = g_u8RecData[g_u32comRhead];
-            while(UART_IS_TX_FULL(UART0));  /* Wait Tx is not full to transmit data */
+            while(UART_IS_TX_FULL(UART0));      /* Wait Tx is not full to transmit data */
             UART_WRITE(UART0, u8InChar);
             g_u32comRhead = (g_u32comRhead == (RXBUFSIZE - 1)) ? 0 : (g_u32comRhead + 1);
             g_u32comRbytes--;
         }
-    }
-
-    if(UART0->FIFOSTS & (UART_FIFOSTS_BIF_Msk | UART_FIFOSTS_FEF_Msk | UART_FIFOSTS_PEF_Msk | UART_FIFOSTS_RXOVIF_Msk))
+    }  
+    
+    /* Buffer Error Interrupt Handle */    
+    if(u32IntSts & UART_INTSTS_BUFERRINT_Msk)   
     {
-        UART0->FIFOSTS = (UART_FIFOSTS_BIF_Msk | UART_FIFOSTS_FEF_Msk | UART_FIFOSTS_PEF_Msk | UART_FIFOSTS_RXOVIF_Msk);
+        /* Clear Buffer Error Interrupt */
+        UART_ClearIntFlag(UART0, UART_INTSTS_BUFERRINT_Msk);             
     }
 }
 
@@ -219,12 +231,12 @@ void UART_FunctionTest(void)
         UART0 will print the received char on screen.
     */
 
-    /* Enable UART RDA and THRE interrupt */
-    UART_EnableInt(UART0, (UART_INTEN_RDAIEN_Msk | UART_INTEN_THREIEN_Msk));
+    /* Enable UART RDA, THRE, RLS and Buffer Error interrupt */
+    UART_EnableInt(UART0, (UART_INTEN_RDAIEN_Msk | UART_INTEN_THREIEN_Msk | UART_INTEN_RLSIEN_Msk | UART_INTEN_BUFERRIEN_Msk));
     while(g_i32Wait);
 
-    /* Disable UART RDA and THRE interrupt */
-    UART_DisableInt(UART0, (UART_INTEN_RDAIEN_Msk | UART_INTEN_THREIEN_Msk));
+    /* Disable UART RDA, THRE, RLS and Buffer Error interrupt */
+    UART_DisableInt(UART0, (UART_INTEN_RDAIEN_Msk | UART_INTEN_THREIEN_Msk | UART_INTEN_RLSIEN_Msk | UART_INTEN_BUFERRIEN_Msk));
     g_i32Wait = TRUE;
 
 }
