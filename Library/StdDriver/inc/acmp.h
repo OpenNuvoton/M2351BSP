@@ -1,9 +1,7 @@
 /**************************************************************************//**
  * @file     ACMP.h
- * @version  V0.10
- * $Revision: 1 $
- * $Date: 16/07/07 7:50p $
- * @brief    M0564 Series ACMP Driver Header File
+ * @version  V3.00
+ * @brief    M2351 Series ACMP Driver Header File
  *
  * @note
  * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
