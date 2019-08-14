@@ -29,7 +29,7 @@ volatile uint8_t g_u8SlvEndFlag = 0;
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 volatile static I2C_FUNC s_I2C0HandlerFn = NULL;
-
+volatile uint8_t g_u8SlvTRxAbortFlag = 0;
 /*---------------------------------------------------------------------------------------------------------*/
 /*  I2C0 IRQ Handler                                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -97,8 +97,21 @@ void I2C_GCSlaveRx(uint32_t u32Status)
     }
     else
     {
-        /* TO DO */
-        printf("Status 0x%x is NOT processed\n", u32Status);
+        printf("[SlaveTRx] Status [0x%x] Unexpected abort!!\n", u32Status);
+        if(u32Status == 0x68)               /* Slave receive arbitration lost, clear SI */
+        {
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
+        }
+        else if(u32Status == 0xB0)          /* Address transmit arbitration lost, clear SI  */
+        {
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
+        }
+        else                                /* Slave bus error, stop I2C and clear SI */
+        {
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STO_SI);
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
+        }
+        g_u8SlvTRxAbortFlag = 1;
     }
 }
 
@@ -243,24 +256,38 @@ int32_t main(void)
     /* I2C function to Slave receive data */
     s_I2C0HandlerFn = I2C_GCSlaveRx;
 
-    printf("\n");
-    printf("Slave(GC Mode) waiting for receiving data.\n");
-    while(g_u8SlvEndFlag == 0);
-
-    /* Check receive data correct or not */
-    for(u32i = 0; u32i < 0x100; u32i++)
+    while(1)
     {
-        g_au8SlvTxData[0] = (uint8_t)((u32i & 0xFF00) >> 8);
-        g_au8SlvTxData[1] = (uint8_t)(u32i & 0x00FF);
-        g_au8SlvTxData[2] = (uint8_t)(g_au8SlvTxData[1] + 3);
-        if(g_au8SlvData[u32i] != g_au8SlvTxData[2])
-        {
-            printf("GC Mode Receive data fail.\n");
-            while(1);
-        }
-    }
+        printf("\n");
+        printf("Slave(GC Mode) waiting for receiving data.\n");
+        while(g_u8SlvEndFlag == 0 && g_u8SlvTRxAbortFlag == 0);
 
-    printf("GC Mode receive data OK.\n");
+        /* When I2C abort, clear SI to enter non-addressed SLV mode*/
+        if(g_u8SlvTRxAbortFlag)
+        {
+            g_u8SlvTRxAbortFlag = 0;
+
+            while(I2C0->CTL0 & I2C_CTL0_SI_Msk);
+            printf("I2C Slave re-start. status[0x%x]\n", I2C0->STATUS0);
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
+        }
+
+        /* Check receive data correct or not */
+        for(u32i = 0; u32i < 0x100; u32i++)
+        {
+            g_au8SlvTxData[0] = (uint8_t)((u32i & 0xFF00) >> 8);
+            g_au8SlvTxData[1] = (uint8_t)(u32i & 0x00FF);
+            g_au8SlvTxData[2] = (uint8_t)(g_au8SlvTxData[1] + 3);
+            if(g_au8SlvData[u32i] != g_au8SlvTxData[2])
+            {
+                printf("GC Mode Receive data fail.\n");
+                while(1);
+            }
+        }
+
+        printf("GC Mode receive data OK. Any key to continue.\n");
+        getchar();
+    }
 
     s_I2C0HandlerFn = NULL;
 
