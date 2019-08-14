@@ -22,8 +22,6 @@
 
 #define ENABLE_OHCI                         /* Enable OHCI host controller                */
 
-#define OHCI_PER_PORT_POWER                 /* OHCI root hub per port powered             */
-
 #define OHCI_ISO_DELAY         4            /* preserved number frames while scheduling 
                                                OHCI isochronous transfer                  */
 
