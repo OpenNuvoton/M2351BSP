@@ -201,14 +201,8 @@ static int  ohci_init(void)
     /* start controller operations                */
     _ohci->HcControl = HCFS_OPER | (0x3 << USBH_HcControl_CBSR_Pos);
 
-#ifdef OHCI_PER_PORT_POWER
-    _ohci->HcRhDescriptorB = 0x60000;
-    _ohci->HcRhPortStatus[0] = USBH_HcRhPortStatus_PPS_Msk;
-    _ohci->HcRhPortStatus[1] = USBH_HcRhPortStatus_PPS_Msk;
-#else
     _ohci->HcRhDescriptorA = (_ohci->HcRhDescriptorA | (1 << 9)) & ~USBH_HcRhDescriptorA_PSM_Msk;
     _ohci->HcRhStatus = USBH_HcRhStatus_LPSC_Msk;
-#endif
 
     _ohci->HcInterruptEnable = USBH_HcInterruptEnable_MIE_Msk | USBH_HcInterruptEnable_WDH_Msk | USBH_HcInterruptEnable_SF_Msk;
 
@@ -251,9 +245,7 @@ static void ohci_shutdown(void)
 {
     ohci_suspend();
     DISABLE_OHCI_IRQ();
-#ifndef OHCI_PER_PORT_POWER
     _ohci->HcRhStatus = USBH_HcRhStatus_LPS_Msk;
-#endif
 }
 
 

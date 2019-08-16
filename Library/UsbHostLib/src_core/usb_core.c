@@ -31,7 +31,7 @@ static CONN_FUNC  *g_conn_func, *g_disconn_func;
 
 
 /**
-  * @brief       Initialize M480 USB Host controller and USB stack.
+  * @brief       Initialize M2351 USB Host controller and USB stack.
   *
   * @return      None.
   */
@@ -49,8 +49,6 @@ void  usbh_core_init()
     usbh_hub_init();
 
     usbh_memory_init();
-
-    _ohci->HcRhDescriptorA |= USBH_HcRhDescriptorA_OCPM_Msk | USBH_HcRhDescriptorA_PSM_Msk; /* Individual over-current and power switching */
 
     _ohci->HcPhyControl &= ~USBH_HcPhyControl_STBYEN_Msk; /* Never enter the standby mode */
 
