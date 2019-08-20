@@ -20,7 +20,8 @@ extern uint8_t *g_au8ShaData;
 extern uint8_t g_au8ShaDigest[64];
 extern int32_t g_i32DataLen;
 
-static int32_t  g_i32DigestLength = 0;
+/* 160 bit length for SHA1 (20 bytes) */
+static int32_t  g_i32DigestLength = 20;
 
 static volatile int g_SHA_done;
 
