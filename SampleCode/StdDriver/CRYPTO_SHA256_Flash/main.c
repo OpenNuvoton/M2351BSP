@@ -60,15 +60,16 @@ void DEBUG_PORT_Init()
 }
 
 
-int32_t SHA256(uint32_t *pu32Addr, int32_t size, uint32_t digest[])
+int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t digest[])
 {
     int32_t i;
+    int32_t n;
 
     /* Enable CRYPTO */
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
     
     /* Init SHA */
-    CRPT->HMAC_CTL = (SHA_MODE_SHA256 << CRPT_HMAC_CTL_OPMODE_Pos) | CRPT_HMAC_CTL_INSWAP_Msk;
+    CRPT->HMAC_CTL = (u32Mode << CRPT_HMAC_CTL_OPMODE_Pos) | CRPT_HMAC_CTL_INSWAP_Msk;
     CRPT->HMAC_DMACNT = size;
     
     /* Calculate SHA */
@@ -95,11 +96,22 @@ int32_t SHA256(uint32_t *pu32Addr, int32_t size, uint32_t digest[])
     while(CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk);
     
     /* return SHA results */
-    for(i = 0; i < 8; i++)
+    if(u32Mode == SHA_MODE_SHA1)
+        n = 5;
+    else if(u32Mode == SHA_MODE_SHA224)
+        n = 7;
+    else if(u32Mode == SHA_MODE_SHA256)
+        n = 8;
+    else if(u32Mode == SHA_MODE_SHA384)
+        n = 12;
+    
+    for(i = 0; i < n; i++)
         digest[i] = CRPT->HMAC_DGST[i];
 
     return 0;
 }
+
+
 
 const __attribute__((aligned(4))) uint8_t g_au8Test[32] ={
 0x64,0x36,0x2E,0x4D,0x28,0x16,0x0D,0xB4,0x44,0xEF,0x39
@@ -110,7 +122,7 @@ const __attribute__((aligned(4))) uint8_t g_au8Test[32] ={
 /*-----------------------------------------------------------------------------*/
 int main(void)
 {
-    uint32_t hash[8] = {0};
+    uint32_t hash[16] = {0};
     int32_t i;
     
     SYS_UnlockReg();
@@ -132,12 +144,31 @@ int main(void)
     {
         printf("%02x", g_au8Test[i]);
     }
+    
     printf("\n");
+    SHAHash(SHA_MODE_SHA1, (uint32_t *)g_au8Test, 32, hash);
+    printf("\nOutput SHA1 Hash:\n");
+    for(i=0;i<5;i++)
+        printf("%08x",hash[i]);
+
+    printf("\n");
+    SHAHash(SHA_MODE_SHA224, (uint32_t *)g_au8Test, 32, hash);
+    printf("\nOutput SHA224 Hash:\n");
+    for(i=0;i<7;i++)
+        printf("%08x",hash[i]);
+
+    printf("\n");
+    SHAHash(SHA_MODE_SHA256, (uint32_t *)g_au8Test, 32, hash);
+    printf("\nOutput SHA256 Hash:\n");
+    for(i=0;i<8;i++)
+        printf("%08x",hash[i]);
     
-    SHA256((uint32_t *)g_au8Test, 32, hash);
+    printf("\n");
+    SHAHash(SHA_MODE_SHA384, (uint32_t *)g_au8Test, 32, hash);
+    printf("\nOutput SHA384 Hash:\n");
+    for(i=0;i<12;i++)
+        printf("%08x",hash[i]);
     
-    printf("\nOutput Hash:\n");
-    printf("%08x%08x%08x%08x%08x%08x%08x%08x\n", hash[0],hash[1],hash[2],hash[3],hash[4],hash[5],hash[6],hash[7]);
 
     while(1);
 }
