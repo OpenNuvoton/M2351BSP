@@ -22,6 +22,7 @@ uint32_t g_au8MyTDESKey[3][2] =
 uint32_t g_au32MyTDESIV[2] = {  0x12345678, 0x90abcdef };
 
 
+/* The input data for TDES test. NOTE: The input data size must be 8 bytes alignment */
 #ifdef __ICCARM__
 #pragma data_alignment=4
 uint8_t g_au8InputData[] =
@@ -30,7 +31,7 @@ uint8_t g_au8InputData[] =
 __attribute__((aligned(4))) uint8_t g_au8InputData[] =
 {
 #endif
-    0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF
+    0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x11, 0x22
 };
 
 
@@ -147,6 +148,14 @@ int32_t main(void)
     printf("|           Crypto TDES Driver Sample Code   |\n");
     printf("+--------------------------------------------+\n");
 
+    /* Check input data size */
+    if((sizeof(g_au8InputData) & 0x7) != 0)
+    {
+        printf("ERR: The input data size is not 8 bytes alignment.\n");
+        printf("     You may pad 0x0 to let it be 8 bytes alignment.\n");
+        goto lexit;
+    }
+    
     /* Enable crypto interrupt */
     NVIC_EnableIRQ(CRPT_IRQn);
     TDES_ENABLE_INT(CRPT);
@@ -183,6 +192,8 @@ int32_t main(void)
 
     printf("TDES decrypt done.\n\n");
     DumpBuffHex(g_au8InputData, sizeof(g_au8InputData));
+
+lexit:
 
     while(1);
 }
