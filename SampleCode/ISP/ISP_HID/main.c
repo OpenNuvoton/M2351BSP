@@ -7,6 +7,7 @@
  * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #include <stdio.h>
+#include <string.h>
 #include "targetdev.h"
 #include "hid_transfer.h"
 
@@ -65,8 +66,8 @@ void SYS_Init(void)
 int32_t main(void)
 {
     uint32_t u32TrimInit;
-    ISP_INFO_T      *pISPInfo;
-    BL_USBD_INFO_T  *pUSBDInfo;
+    volatile ISP_INFO_T      *pISPInfo;
+    volatile BL_USBD_INFO_T  *pUSBDInfo;
 
     pISPInfo = &g_ISPInfo;
     pUSBDInfo = &g_USBDInfo;
