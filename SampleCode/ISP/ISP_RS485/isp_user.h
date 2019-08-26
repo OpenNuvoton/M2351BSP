@@ -34,20 +34,13 @@
 #define	V6M_AIRCR_VECTKEY_DATA	        0x05FA0000UL
 #define V6M_AIRCR_SYSRESETREQ		    0x00000004UL
 
-extern void GetDataFlashInfo(uint32_t *addr, uint32_t *size);
-extern uint32_t GetApromSize(void);
 extern int ParseCmd(unsigned char *buffer, uint8_t len);
-extern uint32_t g_apromSize, g_dataFlashAddr, g_dataFlashSize;
+extern uint32_t g_u32apromSize, g_u32dataFlashAddr, g_u32dataFlashSize;
 
-//extern __align(4) uint8_t usb_rcvbuf[];
-//extern __align(4) uint8_t usb_sendbuf[];
-//extern __align(4) uint8_t response_buff[64];
 
-extern __attribute__((aligned(4))) uint8_t usb_rcvbuf[];
-extern __attribute__((aligned(4))) uint8_t usb_sendbuf[];
-extern __attribute__((aligned(4))) uint8_t response_buff[64];
+extern __attribute__((aligned(4))) uint8_t au8response_buff[64];
 
-extern uint8_t volatile bUsbDataReady;
+extern uint8_t volatile u8bUsbDataReady;
 #endif	// #ifndef ISP_USER_H
 
 /*** (C) COPYRIGHT 2017-2018 Nuvoton Technology Corp. ***/

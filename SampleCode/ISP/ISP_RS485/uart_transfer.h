@@ -17,9 +17,9 @@
 
 /*-------------------------------------------------------------*/
 
-extern uint8_t  uart_rcvbuf[];
-extern uint8_t volatile bUartDataReady;
-extern uint8_t volatile bufhead;
+extern uint8_t au8uart_rcvbuf[];
+extern uint8_t volatile u8bUartDataReady;
+extern uint8_t volatile u8bufhead;
 
 /*-------------------------------------------------------------*/
 void UART_Init(void);

@@ -37,8 +37,6 @@ void WriteData(unsigned int addr_start, unsigned int addr_end, unsigned int *dat
 int EraseAP(unsigned int addr_start, unsigned int size);
 void UpdateConfig(unsigned int *data, unsigned int *res);
 
-void GetDataFlashInfo(uint32_t *addr, uint32_t *size);
-
 #endif
 
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
