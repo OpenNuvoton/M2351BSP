@@ -183,7 +183,7 @@ uint32_t SDH_Swap32(uint32_t u32Val)
     u32Val |= (u32Buf << 8) & 0xff0000UL;
     u32Val |= (u32Buf >> 8) & 0xff00UL;
     u32Val |= (u32Buf >> 24) & 0xffUL;
-    return u32Buf;
+    return u32Val;
 }
 
 /* Get 16 bytes CID or CSD */
