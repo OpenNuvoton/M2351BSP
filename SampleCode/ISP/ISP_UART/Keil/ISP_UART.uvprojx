@@ -413,11 +413,6 @@
               <FilePath>..\isp_user.c</FilePath>
             </File>
             <File>
-              <FileName>targetdev.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\targetdev.c</FilePath>
-            </File>
-            <File>
               <FileName>uart_transfer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\uart_transfer.c</FilePath>

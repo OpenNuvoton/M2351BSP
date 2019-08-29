@@ -11,9 +11,9 @@
 #include <string.h>
 #include "isp_user.h"
 
-__attribute__((aligned(4))) uint8_t response_buff[64];
+__attribute__((aligned(4))) uint8_t au8response_buff[64];
 __attribute__((aligned(4))) static uint8_t aprom_buf[FMC_FLASH_PAGE_SIZE];
-uint32_t g_apromSize, g_dataFlashAddr, g_dataFlashSize;
+uint32_t g_u32apromSize, g_u32dataFlashAddr, g_u32dataFlashSize;
 
 static uint16_t Checksum(unsigned char *buf, int len)
 {
@@ -35,7 +35,7 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
     uint32_t lcmd, srclen, i;
     unsigned char *pSrc;
     static uint32_t	gcmd;
-    response = response_buff;
+    response = au8response_buff;
     pSrc = buffer;
     srclen = len;
     lcmd = inpw(pSrc);
@@ -65,24 +65,24 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         while (1);
     } else if (lcmd == CMD_CONNECT) {
         g_packno = 1;
-        outpw(response + 8, g_apromSize);
-        outpw(response + 12, g_dataFlashAddr);
+        outpw(response + 8, g_u32apromSize);
+        outpw(response + 12, g_u32dataFlashAddr);
         goto out;
     } else if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_ERASE_ALL)) {
-        EraseAP(FMC_APROM_BASE, (g_apromSize < g_dataFlashAddr) ? g_apromSize : g_dataFlashAddr); // erase APROM // g_dataFlashAddr, g_apromSize
+        EraseAP(FMC_APROM_BASE, (g_u32apromSize < g_u32dataFlashAddr) ? g_u32apromSize : g_u32dataFlashAddr); // erase APROM // g_dataFlashAddr, g_apromSize
 
         if (lcmd == CMD_ERASE_ALL) { //erase data flash
-            EraseAP(g_dataFlashAddr, g_dataFlashSize);
+            EraseAP(g_u32dataFlashAddr, g_u32dataFlashSize);
             UpdateConfig((uint32_t *)(response + 8), NULL);
         }
     }
 
     if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_UPDATE_DATAFLASH)) {
         if (lcmd == CMD_UPDATE_DATAFLASH) {
-            StartAddress = g_dataFlashAddr;
+            StartAddress = g_u32dataFlashAddr;
 
-            if (g_dataFlashSize) { //g_dataFlashAddr
-                EraseAP(g_dataFlashAddr, g_dataFlashSize);
+            if (g_u32dataFlashSize) { //g_dataFlashAddr
+                EraseAP(g_u32dataFlashAddr, g_u32dataFlashSize);
             } else {
                 goto out;
             }
