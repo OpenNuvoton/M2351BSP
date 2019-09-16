@@ -96,14 +96,14 @@ void I2C_SlaveTRx(I2C_T *i2c, uint32_t u32Status)
     else if (u32Status == 0xA8)                 /* Own SLA+R has been receive; ACK has been return */
     {
         g_u8SlvDataLen = 0;
-        u8data = au8ResponseBuff[g_u8SlvDataLen];
+        u8data = g_au8ResponseBuff[g_u8SlvDataLen];
         I2C_SET_DATA(i2c, u8data);
         g_u8SlvDataLen++;
         I2C_SET_CONTROL_REG(i2c, I2C_CTL_SI_AA);
     }
     else if (u32Status == 0xB8)
     {
-        u8data = au8ResponseBuff[g_u8SlvDataLen];
+        u8data = g_au8ResponseBuff[g_u8SlvDataLen];
         I2C_SET_DATA(i2c, u8data);
         g_u8SlvDataLen++;
         g_u8SlvDataLen &= 0x3F;
