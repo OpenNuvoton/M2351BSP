@@ -1,145 +1,168 @@
-/******************************************************************************
+/***************************************************************************//**
  * @file     isp_user.c
  * @brief    ISP Command source file
  * @version  0x32
- * @date     14, June, 2017
  *
  * @note
- * Copyright (C) 2016-2017 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include "isp_user.h"
 
-__attribute__((aligned(4))) uint8_t au8response_buff[64];
-__attribute__((aligned(4))) static uint8_t aprom_buf[FMC_FLASH_PAGE_SIZE];
-uint32_t g_u32apromSize, g_u32dataFlashAddr, g_u32dataFlashSize;
+__attribute__((aligned(4))) uint8_t g_au8ResponseBuff[64];
+__attribute__((aligned(4))) static uint8_t g_u8ApromBuf[FMC_FLASH_PAGE_SIZE];
+uint32_t g_u32ApromSize, g_u32DataFlashAddr, g_u32DataFlashSize;
 
 static uint16_t Checksum(unsigned char *buf, int len)
 {
     int i;
     uint16_t c;
 
-    for (c = 0, i = 0 ; i < len; i++) {
+    for(c = 0, i = 0 ; i < len; i++)
+    {
         c += buf[i];
     }
 
     return (c);
 }
 
-int ParseCmd(unsigned char *buffer, uint8_t len)
+int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
 {
-    static uint32_t StartAddress, StartAddress_bak, TotalLen, TotalLen_bak, LastDataLen, g_packno = 1;
-    uint8_t *response;
-    uint16_t lcksum;
-    uint32_t lcmd, srclen, i;
-    unsigned char *pSrc;
-    static uint32_t	gcmd;
-    response = au8response_buff;
-    pSrc = buffer;
-    srclen = len;
-    lcmd = inpw(pSrc);
-    outpw(response + 4, 0);
-    pSrc += 8;
-    srclen -= 8;
-    ReadData(Config0, Config0 + 16, (uint32_t *)(response + 8)); //read config
+    static uint32_t u32StartAddress, u32StartAddress_bak, u32TotalLen, u32TotalLen_bak, u32LastDataLen, u32PackNo = 1;
+    uint32_t u32PageAddress;
+    uint8_t *pu8Response;
+    uint16_t u16Lcksum;
+    uint32_t u32Lcmd, u32srclen, u32i;
+    uint8_t *pu8Src;
+    static uint32_t u32Gcmd;
+    pu8Response = g_au8ResponseBuff;
+    pu8Src = pu8Buffer;
+    u32srclen = u8len;
+    u32Lcmd = inpw(pu8Src);
+    outpw(pu8Response + 4, 0);
+    pu8Src += 8;
+    u32srclen -= 8;
+    
+    ReadData(Config0, Config0 + 16, (uint32_t *)(pu8Response + 8)); /* Read config */
 
-    if (lcmd == CMD_SYNC_PACKNO) {
-        g_packno = inpw(pSrc);
+    if(u32Lcmd == CMD_SYNC_PACKNO)
+    {
+        u32PackNo = inpw(pu8Src);
     }
 
-    if ((lcmd) && (lcmd != CMD_RESEND_PACKET)) {
-        gcmd = lcmd;
+    if((u32Lcmd) && (u32Lcmd != CMD_RESEND_PACKET))
+    {
+        u32Gcmd = u32Lcmd;
     }
 
-    if (lcmd == CMD_GET_FWVER) {
-        response[8] = FW_VERSION;
-    } else if (lcmd == CMD_GET_DEVICEID) {
-        outpw(response + 8, SYS->PDID);
+    if(u32Lcmd == CMD_GET_FWVER)
+    {
+        pu8Response[8] = FW_VERSION;
+    }
+    else if(u32Lcmd == CMD_GET_DEVICEID)
+    {
+        outpw(pu8Response + 8, SYS->PDID);
         goto out;
-    } else if (lcmd == CMD_RUN_APROM) {
+    }
+    else if(u32Lcmd == CMD_RUN_APROM)
+    {
         FMC_SetVectorPageAddr(FMC_APROM_BASE);
         NVIC_SystemReset();
 
         /* Trap the CPU */
-        while (1);
-    } else if (lcmd == CMD_CONNECT) {
-        g_packno = 1;
-        outpw(response + 8, g_u32apromSize);
-        outpw(response + 12, g_u32dataFlashAddr);
+        while(1);
+    }
+    else if(u32Lcmd == CMD_CONNECT)
+    {
+        u32PackNo = 1;
+        outpw(pu8Response + 8, g_u32ApromSize);
+        outpw(pu8Response + 12, g_u32DataFlashAddr);
         goto out;
-    } else if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_ERASE_ALL)) {
-        EraseAP(FMC_APROM_BASE, (g_u32apromSize < g_u32dataFlashAddr) ? g_u32apromSize : g_u32dataFlashAddr); // erase APROM // g_dataFlashAddr, g_apromSize
-
-        if (lcmd == CMD_ERASE_ALL) { //erase data flash
-            EraseAP(g_u32dataFlashAddr, g_u32dataFlashSize);
-            UpdateConfig((uint32_t *)(response + 8), NULL);
-        }
+    }
+    else if(u32Lcmd == CMD_ERASE_ALL)
+    {
+        EraseAP(FMC_APROM_BASE, g_u32ApromSize);
     }
 
-    if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_UPDATE_DATAFLASH)) {
-        if (lcmd == CMD_UPDATE_DATAFLASH) {
-            StartAddress = g_u32dataFlashAddr;
+    if((u32Lcmd == CMD_UPDATE_APROM) || (u32Lcmd == CMD_UPDATE_DATAFLASH))
+    {
+        if(u32Lcmd == CMD_UPDATE_DATAFLASH)
+        {
+            u32StartAddress = g_u32DataFlashAddr;
 
-            if (g_u32dataFlashSize) { //g_dataFlashAddr
-                EraseAP(g_u32dataFlashAddr, g_u32dataFlashSize);
-            } else {
+            if(g_u32DataFlashSize)    
+            {
+                EraseAP(g_u32DataFlashAddr, g_u32DataFlashSize);
+            }
+            else
+            {
                 goto out;
             }
-        } else {
-            StartAddress = 0;
+        }
+        else
+        {
+            u32StartAddress = inpw(pu8Src);
+            u32TotalLen = inpw(pu8Src + 4);
+            EraseAP(u32StartAddress, u32TotalLen);
         }
 
-        //StartAddress = inpw(pSrc);
-        TotalLen = inpw(pSrc + 4);
-        pSrc += 8;
-        srclen -= 8;
-        StartAddress_bak = StartAddress;
-        TotalLen_bak = TotalLen;
-    } else if (lcmd == CMD_UPDATE_CONFIG) {
-        UpdateConfig((uint32_t *)(pSrc), (uint32_t *)(response + 8));
+        u32TotalLen = inpw(pu8Src + 4);
+        pu8Src += 8;
+        u32srclen -= 8;
+        u32StartAddress_bak = u32StartAddress;
+        u32TotalLen_bak = u32TotalLen;
+    }
+    else if(u32Lcmd == CMD_UPDATE_CONFIG)
+    {
+        UpdateConfig((uint32_t *)(pu8Src), (uint32_t *)(pu8Response + 8));
         goto out;
-    } else if (lcmd == CMD_RESEND_PACKET) { //for APROM&Data flash only
-        uint32_t PageAddress;
-        StartAddress -= LastDataLen;
-        TotalLen += LastDataLen;
-        PageAddress = StartAddress & (0x100000 - FMC_FLASH_PAGE_SIZE);
+    }
+    else if(u32Lcmd == CMD_RESEND_PACKET)      /* for APROM and Data flash only */
+    {
+        u32StartAddress -= u32LastDataLen;
+        u32TotalLen += u32LastDataLen;
+        u32PageAddress = u32StartAddress & (0x100000 - FMC_FLASH_PAGE_SIZE);
 
-        if (PageAddress >= Config0) {
+        if(u32PageAddress >= Config0)
+        {
             goto out;
         }
 
-        ReadData(PageAddress, StartAddress, (uint32_t *)aprom_buf);
-        FMC_Erase_User(PageAddress);
-        WriteData(PageAddress, StartAddress, (uint32_t *)aprom_buf);
+        ReadData(u32PageAddress, u32StartAddress, (uint32_t *)g_u8ApromBuf);
+        FMC_Erase_User(u32PageAddress);
+        WriteData(u32PageAddress, u32StartAddress, (uint32_t *)g_u8ApromBuf);
 
-        if ((StartAddress % FMC_FLASH_PAGE_SIZE) >= (FMC_FLASH_PAGE_SIZE - LastDataLen)) {
-            FMC_Erase_User(PageAddress + FMC_FLASH_PAGE_SIZE);
+        if((u32StartAddress % FMC_FLASH_PAGE_SIZE) >= (FMC_FLASH_PAGE_SIZE - u32LastDataLen))
+        {
+            FMC_Erase_User(u32PageAddress + FMC_FLASH_PAGE_SIZE);
         }
 
         goto out;
     }
 
-    if ((gcmd == CMD_UPDATE_APROM) || (gcmd == CMD_UPDATE_DATAFLASH)) {
-        if (TotalLen < srclen) {
-            srclen = TotalLen;//prevent last package from over writing
+    if((u32Gcmd == CMD_UPDATE_APROM) || (u32Gcmd == CMD_UPDATE_DATAFLASH))
+    {
+        if(u32TotalLen < u32srclen)
+        {
+            u32srclen = u32TotalLen; /* prevent last package from over writing */
         }
 
-        TotalLen -= srclen;
-        WriteData(StartAddress, StartAddress + srclen, (uint32_t *)pSrc); //WriteData(StartAddress, StartAddress + srclen, (uint32_t*)pSrc);
-        memset(pSrc, 0, srclen);
-        ReadData(StartAddress, StartAddress + srclen, (uint32_t *)pSrc);
-        StartAddress += srclen;
-        LastDataLen =  srclen;
+        u32TotalLen -= u32srclen;
+        WriteData(u32StartAddress, u32StartAddress + u32srclen, (uint32_t *)pu8Src); 
+        memset(pu8Src, 0, u32srclen);
+        ReadData(u32StartAddress, u32StartAddress + u32srclen, (uint32_t *)pu8Src);
+        u32StartAddress += u32srclen;
+        u32LastDataLen =  u32srclen;
     }
 
 out:
-    lcksum = Checksum(buffer, len);
-    outps(response, lcksum);
-    ++g_packno;
-    outpw(response + 4, g_packno);
-    g_packno++;
+    u16Lcksum = Checksum(pu8Buffer, u8len);
+    outps(pu8Response, u16Lcksum);
+    ++u32PackNo;
+    outpw(pu8Response + 4, u32PackNo);
+    u32PackNo++;
     return 0;
 }
 
-/*** (C) COPYRIGHT 2016-2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
