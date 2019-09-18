@@ -62,23 +62,12 @@ static volatile uint32_t g_u32hiHour, g_u32loHour, g_u32hiMin, g_u32loMin, g_u32
   */
 void RTC_Open(S_RTC_TIME_DATA_T *sPt)
 {
-    RTC_T *pRTC;
+    RTC->INIT = RTC_INIT_KEY;
 
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
+    if(RTC->INIT != RTC_INIT_ACTIVE_Msk)
     {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
-    pRTC->INIT = RTC_INIT_KEY;
-
-    if(pRTC->INIT != RTC_INIT_ACTIVE_Msk)
-    {
-        pRTC->INIT = RTC_INIT_KEY;
-        while(pRTC->INIT != RTC_INIT_ACTIVE_Msk) {}
+        RTC->INIT = RTC_INIT_KEY;
+        while(RTC->INIT != RTC_INIT_ACTIVE_Msk) {}
     }
 
     if(sPt == 0)
@@ -125,16 +114,6 @@ void RTC_Close(void)
 void RTC_32KCalibration(int32_t i32FrequencyX10000)
 {
     uint64_t u64Compensate;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     /* u64Compensate = (uint64_t)(0x64000000000); */
     u64Compensate = (uint64_t)(0x2710000000000);
@@ -149,7 +128,7 @@ void RTC_32KCalibration(int32_t i32FrequencyX10000)
     }
 
     RTC_WaitAccessEnable();
-    pRTC->FREQADJ = (uint32_t)u64Compensate;
+    RTC->FREQADJ = (uint32_t)u64Compensate;
 }
 
 /**
@@ -173,35 +152,25 @@ void RTC_32KCalibration(int32_t i32FrequencyX10000)
 void RTC_GetDateAndTime(S_RTC_TIME_DATA_T *sPt)
 {
     uint32_t u32Tmp;
-    RTC_T *pRTC;
 
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
-    sPt->u32TimeScale = pRTC->CLKFMT & RTC_CLKFMT_24HEN_Msk;     /* 12/24-hour */
-    sPt->u32DayOfWeek = pRTC->WEEKDAY & RTC_WEEKDAY_WEEKDAY_Msk; /* Day of the week */
+    sPt->u32TimeScale = RTC->CLKFMT & RTC_CLKFMT_24HEN_Msk;     /* 12/24-hour */
+    sPt->u32DayOfWeek = RTC->WEEKDAY & RTC_WEEKDAY_WEEKDAY_Msk; /* Day of the week */
 
     /* Get [Date digit] data */
-    g_u32hiYear  = (pRTC->CAL & RTC_CAL_TENYEAR_Msk) >> RTC_CAL_TENYEAR_Pos;
-    g_u32loYear  = (pRTC->CAL & RTC_CAL_YEAR_Msk) >> RTC_CAL_YEAR_Pos;
-    g_u32hiMonth = (pRTC->CAL & RTC_CAL_TENMON_Msk) >> RTC_CAL_TENMON_Pos;
-    g_u32loMonth = (pRTC->CAL & RTC_CAL_MON_Msk) >> RTC_CAL_MON_Pos;
-    g_u32hiDay   = (pRTC->CAL & RTC_CAL_TENDAY_Msk) >> RTC_CAL_TENDAY_Pos;
-    g_u32loDay   = (pRTC->CAL & RTC_CAL_DAY_Msk) >> RTC_CAL_DAY_Pos;
+    g_u32hiYear  = (RTC->CAL & RTC_CAL_TENYEAR_Msk) >> RTC_CAL_TENYEAR_Pos;
+    g_u32loYear  = (RTC->CAL & RTC_CAL_YEAR_Msk) >> RTC_CAL_YEAR_Pos;
+    g_u32hiMonth = (RTC->CAL & RTC_CAL_TENMON_Msk) >> RTC_CAL_TENMON_Pos;
+    g_u32loMonth = (RTC->CAL & RTC_CAL_MON_Msk) >> RTC_CAL_MON_Pos;
+    g_u32hiDay   = (RTC->CAL & RTC_CAL_TENDAY_Msk) >> RTC_CAL_TENDAY_Pos;
+    g_u32loDay   = (RTC->CAL & RTC_CAL_DAY_Msk) >> RTC_CAL_DAY_Pos;
 
     /* Get [Time digit] data */
-    g_u32hiHour = (pRTC->TIME & RTC_TIME_TENHR_Msk) >> RTC_TIME_TENHR_Pos;
-    g_u32loHour = (pRTC->TIME & RTC_TIME_HR_Msk) >> RTC_TIME_HR_Pos;
-    g_u32hiMin  = (pRTC->TIME & RTC_TIME_TENMIN_Msk) >> RTC_TIME_TENMIN_Pos;
-    g_u32loMin  = (pRTC->TIME & RTC_TIME_MIN_Msk) >> RTC_TIME_MIN_Pos;
-    g_u32hiSec  = (pRTC->TIME & RTC_TIME_TENSEC_Msk) >> RTC_TIME_TENSEC_Pos;
-    g_u32loSec  = (pRTC->TIME & RTC_TIME_SEC_Msk) >> RTC_TIME_SEC_Pos;
+    g_u32hiHour = (RTC->TIME & RTC_TIME_TENHR_Msk) >> RTC_TIME_TENHR_Pos;
+    g_u32loHour = (RTC->TIME & RTC_TIME_HR_Msk) >> RTC_TIME_HR_Pos;
+    g_u32hiMin  = (RTC->TIME & RTC_TIME_TENMIN_Msk) >> RTC_TIME_TENMIN_Pos;
+    g_u32loMin  = (RTC->TIME & RTC_TIME_MIN_Msk) >> RTC_TIME_MIN_Pos;
+    g_u32hiSec  = (RTC->TIME & RTC_TIME_TENSEC_Msk) >> RTC_TIME_TENSEC_Pos;
+    g_u32loSec  = (RTC->TIME & RTC_TIME_SEC_Msk) >> RTC_TIME_SEC_Pos;
 
     /* Compute to 20XX year */
     u32Tmp  = (g_u32hiYear * 10UL);
@@ -278,37 +247,27 @@ void RTC_GetDateAndTime(S_RTC_TIME_DATA_T *sPt)
 void RTC_GetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
 {
     uint32_t u32Tmp;
-    RTC_T *pRTC;
 
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
-    sPt->u32TimeScale = pRTC->CLKFMT & RTC_CLKFMT_24HEN_Msk;     /* 12/24-hour */
-    sPt->u32DayOfWeek = pRTC->WEEKDAY & RTC_WEEKDAY_WEEKDAY_Msk; /* Day of the week */
+    sPt->u32TimeScale = RTC->CLKFMT & RTC_CLKFMT_24HEN_Msk;     /* 12/24-hour */
+    sPt->u32DayOfWeek = RTC->WEEKDAY & RTC_WEEKDAY_WEEKDAY_Msk; /* Day of the week */
 
     /* Get alarm [Date digit] data */
     RTC_WaitAccessEnable();
-    g_u32hiYear  = (pRTC->CALM & RTC_CALM_TENYEAR_Msk) >> RTC_CALM_TENYEAR_Pos;
-    g_u32loYear  = (pRTC->CALM & RTC_CALM_YEAR_Msk) >> RTC_CALM_YEAR_Pos;
-    g_u32hiMonth = (pRTC->CALM & RTC_CALM_TENMON_Msk) >> RTC_CALM_TENMON_Pos;
-    g_u32loMonth = (pRTC->CALM & RTC_CALM_MON_Msk) >> RTC_CALM_MON_Pos;
-    g_u32hiDay   = (pRTC->CALM & RTC_CALM_TENDAY_Msk) >> RTC_CALM_TENDAY_Pos;
-    g_u32loDay   = (pRTC->CALM & RTC_CALM_DAY_Msk) >> RTC_CALM_DAY_Pos;
+    g_u32hiYear  = (RTC->CALM & RTC_CALM_TENYEAR_Msk) >> RTC_CALM_TENYEAR_Pos;
+    g_u32loYear  = (RTC->CALM & RTC_CALM_YEAR_Msk) >> RTC_CALM_YEAR_Pos;
+    g_u32hiMonth = (RTC->CALM & RTC_CALM_TENMON_Msk) >> RTC_CALM_TENMON_Pos;
+    g_u32loMonth = (RTC->CALM & RTC_CALM_MON_Msk) >> RTC_CALM_MON_Pos;
+    g_u32hiDay   = (RTC->CALM & RTC_CALM_TENDAY_Msk) >> RTC_CALM_TENDAY_Pos;
+    g_u32loDay   = (RTC->CALM & RTC_CALM_DAY_Msk) >> RTC_CALM_DAY_Pos;
 
     /* Get alarm [Time digit] data */
     RTC_WaitAccessEnable();
-    g_u32hiHour = (pRTC->TALM & RTC_TALM_TENHR_Msk) >> RTC_TALM_TENHR_Pos;
-    g_u32loHour = (pRTC->TALM & RTC_TALM_HR_Msk) >> RTC_TALM_HR_Pos;
-    g_u32hiMin  = (pRTC->TALM & RTC_TALM_TENMIN_Msk) >> RTC_TALM_TENMIN_Pos;
-    g_u32loMin  = (pRTC->TALM & RTC_TALM_MIN_Msk) >> RTC_TALM_MIN_Pos;
-    g_u32hiSec  = (pRTC->TALM & RTC_TALM_TENSEC_Msk) >> RTC_TALM_TENSEC_Pos;
-    g_u32loSec  = (pRTC->TALM & RTC_TALM_SEC_Msk) >> RTC_TALM_SEC_Pos;
+    g_u32hiHour = (RTC->TALM & RTC_TALM_TENHR_Msk) >> RTC_TALM_TENHR_Pos;
+    g_u32loHour = (RTC->TALM & RTC_TALM_HR_Msk) >> RTC_TALM_HR_Pos;
+    g_u32hiMin  = (RTC->TALM & RTC_TALM_TENMIN_Msk) >> RTC_TALM_TENMIN_Pos;
+    g_u32loMin  = (RTC->TALM & RTC_TALM_MIN_Msk) >> RTC_TALM_MIN_Pos;
+    g_u32hiSec  = (RTC->TALM & RTC_TALM_TENSEC_Msk) >> RTC_TALM_TENSEC_Pos;
+    g_u32loSec  = (RTC->TALM & RTC_TALM_SEC_Msk) >> RTC_TALM_SEC_Pos;
 
     /* Compute to 20XX year */
     u32Tmp  = (g_u32hiYear * 10UL);
@@ -387,16 +346,6 @@ void RTC_GetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
 void RTC_SetDateAndTime(S_RTC_TIME_DATA_T *sPt)
 {
     uint32_t u32RegCAL, u32RegTIME;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     if(sPt == 0)
     {
@@ -410,7 +359,7 @@ void RTC_SetDateAndTime(S_RTC_TIME_DATA_T *sPt)
         RTC_WaitAccessEnable();
         if(sPt->u32TimeScale == (uint32_t)RTC_CLOCK_12)
         {
-            pRTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
+            RTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
 
             /*-------------------------------------------------------------------------------------------------*/
             /* Important, range of 12-hour PM mode is 21 up to 32                                               */
@@ -422,11 +371,11 @@ void RTC_SetDateAndTime(S_RTC_TIME_DATA_T *sPt)
         }
         else
         {
-            pRTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
+            RTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
         }
 
         /* Set Day of the Week */
-        pRTC->WEEKDAY = sPt->u32DayOfWeek;
+        RTC->WEEKDAY = sPt->u32DayOfWeek;
 
         /*-----------------------------------------------------------------------------------------------------*/
         /* Set RTC Current Date and Time                                                                       */
@@ -449,9 +398,9 @@ void RTC_SetDateAndTime(S_RTC_TIME_DATA_T *sPt)
         /* Set RTC Calender and Time Loading                                                                   */
         /*-----------------------------------------------------------------------------------------------------*/
         RTC_WaitAccessEnable();
-        pRTC->CAL  = (uint32_t)u32RegCAL;
+        RTC->CAL  = (uint32_t)u32RegCAL;
         RTC_WaitAccessEnable();
-        pRTC->TIME = (uint32_t)u32RegTIME;
+        RTC->TIME = (uint32_t)u32RegTIME;
     }
 }
 
@@ -478,16 +427,6 @@ void RTC_SetDateAndTime(S_RTC_TIME_DATA_T *sPt)
 void RTC_SetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
 {
     uint32_t u32RegCALM, u32RegTALM;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     if(sPt == 0)
     {
@@ -501,7 +440,7 @@ void RTC_SetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
         RTC_WaitAccessEnable();
         if(sPt->u32TimeScale == (uint32_t)RTC_CLOCK_12)
         {
-            pRTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
+            RTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
 
             /*-------------------------------------------------------------------------------------------------*/
             /* Important, range of 12-hour PM mode is 21 up to 32                                               */
@@ -513,7 +452,7 @@ void RTC_SetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
         }
         else
         {
-            pRTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
+            RTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
         }
 
         /*-----------------------------------------------------------------------------------------------------*/
@@ -534,9 +473,9 @@ void RTC_SetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
         u32RegTALM |= (sPt->u32Second % 10UL);
 
         RTC_WaitAccessEnable();
-        pRTC->CALM = (uint32_t)u32RegCALM;
+        RTC->CALM = (uint32_t)u32RegCALM;
         RTC_WaitAccessEnable();
-        pRTC->TALM = (uint32_t)u32RegTALM;
+        RTC->TALM = (uint32_t)u32RegTALM;
     }
 }
 
@@ -557,16 +496,6 @@ void RTC_SetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
 void RTC_SetDate(uint32_t u32Year, uint32_t u32Month, uint32_t u32Day, uint32_t u32DayOfWeek)
 {
     uint32_t u32RegCAL;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     u32RegCAL  = ((u32Year - (uint32_t)RTC_YEAR2000) / 10UL) << 20;
     u32RegCAL |= (((u32Year - (uint32_t)RTC_YEAR2000) % 10UL) << 16);
@@ -575,14 +504,13 @@ void RTC_SetDate(uint32_t u32Year, uint32_t u32Month, uint32_t u32Day, uint32_t 
     u32RegCAL |= ((u32Day   / 10UL) << 4);
     u32RegCAL |= (u32Day   % 10UL);
 
-    RTC_WaitAccessEnable();
-
     /* Set Day of the Week */
-    pRTC->WEEKDAY = u32DayOfWeek & RTC_WEEKDAY_WEEKDAY_Msk;
+    RTC_WaitAccessEnable();
+    RTC->WEEKDAY = u32DayOfWeek & RTC_WEEKDAY_WEEKDAY_Msk;
 
     /* Set RTC Calender Loading */
     RTC_WaitAccessEnable();
-    pRTC->CAL = (uint32_t)u32RegCAL;
+    RTC->CAL = (uint32_t)u32RegCAL;
 }
 
 /**
@@ -601,16 +529,6 @@ void RTC_SetDate(uint32_t u32Year, uint32_t u32Month, uint32_t u32Day, uint32_t 
 void RTC_SetTime(uint32_t u32Hour, uint32_t u32Minute, uint32_t u32Second, uint32_t u32TimeMode, uint32_t u32AmPm)
 {
     uint32_t u32RegTIME;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     /* Important, range of 12-hour PM mode is 21 up to 32 */
     if((u32TimeMode == (uint32_t)RTC_CLOCK_12) && (u32AmPm == (uint32_t)RTC_PM))
@@ -631,15 +549,15 @@ void RTC_SetTime(uint32_t u32Hour, uint32_t u32Minute, uint32_t u32Second, uint3
     RTC_WaitAccessEnable();
     if(u32TimeMode == (uint32_t)RTC_CLOCK_12)
     {
-        pRTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
+        RTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
     }
     else
     {
-        pRTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
+        RTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
     }
 
     RTC_WaitAccessEnable();
-    pRTC->TIME = (uint32_t)u32RegTIME;
+    RTC->TIME = (uint32_t)u32RegTIME;
 }
 
 /**
@@ -656,16 +574,6 @@ void RTC_SetTime(uint32_t u32Hour, uint32_t u32Minute, uint32_t u32Second, uint3
 void RTC_SetAlarmDate(uint32_t u32Year, uint32_t u32Month, uint32_t u32Day)
 {
     uint32_t u32RegCALM;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     u32RegCALM  = ((u32Year - (uint32_t)RTC_YEAR2000) / 10UL) << 20;
     u32RegCALM |= (((u32Year - (uint32_t)RTC_YEAR2000) % 10UL) << 16);
@@ -674,10 +582,9 @@ void RTC_SetAlarmDate(uint32_t u32Year, uint32_t u32Month, uint32_t u32Day)
     u32RegCALM |= ((u32Day   / 10UL) << 4);
     u32RegCALM |= (u32Day   % 10UL);
 
-    RTC_WaitAccessEnable();
-
     /* Set RTC Alarm Date */
-    pRTC->CALM = (uint32_t)u32RegCALM;
+    RTC_WaitAccessEnable();
+    RTC->CALM = (uint32_t)u32RegCALM;
 }
 
 /**
@@ -696,16 +603,6 @@ void RTC_SetAlarmDate(uint32_t u32Year, uint32_t u32Month, uint32_t u32Day)
 void RTC_SetAlarmTime(uint32_t u32Hour, uint32_t u32Minute, uint32_t u32Second, uint32_t u32TimeMode, uint32_t u32AmPm)
 {
     uint32_t u32RegTALM;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     /* Important, range of 12-hour PM mode is 21 up to 32 */
     if((u32TimeMode == (uint32_t)RTC_CLOCK_12) && (u32AmPm == (uint32_t)RTC_PM))
@@ -726,16 +623,16 @@ void RTC_SetAlarmTime(uint32_t u32Hour, uint32_t u32Minute, uint32_t u32Second, 
     RTC_WaitAccessEnable();
     if(u32TimeMode == (uint32_t)RTC_CLOCK_12)
     {
-        pRTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
+        RTC->CLKFMT &= ~RTC_CLKFMT_24HEN_Msk;
     }
     else
     {
-        pRTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
+        RTC->CLKFMT |= RTC_CLKFMT_24HEN_Msk;
     }
 
     /* Set RTC Alarm Time */
     RTC_WaitAccessEnable();
-    pRTC->TALM = (uint32_t)u32RegTALM;
+    RTC->TALM = (uint32_t)u32RegTALM;
 }
 
 /**
@@ -754,24 +651,13 @@ void RTC_SetAlarmTime(uint32_t u32Hour, uint32_t u32Minute, uint32_t u32Second, 
   */
 void RTC_SetAlarmDateMask(uint8_t u8IsTenYMsk, uint8_t u8IsYMsk, uint8_t u8IsTenMMsk, uint8_t u8IsMMsk, uint8_t u8IsTenDMsk, uint8_t u8IsDMsk)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
     RTC_WaitAccessEnable();
-    pRTC->CAMSK = ((uint32_t)u8IsTenYMsk << RTC_CAMSK_MTENYEAR_Pos) |
-                  ((uint32_t)u8IsYMsk    << RTC_CAMSK_MYEAR_Pos) |
-                  ((uint32_t)u8IsTenMMsk << RTC_CAMSK_MTENMON_Pos) |
-                  ((uint32_t)u8IsMMsk    << RTC_CAMSK_MMON_Pos) |
-                  ((uint32_t)u8IsTenDMsk << RTC_CAMSK_MTENDAY_Pos) |
-                  ((uint32_t)u8IsDMsk    << RTC_CAMSK_MDAY_Pos);
+    RTC->CAMSK = ((uint32_t)u8IsTenYMsk << RTC_CAMSK_MTENYEAR_Pos) |
+                 ((uint32_t)u8IsYMsk    << RTC_CAMSK_MYEAR_Pos) |
+                 ((uint32_t)u8IsTenMMsk << RTC_CAMSK_MTENMON_Pos) |
+                 ((uint32_t)u8IsMMsk    << RTC_CAMSK_MMON_Pos) |
+                 ((uint32_t)u8IsTenDMsk << RTC_CAMSK_MTENDAY_Pos) |
+                 ((uint32_t)u8IsDMsk    << RTC_CAMSK_MDAY_Pos);
 }
 
 /**
@@ -790,24 +676,13 @@ void RTC_SetAlarmDateMask(uint8_t u8IsTenYMsk, uint8_t u8IsYMsk, uint8_t u8IsTen
   */
 void RTC_SetAlarmTimeMask(uint8_t u8IsTenHMsk, uint8_t u8IsHMsk, uint8_t u8IsTenMMsk, uint8_t u8IsMMsk, uint8_t u8IsTenSMsk, uint8_t u8IsSMsk)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
     RTC_WaitAccessEnable();
-    pRTC->TAMSK = ((uint32_t)u8IsTenHMsk << RTC_TAMSK_MTENHR_Pos) |
-                  ((uint32_t)u8IsHMsk    << RTC_TAMSK_MHR_Pos) |
-                  ((uint32_t)u8IsTenMMsk << RTC_TAMSK_MTENMIN_Pos) |
-                  ((uint32_t)u8IsMMsk    << RTC_TAMSK_MMIN_Pos) |
-                  ((uint32_t)u8IsTenSMsk << RTC_TAMSK_MTENSEC_Pos) |
-                  ((uint32_t)u8IsSMsk    << RTC_TAMSK_MSEC_Pos);
+    RTC->TAMSK = ((uint32_t)u8IsTenHMsk << RTC_TAMSK_MTENHR_Pos) |
+                 ((uint32_t)u8IsHMsk    << RTC_TAMSK_MHR_Pos) |
+                 ((uint32_t)u8IsTenMMsk << RTC_TAMSK_MTENMIN_Pos) |
+                 ((uint32_t)u8IsMMsk    << RTC_TAMSK_MMIN_Pos) |
+                 ((uint32_t)u8IsTenSMsk << RTC_TAMSK_MTENSEC_Pos) |
+                 ((uint32_t)u8IsSMsk    << RTC_TAMSK_MSEC_Pos);
 }
 
 /**
@@ -827,18 +702,7 @@ void RTC_SetAlarmTimeMask(uint8_t u8IsTenHMsk, uint8_t u8IsHMsk, uint8_t u8IsTen
   */
 uint32_t RTC_GetDayOfWeek(void)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
-    return (pRTC->WEEKDAY & RTC_WEEKDAY_WEEKDAY_Msk);
+    return (RTC->WEEKDAY & RTC_WEEKDAY_WEEKDAY_Msk);
 }
 
 /**
@@ -861,20 +725,9 @@ uint32_t RTC_GetDayOfWeek(void)
   */
 void RTC_SetTickPeriod(uint32_t u32TickSelection)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
     RTC_WaitAccessEnable();
 
-    pRTC->TICK = (pRTC->TICK & ~RTC_TICK_TICK_Msk) | u32TickSelection;
+    RTC->TICK = (RTC->TICK & ~RTC_TICK_TICK_Msk) | u32TickSelection;
 }
 
 /**
@@ -898,18 +751,7 @@ void RTC_SetTickPeriod(uint32_t u32TickSelection)
   */
 void RTC_EnableInt(uint32_t u32IntFlagMask)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
-    pRTC->INTEN |= u32IntFlagMask;
+    RTC->INTEN |= u32IntFlagMask;
 }
 
 /**
@@ -933,19 +775,8 @@ void RTC_EnableInt(uint32_t u32IntFlagMask)
   */
 void RTC_DisableInt(uint32_t u32IntFlagMask)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
-    pRTC->INTEN  &= ~u32IntFlagMask;
-    pRTC->INTSTS = u32IntFlagMask;
+    RTC->INTEN  &= ~u32IntFlagMask;
+    RTC->INTSTS = u32IntFlagMask;
 }
 
 /**
@@ -959,20 +790,9 @@ void RTC_DisableInt(uint32_t u32IntFlagMask)
   */
 void RTC_EnableSpareAccess(void)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
     RTC_WaitAccessEnable();
 
-    pRTC->SPRCTL |= RTC_SPRCTL_SPRRWEN_Msk;
+    RTC->SPRCTL |= RTC_SPRCTL_SPRRWEN_Msk;
 }
 
 /**
@@ -986,20 +806,9 @@ void RTC_EnableSpareAccess(void)
   */
 void RTC_DisableSpareRegister(void)
 {
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
-
     RTC_WaitAccessEnable();
 
-    pRTC->SPRCTL &= ~RTC_SPRCTL_SPRRWEN_Msk;
+    RTC->SPRCTL &= ~RTC_SPRCTL_SPRRWEN_Msk;
 }
 
 /**
@@ -1031,19 +840,9 @@ void RTC_StaticTamperEnable(uint32_t u32TamperSelect, uint32_t u32DetecLevel, ui
     uint32_t i;
     uint32_t u32Reg;
     uint32_t u32TmpReg;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     RTC_WaitAccessEnable();
-    u32Reg = pRTC->TAMPCTL;
+    u32Reg = RTC->TAMPCTL;
 
     u32TmpReg = (RTC_TAMPCTL_TAMP0EN_Msk | (u32DetecLevel << RTC_TAMPCTL_TAMP0LV_Pos) |
                  (u32DebounceEn << RTC_TAMPCTL_TAMP0DBEN_Pos));
@@ -1058,7 +857,7 @@ void RTC_StaticTamperEnable(uint32_t u32TamperSelect, uint32_t u32DetecLevel, ui
     }
 
     RTC_WaitAccessEnable();
-    pRTC->TAMPCTL = u32Reg;
+    RTC->TAMPCTL = u32Reg;
 
 }
 
@@ -1082,19 +881,9 @@ void RTC_StaticTamperDisable(uint32_t u32TamperSelect)
     uint32_t i;
     uint32_t u32Reg;
     uint32_t u32TmpReg;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     RTC_WaitAccessEnable();
-    u32Reg = pRTC->TAMPCTL;
+    u32Reg = RTC->TAMPCTL;
 
     u32TmpReg = (RTC_TAMPCTL_TAMP0EN_Msk);
 
@@ -1107,7 +896,7 @@ void RTC_StaticTamperDisable(uint32_t u32TamperSelect)
     }
 
     RTC_WaitAccessEnable();
-    pRTC->TAMPCTL = u32Reg;
+    RTC->TAMPCTL = u32Reg;
 }
 
 /**
@@ -1140,19 +929,9 @@ void RTC_DynamicTamperEnable(uint32_t u32PairSel, uint32_t u32DebounceEn, uint32
     uint32_t u32Reg;
     uint32_t u32TmpReg;
     uint32_t u32Tamper2Debounce, u32Tamper4Debounce;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     RTC_WaitAccessEnable();
-    u32Reg = pRTC->TAMPCTL;
+    u32Reg = RTC->TAMPCTL;
     u32Reg &= ~(RTC_TAMPCTL_TAMP0EN_Msk | RTC_TAMPCTL_TAMP1EN_Msk | RTC_TAMPCTL_TAMP2EN_Msk |
                 RTC_TAMPCTL_TAMP3EN_Msk | RTC_TAMPCTL_TAMP4EN_Msk | RTC_TAMPCTL_TAMP5EN_Msk);
 
@@ -1196,7 +975,7 @@ void RTC_DynamicTamperEnable(uint32_t u32PairSel, uint32_t u32DebounceEn, uint32
     }
 
     RTC_WaitAccessEnable();
-    pRTC->TAMPCTL = u32Reg;
+    RTC->TAMPCTL = u32Reg;
 }
 
 /**
@@ -1217,19 +996,9 @@ void RTC_DynamicTamperDisable(uint32_t u32PairSel)
     uint32_t u32Reg;
     uint32_t u32TmpReg;
     uint32_t u32Tamper2En = 0UL, u32Tamper4En = 0UL;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     RTC_WaitAccessEnable();
-    u32Reg = pRTC->TAMPCTL;
+    u32Reg = RTC->TAMPCTL;
 
     if((u32Reg & (uint32_t)RTC_TAMPCTL_DYN1ISS_Msk) && (u32PairSel & (uint32_t)RTC_PAIR1_SELECT))
     {
@@ -1254,7 +1023,7 @@ void RTC_DynamicTamperDisable(uint32_t u32PairSel)
     u32Reg |= (u32Tamper2En | u32Tamper4En);
 
     RTC_WaitAccessEnable();
-    pRTC->TAMPCTL = u32Reg;
+    RTC->TAMPCTL = u32Reg;
 }
 
 /**
@@ -1288,19 +1057,9 @@ void RTC_DynamicTamperDisable(uint32_t u32PairSel)
 void RTC_DynamicTamperConfig(uint32_t u32ChangeRate, uint32_t u32SeedReload, uint32_t u32RefPattern, uint32_t u32Seed)
 {
     uint32_t u32Reg;
-    RTC_T *pRTC;
-
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        pRTC = RTC_NS;
-    }
-    else
-    {
-        pRTC = RTC;
-    }
 
     RTC_WaitAccessEnable();
-    u32Reg = pRTC->TAMPCTL;
+    u32Reg = RTC->TAMPCTL;
 
     u32Reg &= ~(RTC_TAMPCTL_DYNSRC_Msk | RTC_TAMPCTL_SEEDRLD_Msk | RTC_TAMPCTL_DYNRATE_Msk);
 
@@ -1308,8 +1067,8 @@ void RTC_DynamicTamperConfig(uint32_t u32ChangeRate, uint32_t u32SeedReload, uin
               ((u32RefPattern & 0x3UL) << RTC_TAMPCTL_DYNSRC_Pos);
 
     RTC_WaitAccessEnable();
-    pRTC->TAMPSEED = u32Seed; /* need set seed value before re-loade seed */
-    pRTC->TAMPCTL = u32Reg;
+    RTC->TAMPSEED = u32Seed; /* need set seed value before re-loade seed */
+    RTC->TAMPCTL = u32Reg;
 }
 
 /*@}*/ /* end of group RTC_EXPORTED_FUNCTIONS */

@@ -311,14 +311,7 @@ __STATIC_INLINE void RTC_WaitAccessEnable(void);
   */
 __STATIC_INLINE void RTC_WaitAccessEnable(void)
 {
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
-    {
-        while((RTC_NS->RWEN & RTC_RWEN_RWENF_Msk) == 0x0UL) {}
-    }
-    else
-    {
-        while((RTC->RWEN & RTC_RWEN_RWENF_Msk) == 0x0UL) {}
-    }
+    while((RTC->RWEN & RTC_RWEN_RWENF_Msk) == 0x0UL) {}
 }
 
 void RTC_Open(S_RTC_TIME_DATA_T *sPt);
