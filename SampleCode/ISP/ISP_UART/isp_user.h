@@ -2,10 +2,9 @@
  * @file     isp_user.h
  * @brief    ISP Command header file
  * @version  0x32
- * @date     14, June, 2017
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef ISP_USER_H
 #define ISP_USER_H
@@ -35,13 +34,13 @@
 #define V6M_AIRCR_SYSRESETREQ		    0x00000004UL
 
 
-extern int ParseCmd(unsigned char *buffer, uint8_t len);
-extern uint32_t g_u32apromSize, g_u32dataFlashAddr, g_u32dataFlashSize;
+extern int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len);
+extern uint32_t g_u32ApromSize, g_u32DataFlashAddr, g_u32DataFlashSize;
 
 
-extern __attribute__((aligned(4))) uint8_t au8response_buff[64];
+extern __attribute__((aligned(4))) uint8_t g_au8ResponseBuff[64];
 
 extern uint8_t volatile u8bUsbDataReady;
 #endif	// #ifndef ISP_USER_H
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/

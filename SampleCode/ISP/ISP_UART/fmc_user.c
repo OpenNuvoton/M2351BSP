@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include "fmc_user.h"
 
+#define FMC_BLOCK_SIZE           (FMC_FLASH_PAGE_SIZE * 4UL)
+
 
 int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end, unsigned int *data)
 {
@@ -115,8 +117,6 @@ void WriteData(unsigned int addr_start, unsigned int addr_end, unsigned int *dat
     FMC_Proc(FMC_ISPCMD_PROGRAM, addr_start, addr_end, data);
     return;
 }
-
-#define FMC_BLOCK_SIZE           (FMC_FLASH_PAGE_SIZE * 4UL)
 
 int EraseAP(unsigned int addr_start, unsigned int size)
 {
