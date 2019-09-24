@@ -13,10 +13,10 @@
 #include "targetdev.h"
 #include "uart_transfer.h"
 
-__attribute__((aligned(4))) uint8_t au8uart_rcvbuf[MAX_PKT_SIZE] = {0};
+__attribute__((aligned(4))) uint8_t g_au8uart_rcvbuf[MAX_PKT_SIZE] = {0};
 
-uint8_t volatile u8bUartDataReady = 0;
-uint8_t volatile u8bufhead = 0;
+uint8_t volatile g_u8bUartDataReady = 0;
+uint8_t volatile g_u8bufhead = 0;
 
 
 /* please check "targetdev.h" for chip specific define option */
@@ -33,25 +33,25 @@ void UART0_IRQHandler(void)
     if (u32IntSrc & (UART_INTSTS_RXTOIF_Msk|UART_INTSTS_RDAIF_Msk) ) 
     {
         /* Read data until RX FIFO is empty or data is over maximum packet size */ 
-        while (((UART0->FIFOSTS & UART_FIFOSTS_RXEMPTY_Msk) == 0) && (u8bufhead < MAX_PKT_SIZE)) 
+        while (((UART0->FIFOSTS & UART_FIFOSTS_RXEMPTY_Msk) == 0) && (g_u8bufhead < MAX_PKT_SIZE)) 
         {
-            au8uart_rcvbuf[u8bufhead++] = UART0->DAT;
+            g_au8uart_rcvbuf[g_u8bufhead++] = UART0->DAT;
         }
     }
 
     /* Reset data buffer index */
-    if (u8bufhead == MAX_PKT_SIZE)
+    if (g_u8bufhead == MAX_PKT_SIZE)
     {
-        u8bUartDataReady = TRUE;
-        u8bufhead = 0;
+        g_u8bUartDataReady = TRUE;
+        g_u8bufhead = 0;
     }
     else if (u32IntSrc & UART_INTSTS_RXTOIF_Msk)
     {
-        u8bufhead = 0;
+        g_u8bufhead = 0;
     }
 }
 
-extern __attribute__((aligned(4))) uint8_t au8response_buff[64];
+extern __attribute__((aligned(4))) uint8_t g_au8ResponseBuff[64];
 void PutString(void)
 {
     uint32_t i;
@@ -63,7 +63,7 @@ void PutString(void)
         while ((UART0->FIFOSTS & UART_FIFOSTS_TXFULL_Msk));
 
         /* UART send data */        
-        UART0->DAT = au8response_buff[i];
+        UART0->DAT = g_au8ResponseBuff[i];
     }
 }
 

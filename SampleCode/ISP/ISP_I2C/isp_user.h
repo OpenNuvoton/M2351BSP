@@ -39,9 +39,9 @@ extern uint32_t GetApromSize(void);
 extern int ParseCmd(unsigned char *buffer, uint8_t len);
 extern uint32_t g_u32ApromSize, g_u32DataFlashAddr, g_u32DataFlashSize;
 
-extern __attribute__((aligned(4))) uint8_t au8UsbRcvBuf[];
-extern __attribute__((aligned(4))) uint8_t au8UsbSendBuf[];
-extern __attribute__((aligned(4))) uint8_t au8ResponseBuff[64];
+extern __attribute__((aligned(4))) uint8_t g_au8UsbRcvBuf[];
+extern __attribute__((aligned(4))) uint8_t g_au8UsbSendBuf[];
+extern __attribute__((aligned(4))) uint8_t g_au8ResponseBuff[64];
 
 extern uint8_t volatile bUsbDataReady;
 #endif	/* #ifndef ISP_USER_H */

@@ -91,13 +91,13 @@ int32_t main(void)
     FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
     
     /* Get Secure and Non-secure Flash size */
-    g_u32apromSize = BL_EnableFMC();
-    g_u32dataFlashAddr = SCU->FNSADDR;
+    g_u32ApromSize = BL_EnableFMC();
+    g_u32DataFlashAddr = SCU->FNSADDR;
 
-    if (g_u32dataFlashAddr < g_u32apromSize) {
-        g_u32dataFlashSize = (g_u32apromSize - g_u32dataFlashAddr);
+    if (g_u32DataFlashAddr < g_u32ApromSize) {
+        g_u32DataFlashSize = (g_u32ApromSize - g_u32DataFlashAddr);
     } else {
-        g_u32dataFlashSize = 0;
+        g_u32DataFlashSize = 0;
     }
 
     /* Set Systick time-out for 300ms */
@@ -109,10 +109,10 @@ int32_t main(void)
     while (1)
     {       
         /* Wait for CMD_CONNECT command */        
-        if ((u8bufhead >= 4) || (u8bUartDataReady == TRUE))
+        if ((g_u8bufhead >= 4) || (g_u8bUartDataReady == TRUE))
         {
             uint32_t u32lcmd;
-            u32lcmd = inpw(au8uart_rcvbuf);
+            u32lcmd = inpw(g_au8uart_rcvbuf);
 
             if (u32lcmd == CMD_CONNECT)
             {
@@ -120,8 +120,8 @@ int32_t main(void)
             }
             else
             {
-                u8bUartDataReady = FALSE;
-                u8bufhead = 0;
+                g_u8bUartDataReady = FALSE;
+                g_u8bufhead = 0;
             }
         }
 
@@ -137,10 +137,10 @@ _ISP:
     /* Prase command from master and send response back */
     while (1) {
         
-        if (u8bUartDataReady == TRUE) {
+        if (g_u8bUartDataReady == TRUE) {
             
-            u8bUartDataReady = FALSE;       /* Reset UART data ready flag */     
-            ParseCmd(au8uart_rcvbuf, 64);   /* Parse command from master */  
+            g_u8bUartDataReady = FALSE;       /* Reset UART data ready flag */     
+            ParseCmd(g_au8uart_rcvbuf, 64);   /* Parse command from master */  
             NVIC_DisableIRQ(UART1_IRQn);    /* Disable NVIC */
             nRTSPin = TRANSMIT_MODE;        /* Control RTS in transmit mode */
             PutString();                    /* Send response to master */
