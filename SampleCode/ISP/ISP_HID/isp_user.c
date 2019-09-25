@@ -78,15 +78,9 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         outpw(response + 12, g_dataFlashAddr);
         goto out;
     }
-    else if((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_ERASE_ALL))
+    else if(lcmd == CMD_ERASE_ALL)
     {
-        EraseAP(FMC_APROM_BASE, (g_apromSize < g_dataFlashAddr) ? g_apromSize : g_dataFlashAddr); // erase APROM // g_dataFlashAddr, g_apromSize
-
-        if(lcmd == CMD_ERASE_ALL)    //erase data flash
-        {
-            EraseAP(g_dataFlashAddr, g_dataFlashSize);
-            UpdateConfig((uint32_t *)(response + 8), NULL);
-        }
+        EraseAP(FMC_APROM_BASE, g_apromSize);
     }
 
     if((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_UPDATE_DATAFLASH))
@@ -106,7 +100,9 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         }
         else
         {
-            StartAddress = 0;
+            StartAddress = inpw(pSrc);
+            TotalLen = inpw(pSrc + 4);
+            EraseAP(StartAddress, TotalLen);
         }
 
         //StartAddress = inpw(pSrc);
