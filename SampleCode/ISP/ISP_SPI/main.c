@@ -121,7 +121,7 @@ int32_t main(void)
 
     CLK->AHBCLK |= CLK_AHBCLK_ISPCKEN_Msk;
     FMC->ISPCTL |= (FMC_ISPCTL_ISPEN_Msk | FMC_ISPCTL_APUEN_Msk);
-    g_apromSize = BL_EnableFMC();;
+    g_apromSize = BL_EnableFMC();
     g_dataFlashAddr = SCU->FNSADDR;
 
     if(g_dataFlashAddr < g_apromSize)
