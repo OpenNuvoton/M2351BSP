@@ -12,8 +12,8 @@
 #include "NuMicro.h"
 
 
-#define PLLCON_SETTING          CLK_PLLCTL_64MHz_HIRC
-#define PLL_CLOCK               640000000
+#define PLLCTL_SETTING          CLK_PLLCTL_64MHz_HXT
+#define PLL_CLOCK               64000000
 #define HCLK_DIV                        1
 
 #define GPIO_SETMODE(port, pin, u32Mode) port->MODE = (port->MODE & ~(0x3ul << (pin << 1))) | (u32Mode << (pin << 1));
@@ -94,10 +94,10 @@ void SYS_Init(void)
     CLK->PWRCTL |= CLK_PWRCTL_HIRCEN_Msk | CLK_PWRCTL_HXTEN_Msk;
 
     /* Waiting for Internal RC clock ready */
-    while(!(CLK->STATUS & CLK_STATUS_HIRCSTB_Msk));
+    while(!(CLK->STATUS & CLK_PWRCTL_HXTEN_Msk));
 
     /* Set core clock as PLL_CLOCK from PLL */
-    CLK->PLLCTL = PLLCON_SETTING;
+    CLK->PLLCTL = PLLCTL_SETTING;
 
     while(!(CLK->STATUS & CLK_STATUS_PLLSTB_Msk));
 
