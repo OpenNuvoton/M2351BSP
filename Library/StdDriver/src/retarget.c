@@ -421,7 +421,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
         {
             /* It is happened in Nonsecure code */
             
-            for(i=0;i< sizeof(ip_tbl)-1;i++)
+            for(i=0;i< sizeof(ip_tbl)/sizeof(IP_T)-1;i++)
             {
                 /* Case 1: Nonsecure code try to access secure IP. It also causes SCU violation */
                 if((taddr >= ip_tbl[i].u32Addr) && (taddr < (ip_tbl[i+1].u32Addr)))
@@ -454,7 +454,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
             if(taddr > NS_OFFSET)
             {
                 /* Case 3: Secure try to access secure IP through Nonsecure address. It also causes SCU violation */
-                for(i=0;i< sizeof(ip_tbl)-1;i++)
+                for(i=0;i< sizeof(ip_tbl)/sizeof(IP_T)-1;i++)
                 {
                     if((taddr >= (ip_tbl[i].u32Addr+NS_OFFSET)) && (taddr < (ip_tbl[i+1].u32Addr+NS_OFFSET)))
                     {
