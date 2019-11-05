@@ -4,7 +4,7 @@
  * @brief    USB Host library exported header file.
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef  _USBH_LIB_H_
 #define  _USBH_LIB_H_
@@ -89,7 +89,9 @@ extern "C"
 #define HID_RET_OUT_OF_MEMORY       -1084  /*!< Out of memory.                                  */
 #define HID_RET_NOT_SUPPORTED       -1085  /*!< Function not supported.                         */
 #define HID_RET_EP_NOT_FOUND        -1086  /*!< Endpoint not found.                             */
+#define HID_RET_PARSING             -1087  /*!< Failed to parse HID descriptor                  */
 #define HID_RET_XFER_IS_RUNNING     -1089  /*!< The transfer has been enabled.                  */
+#define HID_RET_REPORT_NOT_FOUND    -1090  /*!< The transfer has been enabled.                  */
 
 #define UAC_RET_OK                   0     /*!< Return with no errors.                          */
 #define UAC_RET_DEV_NOT_FOUND       -2001  /*!< Audio Class device not found or removed.        */
@@ -115,7 +117,7 @@ typedef void (CONN_FUNC)(struct udev_t *udev, int param);
 
 struct line_coding_t;
 struct cdc_dev_t;
-typedef void (CDC_CB_FUNC)(struct cdc_dev_t *cdev, uint8_t *rdata, int data_len); 
+typedef void (CDC_CB_FUNC)(struct cdc_dev_t *cdev, uint8_t *rdata, int data_len);
 
 struct usbhid_dev;
 typedef void (HID_IR_FUNC)(struct usbhid_dev *hdev, uint16_t ep_addr, int status, uint8_t *rdata, uint32_t data_len);    /*!< interrupt in callback function \hideinitializer */
@@ -143,6 +145,12 @@ extern void usbh_install_conn_callback(CONN_FUNC *conn_func, CONN_FUNC *disconn_
 extern void usbh_suspend(void);
 extern void usbh_resume(void);
 extern struct udev_t * usbh_find_device(char *hub_id, int port);
+/**
+ * @brief  A function return current tick count.
+ * @return Current tick.
+ * @details User application must provide this function to return current tick.
+ *          The tick should increase by 1 for every 10 ms.
+ */
 extern uint32_t get_ticks(void);   /* This function must be provided by user application. */
 
 /*------------------------------------------------------------------*/
@@ -152,8 +160,10 @@ extern uint32_t get_ticks(void);   /* This function must be provided by user app
 /*------------------------------------------------------------------*/
 extern void     usbh_cdc_init(void);
 extern struct cdc_dev_t * usbh_cdc_get_device_list(void);
+/// @cond HIDDEN_SYMBOLS
 extern int32_t  usbh_cdc_get_line_coding(struct cdc_dev_t *cdev, struct line_coding_t *line_code);
 extern int32_t  usbh_cdc_set_line_coding(struct cdc_dev_t *cdev, struct line_coding_t *line_code);
+/// @endcond HIDDEN_SYMBOLS
 extern int32_t  usbh_cdc_set_control_line_state(struct cdc_dev_t *cdev, int active_carrier, int DTE_present);
 extern int32_t  usbh_cdc_start_polling_status(struct cdc_dev_t *cdev, CDC_CB_FUNC *func);
 extern int32_t  usbh_cdc_start_to_receive_data(struct cdc_dev_t *cdev, CDC_CB_FUNC *func);
@@ -189,8 +199,9 @@ extern int  usbh_umas_disk_status(int drv_no);
 extern int  usbh_umas_read(int drv_no, uint32_t sec_no, int sec_cnt, uint8_t *buff);
 extern int  usbh_umas_write(int drv_no, uint32_t sec_no, int sec_cnt, uint8_t *buff);
 extern int  usbh_umas_ioctl(int drv_no, int cmd, void *buff);
+/// @cond HIDDEN_SYMBOLS
 extern int  usbh_umas_reset_disk(int drv_no);
-
+/// @endcond HIDDEN_SYMBOLS
 /*------------------------------------------------------------------*/
 /*                                                                  */
 /*  USB Audio Class Library APIs                                    */
@@ -215,7 +226,9 @@ extern int usbh_uac_stop_audio_out(struct uac_dev_t *audev);
 /// @cond HIDDEN_SYMBOLS
 
 extern void dump_ohci_regs(void);
+extern void dump_ehci_regs(void);
 extern void dump_ohci_ports(void);
+extern void dump_ehci_ports(void);
 extern uint32_t  usbh_memory_used(void);
 
 /// @endcond HIDDEN_SYMBOLS
@@ -233,7 +246,7 @@ extern uint32_t  usbh_memory_used(void);
 
 #endif  /* _USBH_LIB_H_ */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
 
 
 

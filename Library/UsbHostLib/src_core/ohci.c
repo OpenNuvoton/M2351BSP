@@ -588,11 +588,11 @@ static int ohci_int_xfer(UTR_T *utr)
     uint32_t   info;
     int8_t     bIsNewED = 0;
 
-    if (utr->data_len > 64)             /* USB 1.1 interrupt transfer maximum packet size is 64 */
+    if(utr->data_len > 64)              /* USB 1.1 interrupt transfer maximum packet size is 64 */
         return USBH_ERR_INVALID_PARAM;
 
     td_new = alloc_ohci_TD(utr);        /* allocate a TD for dummy TD                     */
-    if (td_new == NULL)
+    if(td_new == NULL)
         return USBH_ERR_MEMORY_OUT;
 
     ied = get_int_tree_head_node(ep->bInterval);  /* get head node of this interval       */
@@ -602,25 +602,25 @@ static int ohci_int_xfer(UTR_T *utr)
     /*------------------------------------------------------------------------------------*/
     info = ed_make_info(udev, ep);
     ed = ied;
-    while (ed != NULL)
+    while(ed != NULL)
     {
-        if (ed->Info == info)
+        if(ed->Info == info)
             break;                          /* Endpoint found                             */
         ed = (ED_T *)ed->NextED;
     }
 
-    if (ed == NULL)                         /* ED not found, create it                    */
+    if(ed == NULL)                          /* ED not found, create it                    */
     {
         bIsNewED = 1;
         ed = alloc_ohci_ED();               /* allocate an Endpoint Descriptor            */
-        if (ed == NULL)
+        if(ed == NULL)
             return USBH_ERR_MEMORY_OUT;
         ed->Info = info;
         ed->HeadP = 0;
         ed->bInterval = ep->bInterval;
 
         td = alloc_ohci_TD(NULL);           /* allocate the initial  dummy TD for ED      */
-        if (td == NULL)
+        if(td == NULL)
         {
             free_ohci_ED(ed);
             free_ohci_TD(td_new);
@@ -638,13 +638,13 @@ static int ohci_int_xfer(UTR_T *utr)
     /*------------------------------------------------------------------------------------*/
     /*  Prepare TD                                                                        */
     /*------------------------------------------------------------------------------------*/
-    if ((ep->bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_OUT)
+    if((ep->bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_OUT)
         info = (TD_CC | TD_R | TD_DP_OUT | TD_TYPE_INT);
     else
         info = (TD_CC | TD_R | TD_DP_IN | TD_TYPE_INT);
 
     /* Keep data toggle                               */
-    info = (info & ~(1<<25)) | (td->Info & (1<<25));
+    info = (info & ~(1 << 25)) | (td->Info & (1 << 25));
 
     /* fill this TD                                   */
     write_td(td, info, utr->buff, utr->data_len);
@@ -660,7 +660,7 @@ static int ohci_int_xfer(UTR_T *utr)
     DISABLE_OHCI_IRQ();
 
     ed->TailP = (uint32_t)td_new;
-    if (bIsNewED)
+    if(bIsNewED)
     {
         /* Add to list of the same interval */
         ed->NextED = ied->NextED;

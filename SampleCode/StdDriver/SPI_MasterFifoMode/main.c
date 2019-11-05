@@ -5,12 +5,14 @@
  *           with an off-chip SPI Slave device with FIFO mode. This sample
  *           code needs to work with SPI_SlaveFIFOMode sample code.
  *
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
 
 #define TEST_COUNT  16
+
+#define InterruptMode /* Undefine it when using polling mode */
 
 uint32_t g_au32SourceData[TEST_COUNT];
 uint32_t g_au32DestinationData[TEST_COUNT];
@@ -157,20 +159,33 @@ int main(void)
         g_au32DestinationData[u32DataCount] = 0;
     }
 
+    g_u32TxDataCount = 0;
+    g_u32RxDataCount = 0;
     printf("Before starting the data transfer, make sure the slave device is ready. Press any key to start the transfer.\n");
     getchar();
     printf("\n");
 
-    /* Set TX FIFO threshold, enable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
+    /* Set TX FIFO threshold and enable FIFO mode. */
     SPI_SetFIFO(SPI0, 4, 4);
+#ifdef InterruptMode
+    /* Enable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
     SPI_EnableInt(SPI0, SPI_FIFO_TXTH_INT_MASK | SPI_FIFO_RXTO_INT_MASK);
-
-    g_u32TxDataCount = 0;
-    g_u32RxDataCount = 0;
     NVIC_EnableIRQ(SPI0_IRQn);
 
     /* Wait for transfer done */
     while(g_u32RxDataCount < TEST_COUNT);
+#else
+    /* Wait for transfer done */
+    while(g_u32RxDataCount < TEST_COUNT)
+    {
+        /* Check TX FULL flag and TX data count */
+        if((SPI_GET_TX_FIFO_FULL_FLAG(SPI0) == 0) && (g_u32TxDataCount < TEST_COUNT))
+            SPI_WRITE_TX(SPI0, g_au32SourceData[g_u32TxDataCount++]); /* Write to TX FIFO */
+        /* Check RX EMPTY flag */
+        if(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI0) == 0)
+            g_au32DestinationData[g_u32RxDataCount++] = SPI_READ_RX(SPI0); /* Read RX FIFO */
+    }
+#endif
 
     /* Print the received data */
     printf("Received data:\n");
@@ -178,9 +193,11 @@ int main(void)
     {
         printf("%d:\t0x%X\n", u32DataCount, g_au32DestinationData[u32DataCount]);
     }
+#ifdef InterruptMode
     /* Disable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
     SPI_DisableInt(SPI0, SPI_FIFO_TXTH_INT_MASK | SPI_FIFO_RXTO_INT_MASK);
     NVIC_DisableIRQ(SPI0_IRQn);
+#endif
     printf("The data transfer was done.\n");
 
     printf("\n\nExit SPI driver sample code.\n");
@@ -190,5 +207,5 @@ int main(void)
     while(1);
 }
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
 

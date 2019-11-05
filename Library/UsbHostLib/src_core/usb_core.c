@@ -4,7 +4,7 @@
  * @brief   USB Host library core.
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -122,7 +122,7 @@ void usbh_suspend()
 void usbh_resume(void)
 {
 #ifdef ENABLE_OHCI
-    _ohci->HcControl = (_ohci->HcControl & ~USBH_HcControl_HCFS_Msk) | (2 << USBH_HcControl_HCFS_Pos);
+    _ohci->HcControl = (_ohci->HcControl & ~USBH_HcControl_HCFS_Msk) | (1 << USBH_HcControl_HCFS_Pos);
 
     if(_ohci->HcRhPortStatus[0] & USBH_HcRhPortStatus_PSS_Msk)
         _ohci->HcRhPortStatus[0] = USBH_HcRhPortStatus_POCI_Msk;   /* clear suspend status */
@@ -130,6 +130,9 @@ void usbh_resume(void)
         _ohci->HcRhPortStatus[1] = USBH_HcRhPortStatus_POCI_Msk;   /* clear suspend status */
 
     delay_us(30000);                       /* wait at least 20ms for Host to resume device */
+
+    /* enter operational state */
+    _ohci->HcControl = (_ohci->HcControl & ~USBH_HcControl_HCFS_Msk) | (2 << USBH_HcControl_HCFS_Pos);
 #endif
 }
 
@@ -986,16 +989,16 @@ int  connect_device(UDEV_T *udev)
         return ret;
     }
 
-    if (conf->bmAttributes & (1<<5))
+    if(conf->bmAttributes & (1 << 5))
     {
-    	/* Enable remote wakeup                                                                   */
-    	if(usbh_ctrl_xfer(udev, REQ_TYPE_OUT | REQ_TYPE_STD_DEV | REQ_TYPE_TO_DEV,
-    	                  USB_REQ_SET_FEATURE, 0x01, 0x0000, 0x0000,
-    	                  NULL, &read_len, 300) < 0)
-    	{
-    	    USB_debug("Device does not accept remote wakeup enable command.\n");
-    	}
-	}
+        /* If this configuration supports remote wakeup, enable it.                           */
+        if(usbh_ctrl_xfer(udev, REQ_TYPE_OUT | REQ_TYPE_STD_DEV | REQ_TYPE_TO_DEV,
+                          USB_REQ_SET_FEATURE, 0x01, 0x0000, 0x0000,
+                          NULL, &read_len, 300) < 0)
+        {
+            USB_debug("Device does not accept remote wakeup enable command.\n");
+        }
+    }
 
     if(g_conn_func)
         g_conn_func(udev, 0);
@@ -1232,4 +1235,4 @@ void usbh_dump_ep_info(EP_INFO_T *ep)
 /// @endcond HIDDEN_SYMBOLS
 
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
