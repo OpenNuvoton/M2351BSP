@@ -16,8 +16,11 @@
 #define PLLCTL_SETTING  CLK_PLLCTL_48Hz_HXT
 #define PLL_CLOCK       4800000
 
+/* The size of Slave receive buffer, should adjust it if MasterTx transferring size exceeds this value */
+#define SLV_DATA_BUF_SIZE    256
+
 volatile uint32_t slave_buff_addr;
-volatile uint8_t g_au8SlvData[256];
+volatile uint8_t g_au8SlvData[SLV_DATA_BUF_SIZE];
 volatile uint8_t g_au8SlvRxData[3];
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
@@ -30,6 +33,7 @@ volatile uint8_t g_u8SlvEndFlag = 0;
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 volatile static I2C_FUNC s_I2C0HandlerFn = NULL;
 volatile uint8_t g_u8SlvTRxAbortFlag = 0;
+volatile uint8_t g_u8SlvWarningMsgFlag = 0;
 /*---------------------------------------------------------------------------------------------------------*/
 /*  I2C0 IRQ Handler                                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -71,6 +75,18 @@ void I2C_GCSlaveRx(uint32_t u32Status)
         if(g_u8SlvDataLen == 2)
         {
             slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+
+            /* Exceed g_au8SlvData buffer size, use it as ring buffer  */
+            while(slave_buff_addr >= SLV_DATA_BUF_SIZE)
+            {
+
+                if(slave_buff_addr == SLV_DATA_BUF_SIZE)
+                {
+                    /* Set flag to show warning */
+                    g_u8SlvWarningMsgFlag = 1;
+                }
+                slave_buff_addr -= SLV_DATA_BUF_SIZE;
+            }
         }
         if(g_u8SlvDataLen == 3)
         {
@@ -246,7 +262,7 @@ int32_t main(void)
     I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
 
     /* Clear receive buffer */
-    for(u32i = 0; u32i < 0x100; u32i++)
+    for(u32i = 0; u32i < SLV_DATA_BUF_SIZE; u32i++)
     {
         g_au8SlvData[u32i] = 0;
     }
@@ -271,9 +287,16 @@ int32_t main(void)
             printf("I2C Slave re-start. status[0x%x]\n", I2C0->STATUS0);
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
         }
+        /* Show warning message when Master transferring size exceeds slave buffer size*/
+        if(g_u8SlvWarningMsgFlag)
+        {
+            printf("Warning: MasterTx size exceeds slaveRx buffer size!    \n");
+            printf("         Please adjust the value of SLV_DATA_BUF_SIZE! \n");
+            g_u8SlvWarningMsgFlag = 0;
+        }
 
         /* Check receive data correct or not */
-        for(u32i = 0; u32i < 0x100; u32i++)
+        for(u32i = 0; u32i < SLV_DATA_BUF_SIZE; u32i++)
         {
             g_au8SlvTxData[0] = (uint8_t)((u32i & 0xFF00) >> 8);
             g_au8SlvTxData[1] = (uint8_t)(u32i & 0x00FF);

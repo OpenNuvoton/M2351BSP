@@ -16,10 +16,14 @@
 
 #define PLL_CLOCK       64000000
 
+/* The size of Slave receive buffer, should adjust it if MasterTx transferring size exceeds this value */
+#define SLV_DATA_BUF_SIZE    256
+
 uint32_t slave_buff_addr;
-uint8_t g_au8SlvData[256];
+uint8_t g_au8SlvData[SLV_DATA_BUF_SIZE];
 uint8_t g_au8SlvRxData[3];
 volatile uint8_t g_u8SlvTRxAbortFlag = 0;
+volatile uint8_t g_u8SlvWarningMsgFlag = 0;
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -71,6 +75,17 @@ void I2C_SlaveTRx(uint32_t u32Status)
         {
             g_au8SlvRxData[g_u8SlvDataLen++] = u8Data;
             slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+
+            /* Exceed g_au8SlvData buffer size, use it as ring buffer  */
+            while(slave_buff_addr >= SLV_DATA_BUF_SIZE)
+            {
+                if(slave_buff_addr == SLV_DATA_BUF_SIZE)
+                {
+                    /* Set flag to show warning */
+                    g_u8SlvWarningMsgFlag = 1;
+                }
+                slave_buff_addr -= SLV_DATA_BUF_SIZE;
+            }
         }
         else
         {
@@ -259,7 +274,7 @@ int32_t main(void)
     /* I2C enter no address SLV mode */
     I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
 
-    for(u32i = 0; u32i < 0x100; u32i++)
+    for(u32i = 0; u32i < SLV_DATA_BUF_SIZE; u32i++)
     {
         g_au8SlvData[u32i] = 0;
     }
@@ -280,6 +295,13 @@ int32_t main(void)
             while(I2C0->CTL0 & I2C_CTL0_SI_Msk);
             printf("I2C Slave re-start. status[0x%x]\n", I2C0->STATUS0);
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
+        }
+        /* Show warning message when Master transferring size exceeds slave buffer size*/
+        if(g_u8SlvWarningMsgFlag)
+        {
+            printf("Warning: MasterTx size exceeds slaveRx buffer size!    \n");
+            printf("         Please adjust the value of SLV_DATA_BUF_SIZE! \n");
+            g_u8SlvWarningMsgFlag = 0;
         }
     }
     while(1);

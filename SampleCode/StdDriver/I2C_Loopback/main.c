@@ -15,11 +15,14 @@
 
 #define PLL_CLOCK       64000000
 
+/* The size of Slave receive buffer, should adjust it if MasterTx transferring size exceeds this value */
+#define SLV_DATA_BUF_SIZE    256
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 volatile uint32_t slave_buff_addr;
-volatile uint8_t g_au8SlvData[256];
+volatile uint8_t g_au8SlvData[SLV_DATA_BUF_SIZE];
 volatile uint8_t g_au8SlvRxData[3];
 volatile uint8_t g_u8DeviceAddr;
 volatile uint8_t g_au8MstTxData[3];
@@ -27,6 +30,7 @@ volatile uint8_t g_u8MstRxData;
 volatile uint8_t g_u8MstDataLen;
 volatile uint8_t g_u8SlvDataLen;
 volatile uint8_t g_u8MstEndFlag = 0;
+volatile uint8_t g_u8SlvWarningMsgFlag = 0;
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 
@@ -173,6 +177,7 @@ void I2C_MasterTx(uint32_t u32Status)
 /*---------------------------------------------------------------------------------------------------------*/
 void I2C_SlaveTRx(uint32_t u32Status)
 {
+
     if(u32Status == 0x60)                       /* Own SLA+W has been receive; ACK has been return */
     {
         g_u8SlvDataLen = 0;
@@ -187,6 +192,17 @@ void I2C_SlaveTRx(uint32_t u32Status)
         if(g_u8SlvDataLen == 2)
         {
             slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+
+            /* Exceed g_au8SlvData buffer size, use it as ring buffer  */
+            while(slave_buff_addr >= SLV_DATA_BUF_SIZE)
+            {
+                if(slave_buff_addr == SLV_DATA_BUF_SIZE)
+                {
+                    /* Set flag to show warning */
+                    g_u8SlvWarningMsgFlag = 1;
+                }
+                slave_buff_addr -= SLV_DATA_BUF_SIZE;
+            }
         }
         if(g_u8SlvDataLen == 3)
         {
@@ -364,53 +380,6 @@ void I2C1_Close(void)
     CLK_DisableModuleClock(I2C1_MODULE);
 }
 
-int32_t I2C0_Read_Write_SLAVE(uint8_t u8SlvAddr)
-{
-    uint32_t u32i;
-
-    g_u8DeviceAddr = u8SlvAddr;
-
-    for(u32i = 0; u32i < 0x100; u32i++)
-    {
-        g_au8MstTxData[0] = (uint8_t)((u32i & 0xFF00) >> 8);
-        g_au8MstTxData[1] = (uint8_t)(u32i & 0x00FF);
-        g_au8MstTxData[2] = (uint8_t)(g_au8MstTxData[1] + 3);
-
-        g_u8MstDataLen = 0;
-        g_u8MstEndFlag = 0;
-
-        /* I2C function to write data to slave */
-        s_I2C0HandlerFn = (I2C_FUNC)I2C_MasterTx;
-
-        /* I2C as master sends START signal */
-        I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STA);
-
-        /* Wait I2C Tx Finish */
-        while(g_u8MstEndFlag == 0);
-        g_u8MstEndFlag = 0;
-
-        /* I2C function to read data from slave */
-        s_I2C0HandlerFn = (I2C_FUNC)I2C_MasterRx;
-
-        g_u8MstDataLen = 0;
-        g_u8DeviceAddr = u8SlvAddr;
-
-        I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STA);
-
-        /* Wait I2C Rx Finish */
-        while(g_u8MstEndFlag == 0);
-
-        /* Compare data */
-        if(g_u8MstRxData != g_au8MstTxData[2])
-        {
-            printf("I2C Byte Write/Read Failed, Data 0x%x\n", g_u8MstRxData);
-            return -1;
-        }
-    }
-    printf("Master Access Slave (0x%X) Test OK\n", u8SlvAddr);
-    return 0;
-}
-
 int32_t I2C0_Read_Write_Slave(uint8_t u8SlvAddr)
 {
     uint32_t u32i;
@@ -452,6 +421,13 @@ int32_t I2C0_Read_Write_Slave(uint8_t u8SlvAddr)
         {
             printf("I2C0 Byte Write/Read Failed, Data 0x%x\n", g_u8MstRxData);
             return -1;
+        }
+        /* Show warning message when Master transferring size exceeds slave buffer size*/
+        if(g_u8SlvWarningMsgFlag)
+        {
+            printf("Warning: MasterTx size exceeds slaveRx buffer size!    \n");
+            printf("         Please adjust the value of SLV_DATA_BUF_SIZE! \n");
+            g_u8SlvWarningMsgFlag = 0;
         }
     }
     printf("Master Access Slave (0x%X) Test OK\n", u8SlvAddr);
@@ -503,7 +479,7 @@ int32_t main(void)
     /* I2C1 enter non address SLV mode */
     I2C_SET_CONTROL_REG(I2C1, I2C_CTL_SI_AA);
 
-    for(u32i = 0; u32i < 0x100; u32i++)
+    for(u32i = 0; u32i < SLV_DATA_BUF_SIZE; u32i++)
     {
         g_au8SlvData[u32i] = 0;
     }
