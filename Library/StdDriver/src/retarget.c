@@ -151,8 +151,8 @@ char GetChar(void);
 void SendChar_ToUART(int ch);
 void SendChar(int ch);
 
-#if defined(DEBUG_ENABLE_SEMIHOST)
-#if (defined(__ARMCC_VERSION) || defined(__ICCARM__))
+#if (defined(DEBUG_ENABLE_SEMIHOST) || defined(__GNUC__))
+#if (defined(__ARMCC_VERSION) || defined(__ICCARM__) || defined(OS_USE_SEMIHOSTING))
 /* The static buffer is used to speed up the semihost */
 static char g_buf[16];
 static char g_buf_len = 0;
