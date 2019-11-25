@@ -1,22 +1,21 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
  * $Revision: 3 $
- * $Date: 16/10/17 2:06p $
- * @brief    Show how to read/program embedded flash by ISP function.
+ * $Date: 19/11/22 2:06p $
+ * @brief    Show how mbedTLS RSA function works.
  * @note
  * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
-#include "mbedtls/rsa.h"
+#include "rsa.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
-#define MBEDTLS_EXIT_SUCCESS    0  //EXIT_SUCCESS
-#define MBEDTLS_EXIT_FAILURE    -1 //EXIT_FAILURE
+#define MBEDTLS_EXIT_SUCCESS    0
+#define MBEDTLS_EXIT_FAILURE    -1
 
 
 
@@ -117,36 +116,36 @@ int32_t main(void)
         switch(u8GetCh)
         {
         case '0':
-            printf("\n PEM to RSA key test start...\n");
+            printf("\n  PEM to RSA key test start\n");
             u32Ret = PEMtoRSA();
-            printf("\n PEM to RSA key test done ...\n");
+            printf("\n  PEM to RSA key test done\n");
             break;
         case '1':
-#if 0					
+#if 0
             printf("\n RSA encrypt with hash test. \n Please enter the [verbose] value, then press Enter Key:\n");
             scanf("%d",&u32Verbose);
             printf("\n RSA encrypt with hash test start...   verbose[%d]\n", u32Verbose);
 #else
             u32Verbose = 1;
-				    printf("\n RSA encrypt with hash test start...\n");
-#endif				
+            printf("\n  RSA encrypt with hash test start\n");
+#endif
             u32Ret = RSAEncryptWithHashTest(u32Verbose);
-            printf("\n RSA encrypt with hash test done ...\n");
+            printf("\n  RSA encrypt with hash test done\n");
             break;
         default:
-            printf("\nUn-defined Test Item.\n");
+            printf("\n  Un-defined Test Item\n");
             break;
         }
 
         if(u32Ret == MBEDTLS_EXIT_SUCCESS)
         {
-            printf("\nTest OK\n");
+            printf("\n  Test OK\n");
         }
         else
         {
-            printf("\nTest fail\n");
+            printf("\n  Test fail\n");
         }
-        printf("\n\nAny key to continue....\n");
+        printf("\n\n  Any key to continue...\n");
         getchar();
 
     }

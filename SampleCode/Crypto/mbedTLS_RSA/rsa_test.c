@@ -2,21 +2,21 @@
 #include "NuMicro.h"
 
 /* BEGIN_HEADER */
-#include "mbedtls/rsa.h"
-#include "mbedtls/md2.h"
-#include "mbedtls/md4.h"
-#include "mbedtls/md5.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/dhm.h"
-#include "mbedtls/aes.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/bignum.h"
-#include "mbedtls/x509.h"
+#include "rsa.h"
+#include "md2.h"
+#include "md4.h"
+#include "md5.h"
+#include "sha1.h"
+#include "sha256.h"
+#include "sha512.h"
+#include "entropy.h"
+#include "ctr_drbg.h"
+#include "dhm.h"
+#include "aes.h"
+#include "entropy.h"
+#include "ctr_drbg.h"
+#include "bignum.h"
+#include "x509.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -144,14 +144,14 @@ int PEMtoRSA(void)
                   &pk,
                   (const unsigned char *)SSL_USER_PRIV_KEY_PEM,
                   sizeof(SSL_USER_PRIV_KEY_PEM),
-                  NULL,  0)) != 0) 
+                  NULL,  0)) != 0)
     {
-        printf(" failed\n ! mbedtls_pk_parse_key returned %d\n\n", ret);
+        printf("  failed\n ! mbedtls_pk_parse_key returned %d\n", ret);
         return -1;
     }
 #endif
 
-    printf("\n mbedtls_pk_parse_key: passed \n\n");
+    printf("\n  mbedtls_pk_parse_key:      passed \n");
 
 
     /* check RSA key */
@@ -159,11 +159,13 @@ int PEMtoRSA(void)
         mbedtls_rsa_context *rsa = mbedtls_pk_rsa(pk);
         if (mbedtls_rsa_check_privkey( rsa ) != 0 )
         {
-            printf(" failed\n !mbedtls_rsa_check_privkey\n\n");
+            printf("  failed\n !mbedtls_rsa_check_privkey\n");
             return -1;
         }
-        printf(" mbedtls_rsa_check_privkey: passed\n\n");
+        printf("  mbedtls_rsa_check_privkey: passed\n");
     }
+    mbedtls_pk_free(&pk);
+
     return 0;
 }
 
@@ -204,7 +206,7 @@ int RSAEncryptWithHashTest( int verbose )
     MBEDTLS_MPI_CHK( mbedtls_rsa_complete( &rsa ) );
 
     if( verbose != 0 )
-        printf( "  RSA key validation: " );
+        printf( "\n  RSA key validation: " );
 
     if( mbedtls_rsa_check_pubkey(  &rsa ) != 0 ||
             mbedtls_rsa_check_privkey( &rsa ) != 0 )
