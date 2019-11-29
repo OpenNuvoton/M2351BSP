@@ -67,9 +67,7 @@ extern int ECDHTest(void);
 
 int32_t main(void)
 {
-    uint32_t i, u32Data, u32Verbose;
-    uint8_t  u8GetCh;
-    int  u32Ret = MBEDTLS_EXIT_SUCCESS;
+    int32_t  i32Ret = MBEDTLS_EXIT_SUCCESS;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -94,11 +92,11 @@ int32_t main(void)
 
 
     printf("\n ECDH test start...\n\n");
-    u32Ret = ECDHTest();
+    i32Ret = ECDHTest();
     printf("\n ECDH test done ...\n");
 
 
-    if(u32Ret == MBEDTLS_EXIT_SUCCESS)
+    if(i32Ret == MBEDTLS_EXIT_SUCCESS)
     {
         printf("\n Test OK\n");
     }

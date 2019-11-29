@@ -11,8 +11,8 @@
 #include "NuMicro.h"
 
 
-#define MBEDTLS_EXIT_SUCCESS    0  //EXIT_SUCCESS
-#define MBEDTLS_EXIT_FAILURE    -1 //EXIT_FAILURE
+#define MBEDTLS_EXIT_SUCCESS    0
+#define MBEDTLS_EXIT_FAILURE    -1
 
 
 void SYS_Init(void)
@@ -66,9 +66,7 @@ extern int SHA256Test(void);
 
 int32_t main(void)
 {
-    uint32_t i, u32Data, u32Verbose;
-    uint8_t  u8GetCh;
-    int  u32Ret = MBEDTLS_EXIT_SUCCESS;
+    int  i32Ret = MBEDTLS_EXIT_SUCCESS;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -92,11 +90,11 @@ int32_t main(void)
     printf("+----------------------------------+\n");
 
     printf("\n SHA256 test start...\n\n");
-    u32Ret = SHA256Test();
+    i32Ret = SHA256Test();
     printf("\n SHA256 test done ...\n");
 
 
-    if(u32Ret == MBEDTLS_EXIT_SUCCESS)
+    if(i32Ret == MBEDTLS_EXIT_SUCCESS)
     {
         printf("\nTest OK\n");
     }

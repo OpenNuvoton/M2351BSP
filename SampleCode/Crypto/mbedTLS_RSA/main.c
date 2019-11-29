@@ -74,9 +74,9 @@ extern int RSAEncryptWithHashTest( int verbose );
 
 int32_t main(void)
 {
-    uint32_t i, u32Data, u32Verbose;
+    uint32_t  u32Verbose;
     uint8_t  u8GetCh;
-    int32_t  u32Ret;
+    int32_t  i32Ret;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -110,14 +110,14 @@ int32_t main(void)
         printf("|   [1] RSA encrypt with hash test   |\n");
         printf("+------------------------------------+\n");
 
-        u32Ret = MBEDTLS_EXIT_SUCCESS;
+        i32Ret = MBEDTLS_EXIT_SUCCESS;
         u8GetCh = getchar();
 
         switch(u8GetCh)
         {
         case '0':
             printf("\n  PEM to RSA key test start\n");
-            u32Ret = PEMtoRSA();
+            i32Ret = PEMtoRSA();
             printf("\n  PEM to RSA key test done\n");
             break;
         case '1':
@@ -129,7 +129,7 @@ int32_t main(void)
             u32Verbose = 1;
             printf("\n  RSA encrypt with hash test start\n");
 #endif
-            u32Ret = RSAEncryptWithHashTest(u32Verbose);
+            i32Ret = RSAEncryptWithHashTest(u32Verbose);
             printf("\n  RSA encrypt with hash test done\n");
             break;
         default:
@@ -137,7 +137,7 @@ int32_t main(void)
             break;
         }
 
-        if(u32Ret == MBEDTLS_EXIT_SUCCESS)
+        if(i32Ret == MBEDTLS_EXIT_SUCCESS)
         {
             printf("\n  Test OK\n");
         }
@@ -149,7 +149,6 @@ int32_t main(void)
         getchar();
 
     }
-    while(1);
 
 }
 /*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/

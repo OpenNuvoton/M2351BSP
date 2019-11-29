@@ -66,9 +66,7 @@ extern int AESTest(void);
 
 int32_t main(void)
 {
-    uint32_t i, u32Data, u32Verbose;
-    uint8_t  u8GetCh;
-    int  u32Ret = MBEDTLS_EXIT_SUCCESS;
+    int  i32Ret = MBEDTLS_EXIT_SUCCESS;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -92,11 +90,11 @@ int32_t main(void)
     printf("+--------------------------------+\n");
 
     printf("\n AES test start...\n\n");
-    u32Ret = AESTest();
+    i32Ret = AESTest();
     printf("\n AES test done ...\n");
 
 
-    if(u32Ret == MBEDTLS_EXIT_SUCCESS)
+    if(i32Ret == MBEDTLS_EXIT_SUCCESS)
     {
         printf("\nTest OK\n");
     }
