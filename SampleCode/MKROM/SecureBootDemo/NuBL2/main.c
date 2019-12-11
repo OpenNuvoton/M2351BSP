@@ -24,7 +24,7 @@ volatile FW_INFO_T  g_NuBL3xFwInfo = {0}; // Allocate a FWINFO buffer for storin
 /*---------------------------------------------------------------------------------------------------------*/
 static int32_t CheckBootingStatus(void)
 {
-    int32_t     i;
+    uint32_t    i;
     uint32_t    u32CFG0, au32OTP[8];
     uint32_t    *pu32Info, u32Size;
         
