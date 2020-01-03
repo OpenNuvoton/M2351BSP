@@ -21,7 +21,7 @@ uint32_t volatile u32BuffPos = 0;
 FATFS FatFs[_VOLUMES];      /* File system object for logical drive */
 #ifdef __ICCARM__
 #pragma data_alignment=32
-BYTE Buff[1024] ;       /* Working buffer */
+BYTE Buff[1024];       /* Working buffer */
 #else
 BYTE Buff[1024] __attribute__((aligned(32)));       /* Working buffer */
 #endif
@@ -377,11 +377,6 @@ void SD_Inits(void)
     SYS->GPE_MFPL |= (SYS_GPE_MFPL_PE2MFP_SD0_DAT0 | SYS_GPE_MFPL_PE3MFP_SD0_DAT1 | SYS_GPE_MFPL_PE4MFP_SD0_DAT2 | SYS_GPE_MFPL_PE5MFP_SD0_DAT3 |
                       SYS_GPE_MFPL_PE6MFP_SD0_CLK | SYS_GPE_MFPL_PE7MFP_SD0_CMD);
     SYS->GPD_MFPH |= SYS_GPD_MFPH_PD13MFP_SD0_nCD;
-
-    //SD_PWR: PF9 - it should be pulled low to enalbed the pull-high resistor for SDIO pins(NuTiny-M2351)
-    SYS->GPF_MFPH = (SYS->GPF_MFPH & (~SYS_GPF_MFPH_PF9MFP_Msk));
-    GPIO_SetMode(PF, BIT9, GPIO_MODE_OUTPUT);
-    PF9 = 0;
 
     /* Select IP clock source */
     CLK_SetModuleClock(SDH0_MODULE, CLK_CLKSEL0_SDH0SEL_PLL, CLK_CLKDIV0_SDH0(4));

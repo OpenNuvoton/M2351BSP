@@ -11,6 +11,9 @@
 #include "NuMicro.h"
 #include "usbd_audio.h"
 
+#define CRYSTAL_LESS        1
+#define TRIM_INIT           (SYS_BASE+0x10C)
+
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
 void SYS_Init(void)
@@ -18,6 +21,7 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
+#if (!CRYSTAL_LESS)
     /* Enable external XTAL 12MHz clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HXTEN_Msk);
 
@@ -33,18 +37,31 @@ void SYS_Init(void)
     /* Switch HCLK clock source to PLL */
     CLK_SetHCLK(CLK_CLKSEL0_HCLKSEL_PLL, CLK_CLKDIV0_HCLK(3));
 
-    /* Select USBD */
-    SYS->USBPHY = (SYS->USBPHY & ~SYS_USBPHY_USBROLE_Msk) | SYS_USBPHY_OTGPHYEN_Msk | SYS_USBPHY_SBO_Msk;
-
     /* Select IP clock source */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & ~CLK_CLKDIV0_USBDIV_Msk) | CLK_CLKDIV0_USB(3);
+#else
+    /* Enable Internal RC 48MHz clock */
+    CLK_EnableXtalRC(CLK_PWRCTL_HIRC48EN_Msk);
+
+    /* Waiting for Internal RC clock ready */
+    CLK_WaitClockReady(CLK_STATUS_HIRC48STB_Msk);
+
+    /* Switch HCLK clock source to Internal RC and HCLK source divide 1 */
+    CLK_SetHCLK(CLK_CLKSEL0_HCLKSEL_HIRC48, CLK_CLKDIV0_HCLK(1));
+
+    /* Use HIRC48 as USB clock source */
+    CLK_SetModuleClock(USBD_MODULE, CLK_CLKSEL0_USBSEL_HIRC48, CLK_CLKDIV0_USB(1));
+#endif
+
+    /* Select USBD */
+    SYS->USBPHY = (SYS->USBPHY & ~SYS_USBPHY_USBROLE_Msk) | SYS_USBPHY_OTGPHYEN_Msk | SYS_USBPHY_SBO_Msk;
 
     /* Enable IP clock */
     CLK_EnableModuleClock(USBD_MODULE);
 
     /* Select IP clock source */
-    CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
-    CLK_SetModuleClock(TMR0_MODULE, CLK_CLKSEL1_TMR0SEL_HXT, 0);
+    CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
+    CLK_SetModuleClock(TMR0_MODULE, CLK_CLKSEL1_TMR0SEL_HIRC, 0);
 
     /* Enable IP clock */
     CLK_EnableModuleClock(UART0_MODULE);
@@ -91,6 +108,8 @@ void I2C2_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+    uint32_t u32TrimInit;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -111,8 +130,8 @@ int32_t main(void)
     /* Open I2S0 as slave mode */
     I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_DISABLE_MONO, I2S_FORMAT_I2S);
 
-    /* select source from HXT(12MHz) */
-    CLK_SetModuleClock(I2S0_MODULE, CLK_CLKSEL3_I2S0SEL_HXT, 0);
+    /* Select source from HIRC(12MHz) */
+    CLK_SetModuleClock(I2S0_MODULE, CLK_CLKSEL3_I2S0SEL_HIRC, 0);
 
     /* Set MCLK and enable MCLK */
     I2S_EnableMCLK(I2S0, 12000000);
@@ -145,7 +164,49 @@ int32_t main(void)
     NVIC_EnableIRQ(USBD_IRQn);
     USBD_Start();
 
-    while(1);
+#if CRYSTAL_LESS
+    /* Backup default trim */
+    u32TrimInit = M32(TRIM_INIT);
+#endif
+
+    /* Clear SOF */
+    USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+
+    while(1)
+    {
+#if CRYSTAL_LESS
+        /* Start USB trim if it is not enabled. */
+        if((SYS->TCTL48M & SYS_TCTL48M_FREQSEL_Msk) != 1)
+        {
+            /* Start USB trim only when SOF */
+            if(USBD->INTSTS & USBD_INTSTS_SOFIF_Msk)
+            {
+                /* Clear SOF */
+                USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+
+                /* Re-enable crystal-less */
+                SYS->TCTL48M = 0x01;
+                SYS->TCTL48M |= SYS_TCTL48M_REFCKSEL_Msk;
+            }
+        }
+
+        /* Disable USB Trim when error */
+        if(SYS->TISTS48M & (SYS_TISTS48M_CLKERRIF_Msk | SYS_TISTS48M_TFAILIF_Msk))
+        {
+            /* Init TRIM */
+            M32(TRIM_INIT) = u32TrimInit;
+
+            /* Disable crystal-less */
+            SYS->TCTL48M = 0;
+
+            /* Clear error flags */
+            SYS->TISTS48M = SYS_TISTS48M_CLKERRIF_Msk | SYS_TISTS48M_TFAILIF_Msk;
+
+            /* Clear SOF */
+            USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+        }
+#endif
+    }
 }
 
 

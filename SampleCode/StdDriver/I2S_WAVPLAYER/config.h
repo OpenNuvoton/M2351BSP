@@ -1,8 +1,6 @@
 /**************************************************************************//**
  * @file     config.h
  * @version  V1.00
- * $Revision: 2 $
- * $Date: 14/05/29 1:14p $
  * @brief    I2S Wave Player Sample Configuration Header File
  *
  * @note
@@ -35,4 +33,4 @@ void NAU88L25_ConfigSampleRate(uint32_t u32SampleRate);
 
 #endif
 
-/*** (C) COPYRIGHT 2012 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
