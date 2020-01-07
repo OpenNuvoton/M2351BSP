@@ -113,7 +113,7 @@ extern uint32_t volatile g_u32BuffLen, g_u32RxBuffLen;
 extern uint32_t g_usbd_UsbAudioState;
 extern volatile uint8_t g_u8AudioPlaying;
 extern volatile uint8_t g_u8TxDataCntInBuffer;
-extern uint32_t g_usbd_SampleRate;
+extern uint32_t volatile g_usbd_SampleRate;
 
 void UAC_DeviceEnable(uint32_t u32IsPlay);
 void UAC_DeviceDisable(uint32_t u32IsPlay);
@@ -150,7 +150,6 @@ typedef struct dma_desc_t
 
 extern void PDMA_Init(void);
 extern void PDMA_WriteTxSGTable(void);
-extern void PDMA_ResetRxSGTable(uint8_t id);
 extern void PDMA_WriteRxSGTable(void);
 #endif  /* __USBD_UAC_H_ */
 

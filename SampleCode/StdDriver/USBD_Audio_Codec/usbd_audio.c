@@ -11,7 +11,7 @@
 #include "NuMicro.h"
 #include "usbd_audio.h"
 
-uint32_t g_usbd_SampleRate = AUDIO_RATE;
+uint32_t volatile g_usbd_SampleRate = AUDIO_RATE;
 /*--------------------------------------------------------------------------*/
 static volatile uint8_t g_u8PlayVolumeLAdjust = FALSE;
 static volatile uint8_t g_u8PlayVolumeRAdjust = FALSE;
@@ -283,12 +283,12 @@ void UAC_Init(void)
     if((g_usbd_SampleRate % 8000) == 0)
     {
         g_u32BuffLen = 768;
-        g_u32RxBuffLen = (g_usbd_SampleRate / 1000);
+        g_u32RxBuffLen = (g_usbd_SampleRate / 1000) * 4;
     }
     else
     {
         g_u32BuffLen = 441;
-        g_u32RxBuffLen = (g_usbd_SampleRate / 1000);
+        g_u32RxBuffLen = 444;
     }
 
     /* Init setup packet buffer */
@@ -518,11 +518,6 @@ void UAC_ClassRequest(void)
                 if((buf[0] & 0x0f) == 0x02)
                 {
                     USBD_PrepareCtrlOut((uint8_t *)&g_usbd_SampleRate, buf[6]);
-                    if(g_u8RecEn)
-                    {
-                        UAC_DeviceDisable(0);
-                        AudioStartRecord(g_usbd_SampleRate);
-                    }
                     /* Status stage */
                     USBD_SET_DATA1(EP0);
                     USBD_SET_PAYLOAD_LEN(EP0, 0);
@@ -646,16 +641,18 @@ void UAC_DeviceEnable(uint32_t u32IsPlay)
     {
         /* Enable play hardware */
         g_u8PlayEn = 1;
+        TIMER_Start(TIMER0);
     }
     else
     {
         /* Enable record hardware */
         if(!g_u8RecEn)
+        {
             AudioStartRecord(g_usbd_SampleRate);
+        }
 
         g_u8RecEn = 1;
     }
-    TIMER_Start(TIMER0);
 }
 
 
@@ -794,16 +791,13 @@ void AudioStartPlay(uint32_t u32SampleRate)
   */
 void UAC_SendRecData(void)
 {
-    uint32_t *pu32Buff;
-
-    /* when record buffer full, send data to host */
+    /* When record buffer full, send data to host */
     if(g_au8PcmRxBufFull[g_u32BufRecIdx])
     {
         /* Set empty flag */
         g_au8PcmRxBufFull[g_u32BufRecIdx] = 0;
 
-        pu32Buff = (uint32_t *)&g_au8PcmRecBuff[g_u32BufRecIdx][0];
-        USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2)), (void *)pu32Buff, g_u32RxBuffLen);
+        USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2)), (void *)&g_au8PcmRecBuff[g_u32BufRecIdx][0], g_u32RxBuffLen);
         USBD_SET_PAYLOAD_LEN(EP2, g_u32RxBuffLen);
 
         /* Change to next PCM buffer */

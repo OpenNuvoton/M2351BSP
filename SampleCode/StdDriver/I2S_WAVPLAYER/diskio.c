@@ -36,9 +36,16 @@ uint32_t Tmp_Buffer[Sector_Size];
 
 DSTATUS disk_initialize(BYTE pdrv)        /* Physical drive number (0..) */
 {
+    SDH_T *pSDH;
+
+    if((__PC()&NS_OFFSET) == NS_OFFSET)
+        pSDH = SDH0_NS;
+    else
+        pSDH = SDH0;
+
     if(pdrv == 0)
     {
-        if(SDH_GET_CARD_CAPACITY(SDH0) == 0)
+        if(SDH_GET_CARD_CAPACITY(pSDH) == 0)
             return STA_NOINIT;
     }
     else if(pdrv == 1)
@@ -56,9 +63,16 @@ DSTATUS disk_initialize(BYTE pdrv)        /* Physical drive number (0..) */
 
 DSTATUS disk_status(BYTE pdrv)        /* Physical drive number (0..) */
 {
+    SDH_T *pSDH;
+
+    if((__PC()&NS_OFFSET) == NS_OFFSET)
+        pSDH = SDH0_NS;
+    else
+        pSDH = SDH0;
+
     if(pdrv == 0)
     {
-        if(SDH_GET_CARD_CAPACITY(SDH0) == 0)
+        if(SDH_GET_CARD_CAPACITY(pSDH) == 0)
             return STA_NOINIT;
     }
     else if(pdrv == 1)
@@ -86,6 +100,12 @@ DRESULT disk_read
     DRESULT   ret;
     uint32_t shift_buf_flag = 0;
     uint32_t tmp_StartBufAddr;
+    SDH_T *pSDH;
+
+    if((__PC()&NS_OFFSET) == NS_OFFSET)
+        pSDH = SDH0_NS;
+    else
+        pSDH = SDH0;
 
     //printf("disk_read - drv:%d, sec:%d, cnt:%d, buff:0x%x\n", pdrv, sector, count, (uint32_t)buff);
     if((uint32_t)buff % 4)
@@ -99,20 +119,20 @@ DRESULT disk_read
         {
             if(count == 1)
             {
-                ret = (DRESULT) SDH_Read(SDH0, (uint8_t*)(&Tmp_Buffer), sector, count);
+                ret = (DRESULT) SDH_Read(pSDH, (uint8_t*)(&Tmp_Buffer), sector, count);
                 memcpy(buff, (&Tmp_Buffer), count * SD0.sectorSize);
             }
             else
             {
                 tmp_StartBufAddr = (((uint32_t)buff / 4 + 1) * 4);
-                ret = (DRESULT) SDH_Read(SDH0, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
+                ret = (DRESULT) SDH_Read(pSDH, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
                 memcpy(buff, (void*)tmp_StartBufAddr, (SD0.sectorSize * (count - 1)));
-                ret = (DRESULT) SDH_Read(SDH0, (uint8_t*)(&Tmp_Buffer), (sector + count - 1), 1);
+                ret = (DRESULT) SDH_Read(pSDH, (uint8_t*)(&Tmp_Buffer), (sector + count - 1), 1);
                 memcpy((buff + (SD0.sectorSize * (count - 1))), (void*)Tmp_Buffer, SD0.sectorSize);
             }
         }
         else
-            ret = (DRESULT) SDH_Read(SDH0, buff, sector, count);
+            ret = (DRESULT) SDH_Read(pSDH, buff, sector, count);
     }
 //    else if (pdrv == 1)
 //        ret = (DRESULT) SDH_Read(SDH1, buff, sector, count);
@@ -139,7 +159,13 @@ DRESULT disk_write
     uint32_t shift_buf_flag = 0;
     uint32_t tmp_StartBufAddr;
     uint32_t volatile i;
+    SDH_T *pSDH;
     uint32_t u32BufIdx;
+
+    if((__PC()&NS_OFFSET) == NS_OFFSET)
+        pSDH = SDH0_NS;
+    else
+        pSDH = SDH0;
 
     //printf("disk_write - drv:%d, sec:%d, cnt:%d, buff:0x%x\n", pdrv, sector, count, (uint32_t)buff);
     if((uint32_t)buff % 4)
@@ -154,7 +180,7 @@ DRESULT disk_write
             if(count == 1)
             {
                 memcpy((&Tmp_Buffer), buff, count * SD0.sectorSize);
-                ret = (DRESULT) SDH_Write(SDH0, (uint8_t*)(&Tmp_Buffer), sector, count);
+                ret = (DRESULT) SDH_Write(pSDH, (uint8_t*)(&Tmp_Buffer), sector, count);
             }
             else
             {
@@ -167,12 +193,12 @@ DRESULT disk_write
                     memcpy((void *)(tmp_StartBufAddr + u32BufIdx), (buff + u32BufIdx), 1);
                 }
 
-                ret = (DRESULT) SDH_Write(SDH0, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
-                ret = (DRESULT) SDH_Write(SDH0, (uint8_t*)(&Tmp_Buffer), (sector + count - 1), 1);
+                ret = (DRESULT) SDH_Write(pSDH, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
+                ret = (DRESULT) SDH_Write(pSDH, (uint8_t*)(&Tmp_Buffer), (sector + count - 1), 1);
             }
         }
         else
-            ret = (DRESULT) SDH_Write(SDH0, (uint8_t *)buff, sector, count);
+            ret = (DRESULT) SDH_Write(pSDH, (uint8_t *)buff, sector, count);
     }
 //    else if (pdrv == 1)
 //        ret = (DRESULT) SDH_Write(SDH1, (uint8_t *)buff, sector, count);

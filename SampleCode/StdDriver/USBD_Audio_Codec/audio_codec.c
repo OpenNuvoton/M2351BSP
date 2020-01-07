@@ -114,7 +114,7 @@ void NAU8822_ConfigSampleRate(uint32_t u32SampleRate)
             I2C_WriteNAU8822(6, 0x14D);    /* Divide by 2, 48K */
             I2C_WriteNAU8822(7, 0x000);    /* 48K for internal filter coefficients */
             g_u32BuffLen = 441;
-            g_u32RxBuffLen = 176;
+            g_u32RxBuffLen = 444;
             break;
 
         case 48000:
@@ -125,8 +125,8 @@ void NAU8822_ConfigSampleRate(uint32_t u32SampleRate)
             break;
 
         case 96000:
-            I2C_WriteNAU8822(6, 0x10D);    /* Divide by 1, 96K */
-            I2C_WriteNAU8822(72, 0x017);
+            I2C_WriteNAU8822(6, 0x109);
+            I2C_WriteNAU8822(72, 0x013);
             g_u32BuffLen = 768;
             g_u32RxBuffLen = 384;
             break;
@@ -161,14 +161,14 @@ void AdjustCodecPll(RESAMPLE_STATE_T r)
     {
         {0x00C, 0x093, 0x0E9},   // 8.192
         {0x00E, 0x1D2, 0x1E3},   // * 1.005 = 8.233
-        {0x009, 0x153, 0x1EF}
-    }; // * .995 = 8.151
+        {0x009, 0x153, 0x1EF}    // * .995 = 8.151
+    };
     static uint16_t tb1[3][3] =
     {
-        {0x021, 0x161, 0x026},   // 7.526
+        {0x021, 0x131, 0x026},   // 7.526
         {0x024, 0x010, 0x0C5},   // * 1.005 = 7.563
-        {0x01F, 0x076, 0x191}
-    }; // * .995 = 7.488
+        {0x01F, 0x076, 0x191}    // * .995 = 7.488
+    };
     static RESAMPLE_STATE_T current = E_RS_NONE;
     int i, s;
 
@@ -267,6 +267,8 @@ void NAU88L25_ConfigSampleRate(uint32_t u32SampleRate)
 
     printf("[NAU88L25] Configure Sampling Rate to %d\n", u32SampleRate);
 
+    I2C_WriteNAU88L25(0x0003,  0x8053);
+    I2C_WriteNAU88L25(0x0004,  0x0001);
     if((u32SampleRate % 8) == 0)
     {
         I2C_WriteNAU88L25(0x0005, 0x3126); //12.288Mhz
@@ -285,7 +287,7 @@ void NAU88L25_ConfigSampleRate(uint32_t u32SampleRate)
             I2C_WriteNAU88L25(0x002B,  0x0012);
             I2C_WriteNAU88L25(0x002C,  0x0082);
             g_u32BuffLen = 441;
-            g_u32RxBuffLen = 176;
+            g_u32RxBuffLen = 444;
             break;
 
         case 48000:
@@ -415,7 +417,7 @@ void AdjustCodecPll(RESAMPLE_STATE_T r)
     /* 0.192   * 2^16 = 0x3126 */
     /* 0.23296 * 2^16 = 0x3BA3 */
     /* 0.15104 * 2^16 = 0x26AB */
-    static uint16_t tb0[3] = {0x3216, 0x3BA3, 0x26AB};
+    static uint16_t tb0[3] = {0x3126, 0x3BA3, 0x26AB};
 
     /* Sample rate = 44.1KHz only */
     /* 7.5264, 7.5264*1.005 = 7.5640, 7.5264*0.995 = 7.4887 */
