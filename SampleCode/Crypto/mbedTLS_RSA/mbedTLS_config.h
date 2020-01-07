@@ -32,8 +32,8 @@
 
 /* System support */
 
-//#define MBEDTLS_HAVE_INT32
-#define MBEDTLS_HAVE_ASM
+#define MBEDTLS_HAVE_INT32
+//#define MBEDTLS_HAVE_ASM
 //#define MBEDTLS_HAVE_TIME
 //#define MBEDTLS_HAVE_TIME_DATE
 #define MBEDTLS_PLATFORM_MEMORY
