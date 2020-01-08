@@ -4,15 +4,17 @@
 #include "NuMicro.h"
 
 /* mbeTLS header files */
-#include "ecdh.h"
+#include "ecp.h"
+#include "ecdsa.h"
 
+#define CRYPTO_MAX_KEY_LEN 1024
 
-#define CRYPTO_DH_MAX_KEY_LEN 1024
-
-unsigned char buf[CRYPTO_DH_MAX_KEY_LEN];
+unsigned char buf[CRYPTO_MAX_KEY_LEN];
+unsigned char tmp[CRYPTO_MAX_KEY_LEN];
 
 /* timer ticks - 100 ticks per second */
 volatile uint32_t  g_tick_cnt;
+
 
 void SysTick_Handler(void)
 {
@@ -50,7 +52,6 @@ uint32_t  get_timer0_counter()
     return TIMER0->CNT;
 }
 
-
 static int myrand( void *rng_state, unsigned char *output, size_t len )
 {
 #if !defined(__OpenBSD__)
@@ -75,29 +76,25 @@ static int myrand( void *rng_state, unsigned char *output, size_t len )
 
 
 
-int ECDHTest(void)
+int ECDSATest(void)
 {
     int ret = 0;
     uint32_t u32Time;
-    size_t size;
-    mbedtls_ecp_group_id curve;
-    mbedtls_ecdh_context ecdh;
+    mbedtls_ecdsa_context ecdsa;
+    size_t sig_len;
+    const mbedtls_ecp_curve_info *curve_info = mbedtls_ecp_curve_info_from_grp_id(MBEDTLS_ECP_DP_SECP256K1);
 
+    /* Initializes an ECDSA context. */
+    mbedtls_ecdsa_init( &ecdsa );
+    memset( buf, 0x2A, sizeof( buf ) );
 
-    /* Initializes an ECDH context. */
-    mbedtls_ecdh_init(&ecdh);
-    printf(" mbedtls ECDH init done  \n\n");
-
-    /* Set up the ECDH context with the information given. */
-    /* Adapts P256 curve                                   */
-    curve = MBEDTLS_ECP_DP_SECP256K1;
+    printf(" mbedtls ECDSA init done  \n\n");
 
     enable_sys_tick(1000);
     start_timer0();
 
-    printf(" mbedtls ECDH setup        : ");
-    ret = mbedtls_ecdh_setup (&ecdh, curve);
-
+    printf(" mbedtls ECDSA generate key       : ");
+    ret = mbedtls_ecdsa_genkey( &ecdsa, curve_info->grp_id, myrand, NULL );
     if(ret == 0)
     {
         printf("passed");
@@ -109,16 +106,15 @@ int ECDHTest(void)
     else
     {
         printf("failed! ret[%d]\n", ret);
+        mbedtls_ecdsa_free(&ecdsa);
         return ret;
     }
 
     enable_sys_tick(1000);
     start_timer0();
 
-    /* Generates an EC key pair and exports its in the format used in a TLS ServerKeyExchange handshake message. */
-    printf(" mbedtls ECDH make params  : ");
-    ret = mbedtls_ecdh_make_params(&ecdh, &size, buf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
-
+    printf(" mbedtls ECDSA key pair           : ");
+    ret = mbedtls_ecdsa_from_keypair( &ecdsa, &ecdsa );
     if(ret == 0)
     {
         printf("passed");
@@ -130,16 +126,16 @@ int ECDHTest(void)
     else
     {
         printf("failed! ret[%d]\n", ret);
+        mbedtls_ecdsa_free(&ecdsa);
         return ret;
     }
 
     enable_sys_tick(1000);
     start_timer0();
 
-    /* Generate a public key and exports it as a TLS ClientKeyExchange payload. */
-    printf(" mbedtls ECDH make public  : ");
-    ret = mbedtls_ecdh_make_public(&ecdh, &size, buf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
-
+    /* Computes the ECDSA signature and writes it to a buffer */
+    printf(" mbedtls ECDSA signature generate : ");
+    ret = mbedtls_ecdsa_write_signature( &ecdsa, MBEDTLS_MD_SHA256, buf, curve_info->bit_size, tmp, &sig_len, myrand, NULL);
     if(ret == 0)
     {
         printf("passed");
@@ -151,16 +147,16 @@ int ECDHTest(void)
     else
     {
         printf("failed! ret[%d]\n", ret);
+        mbedtls_ecdsa_free(&ecdsa);
         return ret;
     }
 
     enable_sys_tick(1000);
     start_timer0();
 
-    /* Parse and process the ECDHE payload of a TLS ClientKeyExchange message*/
-    printf(" mbedtls ECDH read public  : ");
-    ret = mbedtls_ecdh_read_public(&ecdh, buf, size);
-
+    /* Reads and verifies an ECDSA signature */
+    printf(" mbedtls ECDSA signature verify   : ");
+    ret = mbedtls_ecdsa_read_signature(&ecdsa, buf, curve_info->bit_size, tmp, sig_len);
     if(ret == 0)
     {
         printf("passed");
@@ -172,32 +168,13 @@ int ECDHTest(void)
     else
     {
         printf("failed! ret[%d]\n", ret);
+        mbedtls_ecdsa_free(&ecdsa);
         return ret;
     }
 
-    enable_sys_tick(1000);
-    start_timer0();
+    mbedtls_ecdsa_free(&ecdsa);
 
-    /* Derives and exports the shared secret.                         */
-    /* This is the last function used by both TLS client and servers. */
-    printf(" mbedtls ECDH calc secret  : ");
-    ret = mbedtls_ecdh_calc_secret(&ecdh, &size, buf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
-
-    if(ret == 0)
-    {
-        printf("passed");
-        u32Time = get_timer0_counter();
-
-        /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
-    }
-    else
-    {
-        printf("failed! ret[%d]\n", ret);
-        return ret;
-    }
-
-    mbedtls_ecdh_free(&ecdh);
+    printf("\n mbedtls ECDSA done  \n");
     return ret;
 }
 

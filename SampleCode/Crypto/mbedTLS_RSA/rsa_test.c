@@ -94,6 +94,47 @@ const char SSL_USER_PRIV_KEY_PEM[] =
 
 #define USE_PEM_FILE 0
 
+uint32_t g_u32Time, g_u32Ratio, u32Cnt;;
+/* timer ticks - 100 ticks per second */
+volatile uint32_t  g_tick_cnt;
+
+
+void SysTick_Handler(void)
+{
+    g_tick_cnt++;
+}
+
+
+void enable_sys_tick(int ticks_per_second)
+{
+    g_tick_cnt = 0;
+    SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
+    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    {
+        /* Setup SysTick Timer for 1 second interrupts  */
+        printf("Set system tick error!!\n");
+        while(1);
+    }
+}
+
+void start_timer0()
+{
+    /* Start TIMER0  */
+    CLK->CLKSEL1 = (CLK->CLKSEL1 & (~CLK_CLKSEL1_TMR0SEL_Msk)) | CLK_CLKSEL1_TMR0SEL_HXT;
+    CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;    /* enable TIMER0 clock                  */
+    TIMER0->CTL = 0;                   /* disable timer                                  */
+    TIMER0->INTSTS = (TIMER_INTSTS_TWKF_Msk | TIMER_INTSTS_TIF_Msk);  /* clear interrupt status */
+    TIMER0->CMP = 0xFFFFFE;            /* maximum time                                   */
+    TIMER0->CNT = 0;                   /* clear timer counter                            */
+    /* start timer */
+    TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
+}
+
+uint32_t  get_timer0_counter()
+{
+    return TIMER0->CNT ? TIMER0->CNT : g_u32Ratio*g_tick_cnt;
+}
+
 
 #if defined(MBEDTLS_PKCS1_V15)
 static int myrand( void *rng_state, unsigned char *output, size_t len )
@@ -124,17 +165,31 @@ static int myrand( void *rng_state, unsigned char *output, size_t len )
 int PEMtoRSA(void)
 {
     int ret = 0;
-
     mbedtls_pk_context pk;
+
+
+    enable_sys_tick(1000);
+    start_timer0();
+    for(u32Cnt = 0; u32Cnt<100000; u32Cnt++)
+    {
+        __NOP();
+    }
+
+    g_u32Time = get_timer0_counter();
+    g_u32Ratio = g_u32Time/g_tick_cnt;
+
 
     mbedtls_pk_init(&pk);
 
+    enable_sys_tick(1000);
+    start_timer0();
 
+    printf("\n  mbedtls_pk_parse_key      :");
 #if USE_PEM_FILE
     /*
      * Read the RSA private key
      */
-    if( ( ret = mbedtls_pk_parse_keyfile( &pk, "private.pem", "" ) ) != 0 )
+    if( ( ret = mbedtls_pk_parse_keyfile( &pk, "./private.pem", "" ) ) != 0 )
     {
         printf( " failed\n  ! mbedtls_pk_parse_keyfile returned -0x%04x\n", ret );
         return -1;
@@ -151,19 +206,31 @@ int PEMtoRSA(void)
     }
 #endif
 
-    printf("\n  mbedtls_pk_parse_key:      passed \n");
 
+    printf(" passed");
+    g_u32Time = get_timer0_counter();
 
+    /* TIMER0->CNT is the elapsed us */
+    printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+
+    enable_sys_tick(1000);
+    start_timer0();
+
+    printf("  mbedtls_rsa_check_privkey :");
     /* check RSA key */
+    mbedtls_rsa_context *rsa = mbedtls_pk_rsa(pk);
+    if (mbedtls_rsa_check_privkey( rsa ) != 0 )
     {
-        mbedtls_rsa_context *rsa = mbedtls_pk_rsa(pk);
-        if (mbedtls_rsa_check_privkey( rsa ) != 0 )
-        {
-            printf("  failed\n !mbedtls_rsa_check_privkey\n");
-            return -1;
-        }
-        printf("  mbedtls_rsa_check_privkey: passed\n");
+        printf("  failed\n !mbedtls_rsa_check_privkey\n");
+        return -1;
     }
+
+    printf(" passed");
+    g_u32Time = get_timer0_counter();
+
+    /* TIMER0->CNT is the elapsed us */
+    printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+
     mbedtls_pk_free(&pk);
 
     return 0;
@@ -206,7 +273,11 @@ int RSAEncryptWithHashTest( int verbose )
     MBEDTLS_MPI_CHK( mbedtls_rsa_complete( &rsa ) );
 
     if( verbose != 0 )
-        printf( "\n  RSA key validation: " );
+        printf( "\n  RSA key validation     : " );
+
+
+    enable_sys_tick(1000);
+    start_timer0();
 
     if( mbedtls_rsa_check_pubkey(  &rsa ) != 0 ||
             mbedtls_rsa_check_privkey( &rsa ) != 0 )
@@ -219,7 +290,18 @@ int RSAEncryptWithHashTest( int verbose )
     }
 
     if( verbose != 0 )
-        printf( "passed\n  PKCS#1 encryption : " );
+    {
+        printf("passed");
+        g_u32Time = get_timer0_counter();
+
+        /* TIMER0->CNT is the elapsed us */
+        printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+    }
+
+    enable_sys_tick(1000);
+    start_timer0();
+
+    printf( "  PKCS#1 encryption      : " );
 
     memcpy( rsa_plaintext, RSA_PT, PT_LEN );
 
@@ -235,7 +317,18 @@ int RSAEncryptWithHashTest( int verbose )
     }
 
     if( verbose != 0 )
-        printf( "passed\n  PKCS#1 decryption : " );
+    {
+        printf("passed");
+        g_u32Time = get_timer0_counter();
+
+        /* TIMER0->CNT is the elapsed us */
+        printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+    }
+
+    enable_sys_tick(1000);
+    start_timer0();
+
+    printf( "  PKCS#1 decryption      : " );
 
     if( mbedtls_rsa_pkcs1_decrypt( &rsa, myrand, NULL, MBEDTLS_RSA_PRIVATE,
                                    &len, rsa_ciphertext, rsa_decrypted,
@@ -258,11 +351,20 @@ int RSAEncryptWithHashTest( int verbose )
     }
 
     if( verbose != 0 )
-        printf( "passed\n" );
+    {
+        printf("passed");
+        g_u32Time = get_timer0_counter();
+
+        /* TIMER0->CNT is the elapsed us */
+        printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+    }
+    enable_sys_tick(1000);
+    start_timer0();
+
 
 #if defined(MBEDTLS_SHA1_C)
     if( verbose != 0 )
-        printf( "  PKCS#1 data sign  : " );
+        printf( "  PKCS#1 data sign       : " );
 
     if( mbedtls_sha1_ret( rsa_plaintext, PT_LEN, sha1sum ) != 0 )
     {
@@ -283,8 +385,18 @@ int RSAEncryptWithHashTest( int verbose )
         goto cleanup;
     }
 
+
     if( verbose != 0 )
-        printf( "passed\n  PKCS#1 sig. verify: " );
+    {
+        printf("passed");
+        g_u32Time = get_timer0_counter();
+
+        /* TIMER0->CNT is the elapsed us */
+        printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+    }
+    enable_sys_tick(1000);
+    start_timer0();
+    printf( "  PKCS#1 sig. verify     : " );
 
     if( mbedtls_rsa_pkcs1_verify( &rsa, NULL, NULL,
                                   MBEDTLS_RSA_PUBLIC, MBEDTLS_MD_SHA1, 0,
@@ -298,7 +410,15 @@ int RSAEncryptWithHashTest( int verbose )
     }
 
     if( verbose != 0 )
-        printf( "passed\n" );
+    {
+        printf("passed");
+        g_u32Time = get_timer0_counter();
+
+        /* TIMER0->CNT is the elapsed us */
+        printf("     takes %d.%d seconds,  %d ticks\n", g_u32Time / 1000000, g_u32Time / 1000, g_tick_cnt);
+    }
+    enable_sys_tick(1000);
+    start_timer0();
 #endif /* MBEDTLS_SHA1_C */
 
     if( verbose != 0 )

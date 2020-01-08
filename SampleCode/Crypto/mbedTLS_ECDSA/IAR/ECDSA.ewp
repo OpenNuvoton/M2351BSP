@@ -649,7 +649,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>ECDH.bin</state>
+                    <state>ECDSA.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -704,7 +704,7 @@
                 </option>
                 <option>
                     <name>IlinkOutputFile</name>
-                    <state>ECDH.out</state>
+                    <state>ECDSA.out</state>
                 </option>
                 <option>
                     <name>IlinkDebugInfoEnable</name>
@@ -1001,7 +1001,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>ECDH_import_lib.o</state>
+                    <state>ECDSA_import_lib.o</state>
                 </option>
             </data>
         </settings>
@@ -1117,9 +1117,6 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\ThirdParty\mbedTLS\library\dhm.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\..\..\..\ThirdParty\mbedTLS\library\ecdh.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\ThirdParty\mbedTLS\library\ecdsa.c</name>
@@ -1296,7 +1293,7 @@
     <group>
         <name>User</name>
         <file>
-            <name>$PROJ_DIR$\..\ecdh_test.c</name>
+            <name>$PROJ_DIR$\..\ecdsa_test.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\main.c</name>

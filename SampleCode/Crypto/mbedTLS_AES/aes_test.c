@@ -9,6 +9,45 @@
 #include "platform.h"
 
 
+/* timer ticks - 100 ticks per second */
+volatile uint32_t  g_tick_cnt;
+
+
+void SysTick_Handler(void)
+{
+    g_tick_cnt++;
+}
+
+
+void enable_sys_tick(int ticks_per_second)
+{
+    g_tick_cnt = 0;
+    SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
+    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    {
+        /* Setup SysTick Timer for 1 second interrupts  */
+        printf("Set system tick error!!\n");
+        while(1);
+    }
+}
+
+void start_timer0()
+{
+    /* Start TIMER0  */
+    CLK->CLKSEL1 = (CLK->CLKSEL1 & (~CLK_CLKSEL1_TMR0SEL_Msk)) | CLK_CLKSEL1_TMR0SEL_HXT;
+    CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;    /* enable TIMER0 clock                  */
+    TIMER0->CTL = 0;                   /* disable timer                                  */
+    TIMER0->INTSTS = (TIMER_INTSTS_TWKF_Msk | TIMER_INTSTS_TIF_Msk);  /* clear interrupt status */
+    TIMER0->CMP = 0xFFFFFE;            /* maximum time                                   */
+    TIMER0->CNT = 0;                   /* clear timer counter                            */
+    /* start timer */
+    TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
+}
+
+uint32_t  get_timer0_counter()
+{
+    return TIMER0->CNT;
+}
 
 
 static const unsigned char aes_test_cfb128_key[3][32] =
@@ -81,13 +120,14 @@ static const unsigned char aes_test_cfb128_ct[3][64] =
 int AESTest(void)
 {
     int verbose = 1;
-    int ret = 0, i, j, u, mode;
+    int ret = 0, i, u, mode;
     unsigned int keybits;
     unsigned char key[32];
     unsigned char buf[64];
     const unsigned char *aes_tests;
     unsigned char iv[16];
     size_t offset;
+    uint32_t u32Time;
 
 
 
@@ -116,6 +156,8 @@ int AESTest(void)
 
         offset = 0;
 
+        enable_sys_tick(1000);
+        start_timer0();
         /* Sets the AES encryption key */
         ret = mbedtls_aes_setkey_enc( &ctx, key, keybits );
 
@@ -152,7 +194,13 @@ int AESTest(void)
         }
 
         if( verbose != 0 )
-            printf( "passed\n" );
+        {
+            printf("passed");
+            u32Time = get_timer0_counter();
+
+            /* TIMER0->CNT is the elapsed us */
+            printf("     takes %d us,  %d ticks\n", u32Time, g_tick_cnt);
+        }
     }
 
     if( verbose != 0 )

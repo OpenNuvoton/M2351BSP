@@ -1,22 +1,19 @@
+
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
  * $Revision: 3 $
  * $Date: 19/11/22 2:06p $
- * @brief    Show how mbedTLS RSA function works.
+ * @brief    Show how mbedTLS ECDH function works.
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
-#include "rsa.h"
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+
 
 #define MBEDTLS_EXIT_SUCCESS    0
 #define MBEDTLS_EXIT_FAILURE    -1
-
 
 
 void SYS_Init(void)
@@ -66,16 +63,11 @@ void SYS_Init(void)
     SYS->GPB_MFPH = (SYS->GPB_MFPH & (~(UART0_RXD_PB12_Msk | UART0_TXD_PB13_Msk))) | UART0_RXD_PB12 | UART0_TXD_PB13;
 }
 
-
-
-
-extern int PEMtoRSA(void);
-extern int RSAEncryptWithHashTest( int verbose );
+extern int ECDSATest(void);
 
 int32_t main(void)
 {
-    uint32_t  u32Verbose;
-    int32_t  i32Ret;
+    int32_t  i32Ret = MBEDTLS_EXIT_SUCCESS;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -95,42 +87,22 @@ int32_t main(void)
 
     printf("\n\n");
     printf("+---------------------------------+\n");
-    printf("|         RSA Sample Code         |\n");
+    printf("|       ECDSA Sample Code         |\n");
     printf("+---------------------------------+\n");
 
-    /* Unlock protected registers */
-    SYS_UnlockReg();
 
-    i32Ret = MBEDTLS_EXIT_SUCCESS;
+    printf("\n ECDSA test start...\n\n");
+    i32Ret = ECDSATest();
+    printf("\n ECDSA test done ...\n");
 
-    printf("\n  PEM to RSA key test start\n");
-    i32Ret = PEMtoRSA();
-    printf("\n  PEM to RSA key test done\n");
-
-    if(i32Ret != MBEDTLS_EXIT_SUCCESS)
-    {
-        printf("\n  Test fail\n");
-        while(1);
-    }
-#if 0
-    printf("\n RSA encrypt with hash test. \n Please enter the [verbose] value, then press Enter Key:\n");
-    scanf("%d",&u32Verbose);
-    printf("\n RSA encrypt with hash test start...   verbose[%d]\n", u32Verbose);
-#else
-    u32Verbose = 1;
-    printf("\n  RSA encrypt with hash test start\n");
-#endif
-
-    i32Ret = RSAEncryptWithHashTest(u32Verbose);
-    printf("\n  RSA encrypt with hash test done\n");
 
     if(i32Ret == MBEDTLS_EXIT_SUCCESS)
     {
-        printf("\n  Test OK\n");
+        printf("\n Test OK\n");
     }
     else
     {
-        printf("\n  Test fail\n");
+        printf("\n Test fail\n");
     }
 
     while(1);
