@@ -280,23 +280,8 @@ int32_t FMC_EraseXOM(uint32_t u32XomNum)
 
         if(i32Active)
         {
-            switch(u32XomNum)
-            {
-                case 0u:
-                    u32Addr = (FMC->XOMR0STS & 0xFFFFFF00u) >> 8u;
-                    break;
-                case 1u:
-                    u32Addr = (FMC->XOMR1STS & 0xFFFFFF00u) >> 8u;
-                    break;
-                case 2u:
-                    u32Addr = (FMC->XOMR2STS & 0xFFFFFF00u) >> 8u;
-                    break;
-                case 3u:
-                    u32Addr = (FMC->XOMR3STS & 0xFFFFFF00u) >> 8u;
-                    break;
-                default:
-                    break;
-            }
+            u32Addr = ( ( (uint32_t)(&FMC->XOMR0STS)[u32XomNum] ) & 0xFFFFFF00u ) >> 8u;
+
             FMC->ISPCMD = FMC_ISPCMD_PAGE_ERASE;
             FMC->ISPADDR = u32Addr;
             FMC->ISPDAT = 0x55aa03u;
@@ -918,8 +903,8 @@ int32_t FMC_WriteConfig(uint32_t au32Config[], uint32_t u32Count)
 int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
 {
 
-    uint32_t i, idx, u32OnProg, retval = 0;
-    int32_t err;
+    uint32_t i, idx, u32OnProg;
+    int32_t err, retval = 0;
 
     if((u32Addr >= FMC_APROM_END) || ((u32Addr % 8) != 0))
     {
@@ -941,7 +926,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
         FMC->ISPTRG = 0x1u;
         idx += 4u;
 
-        for(i = idx; i < (FMC_MULTI_WORD_PROG_LEN / 4u); i += 4u) /* Max data length is 256 bytes (512/4 words)*/
+        for(i = idx; i < (u32Len / 4u); i += 4u) /* Max data length is 256 bytes (512/4 words)*/
         {
             __set_PRIMASK(1u); /* Mask interrupt to avoid status check coherence error*/
             do

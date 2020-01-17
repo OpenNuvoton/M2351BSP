@@ -55,7 +55,7 @@ void TPWM_SetCounterClockSource(TIMER_T *timer, uint32_t u32CntClkSrc)
 uint32_t TPWM_ConfigOutputFreqAndDuty(TIMER_T *timer, uint32_t u32Frequency, uint32_t u32DutyCycle)
 {
     uint32_t u32PWMClockFreq, u32TargetFreq;
-    uint32_t u32Prescaler = 0x1000UL, u32Period, u32CMP;
+    uint32_t u32Prescaler = 0x1000UL, u32Period = 1UL, u32CMP;
 
     if((timer == TIMER0) || (timer == TIMER1))
     {

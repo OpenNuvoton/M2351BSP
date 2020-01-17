@@ -659,7 +659,7 @@ __STATIC_INLINE void USBD_ClearStall(uint8_t epnum)
   */
 __STATIC_INLINE uint32_t USBD_GetStall(uint8_t epnum)
 {
-    uint32_t u32CfgAddr;
+    uint32_t u32CfgAddr = 0;
     uint32_t u32Cfg;
     uint32_t i;
 
@@ -689,6 +689,7 @@ __STATIC_INLINE uint32_t USBD_GetStall(uint8_t epnum)
 }
 
 extern volatile uint8_t g_USBD_u8RemoteWakeupEn;
+extern uint8_t g_USBD_au8SetupPacket[8];
 
 
 typedef void (*VENDOR_REQ)(void);           /*!< Functional pointer type definition for Vendor class */
@@ -696,6 +697,12 @@ typedef void (*CLASS_REQ)(void);            /*!< Functional pointer type declara
 typedef void (*SET_INTERFACE_REQ)(uint32_t u32AltInterface);    /*!< Functional pointer type declaration for USB set interface request callback handler */
 typedef void (*SET_CONFIG_CB)(void);       /*!< Functional pointer type declaration for USB set configuration request callback handler */
 
+extern const S_USBD_INFO_T *g_USBD_sInfo;           /*!< A pointer for USB information structure */
+extern VENDOR_REQ g_USBD_pfnVendorRequest;          /*!< USB Vendor Request Functional Pointer */
+extern CLASS_REQ g_USBD_pfnClassRequest;            /*!< USB Class Request Functional Pointer */
+extern SET_INTERFACE_REQ g_USBD_pfnSetInterface;    /*!< USB Set Interface Functional Pointer */
+extern SET_CONFIG_CB g_USBD_pfnSetConfigCallback;   /*!< USB Set configuration callback function pointer */
+extern uint32_t g_USBD_u32EpStallLock;              /*!< Bit map flag to lock specified EP when SET_FEATURE */
 
 /*--------------------------------------------------------------------*/
 void USBD_Open(const S_USBD_INFO_T *param, CLASS_REQ pfnClassReq, SET_INTERFACE_REQ pfnSetInterface);

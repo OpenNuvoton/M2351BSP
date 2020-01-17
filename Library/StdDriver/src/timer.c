@@ -259,30 +259,23 @@ uint32_t TIMER_GetModuleClock(TIMER_T *timer)
     }
     else
     {
-        u32Clk = 0UL;
+        return 0UL;
     }
 
-    if(u32Clk == 0UL)
+    if(u32Src == 2UL)
     {
-        ; /* Invalid timer channel */
-    }
-    else
-    {
-        if(u32Src == 2UL)
+        if((timer == TIMER0) || (timer == TIMER1))
         {
-            if((timer == TIMER0) || (timer == TIMER1))
-            {
-                u32Clk = CLK_GetPCLK0Freq();
-            }
-            else
-            {
-                u32Clk = CLK_GetPCLK1Freq();
-            }
+            u32Clk = CLK_GetPCLK0Freq();
         }
         else
         {
-            u32Clk = au32Clk[u32Src];
+            u32Clk = CLK_GetPCLK1Freq();
         }
+    }
+    else
+    {
+        u32Clk = au32Clk[u32Src];
     }
 
     return u32Clk;
@@ -325,7 +318,7 @@ void TIMER_EnableFreqCounter(TIMER_T *timer,
     }
     else
     {
-        t = 0UL ;
+        t = 0UL;
     }
 
     if(t != 0UL)

@@ -303,7 +303,7 @@ void UART_Open(UART_T* uart, uint32_t u32baudrate)
             u32UartClkDivNum = CLK_GetModuleClockDivider(UART5_MODULE);
             break;
         default:
-            break;
+            return ;
     }
 
     /* Select UART function */
@@ -451,7 +451,7 @@ void UART_SetLineConfig(UART_T* uart, uint32_t u32baudrate, uint32_t u32data_wid
             u32UartClkDivNum = CLK_GetModuleClockDivider(UART5_MODULE);
             break;
         default:
-            break;
+            return ;
     }
 
     /* Get PLL clock frequency if UART clock source selection is PLL */
@@ -556,7 +556,7 @@ void UART_SelectIrDAMode(UART_T* uart, uint32_t u32Buadrate, uint32_t u32Directi
             u32UartClkDivNum = CLK_GetModuleClockDivider(UART5_MODULE);
             break;
         default:
-            break;
+            return ;
     }
 
     /* Get PLL clock frequency if UART clock source selection is PLL */

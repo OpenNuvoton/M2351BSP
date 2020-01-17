@@ -35,7 +35,7 @@
 uint32_t EPWM_ConfigCaptureChannel(EPWM_T *epwm, uint32_t u32ChannelNum, uint32_t u32UnitTimeNsec, uint32_t u32CaptureEdge)
 {
     uint32_t u32PWMClockSrc;
-    uint32_t u32NearestUnitTimeNsec;
+    uint32_t u32NearestUnitTimeNsec = 0U;
     uint32_t u32Prescale = 1U, u32CNR = 0xFFFFU;
     uint8_t u8BreakLoop = 0U;
 
