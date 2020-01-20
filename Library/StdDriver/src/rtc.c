@@ -70,11 +70,7 @@ void RTC_Open(S_RTC_TIME_DATA_T *sPt)
         while(RTC->INIT != RTC_INIT_ACTIVE_Msk) {}
     }
 
-    if(sPt == 0)
-    {
-        ; /* No RTC date/time data */
-    }
-    else
+    if(sPt != 0)
     {
         /* Set RTC date and time */
         RTC_SetDateAndTime(sPt);
@@ -92,12 +88,9 @@ void RTC_Open(S_RTC_TIME_DATA_T *sPt)
   */
 void RTC_Close(void)
 {
-    if((__PC()&NS_OFFSET) == NS_OFFSET)
+    if((__PC()&NS_OFFSET) == 0)
     {
-        ; /* Disable RTC clock in secure mode only */
-    }
-    else
-    {
+        /* Disable RTC clock in secure mode only */
         CLK->APBCLK0 &= ~CLK_APBCLK0_RTCCKEN_Msk;
     }
 }
@@ -347,11 +340,7 @@ void RTC_SetDateAndTime(S_RTC_TIME_DATA_T *sPt)
 {
     uint32_t u32RegCAL, u32RegTIME;
 
-    if(sPt == 0)
-    {
-        ; /* No RTC date/time data */
-    }
-    else
+    if(sPt != 0)
     {
         /*-----------------------------------------------------------------------------------------------------*/
         /* Set RTC 24/12 hour setting and Day of the Week                                                      */
@@ -428,11 +417,7 @@ void RTC_SetAlarmDateAndTime(S_RTC_TIME_DATA_T *sPt)
 {
     uint32_t u32RegCALM, u32RegTALM;
 
-    if(sPt == 0)
-    {
-        ; /* No RTC date/time data */
-    }
-    else
+    if(sPt != 0)
     {
         /*-----------------------------------------------------------------------------------------------------*/
         /* Set RTC 24/12 hour setting and Day of the Week                                                      */

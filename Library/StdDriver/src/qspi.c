@@ -267,6 +267,12 @@ uint32_t QSPI_SetBusClock(QSPI_T *qspi, uint32_t u32BusClock)
     uint32_t u32ClkSrc, u32HCLKFreq;
     uint32_t u32Div, u32RetValue;
 
+    /* Check if valid QSPI exist */
+    if(!((qspi == QSPI0) || (qspi == QSPI0_NS)))
+    {
+        return 0ul;
+    }
+    
     /* Get system clock frequency */
     u32HCLKFreq = CLK_GetHCLKFreq();
 
@@ -275,32 +281,26 @@ uint32_t QSPI_SetBusClock(QSPI_T *qspi, uint32_t u32BusClock)
         if(!(__PC() & (1UL << 28UL)))
         {
             /* Select PCLK as the clock source of QSPI */
-            if((qspi == QSPI0) || (qspi == QSPI0_NS))
-            {
-                CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_QSPI0SEL_Msk)) | CLK_CLKSEL2_QSPI0SEL_PCLK0;
-            }
+            CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_QSPI0SEL_Msk)) | CLK_CLKSEL2_QSPI0SEL_PCLK0;
         }
     }
 
     /* Check clock source of QSPI */
-    if((qspi == QSPI0) || (qspi == QSPI0_NS))
+    if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_HXT)
     {
-        if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_HXT)
-        {
-            u32ClkSrc = __HXT; /* Clock source is HXT */
-        }
-        else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PLL)
-        {
-            u32ClkSrc = CLK_GetPLLClockFreq(); /* Clock source is PLL */
-        }
-        else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PCLK0)
-        {
-            u32ClkSrc = CLK_GetPCLK0Freq(); /* Clock source is PCLK0 */
-        }
-        else
-        {
-            u32ClkSrc = __HIRC; /* Clock source is HIRC */
-        }
+        u32ClkSrc = __HXT; /* Clock source is HXT */
+    }
+    else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PLL)
+    {
+        u32ClkSrc = CLK_GetPLLClockFreq(); /* Clock source is PLL */
+    }
+    else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PCLK0)
+    {
+        u32ClkSrc = CLK_GetPCLK0Freq(); /* Clock source is PCLK0 */
+    }
+    else
+    {
+        u32ClkSrc = __HIRC; /* Clock source is HIRC */
     }
 
     if(u32BusClock >= u32HCLKFreq)
@@ -371,28 +371,31 @@ uint32_t QSPI_GetBusClock(QSPI_T *qspi)
     uint32_t u32Div;
     uint32_t u32ClkSrc;
 
+    /* Check if valid QSPI exist */
+    if(!((qspi == QSPI0) || (qspi == QSPI0_NS)))
+    {
+        return 0ul;
+    }
+    
     /* Get DIVIDER setting */
     u32Div = (qspi->CLKDIV & QSPI_CLKDIV_DIVIDER_Msk) >> QSPI_CLKDIV_DIVIDER_Pos;
 
     /* Check clock source of QSPI */
-    if((qspi == QSPI0) || (qspi == QSPI0_NS))
+    if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_HXT)
     {
-        if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_HXT)
-        {
-            u32ClkSrc = __HXT; /* Clock source is HXT */
-        }
-        else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PLL)
-        {
-            u32ClkSrc = CLK_GetPLLClockFreq(); /* Clock source is PLL */
-        }
-        else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PCLK0)
-        {
-            u32ClkSrc = CLK_GetPCLK0Freq(); /* Clock source is PCLK0 */
-        }
-        else
-        {
-            u32ClkSrc = __HIRC; /* Clock source is HIRC */
-        }
+        u32ClkSrc = __HXT; /* Clock source is HXT */
+    }
+    else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PLL)
+    {
+        u32ClkSrc = CLK_GetPLLClockFreq(); /* Clock source is PLL */
+    }
+    else if((CLK_GetModuleClockSource(QSPI0_MODULE) << CLK_CLKSEL2_QSPI0SEL_Pos) == CLK_CLKSEL2_QSPI0SEL_PCLK0)
+    {
+        u32ClkSrc = CLK_GetPCLK0Freq(); /* Clock source is PCLK0 */
+    }
+    else
+    {
+        u32ClkSrc = __HIRC; /* Clock source is HIRC */
     }
 
     /* Return QSPI bus clock rate */

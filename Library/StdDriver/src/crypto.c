@@ -475,7 +475,7 @@ enum
 /*  Define elliptic curve (EC):                        */
 /*-----------------------------------------------------*/
 #if !XOM_SUPPORT // Replace with XOM ready curve table
-const ECC_CURVE _Curve[] =
+static const ECC_CURVE _Curve[] =
 {
     {
         /* NIST: Curve P-192 : y^2=x^3-ax+b (mod p) */
@@ -760,7 +760,7 @@ static void run_ecc_codec(CRPT_T *crpt, uint32_t mode);
 
 static char  temp_hex_str[160];
 
-volatile uint32_t g_ECC_done, g_ECCERR_done;
+static volatile uint32_t g_ECC_done, g_ECCERR_done;
 
 void ECC_DriverISR(CRPT_T *crpt)
 {
@@ -1757,7 +1757,7 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
 
 #if XOM_SUPPORT // To support XOM ready curve table
 
-int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
+static int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
 {
     int32_t i;
 
@@ -1851,7 +1851,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000002;
             p32[239] = 0x00000001;
             p32[240] = 0x00000000;
-            break;
+            return 0;
         case CURVE_P_224:
             p32[  0] = 0x00000001;
             p32[  1] = 0x00000038;
@@ -1947,7 +1947,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000008;
             p32[239] = 0x00000003;
             p32[240] = 0x00000000;
-            break;
+            return 0;
         case CURVE_P_256:
             p32[  0] = 0x00000002;
             p32[  1] = 0x00000040;
@@ -2060,7 +2060,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000005;
             p32[239] = 0x00000002;
             p32[240] = 0x00000000;
-            break;
+            return 0;
         case CURVE_P_384:
             p32[  0] = 0x00000003;
             p32[  1] = 0x00000060;
@@ -2198,7 +2198,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000003;
             p32[239] = 0x00000002;
             p32[240] = 0x00000000;
-            break;
+            return 0;
         case CURVE_P_521:
             p32[  0] = 0x00000004;
             p32[  1] = 0x00000083;
@@ -2357,7 +2357,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000020;
             p32[239] = 0x00000020;
             p32[240] = 0x00000000;
-            break;
+            return 0;
         case CURVE_B_163:
             p32[  0] = 0x0000000a;
             p32[  1] = 0x00000029;
@@ -2440,7 +2440,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000006;
             p32[239] = 0x00000003;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_B_233:
             p32[  0] = 0x0000000b;
             p32[  1] = 0x0000003b;
@@ -2537,7 +2537,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x0000004a;
             p32[239] = 0x0000004a;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_B_283:
             p32[  0] = 0x0000000c;
             p32[  1] = 0x00000047;
@@ -2645,7 +2645,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000007;
             p32[239] = 0x00000005;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_B_409:
             p32[  0] = 0x0000000d;
             p32[  1] = 0x00000067;
@@ -2780,7 +2780,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000057;
             p32[239] = 0x00000057;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_B_571:
             p32[  0] = 0x0000000e;
             p32[  1] = 0x0000008f;
@@ -2939,7 +2939,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000005;
             p32[239] = 0x00000002;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_K_163:
             p32[  0] = 0x00000005;
             p32[  1] = 0x00000029;
@@ -3015,7 +3015,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000006;
             p32[239] = 0x00000003;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_K_233:
             p32[  0] = 0x00000006;
             p32[  1] = 0x0000003b;
@@ -3101,7 +3101,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x0000004a;
             p32[239] = 0x0000004a;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_K_283:
             p32[  0] = 0x00000007;
             p32[  1] = 0x00000047;
@@ -3195,7 +3195,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000007;
             p32[239] = 0x00000005;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_K_409:
             p32[  0] = 0x00000008;
             p32[  1] = 0x00000067;
@@ -3309,7 +3309,7 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000057;
             p32[239] = 0x00000057;
             p32[240] = 0x00000001;
-            break;
+            return 0;
         case CURVE_K_571:
             p32[  0] = 0x00000009;
             p32[  1] = 0x0000008f;
@@ -3436,22 +3436,16 @@ int32_t CurveCpy(unsigned int *p32, E_ECC_CURVE id)
             p32[238] = 0x00000005;
             p32[239] = 0x00000002;
             p32[240] = 0x00000001;
-            break;
-        default:
-            return -1;
-
+            return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 
 
 static ECC_CURVE * get_curve(E_ECC_CURVE ecc_curve)
 {
-    uint32_t   i;
-    ECC_CURVE  *ret = NULL;
-
     if(CurveCpy((unsigned int *)&Curve_Copy, ecc_curve))
         return NULL;
     else

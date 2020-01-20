@@ -170,6 +170,9 @@ extern SDH_INFO_T SD0;
  */
 #define SDH_GET_CARD_CAPACITY(sdh)  ((((sdh) == SDH0)||((sdh) == SDH0_NS))? SD0.diskSize : 0)
 
+extern uint8_t g_u8R3Flag;
+extern uint8_t volatile g_u8SDDataReadyFlag;
+extern int     SDH_ok;
 
 void SDH_Open(SDH_T *sdh, uint32_t u32CardDetSrc);
 uint32_t SDH_Probe(SDH_T *sdh);

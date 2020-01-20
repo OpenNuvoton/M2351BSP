@@ -613,7 +613,7 @@ uint8_t UI2C_WriteByte(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t data)
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);     /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);             /* Write SLA+W to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                 eEvent = MASTER_SEND_ADDRESS;
                 u8Ctrl = UI2C_CTL_PTRG;                                     /* Clear SI */
                 break;
@@ -687,7 +687,7 @@ uint32_t UI2C_WriteMultiBytes(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t *data, 
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);     /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);             /* Write SLA+W to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                 u8Ctrl = UI2C_CTL_PTRG;                                     /* Clear SI */
                 break;
 
@@ -756,7 +756,7 @@ uint8_t UI2C_WriteByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAd
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);     /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);             /* Write SLA+W to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                 u8Ctrl = UI2C_CTL_PTRG;                                     /* Clear SI */
                 break;
 
@@ -837,7 +837,7 @@ uint32_t UI2C_WriteMultiBytesOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);     /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);             /* Write SLA+W to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                 eEvent = MASTER_SEND_ADDRESS;
                 u8Ctrl = UI2C_CTL_PTRG;                                     /* Clear SI */
                 break;
@@ -915,7 +915,7 @@ uint8_t UI2C_WriteByteTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16Dat
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);         /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);                 /* Write SLA+W to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                 u8Ctrl = UI2C_CTL_PTRG;                                         /* Clear SI */
                 break;
 
@@ -1001,7 +1001,7 @@ uint32_t UI2C_WriteMultiBytesTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);         /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);                 /* Write SLA+W to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                 eEvent = MASTER_SEND_ADDRESS;
                 u8Ctrl = UI2C_CTL_PTRG;                                         /* Clear SI */
                 break;
@@ -1085,7 +1085,7 @@ uint8_t UI2C_ReadByte(UI2C_T *ui2c, uint8_t u8SlaveAddr)
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);     /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x01U);             /* Write SLA+R to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x01U));    /* Write SLA+R to Register UI2C_TXDAT */
                 eEvent = MASTER_SEND_H_RD_ADDRESS;
                 u8Ctrl = UI2C_CTL_PTRG;
                 break;
@@ -1164,7 +1164,7 @@ uint32_t UI2C_ReadMultiBytes(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t *rdata, 
         {
             case UI2C_PROTSTS_STARIF_Msk:
                 UI2C_CLR_PROT_INT_FLAG(ui2c, UI2C_PROTSTS_STARIF_Msk);     /* Clear START INT Flag */
-                UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x01U);             /* Write SLA+R to Register UI2C_TXDAT */
+                UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x01U)); /* Write SLA+R to Register UI2C_TXDAT */
                 eEvent = MASTER_SEND_H_RD_ADDRESS;
                 u8Ctrl = UI2C_CTL_PTRG;
                 break;
@@ -1249,12 +1249,12 @@ uint8_t UI2C_ReadByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAdd
 
                 if(eEvent == MASTER_SEND_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);         /* Write SLA+W to Register UI2C_TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                     eEvent = MASTER_SEND_ADDRESS;
                 }
                 else if(eEvent == MASTER_SEND_REPEAT_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x01U);        /* Write SLA+R to Register TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x01U));    /* Write SLA+R to Register TXDAT */
                     eEvent = MASTER_SEND_H_RD_ADDRESS;
                 }
 
@@ -1356,12 +1356,12 @@ uint32_t UI2C_ReadMultiBytesOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8
 
                 if(eEvent == MASTER_SEND_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);         /* Write SLA+W to Register UI2C_TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                     eEvent = MASTER_SEND_ADDRESS;
                 }
                 else if(eEvent == MASTER_SEND_REPEAT_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x01U);        /* Write SLA+R to Register TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x01U));    /* Write SLA+R to Register TXDAT */
                     eEvent = MASTER_SEND_H_RD_ADDRESS;
                 }
 
@@ -1459,12 +1459,12 @@ uint8_t UI2C_ReadByteTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16Data
 
                 if(eEvent == MASTER_SEND_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);        /* Write SLA+W to Register UI2C_TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                     eEvent = MASTER_SEND_ADDRESS;
                 }
                 else if(eEvent == MASTER_SEND_REPEAT_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x01U);        /* Write SLA+R to Register TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x01U));    /* Write SLA+R to Register TXDAT */
                     eEvent = MASTER_SEND_H_RD_ADDRESS;
                 }
 
@@ -1573,12 +1573,12 @@ uint32_t UI2C_ReadMultiBytesTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t 
 
                 if(eEvent == MASTER_SEND_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x00U);         /* Write SLA+W to Register UI2C_TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x00U));    /* Write SLA+W to Register UI2C_TXDAT */
                     eEvent = MASTER_SEND_ADDRESS;
                 }
                 else if(eEvent == MASTER_SEND_REPEAT_START)
                 {
-                    UI2C_SET_DATA(ui2c, (u8SlaveAddr << 1U) | 0x01U);        /* Write SLA+R to Register TXDAT */
+                    UI2C_SET_DATA(ui2c, ((uint8_t)(u8SlaveAddr << 1U) | 0x01U));    /* Write SLA+R to Register TXDAT */
                     eEvent = MASTER_SEND_H_RD_ADDRESS;
                 }
 

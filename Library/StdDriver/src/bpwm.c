@@ -35,7 +35,7 @@
 uint32_t BPWM_ConfigCaptureChannel(BPWM_T *bpwm, uint32_t u32ChannelNum, uint32_t u32UnitTimeNsec, uint32_t u32CaptureEdge)
 {
     uint32_t u32PWMClockSrc;
-    uint32_t u32NearestUnitTimeNsec;
+    uint32_t u32NearestUnitTimeNsec = 0U;
     uint32_t u32Prescale = 1U, u32CNR = 0xFFFFU;
     uint8_t u8BreakLoop = 0U;
 
@@ -439,7 +439,7 @@ void BPWM_EnableDutyInt(BPWM_T *bpwm, uint32_t u32ChannelNum, uint32_t u32IntDut
  */
 void BPWM_DisableDutyInt(BPWM_T *bpwm, uint32_t u32ChannelNum)
 {
-    (bpwm)->INTEN &= ~((BPWM_DUTY_INT_DOWN_COUNT_MATCH_CMP | BPWM_DUTY_INT_UP_COUNT_MATCH_CMP) << u32ChannelNum);
+    (bpwm)->INTEN &= ~(uint32_t)((BPWM_DUTY_INT_DOWN_COUNT_MATCH_CMP | BPWM_DUTY_INT_UP_COUNT_MATCH_CMP) << u32ChannelNum);
 }
 
 /**

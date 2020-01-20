@@ -194,7 +194,7 @@ void USBD_ProcessSetupPacket(void)
   * @details  Parse GetDescriptor request and perform the corresponding action.
   *
   */
-void USBD_GetDescriptor(void)
+static void USBD_GetDescriptor(void)
 {
     uint32_t u32Len;
 
