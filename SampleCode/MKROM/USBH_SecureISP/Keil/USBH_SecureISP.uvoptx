@@ -413,8 +413,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\Library\UsbHostLib\src_hid\hid_driver.c</PathWithFileName>
-      <FilenameWithoutPath>hid_driver.c</FilenameWithoutPath>
+      <PathWithFileName>..\My_hid_core.c</PathWithFileName>
+      <FilenameWithoutPath>My_hid_core.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -425,8 +425,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\My_hid_core.c</PathWithFileName>
-      <FilenameWithoutPath>My_hid_core.c</FilenameWithoutPath>
+      <PathWithFileName>..\..\..\..\Library\UsbHostLib\src_hid\hid_driver.c</PathWithFileName>
+      <FilenameWithoutPath>hid_driver.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

@@ -349,7 +349,7 @@
                     <state>$PROJ_DIR$\..\..\..\..\Library\Device\Nuvoton\M2351\Include</state>
                     <state>$PROJ_DIR$\..\..\..\..\Library\StdDriver\inc</state>
                     <state>$PROJ_DIR$\..\..\..\..\ThirdParty\mbedTLS\include\mbedtls</state>
-                    <state>$PROJ_DIR$\..\..\..\..\ThirdParty\mbedTLS\configs</state>
+                    <state>$PROJ_DIR$\..\</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>

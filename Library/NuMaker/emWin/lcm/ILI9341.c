@@ -134,7 +134,7 @@ void _Write0(U8 Cmd)
 
     while(SPI_LCD_PORT->STATUS & SPI_STATUS_TXFULL_Msk);
     SPI_WRITE_TX(SPI_LCD_PORT, Cmd);
-    while((SPI_LCD_PORT->STATUS & SPI_STATUS_TXEMPTY_Msk) == 0);
+    while(SPI_IS_BUSY(SPI_LCD_PORT));
 }
 
 /*********************************************************************
@@ -147,7 +147,7 @@ void _Write1(U8 Data)
     
     while(SPI_LCD_PORT->STATUS & SPI_STATUS_TXFULL_Msk);
     SPI_WRITE_TX(SPI_LCD_PORT, Data);
-    while((SPI_LCD_PORT->STATUS & SPI_STATUS_TXEMPTY_Msk) == 0);
+    while(SPI_IS_BUSY(SPI_LCD_PORT));
 }
 
 /*********************************************************************

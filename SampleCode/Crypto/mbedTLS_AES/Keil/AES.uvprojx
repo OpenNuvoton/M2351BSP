@@ -10,7 +10,7 @@
       <TargetName>AES</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6100001::V6.10.1::.\ARMCLANG</pCCUsed>
+      <pCCUsed>6120000::V6.12::.\ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\..\..\Library\CMSIS\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\ThirdParty\mbedTLS\include\mbedtls;..\..\..\..\ThirdParty\mbedTLS\configs</IncludePath>
+              <IncludePath>..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\..\..\Library\CMSIS\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\ThirdParty\mbedTLS\include\mbedtls;..\</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -606,6 +606,16 @@
               <FileName>pk.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\ThirdParty\mbedTLS\library\pk.c</FilePath>
+            </File>
+            <File>
+              <FileName>ecdsa.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\ThirdParty\mbedTLS\library\ecdsa.c</FilePath>
+            </File>
+            <File>
+              <FileName>hmac_drbg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\ThirdParty\mbedTLS\library\hmac_drbg.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -41,6 +41,7 @@
 /* _sd_uR3_CMD is the flag for it. 1 means software should ignore CRC-7 error */
 uint8_t g_u8R3Flag = 0UL;
 uint8_t volatile g_u8SDDataReadyFlag = (uint8_t)FALSE;
+int     SDH_ok = 0;
 
 static uint32_t _SDH_uR7_CMD = 0UL;
 static uint32_t _SDH_ReferenceClock;
@@ -65,8 +66,6 @@ uint32_t SDH_Init(SDH_T *sdh);
 uint32_t SDH_SwitchToHighSpeed(SDH_T *sdh, SDH_INFO_T *pSD);
 uint32_t SDH_SelectCardType(SDH_T *sdh);
 void SDH_Get_SD_info(SDH_T *sdh);
-
-int SDH_ok = 0;
 
 SDH_INFO_T SD0;
 
@@ -532,14 +531,14 @@ uint32_t SDH_SwitchToHighSpeed(SDH_T *sdh, SDH_INFO_T *pSD)
         return Fail;
     }
 
-    u16CurrentComsumption = (uint16_t)_SDH_ucSDHCBuffer[0] << 8;
+    u16CurrentComsumption = (uint16_t)(_SDH_ucSDHCBuffer[0] << 8);
     u16CurrentComsumption |= (uint16_t)_SDH_ucSDHCBuffer[1];
     if(!u16CurrentComsumption)
     {
         return Fail;
     }
 
-    u16BusyStatus0 = (uint16_t)_SDH_ucSDHCBuffer[28] << 8;
+    u16BusyStatus0 = (uint16_t)(_SDH_ucSDHCBuffer[28] << 8);
     u16BusyStatus0 |= (uint16_t)_SDH_ucSDHCBuffer[29];
 
     if(!u16BusyStatus0)    /* function ready */
@@ -556,7 +555,7 @@ uint32_t SDH_SwitchToHighSpeed(SDH_T *sdh, SDH_INFO_T *pSD)
         sdh->CTL |= SDH_CTL_CLK8OEN_Msk;
         while(sdh->CTL & SDH_CTL_CLK8OEN_Msk) {}
 
-        u16CurrentComsumption = (uint16_t)_SDH_ucSDHCBuffer[0] << 8;
+        u16CurrentComsumption = (uint16_t)(_SDH_ucSDHCBuffer[0] << 8);
         u16CurrentComsumption |= (uint16_t)_SDH_ucSDHCBuffer[1];
         if(!u16CurrentComsumption)
         {
@@ -600,7 +599,7 @@ uint32_t SDH_SelectCardType(SDH_T *sdh)
         }
 
         sdh->DMACTL |= 0x2;
-        while(sdh->DMACTL & 0x2) {};
+        while(sdh->DMACTL & 0x2) {}
 
         if((u32Status = SDH_SDCmdAndRspDataIn(sdh, 51UL, 0x00UL)) != Successful)
         {
@@ -873,9 +872,9 @@ uint32_t SDH_Probe(SDH_T *sdh)
  */
 uint32_t SDH_Read(SDH_T *sdh, uint8_t *pu8BufAddr, uint32_t u32StartSec, uint32_t u32SecCount)
 {
-    uint32_t volatile u32IsSendCmd = (uint32_t)FALSE, u32Buf;
+    uint32_t volatile u32IsSendCmd = (uint32_t)FALSE;
     uint32_t volatile u32Reg;
-    uint32_t volatile i, u32Loop, u32Status;
+    uint32_t volatile u32Loop, u32Status;
     uint32_t u32BlkSize = SDH_BLOCK_SIZE;
 
     SDH_INFO_T *pSD;
@@ -1018,7 +1017,7 @@ uint32_t SDH_Write(SDH_T *sdh, uint8_t *pu8BufAddr, uint32_t u32StartSec, uint32
 {
     uint32_t volatile u32IsSendCmd = (uint32_t)FALSE;
     uint32_t volatile u32Reg;
-    uint32_t volatile i, u32Loop, u32Status;
+    uint32_t volatile u32Loop, u32Status;
 
     SDH_INFO_T *pSD;
 

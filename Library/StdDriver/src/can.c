@@ -27,9 +27,9 @@
 /** @cond HIDDEN_SYMBOLS */
 
 #if defined(CAN1)
-static uint8_t gu8LockCanIf[2][2] = {0U};    /* The chip has two CANs. */
+static uint8_t gu8LockCanIf[2][2] = {{0U}};    /* The chip has two CANs. */
 #elif defined(CAN0) || defined(CAN)
-static uint8_t gu8LockCanIf[1][2] = {0U};    /* The chip only has one CAN. */
+static uint8_t gu8LockCanIf[1][2] = {{0U}};    /* The chip only has one CAN. */
 #endif
 
 #define RETRY_COUNTS    (0x10000000UL)
@@ -121,7 +121,7 @@ static uint32_t LockIF(CAN_T *tCAN)
 static uint32_t LockIF_TL(CAN_T *tCAN)
 {
     uint32_t u32Count;
-    uint32_t u32FreeIfNo;
+    uint32_t u32FreeIfNo = 0U;
 
     for(u32Count = 0U; u32Count < (uint32_t)RETRY_COUNTS; u32Count++)
     {

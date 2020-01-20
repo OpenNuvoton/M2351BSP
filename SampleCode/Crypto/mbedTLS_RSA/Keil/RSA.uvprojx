@@ -10,7 +10,7 @@
       <TargetName>RSA</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6130001::V6.13.1::.\ARMCLANG</pCCUsed>
+      <pCCUsed>6120000::V6.12::.\ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -134,7 +134,7 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4100</DriverSelection>
+            <DriverSelection>4101</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2V8M.DLL</Flash2>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\;..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\..\..\Library\CMSIS\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\ThirdParty\mbedTLS\include\mbedtls;..\..\..\..\ThirdParty\mbedTLS\configs</IncludePath>
+              <IncludePath>..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\..\..\Library\CMSIS\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\ThirdParty\mbedTLS\include\mbedtls;..\</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -796,11 +796,6 @@
               <FileName>x509_crl.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\ThirdParty\mbedTLS\library\x509_crl.c</FilePath>
-            </File>
-            <File>
-              <FileName>x509_crt.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\ThirdParty\mbedTLS\library\x509_crt.c</FilePath>
             </File>
             <File>
               <FileName>x509_csr.c</FileName>

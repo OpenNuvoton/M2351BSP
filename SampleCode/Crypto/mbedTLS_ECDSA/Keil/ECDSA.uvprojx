@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>SHA256</TargetName>
+      <TargetName>ECDSA</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <pCCUsed>6120000::V6.12::.\ARMCLANG</pCCUsed>
@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\obj\</OutputDirectory>
-          <OutputName>SHA256</OutputName>
+          <OutputName>ECDSA</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
@@ -134,7 +134,7 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4100</DriverSelection>
+            <DriverSelection>4101</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2V8M.DLL</Flash2>
@@ -403,9 +403,9 @@
               <FilePath>..\main.c</FilePath>
             </File>
             <File>
-              <FileName>sha256_test.c</FileName>
+              <FileName>ecdsa_test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\sha256_test.c</FilePath>
+              <FilePath>..\ecdsa_test.c</FilePath>
             </File>
           </Files>
         </Group>

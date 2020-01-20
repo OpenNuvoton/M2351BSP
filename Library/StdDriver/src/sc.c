@@ -79,10 +79,8 @@ uint32_t SC_IsCardInserted(SC_T *sc)
   */
 void SC_ClearFIFO(SC_T *sc)
 {
-    while(sc->ALTCTL & SC_ALTCTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->ALTCTL & SC_ALTCTL_SYNC_Msk) {}
+        
     sc->ALTCTL |= (SC_ALTCTL_TXRST_Msk | SC_ALTCTL_RXRST_Msk);
 }
 
@@ -98,16 +96,12 @@ void SC_ClearFIFO(SC_T *sc)
 void SC_Close(SC_T *sc)
 {
     sc->INTEN = 0UL;
-    while(sc->PINCTL & SC_PINCTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->PINCTL & SC_PINCTL_SYNC_Msk) {}
+        
     sc->PINCTL = 0UL;
     sc->ALTCTL = 0UL;
-    while(sc->CTL & SC_CTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->CTL & SC_CTL_SYNC_Msk) {}
+
     sc->CTL = 0UL;
 }
 
@@ -154,10 +148,8 @@ void SC_Open(SC_T *sc, uint32_t u32CardDet, uint32_t u32PWR)
         g_u32CardStateIgnore[u32Intf] = 1UL;
     }
     sc->PINCTL = u32PWR ? 0UL : SC_PINCTL_PWRINV_Msk;
-    while(sc->CTL & SC_CTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->CTL & SC_CTL_SYNC_Msk) {}
+
     sc->CTL = SC_CTL_SCEN_Msk | SC_CTL_TMRSEL_Msk | u32Reg;
 }
 
@@ -190,20 +182,16 @@ void SC_ResetReader(SC_T *sc)
     /* Reset FIFO, enable auto de-activation while card removal */
     sc->ALTCTL |= (SC_ALTCTL_TXRST_Msk | SC_ALTCTL_RXRST_Msk | SC_ALTCTL_ADACEN_Msk);
     /* Set Rx trigger level to 1 character, longest card detect debounce period, disable error retry (EMV ATR does not use error retry) */
-    while(sc->CTL & SC_CTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->CTL & SC_CTL_SYNC_Msk) {}
+  
     sc->CTL &= ~(SC_CTL_RXTRGLV_Msk |
                  SC_CTL_CDDBSEL_Msk |
                  SC_CTL_TXRTY_Msk |
                  SC_CTL_TXRTYEN_Msk |
                  SC_CTL_RXRTY_Msk |
                  SC_CTL_RXRTYEN_Msk);
-    while(sc->CTL & SC_CTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->CTL & SC_CTL_SYNC_Msk) {}
+        
     /* Enable auto convention, and all three smartcard internal timers */
     sc->CTL |= SC_CTL_AUTOCEN_Msk | SC_CTL_TMRSEL_Msk;
     /* Disable Rx timeout */
@@ -281,10 +269,8 @@ void SC_SetCharGuardTime(SC_T *sc, uint32_t u32CGT)
   */
 void SC_StopAllTimer(SC_T *sc)
 {
-    while(sc->ALTCTL & SC_ALTCTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->ALTCTL & SC_ALTCTL_SYNC_Msk) {}
+
     sc->ALTCTL &= ~(SC_ALTCTL_CNTEN0_Msk | SC_ALTCTL_CNTEN1_Msk | SC_ALTCTL_CNTEN2_Msk);
 }
 
@@ -315,34 +301,23 @@ void SC_StopAllTimer(SC_T *sc)
 void SC_StartTimer(SC_T *sc, uint32_t u32TimerNum, uint32_t u32Mode, uint32_t u32ETUCount)
 {
     uint32_t u32Reg = u32Mode | (SC_TMRCTL0_CNT_Msk & (u32ETUCount - 1UL));
-    while(sc->ALTCTL & SC_ALTCTL_SYNC_Msk)
-    {
-        ;
-    }
+    while(sc->ALTCTL & SC_ALTCTL_SYNC_Msk) {}
+
     if(u32TimerNum == 0UL)
     {
-        while(sc->TMRCTL0 & SC_TMRCTL0_SYNC_Msk)
-        {
-            ;
-        }
+        while(sc->TMRCTL0 & SC_TMRCTL0_SYNC_Msk) {}
         sc->TMRCTL0 = u32Reg;
         sc->ALTCTL |= SC_ALTCTL_CNTEN0_Msk;
     }
     else if(u32TimerNum == 1UL)
     {
-        while(sc->TMRCTL1 & SC_TMRCTL1_SYNC_Msk)
-        {
-            ;
-        }
+        while(sc->TMRCTL1 & SC_TMRCTL1_SYNC_Msk) {}
         sc->TMRCTL1 = u32Reg;
         sc->ALTCTL |= SC_ALTCTL_CNTEN1_Msk;
     }
     else       /* timer 2 */
     {
-        while(sc->TMRCTL2 & SC_TMRCTL2_SYNC_Msk)
-        {
-            ;
-        }
+        while(sc->TMRCTL2 & SC_TMRCTL2_SYNC_Msk) {}
         sc->TMRCTL2 = u32Reg;
         sc->ALTCTL |= SC_ALTCTL_CNTEN2_Msk;
     }
@@ -410,42 +385,35 @@ uint32_t SC_GetInterfaceClock(SC_T *sc)
     }
     else
     {
-        u32Clk = 0UL;
+        return 0UL;
     }
 
-    if(u32Clk == 0UL)
+    /* Get smartcard module clock */
+    if(u32ClkSrc == 0UL)
     {
-        ; /* Invalid sc port */
+        u32Clk = __HXT;
     }
-    else
+    else if(u32ClkSrc == 1UL)
     {
-        /* Get smartcard module clock */
-        if(u32ClkSrc == 0UL)
+        u32Clk = CLK_GetPLLClockFreq();
+    }
+    else if(u32ClkSrc == 2UL)
+    {
+        if(u32Num == 1UL)
         {
-            u32Clk = __HXT;
-        }
-        else if(u32ClkSrc == 1UL)
-        {
-            u32Clk = CLK_GetPLLClockFreq();
-        }
-        else if(u32ClkSrc == 2UL)
-        {
-            if(u32Num == 1UL)
-            {
-                u32Clk = CLK_GetPCLK1Freq();
-            }
-            else
-            {
-                u32Clk = CLK_GetPCLK0Freq();
-            }
+            u32Clk = CLK_GetPCLK1Freq();
         }
         else
         {
-            u32Clk = __HIRC;
+            u32Clk = CLK_GetPCLK0Freq();
         }
-
-        u32Clk /= (u32Div + 1UL) * 1000UL;
     }
+    else
+    {
+        u32Clk = __HIRC;
+    }
+
+    u32Clk /= (u32Div + 1UL) * 1000UL;
 
     return u32Clk;
 }

@@ -8,6 +8,46 @@
 #include "platform_util.h"
 #include "platform.h"
 
+/* timer ticks - 100 ticks per second */
+volatile uint32_t  g_tick_cnt;
+
+
+void SysTick_Handler(void)
+{
+    g_tick_cnt++;
+}
+
+
+void enable_sys_tick(int ticks_per_second)
+{
+    g_tick_cnt = 0;
+    SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
+    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    {
+        /* Setup SysTick Timer for 1 second interrupts  */
+        printf("Set system tick error!!\n");
+        while(1);
+    }
+}
+
+void start_timer0()
+{
+    /* Start TIMER0  */
+    CLK->CLKSEL1 = (CLK->CLKSEL1 & (~CLK_CLKSEL1_TMR0SEL_Msk)) | CLK_CLKSEL1_TMR0SEL_HXT;
+    CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;    /* enable TIMER0 clock                  */
+    TIMER0->CTL = 0;                   /* disable timer                                  */
+    TIMER0->INTSTS = (TIMER_INTSTS_TWKF_Msk | TIMER_INTSTS_TIF_Msk);  /* clear interrupt status */
+    TIMER0->CMP = 0xFFFFFE;            /* maximum time                                   */
+    TIMER0->CNT = 0;                   /* clear timer counter                            */
+    /* start timer */
+    TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
+}
+
+uint32_t  get_timer0_counter()
+{
+    return TIMER0->CNT;
+}
+
 /*
  * FIPS-180-2 test vectors
  */
@@ -71,6 +111,8 @@ int SHA256Test(void)
     unsigned char *buf;
     unsigned char sha256sum[32];
     mbedtls_sha256_context ctx;
+    uint32_t u32Time;
+
 
     buf = mbedtls_calloc( 1024, sizeof(unsigned char) );
     if( NULL == buf )
@@ -88,6 +130,9 @@ int SHA256Test(void)
         k = i < 3;
 
         printf( "  SHA-%d test #%d: ", 256 - k * 32, j + 1 );
+
+        enable_sys_tick(100000);
+        start_timer0();
 
         /* Start a SHA-224 or SHA-256 checksum calculation*/
         if( ( ret = mbedtls_sha256_starts_ret( &ctx, k ) ) != 0 )
@@ -126,7 +171,11 @@ int SHA256Test(void)
             goto fail;
         }
 
-        printf( "passed\n" );
+        printf("passed");
+        u32Time = get_timer0_counter();
+
+        /* TIMER0->CNT is the elapsed us */
+        printf("     takes %d us,  %d ticks\n", u32Time, g_tick_cnt);
     }
 
     printf( "\n" );

@@ -70,42 +70,35 @@ static uint32_t SCUART_GetClock(SC_T *sc)
     }
     else
     {
-        u32Clk = 0UL;
+        return 0UL;
     }
 
-    if(u32Clk == 0UL)
+    /* Get smartcard module clock */
+    if(u32ClkSrc == 0UL)
     {
-        ; /* Invalid sc port */
+        u32Clk = __HXT;
     }
-    else
+    else if(u32ClkSrc == 1UL)
     {
-        /* Get smartcard module clock */
-        if(u32ClkSrc == 0UL)
+        u32Clk = CLK_GetPLLClockFreq();
+    }
+    else if(u32ClkSrc == 2UL)
+    {
+        if(u32Num == 1UL)
         {
-            u32Clk = __HXT;
-        }
-        else if(u32ClkSrc == 1UL)
-        {
-            u32Clk = CLK_GetPLLClockFreq();
-        }
-        else if(u32ClkSrc == 2UL)
-        {
-            if(u32Num == 1UL)
-            {
-                u32Clk = CLK_GetPCLK1Freq();
-            }
-            else
-            {
-                u32Clk = CLK_GetPCLK0Freq();
-            }
+            u32Clk = CLK_GetPCLK1Freq();
         }
         else
         {
-            u32Clk = __HIRC;
+            u32Clk = CLK_GetPCLK0Freq();
         }
-
-        u32Clk /= (u32Div + 1UL);
     }
+    else
+    {
+        u32Clk = __HIRC;
+    }
+
+    u32Clk /= (u32Div + 1UL);
 
     return u32Clk;
 }
@@ -258,10 +251,8 @@ void SCUART_Write(SC_T* sc, uint8_t pu8TxBuf[], uint32_t u32WriteBytes)
     for(u32Count = 0UL; u32Count != u32WriteBytes; u32Count++)
     {
         /* Wait 'til FIFO not full */
-        while(SCUART_GET_TX_FULL(sc))
-        {
-            ;
-        }
+        while(SCUART_GET_TX_FULL(sc)) {}
+
         /* Write 1 byte to FIFO */
         sc->DAT = pu8TxBuf[u32Count];  /* Write 1 byte to FIFO */
     }
