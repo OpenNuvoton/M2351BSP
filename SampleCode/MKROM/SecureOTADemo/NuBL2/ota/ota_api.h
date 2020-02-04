@@ -23,7 +23,7 @@ extern "C"
 #define DEBUG_MSG(...)
 #endif
 
-#define OTA_UPGRADE_FROM_SD 0 /* 1: Enable OTA update form SD card method */
+#define OTA_UPGRADE_FROM_SD 0 /* 1: Enable OTA update from SD card method */
                               /* 0: Enable OTA update on the fly method */
 
 #define BUF_SIZE	128
