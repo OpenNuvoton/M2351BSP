@@ -37,9 +37,16 @@ static CONN_FUNC  *g_conn_func, *g_disconn_func;
   */
 void  usbh_core_init()
 {
-    DISABLE_OHCI_IRQ();
+    if((__PC() & NS_OFFSET) == NS_OFFSET)
+    {
+        _ohci = USBH_NS;
+    }
+    else
+    {
+        _ohci = USBH;
+    }
 
-    _ohci = USBH;
+    DISABLE_OHCI_IRQ();
 
     memset(_drivers, 0, sizeof(_drivers));
 
