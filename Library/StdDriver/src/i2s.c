@@ -94,7 +94,7 @@ uint32_t I2S_Open(I2S_T *i2s, uint32_t u32MasterSlave, uint32_t u32SampleRate, u
     uint16_t u16Divider;
     uint32_t u32BitRate, u32SrcClk;
 
-    if(!(__PC() & (1UL << 28UL)))
+    if(!(__PC() & NS_OFFSET))
     {
         /* Reset I2S */
         SYS->IPRST1 |= SYS_IPRST1_I2S0RST_Msk;

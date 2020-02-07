@@ -77,7 +77,7 @@ uint32_t SPI_Open(SPI_T *spi,
 
         if(u32BusClock >= u32HCLKFreq)
         {
-            if(!(__PC() & (1UL << 28UL)))
+            if(!(__PC() & NS_OFFSET))
             {
                 /* Select PCLK as the clock source of SPI */
                 if((spi == SPI0) || (spi == SPI0_NS))
@@ -227,7 +227,7 @@ uint32_t SPI_Open(SPI_T *spi,
         /* Set DIVIDER = 0 */
         spi->CLKDIV = 0UL;
 
-        if(!(__PC() & (1UL << 28UL)))
+        if(!(__PC() & NS_OFFSET))
         {
             /* Select PCLK as the clock source of SPI */
             if((spi == SPI0) || (spi == SPI0_NS))
@@ -423,7 +423,7 @@ uint32_t SPI_SetBusClock(SPI_T *spi, uint32_t u32BusClock)
 
     if(u32BusClock >= u32HCLKFreq)
     {
-        if(!(__PC() & (1UL << 28UL)))
+        if(!(__PC() & NS_OFFSET))
         {
             /* Select PCLK as the clock source of SPI */
             if((spi == SPI0) || (spi == SPI0_NS))
@@ -1193,7 +1193,7 @@ uint32_t SPII2S_Open(SPI_T *i2s, uint32_t u32MasterSlave, uint32_t u32SampleRate
     uint32_t u32BitRate, u32SrcClk, u32RetValue;
     uint32_t u32PCLK0Freq, u32PCLK1Freq;
 
-    if(!(__PC() & (1UL << 28UL)))
+    if(!(__PC() & NS_OFFSET))
     {
         /* Reset SPI/I2S */
         if((i2s == SPI0) || (i2s == SPI0_NS))
@@ -1256,7 +1256,7 @@ uint32_t SPII2S_Open(SPI_T *i2s, uint32_t u32MasterSlave, uint32_t u32SampleRate
 
         if((i2s == SPI0) || (i2s == SPI0_NS))
         {
-            if(!(__PC() & (1UL << 28UL)))
+            if(!(__PC() & NS_OFFSET))
             {
                 /* Set the peripheral clock rate to equal APB clock rate */
                 CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_SPI0SEL_Msk)) | CLK_CLKSEL2_SPI0SEL_PCLK1;
@@ -1288,7 +1288,7 @@ uint32_t SPII2S_Open(SPI_T *i2s, uint32_t u32MasterSlave, uint32_t u32SampleRate
         }
         else if((i2s == SPI1) || (i2s == SPI1_NS))
         {
-            if(!(__PC() & (1UL << 28UL)))
+            if(!(__PC() & NS_OFFSET))
             {
                 /* Set the peripheral clock rate to equal APB clock rate */
                 CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_SPI1SEL_Msk)) | CLK_CLKSEL2_SPI1SEL_PCLK0;
@@ -1320,7 +1320,7 @@ uint32_t SPII2S_Open(SPI_T *i2s, uint32_t u32MasterSlave, uint32_t u32SampleRate
         }
         else if((i2s == SPI2) || (i2s == SPI2_NS))
         {
-            if(!(__PC() & (1UL << 28UL)))
+            if(!(__PC() & NS_OFFSET))
             {
                 /* Set the peripheral clock rate to equal APB clock rate */
                 CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_SPI2SEL_Msk)) | CLK_CLKSEL2_SPI2SEL_PCLK1;
@@ -1352,7 +1352,7 @@ uint32_t SPII2S_Open(SPI_T *i2s, uint32_t u32MasterSlave, uint32_t u32SampleRate
         }
         else
         {
-            if(!(__PC() & (1UL << 28UL)))
+            if(!(__PC() & NS_OFFSET))
             {
                 /* Set the peripheral clock rate to equal APB clock rate */
                 CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_SPI3SEL_Msk)) | CLK_CLKSEL2_SPI3SEL_PCLK0;

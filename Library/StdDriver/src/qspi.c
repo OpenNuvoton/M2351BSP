@@ -70,7 +70,7 @@ uint32_t QSPI_Open(QSPI_T *qspi,
 
         if(u32BusClock >= u32HCLKFreq)
         {
-            if(!(__PC() & (1UL << 28UL)))
+            if(!(__PC() & NS_OFFSET))
             {
                 /* Select PCLK as the clock source of QSPI */
                 if((qspi == QSPI0) || (qspi == QSPI0_NS))
@@ -151,7 +151,7 @@ uint32_t QSPI_Open(QSPI_T *qspi,
         /* Set DIVIDER = 0 */
         qspi->CLKDIV = 0UL;
 
-        if(!(__PC() & (1UL << 28UL)))
+        if(!(__PC() & NS_OFFSET))
         {
             /* Select PCLK as the clock source of QSPI */
             if((qspi == QSPI0) || (qspi == QSPI0_NS))
@@ -278,7 +278,7 @@ uint32_t QSPI_SetBusClock(QSPI_T *qspi, uint32_t u32BusClock)
 
     if(u32BusClock >= u32HCLKFreq)
     {
-        if(!(__PC() & (1UL << 28UL)))
+        if(!(__PC() & NS_OFFSET))
         {
             /* Select PCLK as the clock source of QSPI */
             CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_QSPI0SEL_Msk)) | CLK_CLKSEL2_QSPI0SEL_PCLK0;

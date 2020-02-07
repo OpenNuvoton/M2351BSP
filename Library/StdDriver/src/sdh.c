@@ -270,7 +270,7 @@ uint32_t SDH_SDCmdAndRspDataIn(SDH_T *sdh, uint32_t u32Cmd, uint32_t u32Arg)
 
 void SDH_Set_clock(SDH_T *sdh, uint32_t u32SDClockKhz)
 {
-    if(!(__PC() & (1UL << 28)))
+    if(!(__PC() & NS_OFFSET))
     {
         uint32_t u32Rate, u32Div1;
         static uint32_t u32SDClkSrc = 0UL;
