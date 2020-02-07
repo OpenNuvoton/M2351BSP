@@ -640,12 +640,12 @@ extern void SystemInit(void);
 # define PDMA1 PDMA1_NS
 #else
 # define PDMA1 PDMA1_S
+#endif
 
 #if defined (SCU_INIT_PNSSET1_VAL) && (SCU_INIT_PNSSET1_VAL & BIT17)
 # define CRC CRC_NS
 #else
 # define CRC CRC_S
-#endif
 #endif
 
 #if defined (SCU_INIT_PNSSET1_VAL) && (SCU_INIT_PNSSET1_VAL & BIT18)
