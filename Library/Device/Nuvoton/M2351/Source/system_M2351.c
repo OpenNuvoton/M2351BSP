@@ -253,8 +253,8 @@ void NSC_Init(void)
     i32Region = 3;
     SAU->RNR  =  (i32Region & SAU_RNR_REGION_Msk);
     SAU->RBAR =  (u32Base & SAU_RBAR_BADDR_Msk);
-    SAU->RLAR =  (u32Limit & SAU_RLAR_LADDR_Msk) | 
-                ((1ul << SAU_RLAR_NSC_Pos)  & SAU_RLAR_NSC_Msk) | 1ul;
+    SAU->RLAR =  ((u32Limit-1) & SAU_RLAR_LADDR_Msk) | 
+                ((1ul << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1ul;
 
 }
 
