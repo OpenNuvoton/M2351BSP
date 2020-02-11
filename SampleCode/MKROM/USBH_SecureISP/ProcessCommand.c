@@ -597,6 +597,9 @@ static int32_t ECDH_0_SendPub0(void)
     return 0;
 }
 
+/* The ECC public key pair of USB client, e.g SecureISPDemo */ 
+char g_acClientPub0[] = "66e9160410bb8b6834809d3a82f47de552fc461a7916e14c6f04cf2e643428f0";
+char g_acClientPub1[] = "51d0cb1894c206c205b50cb2d92d6b3f7d706090a42fde95648570c472ea7079";
 static int32_t ECDH_1_SendPub1(void)
 {
     uint32_t    i, u32PacketID = 0xE1;
@@ -641,11 +644,6 @@ static int32_t ECDH_1_SendPub1(void)
     if(g_ReturnData.au32Data[0] != 0)
         return g_ReturnData.au32Data[0];
     
-{
-    /* Internal public key */
-    char g_acClientPub0[] = "66e9160410bb8b6834809d3a82f47de552fc461a7916e14c6f04cf2e643428f0";
-    char g_acClientPub1[] = "51d0cb1894c206c205b50cb2d92d6b3f7d706090a42fde95648570c472ea7079";
-    
     /* Generate 1st ECDH key */
     ECC_ENABLE_INT(CRPT);
     if(XECC_GenerateSecretZ(XCRPT, CURVE_P_256, (char *)g_acPriv, (char *)g_acClientPub0, (char *)g_acClientPub1, g_ChipISPInfo.KeyZ) < 0)
@@ -659,7 +657,6 @@ static int32_t ECDH_1_SendPub1(void)
     BytesSwap((char *)tmp, sizeof(tmp));
     for(i=0; i<8; i++)
         g_ChipISPInfo.au32AESKey[i] = Swap32(tmp[i]);
-}
 
     return 0;
 }
