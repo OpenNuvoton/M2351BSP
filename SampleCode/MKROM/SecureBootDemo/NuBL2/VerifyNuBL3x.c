@@ -268,7 +268,7 @@ int32_t VerifyNuBL3x(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
     pFwInfo = (FW_INFO_T *)pu32FwInfo;
         
     /*---------------------------------------------------------------------------------------------------------*/
-    /*  Verify NuBL3x identity (cehck NuBL3x public key)                                                       */
+    /*  Verify NuBL3x identity (check NuBL3x public key)                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
     if(IdentifyNuBL3xPubKey((uint32_t *)pFwInfo, u32InfoBase) < 0)
     {

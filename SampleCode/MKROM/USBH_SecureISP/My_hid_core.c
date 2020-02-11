@@ -735,7 +735,9 @@ int32_t usbh_hid_stop_int_write(HID_DEV_T *hdev, uint8_t ep_addr)
 
     hdev->utr_list[i] = NULL;               /* remove it from HID UTR list                */
 
+#if 0 /* 2020.02.10. Do not quit, just free memory. */
     ret = usbh_quit_utr(utr);
+#endif    
 
     usbh_free_mem(utr->buff, utr->ep->wMaxPacketSize);
     free_utr(utr);
