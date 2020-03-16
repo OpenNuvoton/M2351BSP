@@ -67,24 +67,25 @@ void FMC_NSBA_Setup(void)
         while(FMC->ISPTRG);
 
         /* Setting NSBA when it is empty */
-        if(FMC->ISPDAT != 0xfffffffful)
+        if(FMC->ISPDAT == 0xfffffffful)
         {
-            /* Erase old setting */
-            FMC->ISPCMD = FMC_ISPCMD_PAGE_ERASE;
+            /* Set new base */
+            FMC->ISPDAT = FMC_SECURE_ROM_SIZE;
+            FMC->ISPCMD = FMC_ISPCMD_PROGRAM;
             FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
             while(FMC->ISPTRG);
-        }
             
-        /* Set new base */
-        FMC->ISPDAT = FMC_SECURE_ROM_SIZE;
-        FMC->ISPCMD = FMC_ISPCMD_PROGRAM;
-        FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
-        while(FMC->ISPTRG);
-
-        /* Force Chip Reset to valid new setting */
-        SYS->IPRST0 = SYS_IPRST0_CHIPRST_Msk;
-        
-        
+            /* Verify new base */
+            FMC->ISPDAT = 0;
+            FMC->ISPCMD = FMC_ISPCMD_READ;
+            FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+            while(FMC->ISPTRG);
+            if(FMC->ISPDAT == FMC_SECURE_ROM_SIZE)
+            {
+                /* Force Chip Reset to valid new setting */
+                SYS->IPRST0 = SYS_IPRST0_CHIPRST_Msk;
+            }
+        }
     }
 
 }
