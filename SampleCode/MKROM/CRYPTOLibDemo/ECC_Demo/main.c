@@ -13,11 +13,15 @@
 #define ECC_CURVE_TYPE      CURVE_P_256
 #define ECC_KEY_SIZE        256     /* Select ECC P-256 curve, 256-bits key length */
 
-char d[68];                         /* private key */
-char Qx[68], Qy[68];                /* temporary buffer used to keep output public keys */
-char k[68];                         /* random integer k form [1, n-1]                */
-char R[68], S[68];                  /* temporary buffer used to keep digital signature (R,S) pair */
-char msg[] = "This is a message. It could be encypted.";
+static char d[68];                         /* private key */
+static char Qx[68], Qy[68];                /* temporary buffer used to keep output public keys */
+static char k[68];                         /* random integer k form [1, n-1]                */
+static char R[68], S[68];                  /* temporary buffer used to keep digital signature (R,S) pair */
+static char msg[] = "This is a message. It could be encypted.";
+
+uint8_t Byte2Char(uint8_t c);
+void SYS_Init(void);
+void UART_Init(void);
 
 uint8_t Byte2Char(uint8_t c)
 {
@@ -113,7 +117,7 @@ int main(void)
     do
     {
         /* Generate random number for private key */
-        XTRNG_Random(&rng, au8r, i32NBits / 8);
+        XTRNG_Random(&rng, au8r, (uint32_t)(i32NBits / 8));
 
         for(i = 0, j = 0; i < i32NBits / 8; i++)
         {
@@ -162,7 +166,7 @@ int main(void)
         printf("//-------------------------------------------------------------------------//\n");
 
         /* Generate random number k */
-        XTRNG_Random(&rng, au8r, i32NBits / 8);
+        XTRNG_Random(&rng, au8r, (uint32_t)(i32NBits / 8));
 
         for(i = 0, j = 0; i < i32NBits / 8; i++)
         {

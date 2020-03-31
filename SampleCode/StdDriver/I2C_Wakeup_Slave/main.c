@@ -15,19 +15,27 @@
 
 #define PLL_CLOCK       64000000
 
-uint32_t slave_buff_addr;
-uint8_t g_au8SlvData[256];
-uint8_t g_au8SlvRxData[3];
-uint8_t g_u8SlvPWRDNWK, g_u8SlvI2CWK;
+static uint32_t s_u32SlaveBuffAddr;
+static uint8_t s_au8SlvData[256];
+static uint8_t s_au8SlvRxData[3];
+static uint8_t s_u8SlvPWRDNWK, s_u8SlvI2CWK;
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8DeviceAddr;
-volatile uint8_t g_u8SlvDataLen;
+static volatile uint8_t s_u8SlvDataLen;
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 
 static I2C_FUNC s_I2C0HandlerFn = NULL;
+
+
+void I2C0_IRQHandler(void);
+void PWRWU_IRQHandler(void);
+void PowerDownFunction(void);
+void I2C_SlaveTRx(uint32_t u32Status);
+void SYS_Init(void);
+void I2C0_Init(void);
+void I2C0_Close(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  I2C0 IRQ Handler                                                                                       */
@@ -41,7 +49,7 @@ void I2C0_IRQHandler(void)
     {
         /* Clear I2C Wake-up interrupt flag */
         I2C_CLEAR_WAKEUP_FLAG(I2C0);
-        g_u8SlvI2CWK = 1;
+        s_u8SlvI2CWK = 1;
 
         return;
     }
@@ -69,7 +77,7 @@ void PWRWU_IRQHandler(void)
     {
         /* Clear system power down wake-up interrupt flag */
         CLK->PWRCTL |= CLK_PWRCTL_PDWKIF_Msk;
-        g_u8SlvPWRDNWK = 1;
+        s_u8SlvPWRDNWK = 1;
 
     }
 }
@@ -93,30 +101,30 @@ void I2C_SlaveTRx(uint32_t u32Status)
 {
     if(u32Status == 0x60)                       /* Own SLA+W has been receive; ACK has been return */
     {
-        g_u8SlvDataLen = 0;
+        s_u8SlvDataLen = 0;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0x80)                 /* Previously address with own SLA address
                                                    Data has been received; ACK has been returned*/
     {
-        g_au8SlvRxData[g_u8SlvDataLen] = (unsigned char)I2C_GET_DATA(I2C0);
-        g_u8SlvDataLen++;
+        s_au8SlvRxData[s_u8SlvDataLen] = (unsigned char)I2C_GET_DATA(I2C0);
+        s_u8SlvDataLen++;
 
-        if(g_u8SlvDataLen == 2)
+        if(s_u8SlvDataLen == 2)
         {
-            slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+            s_u32SlaveBuffAddr = (uint32_t)((s_au8SlvRxData[0] << 8) + s_au8SlvRxData[1]);
         }
-        if(g_u8SlvDataLen == 3)
+        if(s_u8SlvDataLen == 3)
         {
-            g_au8SlvData[slave_buff_addr] = g_au8SlvRxData[2];
-            g_u8SlvDataLen = 0;
+            s_au8SlvData[s_u32SlaveBuffAddr] = s_au8SlvRxData[2];
+            s_u8SlvDataLen = 0;
         }
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0xA8)                  /* Own SLA+R has been receive; ACK has been return */
     {
-        I2C_SET_DATA(I2C0, g_au8SlvData[slave_buff_addr]);
-        slave_buff_addr++;
+        I2C_SET_DATA(I2C0, s_au8SlvData[s_u32SlaveBuffAddr]);
+        s_u32SlaveBuffAddr++;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0xC0)                 /* Data byte or last data in I2CDAT has been transmitted
@@ -127,13 +135,13 @@ void I2C_SlaveTRx(uint32_t u32Status)
     else if(u32Status == 0x88)                 /* Previously addressed with own SLA address; NOT ACK has
                                                    been returned */
     {
-        g_u8SlvDataLen = 0;
+        s_u8SlvDataLen = 0;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0xA0)                 /* A STOP or repeated START has been received while still
                                                    addressed as Slave/Receiver*/
     {
-        g_u8SlvDataLen = 0;
+        s_u8SlvDataLen = 0;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else
@@ -274,7 +282,7 @@ int32_t main(void)
 
     for(u32i = 0; u32i < 0x100; u32i++)
     {
-        g_au8SlvData[u32i] = 0;
+        s_au8SlvData[u32i] = 0;
     }
 
     /* I2C function to Transmit/Receive data as slave */
@@ -289,11 +297,11 @@ int32_t main(void)
     /* Enable power wake-up interrupt */
     CLK->PWRCTL |= CLK_PWRCTL_PDWKIEN_Msk;
     NVIC_EnableIRQ(PWRWU_IRQn);
-    g_u8SlvPWRDNWK = 0;
+    s_u8SlvPWRDNWK = 0;
 
     /* Enable I2C wake-up */
     I2C_EnableWakeup(I2C0);
-    g_u8SlvI2CWK = 0;
+    s_u8SlvI2CWK = 0;
 
     printf("\n");
     printf("Enter PD 0x%x 0x%x\n", I2C0->CTL0, I2C0->STATUS0);
@@ -308,7 +316,7 @@ int32_t main(void)
     PowerDownFunction();
 
     /* Waiting for syteem wake-up and I2C wake-up finish*/
-    while((g_u8SlvPWRDNWK & g_u8SlvI2CWK) == 0);
+    while((s_u8SlvPWRDNWK & s_u8SlvI2CWK) == 0);
 
     /* Waitinn for I2C response ACK finish */
     while(!I2C_GET_WAKEUP_DONE(I2C0));

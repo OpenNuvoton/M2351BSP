@@ -87,7 +87,8 @@ static __INLINE uint32_t get_be32(uint8_t *buf)
   M2351 USBD Mass Specific Struct
   @{
 */
-
+#pragma pack(push)
+#pragma pack(1)
 /*!<USB Mass Storage Class - Command Block Wrapper Structure */
 struct CBW
 {
@@ -101,7 +102,10 @@ struct CBW
     uint8_t   u8LUN;
     uint8_t   au8Data[14];
 };
+#pragma pack(pop)
 
+#pragma pack(push)
+#pragma pack(1)
 /*!<USB Mass Storage Class - Command Status Wrapper Structure */
 struct CSW
 {
@@ -110,7 +114,7 @@ struct CSW
     uint32_t  dCSWDataResidue;
     uint8_t   bCSWStatus;
 };
-
+#pragma pack(pop)
 /*-------------------------------------------------------------*/
 #define DATA_FLASH_STORAGE_SIZE    (64*1024)  /* Configure the DATA FLASH storage size */
 #define MASS_BUFFER_SIZE    256                /* Mass Storage command buffer size */
@@ -119,6 +123,8 @@ struct CSW
 
 extern uint32_t MassBlock[];
 extern uint32_t Storage_Block[];
+extern uint8_t volatile g_u8SdInitFlag;
+extern uint32_t g_u32TotalSectors;
 
 #define MassCMD_BUF        ((uint32_t)&MassBlock[0])
 #define STORAGE_DATA_BUF   ((uint32_t)&Storage_Block[0])

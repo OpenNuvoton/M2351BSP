@@ -10,6 +10,10 @@
 #include "NuMicro.h"
 
 
+void GPB_IRQHandler(void);
+void GPC_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       GPIO PB IRQ

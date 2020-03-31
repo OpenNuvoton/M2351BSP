@@ -15,6 +15,7 @@
 #define MBEDTLS_EXIT_SUCCESS    0
 #define MBEDTLS_EXIT_FAILURE    -1
 
+void SYS_Init(void);
 
 void SYS_Init(void)
 {

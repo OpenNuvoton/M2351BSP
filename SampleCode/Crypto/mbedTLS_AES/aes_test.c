@@ -10,20 +10,25 @@
 
 
 /* timer ticks - 100 ticks per second */
-volatile uint32_t  g_tick_cnt;
+static volatile uint32_t  s_u32TickCnt;
 
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void start_timer0(void);
+uint32_t  get_timer0_counter(void);
+int AESTest(void);
 
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;
+    s_u32TickCnt++;
 }
 
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -144,7 +149,7 @@ int AESTest(void)
     for( i = 0; i < 6; i++ )
     {
         u = i >> 1;
-        keybits = 128 + u * 64;
+        keybits = 128 + (unsigned int)u * 64;
         mode = i & 1;
 
         if( verbose != 0 )
@@ -199,7 +204,7 @@ int AESTest(void)
             u32Time = get_timer0_counter();
 
             /* TIMER0->CNT is the elapsed us */
-            printf("     takes %d us,  %d ticks\n", u32Time, g_tick_cnt);
+            printf("     takes %d us,  %d ticks\n", u32Time, s_u32TickCnt);
         }
     }
 

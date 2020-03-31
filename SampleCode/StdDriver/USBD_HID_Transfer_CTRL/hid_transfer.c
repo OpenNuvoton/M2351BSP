@@ -12,6 +12,8 @@
 #include "NuMicro.h"
 #include "hid_transfer.h"
 
+void USBD_IRQHandler(void);
+
 void USBD_IRQHandler(void)
 {
     uint32_t u32IntSts = USBD_GET_INT_FLAG();
@@ -201,7 +203,7 @@ void HID_ClassRequest(void)
 {
     uint8_t au8Buf[8];
     uint8_t au8SendBuffer[64], u8SendLen;
-    int i;
+    uint8_t i;
 
     USBD_GetSetupPacket(au8Buf);
 

@@ -22,7 +22,11 @@ void UART_RxThresholdWakeUp(void);
 void UART_RS485WakeUp(void);
 void UART_PowerDown_TestItem(void);
 void UART_PowerDownWakeUpTest(void);
-
+void PowerDownFunction(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void UART1_Init(void);
+void UART1_IRQHandler(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Function for System Entry to Power Down Mode                                                           */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -290,7 +294,7 @@ void UART_PowerDown_TestItem(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void UART_PowerDownWakeUpTest(void)
 {
-    uint32_t u32Item;
+    int32_t i32Item;
 
     printf("Due to PLL clock stable too slow.\n");
     printf("Before demo UART wake-up, this demo code will switch HCLK from PLL to HIRC.\n");
@@ -310,9 +314,9 @@ void UART_PowerDownWakeUpTest(void)
     UART_EnableInt(UART1, UART_INTEN_WKIEN_Msk | UART_INTEN_RDAIEN_Msk | UART_INTEN_RXTOIEN_Msk);
 
     UART_PowerDown_TestItem();
-    u32Item = getchar();
-    printf("%c\n\n", u32Item);
-    switch(u32Item)
+    i32Item = getchar();
+    printf("%c\n\n", i32Item);
+    switch(i32Item)
     {
         case '1':
             UART_CTSWakeUp();

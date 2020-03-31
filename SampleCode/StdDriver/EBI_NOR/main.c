@@ -19,6 +19,11 @@ extern int32_t NOR_MX29LV320T_WRITE(uint32_t u32Bank, uint32_t u32DstAddr, uint1
 extern void NOR_MX29LV320T_GET_ID(uint32_t u32Bank, uint16_t *pu16IDTable);
 extern int32_t NOR_MX29LV320T_EraseChip(uint32_t u32Bank, uint32_t u32IsCheckBlank);
 
+void Configure_EBI_16BIT_Pins(void);
+void SYS_Init(void);
+void UART_Init(void);
+
+
 void Configure_EBI_16BIT_Pins(void)
 {
     /* AD0 ~ AD7*/

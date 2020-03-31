@@ -23,7 +23,7 @@ typedef struct
     char     Z[580];                      /* expected answer secret Z                     */
 }  ECDH_VECTOR_T;
 
-char  gZ[580];                         /* temporary buffer used to keep output secret Z        */
+static char  s_acZ[580];                         /* temporary buffer used to keep output secret Z        */
 
 
 static const ECDH_VECTOR_T   gPattern[] =
@@ -135,6 +135,10 @@ static const ECDH_VECTOR_T   gPattern[] =
     },
 };
 
+void CRPT_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+
 
 void CRPT_IRQHandler()
 {
@@ -193,7 +197,7 @@ void DEBUG_PORT_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    int32_t p, i;
+    uint32_t p, i;
     char *pz, *pZ;
 
     /* Lock protected registers */
@@ -216,21 +220,21 @@ int32_t main(void)
     {
         printf("Run ECC CDH pattern %s => ", gPattern[p].vecotr_name);
 
-        if(ECC_GenerateSecretZ(CRPT, gPattern[p].curve, (char *)gPattern[p].d, (char *)gPattern[p].Qx, (char *)gPattern[p].Qy, gZ) < 0)
+        if(ECC_GenerateSecretZ(CRPT, gPattern[p].curve, (char *)(uint32_t)gPattern[p].d, (char *)(uint32_t)gPattern[p].Qx, (char *)(uint32_t)gPattern[p].Qy, s_acZ) < 0)
         {
             printf("ECC CDH secret Z generation failed!!\n");
             while(1);
         }
 
         /* truncate leading zeros                */
-        for(pz = &gZ[0]; *pz == '0'; pz++);    
+        for(pz = &s_acZ[0]; *pz == '0'; pz++);    
 
         /* truncate leading zeros  */
-        for(pZ = (char *)&gPattern[p].Z[0]; *pZ == '0'; pZ++);  
+        for(pZ = (char *)(uint32_t)&gPattern[p].Z[0]; *pZ == '0'; pZ++);  
 
         if(strcmp(pz, pZ))
         {
-            printf("Secret Z [%s] is not matched with expected [%s]!\n", gZ, gPattern[p].Z);
+            printf("Secret Z [%s] is not matched with expected [%s]!\n", s_acZ, gPattern[p].Z);
             for(i = 0; pz[i] != 0; i++)
             {
                 if(pz[i] != pZ[i])

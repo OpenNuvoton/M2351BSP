@@ -18,6 +18,24 @@
 /* typedef for NonSecure callback functions */
 typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 
+
+__NONSECURE_ENTRY
+int32_t Secure_PA11_LED_On(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_PA11_LED_Off(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_PA12_LED_On(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_PA12_LED_Off(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_PA13_LED_On(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_PA13_LED_Off(uint32_t num);
+__NONSECURE_ENTRY
+uint32_t GetSystemCoreClock(void);
+int32_t LED_On(void);
+int32_t LED_Off(void);
+void SysTick_Handler(void);
 /*----------------------------------------------------------------------------
   Secure functions exported to NonSecure application
   Must place in Non-secure Callable
@@ -25,6 +43,7 @@ typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 __NONSECURE_ENTRY
 int32_t Secure_PA11_LED_On(uint32_t num)
 {
+    (void)num;
     printf("Secure PA11 LED On call by secure\n");
     PA11 = 0;
     return 0;
@@ -33,6 +52,7 @@ int32_t Secure_PA11_LED_On(uint32_t num)
 __NONSECURE_ENTRY
 int32_t Secure_PA11_LED_Off(uint32_t num)
 {
+    (void)num;
     printf("Secure PA11 LED Off call by secure\n");
     PA11 = 1;
     return 1;
@@ -41,6 +61,7 @@ int32_t Secure_PA11_LED_Off(uint32_t num)
 __NONSECURE_ENTRY
 int32_t Secure_PA12_LED_On(uint32_t num)
 {
+    (void)num;
     printf("Secure PA12 LED On call by secure\n");
     PA12 = 0;
     return 0;
@@ -49,6 +70,7 @@ int32_t Secure_PA12_LED_On(uint32_t num)
 __NONSECURE_ENTRY
 int32_t Secure_PA12_LED_Off(uint32_t num)
 {
+    (void)num;
     printf("Secure PA12 LED Off call by secure\n");
     PA12 = 1;
     return 1;
@@ -57,6 +79,7 @@ int32_t Secure_PA12_LED_Off(uint32_t num)
 __NONSECURE_ENTRY
 int32_t Secure_PA13_LED_On(uint32_t num)
 {
+    (void)num;
     printf("Secure PA13 LED On call by secure\n");
     PA13 = 0;
     return 0;
@@ -65,6 +88,7 @@ int32_t Secure_PA13_LED_On(uint32_t num)
 __NONSECURE_ENTRY
 int32_t Secure_PA13_LED_Off(uint32_t num)
 {
+    (void)num;
     printf("Secure PA13 LED Off call by secure\n");
     PA13 = 1;
     return 1;

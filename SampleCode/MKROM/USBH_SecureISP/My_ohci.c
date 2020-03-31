@@ -29,13 +29,17 @@
 #pragma data_alignment=256
 HCCA_T _hcca;
 #else
-HCCA_T _hcca __attribute__((aligned(256)));
+static HCCA_T _hcca __attribute__((aligned(256)));
 #endif
 
-ED_T  * _Ied[6];
+static ED_T  * _Ied[6];
 
 
 static ED_T  *ed_remove_list;
+
+uint32_t ed_make_info(UDEV_T *udev, EP_INFO_T *ep);
+void td_done(TD_T *td);
+void USBH_IRQHandler(void);
 
 static void add_to_ED_remove_list(ED_T *ed)
 {
@@ -67,7 +71,6 @@ static void add_to_ED_remove_list(ED_T *ed)
 
 static int ohci_reset(void)
 {
-    volatile int  t0;
 
     /* Disable HC interrupts  */
     _ohci->HcInterruptDisable = USBH_HcInterruptDisable_MIE_Msk;
@@ -172,7 +175,6 @@ static int get_ohci_interval(int interval)
 static int  ohci_init(void)
 {
     uint32_t    fminterval;
-    volatile int    i;
 
     if(ohci_reset() < 0)
         return -1;
@@ -304,16 +306,16 @@ uint32_t ed_make_info(UDEV_T *udev, EP_INFO_T *ep)
             else
                 udev->descriptor.bMaxPacketSize0 = 64;
         }
-        info = (udev->descriptor.bMaxPacketSize0 << 16) /* Control endpoint Maximum Packet Size from device descriptor */
+        info = ((uint32_t)(udev->descriptor.bMaxPacketSize0 << 16)) /* Control endpoint Maximum Packet Size from device descriptor */
                | ED_DIR_BY_TD                   /* Direction (Get direction From TD)      */
                | ED_FORMAT_GENERAL              /* General format                         */
                | (0 << ED_CTRL_EN_Pos);         /* Endpoint address 0                     */
     }
     else                                        /* Other endpoint direction is from endpoint descriptor */
     {
-        info = (ep->wMaxPacketSize << 16);      /* Maximum Packet Size from endpoint      */
+        info = (uint32_t)(ep->wMaxPacketSize << 16);      /* Maximum Packet Size from endpoint      */
 
-        info |= ((ep->bEndpointAddress & 0xf) << ED_CTRL_EN_Pos);   /* Endpoint Number    */
+        info |= (uint32_t)((ep->bEndpointAddress & 0xf) << ED_CTRL_EN_Pos);   /* Endpoint Number    */
 
         if((ep->bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN)
             info |= ED_DIR_IN;
@@ -522,7 +524,7 @@ static int ohci_bulk_xfer(UTR_T *utr)
         else
             info = (TD_CC | TD_R | TD_DP_IN | TD_TYPE_BULK);
 
-        info &= ~(1 << 25);                 /* Data toggle from ED toggleCarry bit        */
+        info &= ~(1ul << 25);                 /* Data toggle from ED toggleCarry bit        */
 
         if(data_len > 4096)                 /* maximum transfer length is 4K for each TD  */
             xfer_len = 4096;
@@ -639,7 +641,7 @@ static int ohci_int_xfer(UTR_T *utr)
         else
             info = (TD_CC | TD_R | TD_DP_IN | TD_TYPE_INT);
 
-        info &= ~(1 << 25);                 /* Data toggle from ED toggleCarry bit        */
+        info &= ~(1ul << 25);                 /* Data toggle from ED toggleCarry bit        */
 
         if(data_len > 4096)                 /* maximum transfer length is 4K for each TD  */
             xfer_len = 4096;
@@ -768,7 +770,7 @@ static int ohci_iso_xfer(UTR_T *utr)
         buff_addr = (uint32_t)(utr->iso_buff[i]);
         td->Info = (TD_CC | TD_TYPE_ISO) | ed->next_sf;
         ed->next_sf += get_ohci_interval(ed->bInterval);
-        td->CBP  = buff_addr & ~0xFFF;
+        td->CBP  = buff_addr & ~0xFFFul;
         td->BE   = buff_addr + utr->iso_xlen[i] - 1;
         td->PSW[0] = 0xE000 | (buff_addr & 0xFFF);
 
@@ -782,7 +784,7 @@ static int ohci_iso_xfer(UTR_T *utr)
             last_td->NextTD = (uint32_t)td;
 
         last_td = td;
-    };
+    }
 
     /*------------------------------------------------------------------------------------*/
     /*  Hook ED and TD list to HCCA interrupt table                                       */
@@ -790,12 +792,12 @@ static int ohci_iso_xfer(UTR_T *utr)
     utr->status = 0;
     DISABLE_OHCI_IRQ();
 
-    if((ed->HeadP & ~0x3) == 0)
+    if((ed->HeadP & ~0x3ul) == 0)
         ed->HeadP = (ed->HeadP & 0x2) | (uint32_t)td_list;   /* keep toggleCarry bit      */
     else
     {
         /* find the tail of TDs under this ED */
-        td = (TD_T *)(ed->HeadP & ~0x3);
+        td = (TD_T *)(ed->HeadP & ~0x3ul);
         while(td->NextTD != 0)
         {
             td = (TD_T *)td->NextTD;
@@ -855,7 +857,7 @@ static int ohci_rh_port_reset(int port)
         _ohci->HcRhPortStatus[port] = USBH_HcRhPortStatus_PRS_Msk;
 
         t0 = get_ticks();
-        while(get_ticks() - t0 < (reset_time / 10) + 1)
+        while(get_ticks() - t0 < (uint32_t)((reset_time / 10) + 1))
         {
             /*
              *  If device is disconnected or port enabled, we can stop port reset.
@@ -881,9 +883,10 @@ port_reset_done:
 
 static int ohci_rh_polling(void)
 {
-    int       i, change = 0;
+    int       change = 0;
     UDEV_T    *udev;
     int       ret;
+    uint8_t   i;
 
     for(i = 0; i < 2; i++)
     {
@@ -1133,7 +1136,7 @@ static void remove_ed()
         /*--------------------------------------------------------------------------------*/
         if(found)
         {
-            td = (TD_T *)(ed_p->HeadP & ~0x3);
+            td = (TD_T *)(ed_p->HeadP & ~0x3ul);
             if(td != NULL)
             {
                 while(td != NULL)

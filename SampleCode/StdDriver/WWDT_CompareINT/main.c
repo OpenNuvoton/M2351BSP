@@ -12,8 +12,11 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global Interface Variables Declarations                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8WWDTINTCounts;
+static volatile uint8_t s_u8WWDTINTCounts;
 
+void WWDT_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       IRQ Handler for WWDT Interrupt
@@ -33,15 +36,15 @@ void WWDT_IRQHandler(void)
 
         PA2 ^= 1;
 
-        g_u8WWDTINTCounts++;
+        s_u8WWDTINTCounts++;
 
-        if(g_u8WWDTINTCounts < 10)
+        if(s_u8WWDTINTCounts < 10)
         {
             /* To reload the WWDT counter value to 0x3F */
             WWDT_RELOAD_COUNTER();
         }
 
-        printf("WWDT compare match interrupt occurred. (%d)\n", g_u8WWDTINTCounts);
+        printf("WWDT compare match interrupt occurred. (%d)\n", s_u8WWDTINTCounts);
     }
 }
 
@@ -153,7 +156,7 @@ int main(void)
     /* Enable WWDT NVIC */
     NVIC_EnableIRQ(WWDT_IRQn);
 
-    g_u8WWDTINTCounts = 0;
+    s_u8WWDTINTCounts = 0;
 
     /*
         Max time-out period is 1024*(64*WWDT_CLK);

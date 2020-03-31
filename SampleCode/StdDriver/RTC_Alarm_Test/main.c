@@ -12,15 +12,19 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global Interface Variables Declarations                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8IsAlarm = FALSE;
+static volatile uint8_t s_u8IsAlarm = FALSE;
 
+void RTC_AlarmHandle(void);
+void RTC_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /* RTC Alarm Handle                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 void RTC_AlarmHandle(void)
 {
     printf(" Alarm!!\n");
-    g_u8IsAlarm = TRUE;
+    s_u8IsAlarm = TRUE;
 }
 
 /**
@@ -146,7 +150,7 @@ int main(void)
 
     printf("\nRTC Alarm Test (Alarm after 10 seconds)\n\n");
 
-    g_u8IsAlarm = FALSE;
+    s_u8IsAlarm = FALSE;
 
     /* Get the current time */
     RTC_GetDateAndTime(&sCurTime);
@@ -168,7 +172,7 @@ int main(void)
     RTC_EnableInt(RTC_INTEN_ALMIEN_Msk);
     NVIC_EnableIRQ(RTC_IRQn);
 
-    while(g_u8IsAlarm == FALSE) {}
+    while(s_u8IsAlarm == FALSE) {}
 
     /* Get the current time */
     RTC_GetDateAndTime(&sCurTime);

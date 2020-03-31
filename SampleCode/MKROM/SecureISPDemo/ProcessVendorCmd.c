@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "NuMicro.h"
-
+#include "ProcessVendorCmd.h"
 
 /*
     Provides the below vendor functions for USBH_SecureISP and PC VendorCmdSample Tool:
@@ -23,6 +23,8 @@
 /* Global variables for initial SecureISP function                                                         */
 /*---------------------------------------------------------------------------------------------------------*/
 extern ISP_INFO_T   g_ISPInfo;
+
+void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len);
 
 void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len)
 {

@@ -11,10 +11,8 @@
 
 #define TEST_COUNT  16
 
-uint32_t g_au32SourceData[TEST_COUNT];
-uint32_t g_au32DestinationData[TEST_COUNT];
-volatile uint32_t g_u32TxDataCount;
-volatile uint32_t g_u32RxDataCount;
+static uint32_t s_au32SourceData[TEST_COUNT];
+static uint32_t s_au32DestinationData[TEST_COUNT];
 
 /* Function prototype declaration */
 void SYS_Init(void);
@@ -59,9 +57,9 @@ int main()
     for(u32TxDataCount = 0; u32TxDataCount < TEST_COUNT; u32TxDataCount++)
     {
         /* Write the initial value to source buffer */
-        g_au32SourceData[u32TxDataCount] = 0xAA00 + u32TxDataCount;
+        s_au32SourceData[u32TxDataCount] = 0xAA00 + u32TxDataCount;
         /* Clear destination buffer */
-        g_au32DestinationData[u32TxDataCount] = 0;
+        s_au32DestinationData[u32TxDataCount] = 0;
     }
 
     u32TxDataCount = 0;
@@ -75,17 +73,17 @@ int main()
     {
         /* Check TX FULL flag and TX data count */
         if((USPI_GET_TX_FULL_FLAG(USPI1) == 0) && (u32TxDataCount < TEST_COUNT))
-            USPI_WRITE_TX(USPI1, g_au32SourceData[u32TxDataCount++]); /* Write to TX Buffer */
+            USPI_WRITE_TX(USPI1, s_au32SourceData[u32TxDataCount++]); /* Write to TX Buffer */
         /* Check RX EMPTY flag */
         if(USPI_GET_RX_EMPTY_FLAG(USPI1) == 0)
-            g_au32DestinationData[u32RxDataCount++] = USPI_READ_RX(USPI1); /* Read RX Buffer */
+            s_au32DestinationData[u32RxDataCount++] = USPI_READ_RX(USPI1); /* Read RX Buffer */
     }
 
     /* Print the received data */
     printf("Received data:\n");
     for(u32RxDataCount = 0; u32RxDataCount < TEST_COUNT; u32RxDataCount++)
     {
-        printf("%d:\t0x%X\n", u32RxDataCount, g_au32DestinationData[u32RxDataCount]);
+        printf("%d:\t0x%X\n", u32RxDataCount, s_au32DestinationData[u32RxDataCount]);
     }
     printf("The data transfer was done.\n");
 

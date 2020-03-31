@@ -15,22 +15,37 @@
 #include "diskio.h"
 #include "ff.h"
 
-DMA_DESC_T DMA_DESC[2];
+static DMA_DESC_T DMA_DESC[2];
 
-uint32_t volatile u32BuffPos = 0;
+//uint32_t volatile u32BuffPos = 0;
 FATFS FatFs[_VOLUMES];      /* File system object for logical drive */
+#if 0
 #ifdef __ICCARM__
 #pragma data_alignment=32
 BYTE Buff[1024];       /* Working buffer */
 #else
-BYTE Buff[1024] __attribute__((aligned(32)));       /* Working buffer */
+static BYTE Buff[1024] __attribute__((aligned(32)));       /* Working buffer */
 #endif
-
+#endif
 uint8_t bAudioPlaying = 0;
-extern signed int aPCMBuffer[2][PCM_BUFFER_SIZE];
+extern signed int aiPCMBuffer[2][PCM_BUFFER_SIZE];
 
-extern uint32_t g_u8R3Flag;
+
 extern uint8_t volatile g_u8SDDataReadyFlag;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+uint32_t get_ticks(void);
+void delay_us(uint32_t u32USec);
+uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len);
+uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat);
+void NAU88L25_Reset(void);
+void NAU88L25_Setup(void);
+void SDH0_IRQHandler(void);
+void SD_Inits(void);
+void SYS_Init(void);
+void I2C2_Init(void);
+void PDMA_Init(void);
 
 /*---------------------------------------------------------*/
 /* User Provided RTC Function for FatFs module             */
@@ -49,18 +64,18 @@ unsigned long get_fattime(void)
     return g_u64Tmr;
 }
 
-volatile uint32_t  g_u32TickCnt;
+static volatile uint32_t  s_u32TickCnt;
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_u32TickCnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = 12000000UL;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -70,13 +85,13 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_u32TickCnt;
+    return s_u32TickCnt;
 }
 
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32USec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -86,7 +101,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = 0x3;   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32USec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);
@@ -94,6 +109,7 @@ void delay_us(int usec)
 
 uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len)
 {
+    (void)u32Len;
     /* Send START */
     I2C_START(I2C2);
     I2C_WAIT_READY(I2C2);
@@ -291,7 +307,6 @@ void NAU88L25_Setup(void)
 void SDH0_IRQHandler(void)
 {
     unsigned int volatile isr;
-    unsigned int volatile ier;
 
     // FMI data abort interrupt
     if(SDH0->GINTSTS & SDH_GINTSTS_DTAIF_Msk)
@@ -461,12 +476,12 @@ void I2C2_Init(void)
 void PDMA_Init(void)
 {
     DMA_DESC[0].ctl = ((PCM_BUFFER_SIZE - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    DMA_DESC[0].endsrc = (uint32_t)&aPCMBuffer[0][0];
+    DMA_DESC[0].endsrc = (uint32_t)&aiPCMBuffer[0][0];
     DMA_DESC[0].enddest = (uint32_t)&I2S0->TXFIFO;
     DMA_DESC[0].offset = (uint32_t)&DMA_DESC[1] - (PDMA0->SCATBA);
 
     DMA_DESC[1].ctl = ((PCM_BUFFER_SIZE - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    DMA_DESC[1].endsrc = (uint32_t)&aPCMBuffer[1][0];
+    DMA_DESC[1].endsrc = (uint32_t)&aiPCMBuffer[1][0];
     DMA_DESC[1].enddest = (uint32_t)&I2S0->TXFIFO;
     DMA_DESC[1].offset = (uint32_t)&DMA_DESC[0] - (PDMA0->SCATBA);
 

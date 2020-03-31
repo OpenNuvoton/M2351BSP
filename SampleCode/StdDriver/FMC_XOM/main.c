@@ -15,7 +15,9 @@
 
 #define XOMR0_Base    0x10000
 
-extern int32_t Lib_XOM_ADD(uint32_t a, uint32_t b);
+extern uint32_t Lib_XOM_ADD(uint32_t a, uint32_t b);
+
+void SYS_Init(void);
 
 void SYS_Init(void)
 {
@@ -66,7 +68,7 @@ void SYS_Init(void)
 
 int32_t main(void)
 {
-    uint32_t i, u32Status;
+    int32_t i32Status;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -108,8 +110,8 @@ int32_t main(void)
         /* Config XOMR0 */
         if(FMC_GetXOMState(XOMR0) == 0)
         {
-            u32Status = FMC_ConfigXOM(XOMR0, XOMR0_Base, 1);
-            if(u32Status)
+            i32Status = FMC_ConfigXOM(XOMR0, XOMR0_Base, 1);
+            if(i32Status)
                 printf("XOMR0 Config fail...\n");
             else
                 printf("XOMR0 Config OK...\n");
@@ -120,7 +122,7 @@ int32_t main(void)
 
         /* Reset chip to enable XOM region. */
         SYS_ResetChip();
-        while(1) {};
+        while(1) {}
     }
 
     /* Run XOM function */

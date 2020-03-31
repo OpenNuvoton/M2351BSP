@@ -104,6 +104,7 @@ typedef struct
 } __attribute__((packed)) FW_INFO_T;
 /* Size MUST be multiple of 16 bytes due to AES256 encrypt/decrypt limitation */
 
+extern const FW_INFO_T g_FWinfoInitial;
 
 #ifdef __cplusplus
 }

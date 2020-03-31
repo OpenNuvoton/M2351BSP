@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void TMR0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       Timer0 IRQ

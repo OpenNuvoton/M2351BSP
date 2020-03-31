@@ -11,12 +11,14 @@
 #include "NuMicro.h"
 #include "hid_mousekeyboard.h"
 
-int8_t g_ai8MouseTable[] = { -16, -16, -16, 0, 16, 16, 16, 0};
-uint8_t g_u8MouseIdx = 0;
-uint8_t g_u8MoveLen, g_u8MouseMode = 1;
+static int8_t s_ai8MouseTable[] = { -16, -16, -16, 0, 16, 16, 16, 0};
+static uint8_t s_u8MouseIdx = 0;
+static uint8_t s_u8MoveLen, s_u8MouseMode = 1;
 
-uint8_t volatile g_u8EP2Ready = 0;
-uint8_t volatile g_u8EP3Ready = 0;
+static uint8_t volatile s_u8EP2Ready = 0;
+static uint8_t volatile s_u8EP3Ready = 0;
+
+void USBD_IRQHandler(void);
 
 
 void USBD_IRQHandler(void)
@@ -175,12 +177,12 @@ void USBD_IRQHandler(void)
 
 void EP2_Handler(void)  /* Interrupt IN handler */
 {
-    g_u8EP2Ready = 1;
+    s_u8EP2Ready = 1;
 }
 
 void EP3_Handler(void)  /* Interrupt IN handler */
 {
-    g_u8EP3Ready = 1;
+    s_u8EP3Ready = 1;
 }
 
 
@@ -220,8 +222,8 @@ void HID_Init(void)
     USBD_SET_EP_BUF_ADDR(EP3, EP3_BUF_BASE);
 
     /* Start to send IN data */
-    g_u8EP2Ready = 1;
-    g_u8EP3Ready = 1;
+    s_u8EP2Ready = 1;
+    s_u8EP3Ready = 1;
 
 }
 
@@ -306,30 +308,30 @@ void HID_UpdateMouseData(void)
 {
     uint8_t *pu8Buf;
 
-    if(g_u8EP2Ready)
+    if(s_u8EP2Ready)
     {
         pu8Buf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2));
-        g_u8MouseMode ^= 1;
+        s_u8MouseMode ^= 1;
 
-        if(g_u8MouseMode)
+        if(s_u8MouseMode)
         {
-            if(g_u8MoveLen > 14)
+            if(s_u8MoveLen > 14)
             {
                 /* Update new report data */
                 pu8Buf[0] = 0x00;
-                pu8Buf[1] = g_ai8MouseTable[g_u8MouseIdx & 0x07];
-                pu8Buf[2] = g_ai8MouseTable[(g_u8MouseIdx + 2) & 0x07];
+                pu8Buf[1] = (uint8_t)s_ai8MouseTable[s_u8MouseIdx & 0x07];
+                pu8Buf[2] = (uint8_t)s_ai8MouseTable[(s_u8MouseIdx + 2) & 0x07];
                 pu8Buf[3] = 0x00;
-                g_u8MouseIdx++;
-                g_u8MoveLen = 0;
+                s_u8MouseIdx++;
+                s_u8MoveLen = 0;
             }
         }
         else
         {
             pu8Buf[0] = pu8Buf[1] = pu8Buf[2] = pu8Buf[3] = 0;
         }
-        g_u8MoveLen++;
-        g_u8EP2Ready = 0;
+        s_u8MoveLen++;
+        s_u8EP2Ready = 0;
         /* Set transfer length and trigger IN transfer */
         USBD_SET_PAYLOAD_LEN(EP2, 4);
     }
@@ -342,7 +344,7 @@ void HID_UpdateKbData(void)
     uint32_t u32Key = 0xF;
     static uint32_t u32PreKey;
 
-    if(g_u8EP3Ready)
+    if(s_u8EP3Ready)
     {
         pu8Buf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3));
 

@@ -68,6 +68,8 @@ extern "C"
 /** @addtogroup SDH_EXPORTED_TYPEDEF SDH Exported Type Defines
   @{
 */
+#pragma pack(push)
+#pragma pack(1)
 typedef struct SDH_info_t
 {
     unsigned int    CardType;       /*!< SDHC, SD, or MMC */
@@ -77,6 +79,7 @@ typedef struct SDH_info_t
     unsigned int    diskSize;       /*!< Disk size in K bytes */
     int             sectorSize;     /*!< Sector size in bytes */
 } SDH_INFO_T;                       /*!< Structure holds SD card info */
+#pragma pack(pop)
 
 /*@}*/ /* end of group SDH_EXPORTED_TYPEDEF */
 

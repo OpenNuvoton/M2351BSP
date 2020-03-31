@@ -12,8 +12,11 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32IsTamper = FALSE;
+static volatile uint32_t s_u32IsTamper = FALSE;
 
+void TAMPER_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       IRQ Handler for TAMPER Interrupt
@@ -58,7 +61,7 @@ void TAMPER_IRQHandler(void)
                (uint32_t)((u32TAMPTIME & RTC_TAMPTIME_SEC_Msk) >> RTC_TAMPTIME_SEC_Pos));
 
         RTC_CLEAR_TAMPER_INT_FLAG(RTC, u32FlagStatus);
-        g_u32IsTamper = TRUE;
+        s_u32IsTamper = TRUE;
     }
 }
 
@@ -174,7 +177,7 @@ int main(void)
     RTC_StaticTamperEnable(RTC_TAMPER2_SELECT | RTC_TAMPER3_SELECT, RTC_TAMPER_HIGH_LEVEL_DETECT,
                            RTC_TAMPER_DEBOUNCE_ENABLE);
 
-    g_u32IsTamper = FALSE;
+    s_u32IsTamper = FALSE;
 
     /* Enable RTC Tamper Interrupt */
     RTC_EnableInt(RTC_INTEN_TAMP2IEN_Msk | RTC_INTEN_TAMP3IEN_Msk);
@@ -182,8 +185,8 @@ int main(void)
 
     while(1)
     {
-        while(g_u32IsTamper == FALSE) {}
-        g_u32IsTamper = FALSE;
+        while(s_u32IsTamper == FALSE) {}
+        s_u32IsTamper = FALSE;
     }
 }
 

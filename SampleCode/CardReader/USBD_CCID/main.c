@@ -38,6 +38,12 @@ uint32_t volatile u32BulkSize;
 
 int32_t volatile gi32UsbdMessageLength;
 
+
+void SC0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
+
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* The interrupt services routine of smartcard port 0                                                      */
 /*---------------------------------------------------------------------------------------------------------*/

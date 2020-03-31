@@ -18,6 +18,9 @@
 extern uint32_t Image$$RO$$Base;
 #endif
 
+
+void SYS_Init(void);
+
 void SYS_Init(void)
 {
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */
@@ -67,9 +70,7 @@ void SYS_Init(void)
 
 int32_t main(void)
 {
-    uint8_t u8Ch;
-    uint32_t u32Data;
-    uint32_t u32Cfg;
+    int32_t i32Ch;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -124,8 +125,8 @@ int32_t main(void)
     printf("[4] Boot LD, base = 0x100000\n");
     printf("[Others] Boot, base = 0x0\n");
 
-    u8Ch = getchar();
-    switch(u8Ch)
+    i32Ch = getchar();
+    switch(i32Ch)
     {
         case '0':
             FMC_SetVectorPageAddr(0x4000);
@@ -154,17 +155,6 @@ int32_t main(void)
     //NVIC_SystemReset();
 
     while(1);
-
-lexit:
-
-    /* Disable ISP function */
-    FMC_Close();
-
-    /* Lock protected registers */
-    SYS_LockReg();
-
-    printf("\nDone\n");
-    while(SYS->PDID) __WFI();
 
 }
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/

@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void ACMP01_IRQHandler(void);
+void SYS_Init(void);
 
 void ACMP01_IRQHandler(void)
 {

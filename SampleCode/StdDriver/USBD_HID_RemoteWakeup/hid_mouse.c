@@ -11,10 +11,10 @@
 #include "NuMicro.h"
 #include "hid_mouse.h"
 
-uint8_t volatile g_u8EP2Ready = 0;
-uint8_t volatile g_u8Suspend = 0;
+static uint8_t volatile s_u8EP2Ready = 0;
+static uint8_t volatile s_u8Suspend = 0;
 
-
+void USBD_IRQHandler(void);
 void PowerDown(void);
 
 void USBD_IRQHandler(void)
@@ -58,12 +58,12 @@ void USBD_IRQHandler(void)
             /* Bus reset */
             USBD_ENABLE_USB();
             USBD_SwReset();
-            g_u8Suspend = 0;
+            s_u8Suspend = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
             /* Enter power down to wait USB attached */
-            g_u8Suspend = 1;
+            s_u8Suspend = 1;
 
             /* Enable USB but disable PHY */
             USBD_DISABLE_PHY();
@@ -72,13 +72,13 @@ void USBD_IRQHandler(void)
         {
             /* Enable USB and enable PHY */
             USBD_ENABLE_USB();
-            g_u8Suspend = 0;
+            s_u8Suspend = 0;
         }
 #ifdef SUPPORT_LPM
         if(u32State & USBD_STATE_L1SUSPEND)
         {
             /* Enter power down to wait USB attached */
-            g_u8Suspend = 1;
+            s_u8Suspend = 1;
 
             /* Enable USB but disable PHY */
             USBD_DISABLE_PHY();
@@ -87,7 +87,7 @@ void USBD_IRQHandler(void)
         {
             /* Enable USB and enable PHY */
             USBD_ENABLE_USB();
-            g_u8Suspend = 0;
+            s_u8Suspend = 0;
         }
 #endif
     }
@@ -192,7 +192,7 @@ void USBD_IRQHandler(void)
 
 void EP2_Handler(void)  /* Interrupt IN handler */
 {
-    g_u8EP2Ready = 1;
+    s_u8EP2Ready = 1;
 }
 
 
@@ -226,7 +226,7 @@ void HID_Init(void)
     USBD_SET_EP_BUF_ADDR(EP2, EP2_BUF_BASE);
 
     /* start to IN data */
-    g_u8EP2Ready = 1;
+    s_u8EP2Ready = 1;
 }
 
 void HID_ClassRequest(void)
@@ -338,7 +338,7 @@ void HID_UpdateMouseData(void)
     uint8_t *pu8Buf;
     uint32_t u32Reg;
     static int32_t i32X = 0, i32Y = 0;
-    uint32_t u32MouseKey;
+    uint8_t u8MouseKey;
 
     /*
        Key definition:
@@ -352,7 +352,7 @@ void HID_UpdateMouseData(void)
 
 
     /* Enter power down when USB suspend */
-    if(g_u8Suspend)
+    if(s_u8Suspend)
     {
         PowerDown();
 
@@ -360,7 +360,7 @@ void HID_UpdateMouseData(void)
         while((PA->PIN & 0x3F) != 0x3F);
     }
 
-    if(g_u8EP2Ready)
+    if(s_u8EP2Ready)
     {
         pu8Buf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2));
 
@@ -387,19 +387,19 @@ void HID_UpdateMouseData(void)
         if(i32X < -48) i32X = -48;
 
         /* Mouse key */
-        u32MouseKey = 0;
+        u8MouseKey = 0;
         if((u32Reg & 0x20) == 0)
-            u32MouseKey |= 1; /* Left key */
+            u8MouseKey |= 1; /* Left key */
         if((u32Reg & 0x8) == 0)
-            u32MouseKey |= 2; /* Right key */
+            u8MouseKey |= 2; /* Right key */
 
         /* Update new report data */
-        pu8Buf[0] = u32MouseKey;
-        pu8Buf[1] = i32X >> 2;
-        pu8Buf[2] = i32Y >> 2;
+        pu8Buf[0] = u8MouseKey;
+        pu8Buf[1] = (uint8_t)(i32X >> 2);
+        pu8Buf[2] = (uint8_t)(i32Y >> 2);
         pu8Buf[3] = 0x00;
 
-        g_u8EP2Ready = 0;
+        s_u8EP2Ready = 0;
         /* Set transfer length and trigger IN transfer */
         USBD_SET_PAYLOAD_LEN(EP2, 4);
     }

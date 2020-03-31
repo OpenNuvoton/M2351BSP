@@ -14,6 +14,8 @@
 #define printf(...)
 #define DBG_EN      0
 
+void Cal_SHA256_Flash(uint32_t u32Addr, uint32_t u32Bytes, uint32_t *pu32Digest);
+void Cal_SHA256_SRAM(uint32_t u32Addr, uint32_t u32Bytes, uint32_t *pu32Digest);
 
 static void BytesSwap(char *buf, int32_t len)
 {
@@ -30,10 +32,11 @@ static void BytesSwap(char *buf, int32_t len)
 
 void Cal_SHA256_Flash(uint32_t u32Addr, uint32_t u32Bytes, uint32_t *pu32Digest)
 {
-    volatile int32_t    i, addr, bytes, data;
+    volatile int32_t    i, bytes;
+    volatile uint32_t    addr, data;
     
     addr = u32Addr;
-    bytes = u32Bytes;
+    bytes = (int32_t)u32Bytes;
         
     /* Enable CRYPTO module clock */
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
@@ -50,7 +53,7 @@ void Cal_SHA256_Flash(uint32_t u32Addr, uint32_t u32Bytes, uint32_t *pu32Digest)
     while(bytes > 0)
     {
         if(bytes < 64)
-            CRPT->HMAC_DMACNT = bytes;
+            CRPT->HMAC_DMACNT = (uint32_t)bytes;
 
         if(CRPT->HMAC_STS & CRPT_HMAC_STS_DATINREQ_Msk)
         {
@@ -74,7 +77,7 @@ void Cal_SHA256_Flash(uint32_t u32Addr, uint32_t u32Bytes, uint32_t *pu32Digest)
                 while(CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk);
 
                 for(i=0; i<8; i++)
-                    pu32Digest[i] = *(uint32_t *)((uint32_t) & (CRPT->HMAC_DGST[0]) + (i * 4));
+                    pu32Digest[i] = *(uint32_t *)((uint32_t) & (CRPT->HMAC_DGST[0]) + (uint32_t)(i * 4));
             }
         }
     }
@@ -270,7 +273,7 @@ int32_t VerifyNuBL3x(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
     /*---------------------------------------------------------------------------------------------------------*/
     /*  Verify NuBL3x identity (check NuBL3x public key)                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
-    if(IdentifyNuBL3xPubKey((uint32_t *)pFwInfo, u32InfoBase) < 0)
+    if(IdentifyNuBL3xPubKey((uint32_t *)(uint32_t)pFwInfo, u32InfoBase) < 0)
     {
         printf("\n\tIdentify F/W public key FAIL!!\n");
         return -1;

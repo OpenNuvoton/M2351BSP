@@ -15,6 +15,7 @@
 void SYS_Init(void);
 void PowerDownFunction(void);
 int IsDebugFifoEmpty(void);
+void ACMP01_IRQHandler(void);
 
 int32_t main(void)
 {

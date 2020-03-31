@@ -11,17 +11,22 @@
 #include "NuMicro.h"                    /* Device header */
 #include "cssd_lib.h"                   /* Collaborative Secure Software Development Library header */
 
+void LED_On(uint32_t us);
+void LED_Off(uint32_t us);
+void SysTick_Handler(void);
 /*----------------------------------------------------------------------------
   NonSecure Functions from NonSecure Region
  *----------------------------------------------------------------------------*/
 void LED_On(uint32_t us)
 {
+    (void)us;
     printf("NS LED On call by NS\n");
     PC0_NS = 0;
 }
 
 void LED_Off(uint32_t us)
 {
+    (void)us;
     printf("NS LED Off call by NS\n");
     PC0_NS = 1;
 }

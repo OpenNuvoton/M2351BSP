@@ -171,7 +171,7 @@ extern "C"
   * @details    This macro is used to enable independent mode of TIMER PWM module and complementary mode will be disabled.
   * \hideinitializer
   */
-#define TPWM_ENABLE_INDEPENDENT_MODE(timer)     ((timer)->PWMCTL &= ~(1 << TIMER_PWMCTL_OUTMODE_Pos))
+#define TPWM_ENABLE_INDEPENDENT_MODE(timer)     ((timer)->PWMCTL &= ~(1ul << TIMER_PWMCTL_OUTMODE_Pos))
 
 /**
   * @brief      Enable Complementary Mode

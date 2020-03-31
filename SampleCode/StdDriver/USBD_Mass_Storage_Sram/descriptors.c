@@ -13,9 +13,9 @@
 /*!<USB Device Descriptor */
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t gu8DeviceDescriptor[] =
+uint8_t s_au8DeviceDescriptor[] =
 #else
-uint8_t gu8DeviceDescriptor[] __attribute__((aligned(4))) =
+static uint8_t s_au8DeviceDescriptor[] __attribute__((aligned(4))) =
 #endif
 {
     LEN_DEVICE,         /* bLength */
@@ -41,9 +41,9 @@ uint8_t gu8DeviceDescriptor[] __attribute__((aligned(4))) =
 /*!<USB Configure Descriptor */
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t gu8ConfigDescriptor[] =
+uint8_t s_au8ConfigDescriptor[] =
 #else
-uint8_t gu8ConfigDescriptor[] __attribute__((aligned(4))) =
+static uint8_t s_au8ConfigDescriptor[] __attribute__((aligned(4))) =
 #endif
 {
     LEN_CONFIG,                                         // bLength
@@ -86,9 +86,9 @@ uint8_t gu8ConfigDescriptor[] __attribute__((aligned(4))) =
 /*!<USB Language String Descriptor */
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t gu8StringLang[4] =
+uint8_t s_au8StringLang[4] =
 #else
-uint8_t gu8StringLang[4] __attribute__((aligned(4))) =
+static uint8_t s_au8StringLang[4] __attribute__((aligned(4))) =
 #endif
 {
     4,              /* bLength */
@@ -99,9 +99,9 @@ uint8_t gu8StringLang[4] __attribute__((aligned(4))) =
 /*!<USB Vendor String Descriptor */
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t gu8VendorStringDesc[] =
+uint8_t s_au8VendorStringDesc[] =
 #else
-uint8_t gu8VendorStringDesc[] __attribute__((aligned(4))) =
+static uint8_t s_au8VendorStringDesc[] __attribute__((aligned(4))) =
 #endif
 {
     16,
@@ -112,9 +112,9 @@ uint8_t gu8VendorStringDesc[] __attribute__((aligned(4))) =
 /*!<USB Product String Descriptor */
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t gu8ProductStringDesc[] =
+uint8_t s_au8ProductStringDesc[] =
 #else
-uint8_t gu8ProductStringDesc[] __attribute__((aligned(4))) =
+static uint8_t s_au8ProductStringDesc[] __attribute__((aligned(4))) =
 #endif
 {
     22,             /* bLength          */
@@ -124,9 +124,9 @@ uint8_t gu8ProductStringDesc[] __attribute__((aligned(4))) =
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t gu8StringSerial[] =
+uint8_t s_au8StringSerial[] =
 #else
-uint8_t gu8StringSerial[] __attribute__((aligned(4))) =
+static uint8_t s_au8StringSerial[] __attribute__((aligned(4))) =
 #endif
 {
     26,             // bLength
@@ -136,19 +136,20 @@ uint8_t gu8StringSerial[] __attribute__((aligned(4))) =
 };
 
 
-const uint8_t *gpu8UsbString[4] =
+static uint8_t *s_apu8UsbString[4] =
+//uint8_t *gpu8UsbString[4] =
 {
-    gu8StringLang,
-    gu8VendorStringDesc,
-    gu8ProductStringDesc,
-    gu8StringSerial
+    s_au8StringLang,
+    s_au8VendorStringDesc,
+    s_au8ProductStringDesc,
+    s_au8StringSerial
 };
 
 const S_USBD_INFO_T gsInfo =
 {
-    (uint8_t *)gu8DeviceDescriptor,
-    (uint8_t *)gu8ConfigDescriptor,
-    (uint8_t **)gpu8UsbString,
+    (uint8_t *)s_au8DeviceDescriptor,
+    (uint8_t *)s_au8ConfigDescriptor,
+    (uint8_t **)s_apu8UsbString,
     NULL,
     NULL,
     NULL,

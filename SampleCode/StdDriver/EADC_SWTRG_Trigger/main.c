@@ -12,13 +12,16 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32AdcIntFlag;
+static volatile uint32_t s_u32AdcIntFlag;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
 void EADC_FunctionTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+//void EADC0_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -98,7 +101,7 @@ void UART0_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
-    uint8_t  u8Option;
+    int32_t  i32Option;
     int32_t  i32ConversionData;
 
     printf("\n");
@@ -112,8 +115,8 @@ void EADC_FunctionTest()
         printf("  [1] Single end input (channel 2 only)\n");
         printf("  [2] Differential input (channel pair 1 only)\n");
         printf("  Other keys: exit single mode test\n");
-        u8Option = getchar();
-        if(u8Option == '1')
+        i32Option = getchar();
+        if(i32Option == '1')
         {
             /* Set input mode as single-end and enable the A/D converter */
             EADC_Open(EADC, EADC_CTL_DIFFEN_SINGLE_END);
@@ -131,11 +134,11 @@ void EADC_FunctionTest()
             NVIC_EnableIRQ(EADC0_IRQn);
 
             /* Reset the ADC interrupt indicator and trigger sample module 0 to start A/D conversion */
-            g_u32AdcIntFlag = 0;
+            s_u32AdcIntFlag = 0;
             EADC_START_CONV(EADC, BIT0);
 
-            /* Wait ADC interrupt (g_u32AdcIntFlag will be set at IRQ_Handler function) */
-            while(g_u32AdcIntFlag == 0);
+            /* Wait ADC interrupt (s_u32AdcIntFlag will be set at IRQ_Handler function) */
+            while(s_u32AdcIntFlag == 0);
 
             /* Disable the ADINT0 interrupt */
             EADC_DISABLE_INT(EADC, BIT0);
@@ -144,7 +147,7 @@ void EADC_FunctionTest()
             i32ConversionData = EADC_GET_CONV_DATA(EADC, 0);
             printf("Conversion result of channel 2: 0x%X (%d)\n\n", i32ConversionData, i32ConversionData);
         }
-        else if(u8Option == '2')
+        else if(i32Option == '2')
         {
             /* Set input mode as differential and enable the A/D converter */
             EADC_Open(EADC, EADC_CTL_DIFFEN_DIFFERENTIAL);
@@ -162,11 +165,11 @@ void EADC_FunctionTest()
             NVIC_EnableIRQ(EADC0_IRQn);
 
             /* Reset the ADC interrupt indicator and trigger sample module 0 to start A/D conversion */
-            g_u32AdcIntFlag = 0;
+            s_u32AdcIntFlag = 0;
             EADC_START_CONV(EADC, BIT0);
 
-            /* Wait ADC interrupt (g_u32AdcIntFlag will be set at IRQ_Handler function) */
-            while(g_u32AdcIntFlag == 0);
+            /* Wait ADC interrupt (s_u32AdcIntFlag will be set at IRQ_Handler function) */
+            while(s_u32AdcIntFlag == 0);
 
             /* Disable the ADINT0 interrupt */
             EADC_DISABLE_INT(EADC, BIT0);
@@ -186,7 +189,7 @@ void EADC_FunctionTest()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC0_IRQHandler(void)
 {
-    g_u32AdcIntFlag = 1;
+    s_u32AdcIntFlag = 1;
     /* Clear the A/D ADINT0 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF0_Msk);
 }

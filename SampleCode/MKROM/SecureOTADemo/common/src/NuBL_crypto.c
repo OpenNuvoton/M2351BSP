@@ -13,12 +13,12 @@
 #include "NuBL_crypto.h"
 
 #define printf(...)
-
+#if 0
 static uint32_t Swap32(uint32_t val)
 {
     return (val<<24) | ((val<<8)&0xff0000) | ((val>>8)&0xff00) | (val>>24);
 }
-
+#endif
 static void ResetCrypto(void)
 {
     SYS->IPRST0 |= SYS_IPRST0_CRPTRST_Msk;
@@ -42,9 +42,9 @@ static void ResetCrypto(void)
 int32_t NuBL_CalculateSHA256(uint32_t start, uint32_t end, uint32_t digest[], E_SHA_OP_MODE mode, E_SHA_SRC src)
 {
     volatile int32_t    i, bytes;
-    uint32_t            *ptr, addr, data, Hash[8];
+    uint32_t            *ptr, addr, data = 0;
 
-    bytes   = end - start;
+    bytes   = (int32_t)(end - start);
     ptr     = (uint32_t *)start;
     addr    = (uint32_t)ptr;
 
@@ -70,7 +70,7 @@ int32_t NuBL_CalculateSHA256(uint32_t start, uint32_t end, uint32_t digest[], E_
     while(bytes > 0)
     {
         if(bytes < 64)
-            CRPT->HMAC_DMACNT = bytes;
+            CRPT->HMAC_DMACNT = (uint32_t)bytes;
 
         if(CRPT->HMAC_STS & CRPT_HMAC_STS_DATINREQ_Msk)
         {
@@ -103,7 +103,7 @@ int32_t NuBL_CalculateSHA256(uint32_t start, uint32_t end, uint32_t digest[], E_
                     while(CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk);
 
                     for(i=0; i<8; i++)
-                        digest[i] = *(uint32_t *)((uint32_t)&(CRPT->HMAC_DGST[0]) + (i*4));
+                        digest[i] = *(uint32_t *)((uint32_t)&(CRPT->HMAC_DGST[0]) + (uint32_t)(i*4));
 
                     NUBL_MSG("\t[SHA256 done]\n");
 
@@ -136,7 +136,6 @@ int32_t NuBL_CalculateSHA256(uint32_t start, uint32_t end, uint32_t digest[], E_
   */
 int32_t NuBL_AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *KEY)
 {
-    volatile int32_t    i;
     uint32_t au32AESIV[4] = {0};
 
     /* reset crypto */
@@ -149,8 +148,8 @@ int32_t NuBL_AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
 
     /* KEY and IV are byte order (32 bit) reversed, __REV(x)) and stored in ISP_INFO_T */
-    memcpy((void *)&CRPT->AES0_KEY[0], KEY, (4 * 8));
-    memcpy((void *)&CRPT->AES0_IV[0], au32AESIV, (4 * 4));
+    memcpy((void *)(uint32_t)&CRPT->AES0_KEY[0], KEY, (4 * 8));
+    memcpy((void *)(uint32_t)&CRPT->AES0_IV[0], au32AESIV, (4 * 4));
 
     CRPT->AES0_SADDR = (uint32_t)in;
     CRPT->AES0_DADDR = (uint32_t)out;
@@ -187,7 +186,7 @@ extern const uint32_t g_au32Eorder[];
 #define MODOP_SUB           (0x3UL << CRPT_ECC_CTL_MODOP_Pos)
 
 #define B2C(c)              (((uint8_t)(c)<10)? ((uint8_t)(c)+'0'):((uint8_t)(c)-10+'a'))
-
+#if 0
 static char ch2hex(char ch)
 {
     if(ch <= '9')
@@ -249,7 +248,7 @@ static int  get_nibble_value(char c)
     }
     return 0;
 }
-
+#endif
 static int32_t Trigger_ECC(uint32_t mode)
 {
     volatile uint32_t i = 1000000;
@@ -465,7 +464,7 @@ int32_t NuBL_VerifyECCSignature(uint32_t *msg, uint32_t *Qx, uint32_t *Qy, uint3
     }
 
     /*
-     *   4. Compute u1 = e × w (mod n) and u2 = r × w (mod n)
+     *   4. Compute u1 = e ?w (mod n) and u2 = r ?w (mod n)
      *      (1) Write the curve order and curve length to N ,M registers
      *      (2) Write e, w to X1, Y1 registers
      *      (3) Set ECCOP(CRPT_ECC_CTL[10:9]) to 01
@@ -557,7 +556,7 @@ int32_t NuBL_VerifyECCSignature(uint32_t *msg, uint32_t *Qx, uint32_t *Qy, uint3
     }
 
     /*
-     *   5. Compute X’ (x1’, y1’) = u1 * G + u2 * Q
+     *   5. Compute X?(x1? y1? = u1 * G + u2 * Q
      *      (1) Write the curve parameter A, B, N, and curve length M to corresponding registers
      *      (2) Write the point G(x, y) to X1, Y1 registers
      *      (3) Write u1 to K registers
@@ -576,17 +575,17 @@ int32_t NuBL_VerifyECCSignature(uint32_t *msg, uint32_t *Qx, uint32_t *Qy, uint3
      *      (16) Set ECCOP(CRPT_ECC_CTL[10:9]) to 10
      *      (17) Set START(CRPT_ECC_CTL[0]) to 1
      *      (18) Wait for BUSY(CRPT_ECC_STS[0]) be cleared
-     *      (19) Read X1, Y1 registers to get X’(x1’, y1’)
+     *      (19) Read X1, Y1 registers to get X?x1? y1?
      *      (20) Write the curve order and curve length to N ,M registers
-     *      (21) Write x1’ to X1 registers
+     *      (21) Write x1?to X1 registers
      *      (22) Write 0x0 to Y1 registers
      *      (23) Set ECCOP(CRPT_ECC_CTL[10:9]) to 01
      *      (24) Set MOPOP(CRPT_ECC_CTL[12:11]) to 10
      *      (25) Set START(CRPT_ECC_CTL[0]) to 1
      *      (26) Wait for BUSY(CRPT_ECC_STS[0]) be cleared
-     *      (27) Read X1 registers to get x1’ (mod n)
+     *      (27) Read X1 registers to get x1?(mod n)
      *
-     *   6. The signature is valid if x1’ = r, otherwise it is invalid
+     *   6. The signature is valid if x1?= r, otherwise it is invalid
      */
 
     /*
@@ -671,7 +670,7 @@ int32_t NuBL_VerifyECCSignature(uint32_t *msg, uint32_t *Qx, uint32_t *Qy, uint3
         return -1;
     }
 
-    /* (19) Read X1, Y1 registers to get X’(x1’, y1’) */
+    /* (19) Read X1, Y1 registers to get X?x1? y1? */
     for(i = 0; i < 8; i++)
     {
         temp_x[i] = CRPT->ECC_X1[i];
@@ -685,7 +684,7 @@ int32_t NuBL_VerifyECCSignature(uint32_t *msg, uint32_t *Qx, uint32_t *Qy, uint3
     }
 
     /*
-     *  (21) Write x1’ to X1 registers
+     *  (21) Write x1?to X1 registers
      *  (22) Write 0x0 to Y1 registers
      */
     for(i = 0; i < 8; i++)
@@ -700,9 +699,9 @@ int32_t NuBL_VerifyECCSignature(uint32_t *msg, uint32_t *Qx, uint32_t *Qy, uint3
         return -1;
     }
 
-    /*  (27) Read X1 registers to get x1’ (mod n) */
+    /*  (27) Read X1 registers to get x1?(mod n) */
 
-    /* 6. The signature is valid if x1’ = r, otherwise it is invalid */
+    /* 6. The signature is valid if x1?= r, otherwise it is invalid */
 
     /* Compare with test pattern to check if r is correct or not */
     for(i = 0; i < 8; i++)

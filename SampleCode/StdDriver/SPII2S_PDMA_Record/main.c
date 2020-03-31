@@ -27,26 +27,33 @@ typedef struct
     uint32_t FIRST;
 } DESC_TABLE_T;
 
-DESC_TABLE_T g_asDescTable_DataTX[1], g_asDescTable_RX[2];
+static DESC_TABLE_T s_asDescTable_DataTX[1], s_asDescTable_RX[2];
 
-/* Function prototype declaration */
-void SYS_Init(void);
+
 
 /* Global variable declaration */
-volatile uint8_t u8RxIdx = 0;
-uint32_t g_au32PcmRxBuff[2][BUFF_LEN] = {0};
-uint32_t g_au32PcmTxDataBuff[1][TX_BUFF_LEN] = {0};
+static volatile uint8_t s_u8RxIdx = 0;
+static uint32_t s_au32PcmRxBuff[2][BUFF_LEN] = {{0}};
+static uint32_t s_au32PcmTxDataBuff[1][TX_BUFF_LEN] = {{0}};
 
 /* Since ping-pong buffer would record infinitely, in this case we only want to make sure the first buffer of RX Buffer1 and Buffer2 are correct.
-   Hence use g_PcmRxBuff and g_count to check and record the first buffer of RX Buffer1 and Buffer2*/
-uint32_t g_PcmRxBuff[2][BUFF_LEN] = {0};
-volatile uint8_t g_count = 0;
+   Hence use s_PcmRxBuff and s_u8Count to check and record the first buffer of RX Buffer1 and Buffer2*/
+static uint32_t s_PcmRxBuff[2][BUFF_LEN] = {{0}};
+static volatile uint8_t s_u8Count = 0;
+
+
+/* Function prototype declaration */
+void PDMA_ResetRxSGTable(uint8_t id);
+void SYS_Init(void);
+void SYS_Init(void);
+void PDMA0_IRQHandler(void);
+	
 
 /* Once PDMA has transferred, software need to reset Scatter-Gather table */
 void PDMA_ResetRxSGTable(uint8_t id)
 {
-    g_asDescTable_RX[id].CTL |= PDMA_OP_SCATTER;
-    g_asDescTable_RX[id].CTL |= ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos);
+    s_asDescTable_RX[id].CTL |= PDMA_OP_SCATTER;
+    s_asDescTable_RX[id].CTL |= ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos);
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -97,7 +104,7 @@ int32_t main(void)
     u32InitValue = 0x50005000;
     for(u32DataCount = 0; u32DataCount < TX_BUFF_LEN; u32DataCount++)
     {
-        g_au32PcmTxDataBuff[0][u32DataCount] = u32InitValue;
+        s_au32PcmTxDataBuff[0][u32DataCount] = u32InitValue;
         u32InitValue += 0x00010001;
     }
 
@@ -105,23 +112,23 @@ int32_t main(void)
     PDMA_Open(PDMA0, (1 << I2S_TXData_DMA_CH) | (1 << I2S_RX_DMA_CH));
 
     /* Tx description */
-    g_asDescTable_DataTX[0].CTL = ((TX_BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_BASIC;
-    g_asDescTable_DataTX[0].SA = (uint32_t)&g_au32PcmTxDataBuff[0];
-    g_asDescTable_DataTX[0].DA = (uint32_t)&SPI0->TX;
+    s_asDescTable_DataTX[0].CTL = ((TX_BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_BASIC;
+    s_asDescTable_DataTX[0].SA = (uint32_t)&s_au32PcmTxDataBuff[0];
+    s_asDescTable_DataTX[0].DA = (uint32_t)&SPI0->TX;
 
     /* Rx(Record) description */
-    g_asDescTable_RX[0].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    g_asDescTable_RX[0].SA = (uint32_t)&SPI0->RX;
-    g_asDescTable_RX[0].DA = (uint32_t)&g_au32PcmRxBuff[0];
-    g_asDescTable_RX[0].FIRST = (uint32_t)&g_asDescTable_RX[1] - (PDMA0->SCATBA);
+    s_asDescTable_RX[0].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+    s_asDescTable_RX[0].SA = (uint32_t)&SPI0->RX;
+    s_asDescTable_RX[0].DA = (uint32_t)&s_au32PcmRxBuff[0];
+    s_asDescTable_RX[0].FIRST = (uint32_t)&s_asDescTable_RX[1] - (PDMA0->SCATBA);
 
-    g_asDescTable_RX[1].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    g_asDescTable_RX[1].SA = (uint32_t)&SPI0->RX;
-    g_asDescTable_RX[1].DA = (uint32_t)&g_au32PcmRxBuff[1];
-    g_asDescTable_RX[1].FIRST = (uint32_t)&g_asDescTable_RX[0] - (PDMA0->SCATBA);   //link to first description
+    s_asDescTable_RX[1].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+    s_asDescTable_RX[1].SA = (uint32_t)&SPI0->RX;
+    s_asDescTable_RX[1].DA = (uint32_t)&s_au32PcmRxBuff[1];
+    s_asDescTable_RX[1].FIRST = (uint32_t)&s_asDescTable_RX[0] - (PDMA0->SCATBA);   //link to first description
 
-    PDMA_SetTransferMode(PDMA0, 1, PDMA_SPI0_TX, 1, (uint32_t)&g_asDescTable_DataTX[0]);
-    PDMA_SetTransferMode(PDMA0, 2, PDMA_SPI0_RX, 1, (uint32_t)&g_asDescTable_RX[0]);
+    PDMA_SetTransferMode(PDMA0, 1, PDMA_SPI0_TX, 1, (uint32_t)&s_asDescTable_DataTX[0]);
+    PDMA_SetTransferMode(PDMA0, 2, PDMA_SPI0_RX, 1, (uint32_t)&s_asDescTable_RX[0]);
 
     /* Enable PDMA channel 2 interrupt */
     PDMA_EnableInt(PDMA0, 2, PDMA_INT_TRANS_DONE);
@@ -140,7 +147,7 @@ int32_t main(void)
     SPII2S_ENABLE_RXDMA(SPI0);
 
     /* wait RX Buffer 1 and RX Buffer 2 get first buffer */
-    while(g_count != 2);
+    while(s_u8Count != 2);
 
     /* Once I2S is enabled, CLK would be sent immediately, we still have chance to get zero data at beginning,
        in this case we only need to make sure the on-going data is correct */
@@ -149,7 +156,7 @@ int32_t main(void)
     /* Print the received data */
     for(u32DataCount = 0; u32DataCount < BUFF_LEN; u32DataCount++)
     {
-        printf("0x%X\t\t0x%X\n", g_PcmRxBuff[0][u32DataCount], g_PcmRxBuff[1][u32DataCount]);
+        printf("0x%X\t\t0x%X\n", s_PcmRxBuff[0][u32DataCount], s_PcmRxBuff[1][u32DataCount]);
     }
 
     printf("\n\nExit I2S sample code.\n");
@@ -236,21 +243,21 @@ void PDMA0_IRQHandler(void)
         if(PDMA_GET_TD_STS(PDMA0) & 0x4)             /* channel 2 done */
         {
             /* record the first buffer */
-            if(g_count == 0)
+            if(s_u8Count == 0)
             {
                 for(u32DataCount = 0; u32DataCount < BUFF_LEN; u32DataCount++)
-                    g_PcmRxBuff[0][u32DataCount] = g_au32PcmRxBuff[0][u32DataCount];
+                    s_PcmRxBuff[0][u32DataCount] = s_au32PcmRxBuff[0][u32DataCount];
             }
-            else if(g_count == 1)
+            else if(s_u8Count == 1)
             {
                 for(u32DataCount = 0; u32DataCount < BUFF_LEN; u32DataCount++)
-                    g_PcmRxBuff[1][u32DataCount] = g_au32PcmRxBuff[1][u32DataCount];
+                    s_PcmRxBuff[1][u32DataCount] = s_au32PcmRxBuff[1][u32DataCount];
             }
 
-            ++g_count;
+            ++s_u8Count;
             /* Reset PDMA Scatter-Gather table */
-            PDMA_ResetRxSGTable(u8RxIdx);
-            u8RxIdx ^= 1;
+            PDMA_ResetRxSGTable(s_u8RxIdx);
+            s_u8RxIdx ^= 1;
         }
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
     }

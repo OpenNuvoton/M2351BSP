@@ -8,6 +8,12 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void TAMPER_IRQHandler(void);
+void SYS_Init(void);
+void RTC_Init(void);
+void UART0_Init(void);
+void TIMER0_Init(void);
+void GetActiveLXTandLIRC32Freq(uint32_t *u32LXTFreq, uint32_t *LIRC32Freq);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  TAMPER IRQ Handler                                                                                     */
@@ -188,7 +194,7 @@ void GetActiveLXTandLIRC32Freq(uint32_t *u32LXTFreq, uint32_t *LIRC32Freq)
 int32_t main(void)
 {
     uint32_t u32LXTFreq, u32LIRC32Freq, u32STDCount;
-    char u8Option;
+    int32_t i32Option;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -262,11 +268,11 @@ int32_t main(void)
     printf("    [0] Smaller frequency deviation monitoring\n");
     printf("    [1] Larger frequency deviation monitoring\n");
 
-    u8Option = getchar();
+    i32Option = getchar();
     printf("\n");
-    printf("Select item [%c]\n", u8Option);
+    printf("Select item [%c]\n", i32Option);
 
-    if(u8Option == '0')
+    if(i32Option == '0')
     {
         printf("Modify LXT fail boundary to detect FAIL flag.\n\n");
 
@@ -275,7 +281,7 @@ int32_t main(void)
         */
         RTC->CDBR = ((u32STDCount + 1) << RTC_CDBR_FAILBD_Pos);
     }
-    else if(u8Option == '1')
+    else if(i32Option == '1')
     {
         printf("Stop LXT to detect FAIL and STOP flag.\n\n");
     }

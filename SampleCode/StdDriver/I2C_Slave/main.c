@@ -19,20 +19,26 @@
 /* The size of Slave receive buffer, should adjust it if MasterTx transferring size exceeds this value */
 #define SLV_DATA_BUF_SIZE    256
 
-uint32_t slave_buff_addr;
-uint8_t g_au8SlvData[SLV_DATA_BUF_SIZE];
-uint8_t g_au8SlvRxData[3];
-volatile uint8_t g_u8SlvTRxAbortFlag = 0;
-volatile uint8_t g_u8SlvWarningMsgFlag = 0;
+static uint32_t s_u32SlaveBuffAddr;
+static uint8_t s_au8SlvData[SLV_DATA_BUF_SIZE];
+static uint8_t s_au8SlvRxData[3];
+static volatile uint8_t s_u8SlvTRxAbortFlag = 0;
+static volatile uint8_t s_u8SlvWarningMsgFlag = 0;
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8DeviceAddr;
-volatile uint8_t g_u8SlvDataLen;
+static volatile uint8_t s_u8SlvDataLen;
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 
 static I2C_FUNC s_I2C0HandlerFn = NULL;
+
+
+void I2C0_IRQHandler(void);
+void I2C_SlaveTRx(uint32_t u32Status);
+void SYS_Init(void);
+void I2C0_Init(void);
+void I2C0_Close(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  I2C0 IRQ Handler                                                                                       */
@@ -64,35 +70,35 @@ void I2C_SlaveTRx(uint32_t u32Status)
 
     if(u32Status == 0x60)                       /* Own SLA+W has been receive; ACK has been return */
     {
-        g_u8SlvDataLen = 0;
+        s_u8SlvDataLen = 0;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0x80)                 /* Previously address with own SLA address
                                                    Data has been received; ACK has been returned*/
     {
         u8Data = (unsigned char) I2C_GET_DATA(I2C0);
-        if(g_u8SlvDataLen < 2)
+        if(s_u8SlvDataLen < 2)
         {
-            g_au8SlvRxData[g_u8SlvDataLen++] = u8Data;
-            slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+            s_au8SlvRxData[s_u8SlvDataLen++] = u8Data;
+            s_u32SlaveBuffAddr = (uint32_t)((s_au8SlvRxData[0] << 8) + s_au8SlvRxData[1]);
 
-            /* Exceed g_au8SlvData buffer size, use it as ring buffer  */
-            while(slave_buff_addr >= SLV_DATA_BUF_SIZE)
+            /* Exceed s_au8SlvData buffer size, use it as ring buffer  */
+            while(s_u32SlaveBuffAddr >= SLV_DATA_BUF_SIZE)
             {
-                if(slave_buff_addr == SLV_DATA_BUF_SIZE)
+                if(s_u32SlaveBuffAddr == SLV_DATA_BUF_SIZE)
                 {
                     /* Set flag to show warning */
-                    g_u8SlvWarningMsgFlag = 1;
+                    s_u8SlvWarningMsgFlag = 1;
                 }
-                slave_buff_addr -= SLV_DATA_BUF_SIZE;
+                s_u32SlaveBuffAddr -= SLV_DATA_BUF_SIZE;
             }
         }
         else
         {
-            g_au8SlvData[slave_buff_addr++] = u8Data;
-            if(slave_buff_addr == 256)
+            s_au8SlvData[s_u32SlaveBuffAddr++] = u8Data;
+            if(s_u32SlaveBuffAddr == 256)
             {
-                slave_buff_addr = 0;
+                s_u32SlaveBuffAddr = 0;
             }
         }
 
@@ -100,13 +106,13 @@ void I2C_SlaveTRx(uint32_t u32Status)
     }
     else if(u32Status == 0xA8)                  /* Own SLA+R has been receive; ACK has been return */
     {
-        I2C_SET_DATA(I2C0, g_au8SlvData[slave_buff_addr]);
-        slave_buff_addr++;
+        I2C_SET_DATA(I2C0, s_au8SlvData[s_u32SlaveBuffAddr]);
+        s_u32SlaveBuffAddr++;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0xB8)                  /* Data byte in I2CDAT has been transmitted ACK has been received */
     {
-        I2C_SET_DATA(I2C0, g_au8SlvData[slave_buff_addr++]);
+        I2C_SET_DATA(I2C0, s_au8SlvData[s_u32SlaveBuffAddr++]);
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0xC0)                 /* Data byte or last data in I2CDAT has been transmitted
@@ -117,13 +123,13 @@ void I2C_SlaveTRx(uint32_t u32Status)
     else if(u32Status == 0x88)                 /* Previously addressed with own SLA address; NOT ACK has
                                                    been returned */
     {
-        g_u8SlvDataLen = 0;
+        s_u8SlvDataLen = 0;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else if(u32Status == 0xA0)                 /* A STOP or repeated START has been received while still
                                                    addressed as Slave/Receiver*/
     {
-        g_u8SlvDataLen = 0;
+        s_u8SlvDataLen = 0;
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
     }
     else
@@ -142,7 +148,7 @@ void I2C_SlaveTRx(uint32_t u32Status)
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STO_SI);
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
         }
-        g_u8SlvTRxAbortFlag = 1;
+        s_u8SlvTRxAbortFlag = 1;
     }
 }
 
@@ -276,7 +282,7 @@ int32_t main(void)
 
     for(u32i = 0; u32i < SLV_DATA_BUF_SIZE; u32i++)
     {
-        g_au8SlvData[u32i] = 0;
+        s_au8SlvData[u32i] = 0;
     }
 
     /* I2C function to Slave receive/transmit data */
@@ -288,23 +294,22 @@ int32_t main(void)
     while(1)
     {
         /* When I2C abort, clear SI to enter non-addressed SLV mode*/
-        if(g_u8SlvTRxAbortFlag)
+        if(s_u8SlvTRxAbortFlag)
         {
-            g_u8SlvTRxAbortFlag = 0;
+            s_u8SlvTRxAbortFlag = 0;
 
             while(I2C0->CTL0 & I2C_CTL0_SI_Msk);
             printf("I2C Slave re-start. status[0x%x]\n", I2C0->STATUS0);
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
         }
         /* Show warning message when Master transferring size exceeds slave buffer size*/
-        if(g_u8SlvWarningMsgFlag)
+        if(s_u8SlvWarningMsgFlag)
         {
             printf("Warning: MasterTx size exceeds slaveRx buffer size!    \n");
             printf("         Please adjust the value of SLV_DATA_BUF_SIZE! \n");
-            g_u8SlvWarningMsgFlag = 0;
+            s_u8SlvWarningMsgFlag = 0;
         }
     }
-    while(1);
 
 }
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/

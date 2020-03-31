@@ -14,7 +14,12 @@
 
 
 extern int IsDebugFifoEmpty(void);
-volatile uint8_t g_u8IsINTEvent;
+static volatile uint8_t s_u8IsINTEvent;
+
+void WDT_IRQHandler(void);
+void PowerDownFunction(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  WDT IRQ Handler                                                                                        */
@@ -34,7 +39,7 @@ void WDT_IRQHandler(void)
         WDT_CLEAR_TIMEOUT_WAKEUP_FLAG();
     }
 
-    g_u8IsINTEvent = 1;
+    s_u8IsINTEvent = 1;
 
 }
 
@@ -220,7 +225,7 @@ int32_t main(void)
     PowerDownFunction();
 
     /* Check if WDT time-out interrupt and wake-up occurred or not */
-    while(g_u8IsINTEvent == 0);
+    while(s_u8IsINTEvent == 0);
     printf("wake-up!\n\n");
 
     /* Calculate SRAM checksum after wake-up from Power-down mode */

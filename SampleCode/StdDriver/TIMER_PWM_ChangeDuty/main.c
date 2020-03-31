@@ -9,7 +9,12 @@
 #include "NuMicro.h"
 
 
-volatile uint32_t g_u32Period;
+static volatile uint32_t s_u32Period;
+
+void TMR0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
+
 
 /**
  * @brief       Timer0 IRQ
@@ -29,18 +34,18 @@ void TMR0_IRQHandler(void)
         if(u32Toggle == 0)
         {
             /* Set PWM period to generate output frequency 36000 Hz */
-            TPWM_SET_PERIOD(TIMER0, ((g_u32Period / 2) - 1));
+            TPWM_SET_PERIOD(TIMER0, ((s_u32Period / 2) - 1));
 
             /* Set PWM duty, 40% */
-            TPWM_SET_CMPDAT(TIMER0, (((g_u32Period / 2) * 4) / 10));
+            TPWM_SET_CMPDAT(TIMER0, (((s_u32Period / 2) * 4) / 10));
         }
         else
         {
             /* Set PWM period to generate output frequency 18000 Hz */
-            TPWM_SET_PERIOD(TIMER0, (g_u32Period - 1));
+            TPWM_SET_PERIOD(TIMER0, (s_u32Period - 1));
 
             /* Set PWM duty, 50% */
-            TPWM_SET_CMPDAT(TIMER0, (g_u32Period / 2));
+            TPWM_SET_CMPDAT(TIMER0, (s_u32Period / 2));
         }
         u32Toggle ^= 1;
         TPWM_CLEAR_PERIOD_INT_FLAG(TIMER0);
@@ -150,7 +155,7 @@ int main(void)
     TPWM_ConfigOutputFreqAndDuty(TIMER0, 18000, 50);
 
     /* Get initial period and comparator value */
-    g_u32Period = TPWM_GET_PERIOD(TIMER0) + 1;
+    s_u32Period = TPWM_GET_PERIOD(TIMER0) + 1;
 
     /* Set PWM down count type */
     TPWM_SET_COUNTER_TYPE(TIMER0, TPWM_DOWN_COUNT);

@@ -69,7 +69,7 @@ extern "C"
 #define     BUSY_BIT       0x80     /*!< BUSY_BIT mask */
 
 //#define BACK_FROM_ERROR { SingleWrite(0xFF); SPI_SET_SS_HIGH(/*SPI0*/SPI1);  return FALSE;} /*!< macro for SPI write */
-#define BACK_FROM_ERROR { SingleWrite(0xFF); PH10 = 1;  return FALSE;} /*!< macro for SPI write */
+#define BACK_FROM_ERROR do{ SingleWrite(0xFF); PH10 = 1;  return FALSE;}while(0) /*!< macro for SPI write */
 
 
 typedef union                          // byte-addressable unsigned long

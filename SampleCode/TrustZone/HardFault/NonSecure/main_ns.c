@@ -11,7 +11,7 @@
  *----------------------------------------------------------------------------*/
 extern uint32_t GetSystemCoreClock(void);
 
-
+void HardFault_Handler(void)__attribute__((noreturn));
 /*----------------------------------------------------------------------------
   Main function
  *----------------------------------------------------------------------------*/
@@ -31,7 +31,7 @@ extern uint32_t GetSystemCoreClock(void);
 int main(void)
 {
     uint32_t i;
-    char ch;
+    int32_t i32Ch;
 
     printf("\n");
     printf("+---------------------------------------------+\n");
@@ -50,9 +50,9 @@ int main(void)
         printf("| [2] Read secure SRAM to generate hard fault           |\n");
         printf("| [3] Toggle non-secure I/O                             |\n");
         printf("+-------------------------------------------------------+\n");
-        ch = getchar();
+        i32Ch = getchar();
 
-        switch(ch)
+        switch(i32Ch)
         {
             case '0':
                 /*
@@ -90,7 +90,7 @@ int main(void)
 
                 }
 
-                break;
+                //break;
             default:
                 break;
         }

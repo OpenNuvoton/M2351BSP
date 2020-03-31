@@ -19,6 +19,10 @@
 /*---------------------------------------------------------------------------------------------------------*/
 
 
+void SYS_Init(void);
+void UART0_Init(void);
+
+
 void SYS_Init(void)
 {
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */
@@ -184,9 +188,9 @@ int32_t main(void)
     printf("Press any key to stop.\n");
     getchar();
 
-    /* Start EPWM0 counter */
+    /* Stop EPWM0 counter */
     EPWM_ForceStop(EPWM0, 0x3F);
-    /* Start EPWM1 counter */
+    /* Stop EPWM1 counter */
     EPWM_ForceStop(EPWM1, 0x3F);
 
     printf("Done.");

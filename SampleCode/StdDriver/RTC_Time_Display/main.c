@@ -12,8 +12,11 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global Interface Variables Declarations                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32RTCTInt = 0;
+static volatile uint32_t s_u32RTCTInt = 0;
 
+void RTC_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       IRQ Handler for RTC Interrupt
@@ -32,7 +35,7 @@ void RTC_IRQHandler(void)
         /* Clear RTC tick interrupt flag */
         RTC_CLEAR_TICK_INT_FLAG(RTC);
 
-        g_u32RTCTInt = 1;
+        s_u32RTCTInt = 1;
 
         PA2 ^= 1;
     }
@@ -150,12 +153,12 @@ int main(void)
     PA2 = 1;
 
     u32Sec = 0;
-    g_u32RTCTInt = 0;
+    s_u32RTCTInt = 0;
     while(1)
     {
-        if(g_u32RTCTInt == 1)
+        if(s_u32RTCTInt == 1)
         {
-            g_u32RTCTInt = 0;
+            s_u32RTCTInt = 0;
 
             /* Read current RTC date/time */
             RTC_GetDateAndTime(&sReadRTC);

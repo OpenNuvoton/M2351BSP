@@ -11,17 +11,23 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32EadcInt0Flag, g_u32EadcInt1Flag, g_u32EadcInt2Flag, g_u32EadcInt3Flag;
+static volatile uint32_t s_u32EadcInt0Flag, s_u32EadcInt1Flag, s_u32EadcInt2Flag, s_u32EadcInt3Flag;
 
-uint32_t g_au32IntModule[4];    /* save the sample module number for ADINT0~3 */
-volatile uint32_t g_au32IntSequence[4];  /* save the interrupt sequence for ADINT0~3 */
-volatile uint32_t g_u32IntSequenceIndex;
+static uint32_t s_au32IntModule[4];    /* save the sample module number for ADINT0~3 */
+static volatile uint32_t s_au32IntSequence[4];  /* save the interrupt sequence for ADINT0~3 */
+static volatile uint32_t s_u32IntSequenceIndex;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
 void EADC_FunctionTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void EADC0_IRQHandler(void);
+void EADC1_IRQHandler(void);
+void EADC2_IRQHandler(void);
+void EADC3_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -102,7 +108,7 @@ void UART0_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
-    uint8_t  u8Option;
+    int32_t  i32Option;
     int32_t  i32ConversionData, i;
 
     printf("\n");
@@ -119,21 +125,21 @@ void EADC_FunctionTest()
         printf("  [1] Assign interrupt ADINT0~3 to Sample Module 0~3\n");
         printf("  [2] Assign interrupt ADINT3~0 to Sample Module 0~3\n");
         printf("  Other keys: exit EADC test\n");
-        u8Option = getchar();
+        i32Option = getchar();
 
-        if(u8Option == '1')
+        if(i32Option == '1')
         {
-            g_au32IntModule[0] = 0;  /* Assign ADINT0 to Sample module 0 */
-            g_au32IntModule[1] = 1;  /* Assign ADINT1 to Sample module 1 */
-            g_au32IntModule[2] = 2;  /* Assign ADINT2 to Sample module 2 */
-            g_au32IntModule[3] = 3;  /* Assign ADINT3 to Sample module 3 */
+            s_au32IntModule[0] = 0;  /* Assign ADINT0 to Sample module 0 */
+            s_au32IntModule[1] = 1;  /* Assign ADINT1 to Sample module 1 */
+            s_au32IntModule[2] = 2;  /* Assign ADINT2 to Sample module 2 */
+            s_au32IntModule[3] = 3;  /* Assign ADINT3 to Sample module 3 */
         }
-        else if(u8Option == '2')
+        else if(i32Option == '2')
         {
-            g_au32IntModule[0] = 3;  /* Assign ADINT0 to Sample module 3 */
-            g_au32IntModule[1] = 2;  /* Assign ADINT1 to Sample module 2 */
-            g_au32IntModule[2] = 1;  /* Assign ADINT2 to Sample module 1 */
-            g_au32IntModule[3] = 0;  /* Assign ADINT3 to Sample module 0 */
+            s_au32IntModule[0] = 3;  /* Assign ADINT0 to Sample module 3 */
+            s_au32IntModule[1] = 2;  /* Assign ADINT1 to Sample module 2 */
+            s_au32IntModule[2] = 1;  /* Assign ADINT2 to Sample module 1 */
+            s_au32IntModule[3] = 0;  /* Assign ADINT3 to Sample module 0 */
         }
         else
             break;  /* exit while loop */
@@ -150,10 +156,10 @@ void EADC_FunctionTest()
         /* Enable the sample module interrupt.  */
         EADC_ENABLE_INT(EADC, BIT0 | BIT1 | BIT2 | BIT3);
 
-        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 0, BIT0 << g_au32IntModule[0]);
-        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 1, BIT0 << g_au32IntModule[1]);
-        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 2, BIT0 << g_au32IntModule[2]);
-        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 3, BIT0 << g_au32IntModule[3]);
+        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 0, BIT0 << s_au32IntModule[0]);
+        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 1, BIT0 << s_au32IntModule[1]);
+        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 2, BIT0 << s_au32IntModule[2]);
+        EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 3, BIT0 << s_au32IntModule[3]);
 
         NVIC_EnableIRQ(EADC0_IRQn);
         NVIC_EnableIRQ(EADC1_IRQn);
@@ -161,26 +167,26 @@ void EADC_FunctionTest()
         NVIC_EnableIRQ(EADC3_IRQn);
 
         /* Reset the EADC interrupt indicator and trigger sample module to start A/D conversion */
-        g_u32IntSequenceIndex = 0;
-        g_u32EadcInt0Flag = 0;
-        g_u32EadcInt1Flag = 0;
-        g_u32EadcInt2Flag = 0;
-        g_u32EadcInt3Flag = 0;
+        s_u32IntSequenceIndex = 0;
+        s_u32EadcInt0Flag = 0;
+        s_u32EadcInt1Flag = 0;
+        s_u32EadcInt2Flag = 0;
+        s_u32EadcInt3Flag = 0;
 
         /* Start EADC conversion for sample module 0 ~ 3 at the same time */
         EADC_START_CONV(EADC, BIT0 | BIT1 | BIT2 | BIT3);
 
         /* Wait all EADC interrupt (g_u32EadcIntxFlag will be set at EADC_INTx_IRQHandler() function) */
-        while((g_u32EadcInt0Flag == 0) || (g_u32EadcInt1Flag == 0) ||
-                (g_u32EadcInt2Flag == 0) || (g_u32EadcInt3Flag == 0));
+        while((s_u32EadcInt0Flag == 0) || (s_u32EadcInt1Flag == 0) ||
+                (s_u32EadcInt2Flag == 0) || (s_u32EadcInt3Flag == 0));
 
         /* Get the conversion result of the sample module */
         printf("The ADINTx interrupt sequence is:\n");
 
         for(i = 0; i < 4; i++)
         {
-            i32ConversionData = EADC_GET_CONV_DATA(EADC, g_au32IntModule[i]);
-            printf("ADINT%d: #%d, Module %d, Conversion result: 0x%X (%d)\n", i, g_au32IntSequence[i], g_au32IntModule[i], i32ConversionData, i32ConversionData);
+            i32ConversionData = EADC_GET_CONV_DATA(EADC, s_au32IntModule[i]);
+            printf("ADINT%d: #%d, Module %d, Conversion result: 0x%X (%d)\n", i, s_au32IntSequence[i], s_au32IntModule[i], i32ConversionData, i32ConversionData);
         }
 
         printf("\n");
@@ -188,10 +194,10 @@ void EADC_FunctionTest()
         /* Disable the ADINTx interrupt */
         EADC_DISABLE_INT(EADC, BIT0 | BIT1 | BIT2 | BIT3);
 
-        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, BIT0 << g_au32IntModule[0]);
-        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 1, BIT0 << g_au32IntModule[1]);
-        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 2, BIT0 << g_au32IntModule[2]);
-        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 3, BIT0 << g_au32IntModule[3]);
+        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, BIT0 << s_au32IntModule[0]);
+        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 1, BIT0 << s_au32IntModule[1]);
+        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 2, BIT0 << s_au32IntModule[2]);
+        EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 3, BIT0 << s_au32IntModule[3]);
 
         NVIC_DisableIRQ(EADC0_IRQn);
         NVIC_DisableIRQ(EADC1_IRQn);
@@ -210,42 +216,42 @@ void EADC_FunctionTest()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC0_IRQHandler(void)
 {
-    g_u32EadcInt0Flag = 1;
+    s_u32EadcInt0Flag = 1;
     /* Clear the A/D ADINT0 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF0_Msk);
 
     /* Save the interrupt sequence about ADINT0 */
-    g_au32IntSequence[0] = g_u32IntSequenceIndex++;
+    s_au32IntSequence[0] = s_u32IntSequenceIndex++;
 }
 
 void EADC1_IRQHandler(void)
 {
-    g_u32EadcInt1Flag = 1;
+    s_u32EadcInt1Flag = 1;
     /* Clear the A/D ADINT1 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF1_Msk);
 
     /* Save the interrupt sequence about ADINT1 */
-    g_au32IntSequence[1] = g_u32IntSequenceIndex++;
+    s_au32IntSequence[1] = s_u32IntSequenceIndex++;
 }
 
 void EADC2_IRQHandler(void)
 {
-    g_u32EadcInt2Flag = 1;
+    s_u32EadcInt2Flag = 1;
     /* Clear the A/D ADINT2 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF2_Msk);
 
     /* Save the interrupt sequence about ADINT2 */
-    g_au32IntSequence[2] = g_u32IntSequenceIndex++;
+    s_au32IntSequence[2] = s_u32IntSequenceIndex++;
 }
 
 void EADC3_IRQHandler(void)
 {
-    g_u32EadcInt3Flag = 1;
+    s_u32EadcInt3Flag = 1;
     /* Clear the A/D ADINT3 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF3_Msk);
 
     /* Save the interrupt sequence about ADINT3 */
-    g_au32IntSequence[3] = g_u32IntSequenceIndex++;
+    s_au32IntSequence[3] = s_u32IntSequenceIndex++;
 }
 
 /*---------------------------------------------------------------------------------------------------------*/

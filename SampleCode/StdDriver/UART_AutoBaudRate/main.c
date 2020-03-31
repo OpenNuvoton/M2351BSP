@@ -17,6 +17,10 @@
 void AutoBaudRate_Test(void);
 void AutoBaudRate_TxTest(void);
 void AutoBaudRate_RxTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void UART1_Init(void);
+uint32_t GetUartBaudrate(UART_T* uart);
 
 
 void SYS_Init(void)
@@ -143,7 +147,7 @@ int32_t main(void)
 void AutoBaudRate_Test()
 {
 
-    uint32_t u32Item;
+    int32_t i32Item;
 
     printf("\n");
     printf("+-----------------------------------------------------------+\n");
@@ -170,9 +174,9 @@ void AutoBaudRate_Test()
     printf("|  Please select Master or Slave test                       |\n");
     printf("|  [0] Master    [1] Slave                                  |\n");
     printf("+-----------------------------------------------------------+\n");
-    u32Item = getchar();
+    i32Item = getchar();
 
-    if(u32Item == '0')
+    if(i32Item == '0')
         AutoBaudRate_TxTest();
     else
         AutoBaudRate_RxTest();
@@ -184,7 +188,7 @@ void AutoBaudRate_Test()
 /*---------------------------------------------------------------------------------------------------------*/
 void AutoBaudRate_TxTest()
 {
-    uint32_t u32Item;
+    int32_t i32Item;
 
     do
     {
@@ -201,12 +205,12 @@ void AutoBaudRate_TxTest()
         printf("+-----------------------------------------------------------+\n");
         printf("| Quit                                              - [ESC] |\n");
         printf("+-----------------------------------------------------------+\n\n");
-        u32Item = getchar();
-        if(u32Item == 27) break;        
-        printf("%c\n", u32Item);
+        i32Item = getchar();
+        if(i32Item == 27) break;        
+        printf("%c\n", i32Item);
 
         /* Set different baud rate */
-        switch(u32Item)
+        switch(i32Item)
         {
             case '1':
                 UART1->BAUD = UART_BAUD_MODE2 | UART_BAUD_MODE2_DIVIDER(__HXT, 38400);

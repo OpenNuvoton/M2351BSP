@@ -13,8 +13,8 @@
 #include "diskio.h"     /* FatFs lower layer API */
 #include "ff.h"     /* FatFs lower layer API */
 
-FATFS  _FatfsVolSd0;
-FATFS  _FatfsVolSd1;
+static FATFS  _FatfsVolSd0;
+static FATFS  _FatfsVolSd1;
 
 static TCHAR  _Path[3];
 

@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+uint32_t GetFMCChecksum(uint32_t u32Address, uint32_t u32Size);
+uint32_t GetPDMAChecksum(uint32_t u32Address, uint32_t u32Size);
+void SYS_Init(void);
+void UART_Init(void);
 
 uint32_t GetFMCChecksum(uint32_t u32Address, uint32_t u32Size)
 {
@@ -26,7 +30,7 @@ typedef struct dma_desc_t
     uint32_t u32Dest;
     uint32_t u32Offset;
 } DMA_DESC_T;
-DMA_DESC_T g_DMA_DESC[1];
+static DMA_DESC_T s_DMA_DESC[1];
 
 uint32_t GetPDMAChecksum(uint32_t u32Address, uint32_t u32Size)
 {
@@ -37,17 +41,17 @@ uint32_t GetPDMAChecksum(uint32_t u32Address, uint32_t u32Size)
 
     /* Give valid source address and transfer count and program PDMA memory to memory, dest => CRC_WDATA */
     PDMA0->CHCTL = (1 << 0); // use PDMA CH0
-    g_DMA_DESC[0].u32Ctl =
+    s_DMA_DESC[0].u32Ctl =
         (1 << PDMA_DSCT_CTL_OPMODE_Pos)  | (0 << PDMA_DSCT_CTL_TXTYPE_Pos) |
         (7 << PDMA_DSCT_CTL_BURSIZE_Pos) |
         (0 << PDMA_DSCT_CTL_SAINC_Pos)   | (3 << PDMA_DSCT_CTL_DAINC_Pos) |
         (2 << PDMA_DSCT_CTL_TXWIDTH_Pos) | (((u32Size / 4) - 1) << PDMA_DSCT_CTL_TXCNT_Pos);
-    g_DMA_DESC[0].u32Src    = (uint32_t)u32Address;
-    g_DMA_DESC[0].u32Dest   = (uint32_t)&(CRC->DAT);
-    g_DMA_DESC[0].u32Offset = 0;
+    s_DMA_DESC[0].u32Src    = (uint32_t)u32Address;
+    s_DMA_DESC[0].u32Dest   = (uint32_t)&(CRC->DAT);
+    s_DMA_DESC[0].u32Offset = 0;
 
     PDMA0->DSCT[0].CTL = PDMA_OP_SCATTER;
-    PDMA0->DSCT[0].NEXT = (uint32_t)&g_DMA_DESC[0] - (PDMA0->SCATBA);
+    PDMA0->DSCT[0].NEXT = (uint32_t)&s_DMA_DESC[0] - (PDMA0->SCATBA);
 
     PDMA0->INTSTS = PDMA0->INTSTS;
     PDMA0->INTEN = (1 << 0);

@@ -12,6 +12,11 @@
 #include <string.h>
 #include "NuMicro.h"
 
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t digest[]);
+
+
 void SYS_Init(void)
 {
     /* Enable PLL */
@@ -63,14 +68,14 @@ void DEBUG_PORT_Init()
 int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t digest[])
 {
     int32_t i;
-    int32_t n;
+    int32_t n = 0;
 
     /* Enable CRYPTO */
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
     
     /* Init SHA */
     CRPT->HMAC_CTL = (u32Mode << CRPT_HMAC_CTL_OPMODE_Pos) | CRPT_HMAC_CTL_INSWAP_Msk;
-    CRPT->HMAC_DMACNT = size;
+    CRPT->HMAC_DMACNT = (uint32_t)size;
     
     /* Calculate SHA */
     while(size > 0)
@@ -113,7 +118,7 @@ int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t dig
 
 
 
-const __attribute__((aligned(4))) uint8_t g_au8Test[32] ={
+static const __attribute__((aligned(4))) uint8_t s_au8Test[32] ={
 0x64,0x36,0x2E,0x4D,0x28,0x16,0x0D,0xB4,0x44,0xEF,0x39
 ,0x47,0xE1,0xC4,0x05,0x51,0x51,0x8C,0x71,0xE7,0x50,0x30
 ,0x7C,0xA4,0x93,0xD5,0xC8,0x10,0x3E,0xD2,0xBF,0x53
@@ -142,29 +147,29 @@ int main(void)
     printf("Input data:\n");
     for(i=0;i<32;i++)
     {
-        printf("%02x", g_au8Test[i]);
+        printf("%02x", s_au8Test[i]);
     }
     
     printf("\n");
-    SHAHash(SHA_MODE_SHA1, (uint32_t *)g_au8Test, 32, hash);
+    SHAHash(SHA_MODE_SHA1, (uint32_t *)(uint32_t)s_au8Test, 32, hash);
     printf("\nOutput SHA1 Hash:\n");
     for(i=0;i<5;i++)
         printf("%08x",hash[i]);
 
     printf("\n");
-    SHAHash(SHA_MODE_SHA224, (uint32_t *)g_au8Test, 32, hash);
+    SHAHash(SHA_MODE_SHA224, (uint32_t *)(uint32_t)s_au8Test, 32, hash);
     printf("\nOutput SHA224 Hash:\n");
     for(i=0;i<7;i++)
         printf("%08x",hash[i]);
 
     printf("\n");
-    SHAHash(SHA_MODE_SHA256, (uint32_t *)g_au8Test, 32, hash);
+    SHAHash(SHA_MODE_SHA256, (uint32_t *)(uint32_t)s_au8Test, 32, hash);
     printf("\nOutput SHA256 Hash:\n");
     for(i=0;i<8;i++)
         printf("%08x",hash[i]);
     
     printf("\n");
-    SHAHash(SHA_MODE_SHA384, (uint32_t *)g_au8Test, 32, hash);
+    SHAHash(SHA_MODE_SHA384, (uint32_t *)(uint32_t)s_au8Test, 32, hash);
     printf("\nOutput SHA384 Hash:\n");
     for(i=0;i<12;i++)
         printf("%08x",hash[i]);

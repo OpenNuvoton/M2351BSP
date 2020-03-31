@@ -12,8 +12,9 @@
 #include "NuMicro.h"
 #include "VCOM_And_hid_keyboard.h"
 
-uint8_t volatile g_u8EP5Ready;
-uint32_t volatile g_u32OutToggle = 0;
+static uint8_t volatile s_u8EP5Ready;
+static uint32_t volatile s_u32OutToggle = 0;
+void USBD_IRQHandler(void);
 
 void USBD_IRQHandler(void)
 {
@@ -56,7 +57,7 @@ void USBD_IRQHandler(void)
             /* Bus reset */
             USBD_ENABLE_USB();
             USBD_SwReset();
-            g_u32OutToggle = 0;
+            s_u32OutToggle = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
@@ -189,7 +190,7 @@ void EP2_Handler(void)
 void EP3_Handler(void)
 {
     /* Bulk OUT */
-    if(g_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
+    if(s_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
     {
         USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
     }
@@ -198,7 +199,7 @@ void EP3_Handler(void)
         g_u32RxSize = USBD_GET_PAYLOAD_LEN(EP3);
         g_pu8RxBuf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3));
 
-        g_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
+        s_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
         /* Set a flag to indicate bulk out ready */
         g_i8BulkOutReady = 1;
     }
@@ -206,7 +207,7 @@ void EP3_Handler(void)
 
 void EP5_Handler(void)  /* Interrupt IN handler */
 {
-    g_u8EP5Ready = 1;
+    s_u8EP5Ready = 1;
 }
 
 
@@ -303,7 +304,7 @@ void HID_ClassRequest(void)
                 if(au8Buf[4] == 0)    /* VCOM-1 */
                 {
                     g_u16CtrlSignal = au8Buf[3];
-                    g_u16CtrlSignal = (g_u16CtrlSignal << 8) | au8Buf[2];
+                    g_u16CtrlSignal = (uint16_t)(g_u16CtrlSignal << 8) | au8Buf[2];
                     //printf("RTS=%d  DTR=%d\n", (gCtrlSignal0 >> 1) & 1, gCtrlSignal0 & 1);
                 }
 
@@ -433,7 +434,7 @@ void HID_UpdateKbData(void)
     uint32_t u32Key = 0xF;
     static uint32_t u32PreKey;
 
-    if(g_u8EP5Ready)
+    if(s_u8EP5Ready)
     {
         pu8Buf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP5));
 

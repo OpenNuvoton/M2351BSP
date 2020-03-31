@@ -9,6 +9,11 @@
 #include "NuMicro.h"
 
 
+void TMR0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
+
+
 /**
  * @brief       Timer0 IRQ
  *
@@ -97,8 +102,6 @@ void UART_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    volatile uint32_t u32DelayTime;
-
     /* Unlock protected registers */
     SYS_UnlockReg();
 

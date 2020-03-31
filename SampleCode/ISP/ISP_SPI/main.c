@@ -10,6 +10,11 @@
 #include "targetdev.h"
 #include "spi_transfer.h"
 
+void ProcessHardFault(void);
+void SH_Return(void);
+void TIMER3_Init(void);
+void SYS_Init(void);
+
 void ProcessHardFault(void) {}
 void SH_Return(void) {}
 

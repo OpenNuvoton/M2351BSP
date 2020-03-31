@@ -15,7 +15,7 @@
 #include "ff.h"
 
 #define Sector_Size 128 //512byte
-uint32_t Tmp_Buffer[Sector_Size];
+static uint32_t s_au32TmpBuffer[Sector_Size];
 
 
 #define SDH0_DRIVE      0        /* for SD0          */
@@ -97,7 +97,7 @@ DRESULT disk_read
     UINT count      /* Number of sectors to read (1..128) */
 )
 {
-    DRESULT   ret;
+    uint32_t   u32Ret;
     uint32_t shift_buf_flag = 0;
     uint32_t tmp_StartBufAddr;
     SDH_T *pSDH;
@@ -119,26 +119,26 @@ DRESULT disk_read
         {
             if(count == 1)
             {
-                ret = (DRESULT) SDH_Read(pSDH, (uint8_t*)(&Tmp_Buffer), sector, count);
-                memcpy(buff, (&Tmp_Buffer), count * SD0.sectorSize);
+                u32Ret = SDH_Read(pSDH, (uint8_t*)(&s_au32TmpBuffer), sector, count);
+                memcpy(buff, (&s_au32TmpBuffer), count * (UINT)SD0.sectorSize);
             }
             else
             {
                 tmp_StartBufAddr = (((uint32_t)buff / 4 + 1) * 4);
-                ret = (DRESULT) SDH_Read(pSDH, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
-                memcpy(buff, (void*)tmp_StartBufAddr, (SD0.sectorSize * (count - 1)));
-                ret = (DRESULT) SDH_Read(pSDH, (uint8_t*)(&Tmp_Buffer), (sector + count - 1), 1);
-                memcpy((buff + (SD0.sectorSize * (count - 1))), (void*)Tmp_Buffer, SD0.sectorSize);
+                u32Ret = SDH_Read(pSDH, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
+                memcpy(buff, (void*)tmp_StartBufAddr, ((UINT)SD0.sectorSize * (count - 1)));
+                u32Ret = SDH_Read(pSDH, (uint8_t*)(&s_au32TmpBuffer), (sector + count - 1), 1);
+                memcpy((buff + ((UINT)SD0.sectorSize * (count - 1))), (void*)s_au32TmpBuffer, (uint32_t)SD0.sectorSize);
             }
         }
         else
-            ret = (DRESULT) SDH_Read(SDH0, buff, sector, count);
+            u32Ret = SDH_Read(SDH0, buff, sector, count);
     }
 //    else if (pdrv == 1)
 //        ret = (DRESULT) SDH_Read(SDH1, buff, sector, count);
     else
-        ret = RES_PARERR;
-    return ret;
+        u32Ret = RES_PARERR;
+    return (DRESULT)u32Ret;
 }
 
 
@@ -155,7 +155,7 @@ DRESULT disk_write
     UINT count          /* Number of sectors to write (1..128) */
 )
 {
-    DRESULT   ret;
+    uint32_t   u32Ret;
     uint32_t shift_buf_flag = 0;
     uint32_t tmp_StartBufAddr;
     uint32_t volatile i;
@@ -179,33 +179,33 @@ DRESULT disk_write
         {
             if(count == 1)
             {
-                memcpy((&Tmp_Buffer), buff, count * SD0.sectorSize);
-                ret = (DRESULT) SDH_Write(pSDH, (uint8_t*)(&Tmp_Buffer), sector, count);
+                memcpy((&s_au32TmpBuffer), buff, count * (UINT)SD0.sectorSize);
+                u32Ret = SDH_Write(pSDH, (uint8_t*)(&s_au32TmpBuffer), sector, count);
             }
             else
             {
                 tmp_StartBufAddr = (((uint32_t)buff / 4 + 1) * 4);
-                memcpy((void*)Tmp_Buffer, (buff + (SD0.sectorSize * (count - 1))), SD0.sectorSize);
+                memcpy((void*)s_au32TmpBuffer, (buff + ((uint32_t)SD0.sectorSize * (count - 1))), (uint32_t)SD0.sectorSize);
 
-                for(i = (SD0.sectorSize * (count - 1)); i > 0; i--)
+                for(i = ((uint32_t)SD0.sectorSize * (count - 1)); i > 0; i--)
                 {
                     u32BufIdx = i - 1;
                     memcpy((void *)(tmp_StartBufAddr + u32BufIdx), (buff + u32BufIdx), 1);
                 }
 
-                ret = (DRESULT) SDH_Write(pSDH, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
-                ret = (DRESULT) SDH_Write(pSDH, (uint8_t*)(&Tmp_Buffer), (sector + count - 1), 1);
+                u32Ret = SDH_Write(pSDH, ((uint8_t*)tmp_StartBufAddr), sector, (count - 1));
+                u32Ret = SDH_Write(pSDH, (uint8_t*)(&s_au32TmpBuffer), (sector + count - 1), 1);
             }
         }
         else
-            ret = (DRESULT) SDH_Write(pSDH, (uint8_t *)buff, sector, count);
+            u32Ret = SDH_Write(pSDH, (uint8_t *)(uint32_t)buff, sector, count);
     }
 //    else if (pdrv == 1)
-//        ret = (DRESULT) SDH_Write(SDH1, (uint8_t *)buff, sector, count);
+//        u32Ret = SDH_Write(SDH1, (uint8_t *)buff, sector, count);
     else
-        ret = RES_PARERR;
+        u32Ret = RES_PARERR;
 
-    return ret;
+    return (DRESULT)u32Ret;
 }
 
 
@@ -220,7 +220,7 @@ DRESULT disk_ioctl
     void *buff      /* Buffer to send/receive control data */
 )
 {
-
+    (void)pdrv;
     DRESULT res = RES_OK;
 
     switch(cmd)
@@ -231,7 +231,7 @@ DRESULT disk_ioctl
             *(DWORD*)buff = SD0.totalSectorN;
             break;
         case GET_SECTOR_SIZE:
-            *(WORD*)buff = SD0.sectorSize;
+            *(WORD*)buff = (WORD)SD0.sectorSize;
             break;
         default:
             res = RES_PARERR;

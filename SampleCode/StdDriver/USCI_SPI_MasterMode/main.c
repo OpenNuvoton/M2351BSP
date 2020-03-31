@@ -11,15 +11,15 @@
 
 #define TEST_COUNT  16
 
-uint32_t g_au32SourceData[TEST_COUNT];
-uint32_t g_au32DestinationData[TEST_COUNT];
-volatile uint32_t g_u32TxDataCount;
-volatile uint32_t g_u32RxDataCount;
+static uint32_t s_au32SourceData[TEST_COUNT];
+static uint32_t s_au32DestinationData[TEST_COUNT];
+static volatile uint32_t s_u32TxDataCount;
+static volatile uint32_t s_u32RxDataCount;
 
 /* Function prototype declaration */
 void SYS_Init(void);
 void USCI_SPI_Init(void);
-
+void USCI1_IRQHandler(void);
 /* ------------- */
 /* Main function */
 /* ------------- */
@@ -60,9 +60,9 @@ int main()
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
         /* Write the initial value to source buffer */
-        g_au32SourceData[u32DataCount] = 0x5500 + u32DataCount;
+        s_au32SourceData[u32DataCount] = 0x5500 + u32DataCount;
         /* Clear destination buffer */
-        g_au32DestinationData[u32DataCount] = 0;
+        s_au32DestinationData[u32DataCount] = 0;
     }
 
     printf("Before starting the data transfer, make sure the slave device is ready. Press any key to start the transfer.");
@@ -71,21 +71,21 @@ int main()
 
     /* Enable TX end interrupt */
     USPI_EnableInt(USPI1, USPI_TXEND_INT_MASK);
-    g_u32TxDataCount = 0;
-    g_u32RxDataCount = 0;
+    s_u32TxDataCount = 0;
+    s_u32RxDataCount = 0;
     NVIC_EnableIRQ(USCI1_IRQn);
 
     /* Write to TX Buffer */
-    USPI_WRITE_TX(USPI1, g_au32SourceData[g_u32TxDataCount++]);
+    USPI_WRITE_TX(USPI1, s_au32SourceData[s_u32TxDataCount++]);
 
     /* Wait for transfer done */
-    while(g_u32RxDataCount < TEST_COUNT);
+    while(s_u32RxDataCount < TEST_COUNT);
 
     /* Print the received data */
     printf("Received data:\n");
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
-        printf("%d:\t0x%X\n", u32DataCount, g_au32DestinationData[u32DataCount]);
+        printf("%d:\t0x%X\n", u32DataCount, s_au32DestinationData[u32DataCount]);
     }
     /* Disable TX end interrupt */
     USPI_DisableInt(USPI1, USPI_TXEND_INT_MASK);
@@ -182,13 +182,13 @@ void USCI1_IRQHandler(void)
     {
         /* Read RX Buffer */
         u32RxData = USPI_READ_RX(USPI1);
-        g_au32DestinationData[g_u32RxDataCount++] = u32RxData;
+        s_au32DestinationData[s_u32RxDataCount++] = u32RxData;
     }
     /* Check TX data count */
-    if(g_u32TxDataCount < TEST_COUNT)
+    if(s_u32TxDataCount < TEST_COUNT)
     {
         /* Write to TX Buffer */
-        USPI_WRITE_TX(USPI1, g_au32SourceData[g_u32TxDataCount++]);
+        USPI_WRITE_TX(USPI1, s_au32SourceData[s_u32TxDataCount++]);
     }
 }
 

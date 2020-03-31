@@ -12,23 +12,30 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32AdcIntFlag, g_u32COVNUMFlag = 0;
-volatile uint32_t g_u32IsTestOver = 0;
-int16_t  g_ai16ConversionData[6] = {0};
-uint32_t g_u32SampleModuleNum = 0;
+static volatile uint32_t s_u32AdcIntFlag;
+static volatile uint32_t s_u32IsTestOver = 0;
+static int16_t  s_ai16ConversionData[6] = {0};
+static uint32_t s_u32SampleModuleNum = 0;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
 void EADC_FunctionTest(void);
+void EADC0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void EPWM0_Init(void);
+void PDMA_Init(void);
+void ReloadPDMA(void);
+void PDMA0_IRQHandler(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* EADC interrupt handler                                                                                  */
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC0_IRQHandler(void)
 {
-    g_u32AdcIntFlag = 1;
+    s_u32AdcIntFlag = 1;
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF0_Msk);      /* Clear the A/D ADINT0 interrupt flag */
 }
 
@@ -160,8 +167,8 @@ void PDMA_Init()
     /* transfer width is half word(16 bit) and transfer count is 6 */
     PDMA_SetTransferCnt(PDMA0, 2, PDMA_WIDTH_16, 6);
 
-    /* Set source address as EADC data register(no increment) and destination address as g_ai16ConversionData array(increment) */
-    PDMA_SetTransferAddr(PDMA0, 2, (uint32_t)&EADC->DAT[g_u32SampleModuleNum], PDMA_SAR_FIX, (uint32_t)g_ai16ConversionData, PDMA_DAR_INC);
+    /* Set source address as EADC data register(no increment) and destination address as s_ai16ConversionData array(increment) */
+    PDMA_SetTransferAddr(PDMA0, 2, (uint32_t)&EADC->DAT[s_u32SampleModuleNum], PDMA_SAR_FIX, (uint32_t)s_ai16ConversionData, PDMA_DAR_INC);
 
     /* Select PDMA request source as ADC RX */
     PDMA_SetTransferMode(PDMA0, 2, PDMA_ADC_RX, FALSE, 0);
@@ -187,7 +194,7 @@ void ReloadPDMA()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
-    uint8_t  u8Option;
+    int32_t  i32Option;
     uint8_t  u8Index = 0;
 
     printf("\n");
@@ -206,14 +213,14 @@ void EADC_FunctionTest()
         printf("  [1] Single end input (channel 2 only)\n");
         printf("  [2] Differential input (channel pair 1 only(channel 2 and 3))\n");
         printf("  Other keys: exit single mode test\n");
-        u8Option = getchar();
-        if(u8Option == '1')
+        i32Option = getchar();
+        if(i32Option == '1')
         {
             /* Set input mode as single-end and enable the A/D converter */
             EADC_Open(EADC, EADC_CTL_DIFFEN_SINGLE_END);
 
             /* Configure the sample module 0 for analog input channel 2 and enable EPWM0 trigger source */
-            EADC_ConfigSampleModule(EADC, g_u32SampleModuleNum, EADC_PWM0TG0_TRIGGER, 2);
+            EADC_ConfigSampleModule(EADC, s_u32SampleModuleNum, EADC_PWM0TG0_TRIGGER, 2);
             EADC_ENABLE_PDMA(EADC);
 
             printf("Conversion result of channel 2:\n");
@@ -223,25 +230,25 @@ void EADC_FunctionTest()
 
             while(1)
             {
-                /* Wait PDMA interrupt (g_u32IsTestOver will be set at IRQ_Handler function) */
-                while(g_u32IsTestOver == 0);
+                /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
+                while(s_u32IsTestOver == 0);
                 break;
             }
-            g_u32IsTestOver = 0;
+            s_u32IsTestOver = 0;
 
             /* Disable EPWM0 channel 0 counter */
             EPWM_ForceStop(EPWM0, BIT0); /* EPWM0 counter stop running. */
 
             for(u8Index = 0; (u8Index) < 6; u8Index++)
-                printf("                                0x%X (%d)\n", g_ai16ConversionData[u8Index], g_ai16ConversionData[u8Index]);
+                printf("                                0x%X (%d)\n", s_ai16ConversionData[u8Index], s_ai16ConversionData[u8Index]);
 
         }
-        else if(u8Option == '2')
+        else if(i32Option == '2')
         {
             /* Set input mode as differential and enable the A/D converter */
             EADC_Open(EADC, EADC_CTL_DIFFEN_DIFFERENTIAL);
             /* Configure the sample module 0 for analog input channel 2 and software trigger source.*/
-            EADC_ConfigSampleModule(EADC, g_u32SampleModuleNum, EADC_PWM0TG0_TRIGGER, 2);
+            EADC_ConfigSampleModule(EADC, s_u32SampleModuleNum, EADC_PWM0TG0_TRIGGER, 2);
             EADC_ENABLE_PDMA(EADC);
 
             printf("Conversion result of channel 2:\n");
@@ -251,17 +258,17 @@ void EADC_FunctionTest()
 
             while(1)
             {
-                /* Wait PDMA interrupt (g_u32IsTestOver will be set at IRQ_Handler function) */
-                while(g_u32IsTestOver == 0);
+                /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
+                while(s_u32IsTestOver == 0);
                 break;
             }
-            g_u32IsTestOver = 0;
+            s_u32IsTestOver = 0;
 
             /* Disable EPWM0 channel 0 counter */
             EPWM_ForceStop(EPWM0, BIT0); /* EPWM0 counter stop running. */
 
             for(u8Index = 0; (u8Index) < 6; u8Index++)
-                printf("                                0x%X (%d)\n", g_ai16ConversionData[u8Index], g_ai16ConversionData[u8Index]);
+                printf("                                0x%X (%d)\n", s_ai16ConversionData[u8Index], s_ai16ConversionData[u8Index]);
 
         }
         else
@@ -284,13 +291,13 @@ void PDMA0_IRQHandler(void)
     if(status & PDMA_INTSTS_ABTIF_Msk)    /* abort */
     {
         if(PDMA_GET_ABORT_STS(PDMA0) & PDMA_ABTSTS_ABTIF2_Msk)
-            g_u32IsTestOver = 2;
+            s_u32IsTestOver = 2;
         PDMA_CLR_ABORT_FLAG(PDMA0, PDMA_ABTSTS_ABTIF2_Msk);
     }
     else if(status & PDMA_INTSTS_TDIF_Msk)      /* done */
     {
         if(PDMA_GET_TD_STS(PDMA0) & PDMA_TDSTS_TDIF2_Msk)
-            g_u32IsTestOver = 1;
+            s_u32IsTestOver = 1;
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
     }
     else

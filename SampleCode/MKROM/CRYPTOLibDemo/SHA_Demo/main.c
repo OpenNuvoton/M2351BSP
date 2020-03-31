@@ -12,26 +12,32 @@
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-char g_acInputString[] = "123456789ABCdef";
+char s_acInputString[] = "123456789ABCdef";
 #else
-__attribute__((aligned(4))) char g_acInputString[] = "123456789ABCdef";
+static __attribute__((aligned(4))) char s_acInputString[] = "123456789ABCdef";
 #endif
 
 //Hex result: FEBEBE5E04EBE9E4BFE95FD57B25CBE0270128860BB42DCD9E2D13B21F5C18F9
-uint32_t g_au32Expect[] = 
+static uint32_t s_au32Expect[] = 
 {
     0x5EBEBEFE, 0xE4E9EB04, 0xD55FE9BF, 0xE0CB257B,
     0x86280127, 0xCD2DB40B, 0xB2132D9E, 0xF9185C1F
 };
 
 
-volatile uint32_t g_u32IsSHA_done = 0;
+static volatile uint32_t s_u32IsSHA_done = 0;
+
+void CRPT_IRQHandler(void);
+void dump_buff_hex(uint8_t *pucBuff, int32_t i32Bytes);
+int32_t do_compare(uint8_t *output, uint8_t *expect, int32_t cmp_len);
+void SYS_Init(void);
+void UART_Init(void);
 
 void CRPT_IRQHandler()
 {
     if(SHA_GET_INT_FLAG(CRPT))
     {
-        g_u32IsSHA_done = 1;
+        s_u32IsSHA_done = 1;
         SHA_CLR_INT_FLAG(CRPT);
     }
 }
@@ -52,7 +58,7 @@ int32_t do_compare(uint8_t *output, uint8_t *expect, int32_t cmp_len)
 {
     int32_t i;
 
-    if(memcmp(expect, output, cmp_len))
+    if(memcmp(expect, output, (uint32_t)cmp_len))
     {
         printf("\nMismatch!! - %d\n", cmp_len);
         for(i = 0; i < cmp_len; i++)
@@ -141,12 +147,12 @@ int main(void)
      *---------------------------------------*/
     XSHA_Open(XCRPT, SHA_MODE_SHA256, SHA_IN_OUT_SWAP, 0);
 
-    printf("Input string data is %s.\n\n", g_acInputString);    
-    XSHA_SetDMATransfer(XCRPT, (uint32_t)&g_acInputString[0],  sizeof(g_acInputString)-1);
+    printf("Input string data is %s.\n\n", s_acInputString);    
+    XSHA_SetDMATransfer(XCRPT, (uint32_t)&s_acInputString[0],  sizeof(s_acInputString)-1);
 
-    g_u32IsSHA_done = 0;
+    s_u32IsSHA_done = 0;
     XSHA_Start(XCRPT, CRYPTO_DMA_ONE_SHOT);
-    while(g_u32IsSHA_done == 0) {}
+    while(s_u32IsSHA_done == 0) {}
 
     XSHA_Read(XCRPT, au32Output);
 
@@ -156,7 +162,7 @@ int main(void)
     /*--------------------------------------------*/
     /*  Compare                                   */
     /*--------------------------------------------*/
-    if(do_compare((uint8_t *)&au32Output[0], (uint8_t *)&g_au32Expect[0], (256 / 8)) < 0)
+    if(do_compare((uint8_t *)&au32Output[0], (uint8_t *)&s_au32Expect[0], (256 / 8)) < 0)
     {
         printf("Compare error!\n");
         while(1) {}

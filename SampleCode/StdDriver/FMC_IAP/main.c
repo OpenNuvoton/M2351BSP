@@ -17,6 +17,8 @@ extern int32_t IAP_Func1(int32_t n);
 extern int32_t IAP_Func2(int32_t n);
 extern int32_t IAP_Func3(int32_t n);
 
+void SYS_Init(void);
+
 void SYS_Init(void)
 {
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */
@@ -67,7 +69,6 @@ void SYS_Init(void)
 int32_t main(void)
 {
     uint32_t u32Cfg;
-    int32_t (*func)(int32_t n);
 
     /* Unlock protected registers */
     SYS_UnlockReg();

@@ -25,7 +25,8 @@ static uint32_t g_au32Bank1PageSumInFlash[BANK1_FW_SIZE / TMP_PAGE_SIZE];
 
 extern int IsDebugFifoEmpty(void);
 
-
+void WDT_IRQHandler(void);
+void SYS_Init(void);
 
 /**
  * @brief       IRQ Handler for WDT Interrupt
@@ -313,9 +314,11 @@ static void BankSwapContinue(void)
 int32_t main(void)
 {
 
-    uint32_t    u32Ch, u32i, u32RoBase = 0x0;
+    uint32_t  u32i, u32RoBase = 0x0;
 
     uint32_t  u32Ver0, u32Ver1, u32Crc0, u32Crc1, u32CrcGet0 = 0, u32CrcGet1 = 0;
+    int32_t i32Ch;
+    
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -375,9 +378,9 @@ int32_t main(void)
     printf("[x] Any key to continue \n");
 
 
-    u32Ch = getchar();
+    i32Ch = getchar();
 
-    if(u32Ch == 'p')
+    if(i32Ch == 'p')
     {
         /* Set remmaping address */
         FMC->ISPADDR = BANK0_FW_BASE;
@@ -506,8 +509,8 @@ int32_t main(void)
         {
 #if FW_SWAP_BACK
             printf("Swap back to old FW? [y/n]\n");
-            ch = getchar();
-            if(ch == 'y')
+            i32Ch = getchar();
+            if(i32Ch == 'y')
             {
                 printf("Swap back to old FW\n");
                 BankSwap();

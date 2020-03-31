@@ -15,8 +15,8 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile int32_t g_i32Pointer = 0;
-uint8_t g_u8RecData[RXBUFSIZE] = {0};
+static volatile int32_t s_i32Pointer = 0;
+static uint8_t s_au8RecData[RXBUFSIZE] = {0};
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
@@ -24,6 +24,10 @@ uint8_t g_u8RecData[RXBUFSIZE] = {0};
 void AutoFlow_FunctionTest(void);
 void AutoFlow_FunctionTxTest(void);
 void AutoFlow_FunctionRxTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void UART1_Init(void);
+void UART1_IRQHandler(void);
 
 
 void SYS_Init(void)
@@ -150,7 +154,7 @@ int32_t main(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void AutoFlow_FunctionTest(void)
 {
-    uint8_t u8Item;
+    int32_t i32Item;
 
     printf("\n");
     printf("+-----------------------------------------------------------+\n");
@@ -175,9 +179,9 @@ void AutoFlow_FunctionTest(void)
     printf("|  Please select Master or Slave test                       |\n");
     printf("|  [0] Master    [1] Slave                                  |\n");
     printf("+-----------------------------------------------------------+\n");
-    u8Item = getchar();
+    i32Item = getchar();
 
-    if(u8Item == '0')
+    if(i32Item == '0')
         AutoFlow_FunctionTxTest();
     else
         AutoFlow_FunctionRxTest();
@@ -232,12 +236,12 @@ void AutoFlow_FunctionRxTest(void)
     printf("\n Starting to receive data...\n");
 
     /* Wait for receive 1k bytes data */
-    while(g_i32Pointer < RXBUFSIZE);
+    while(s_i32Pointer < RXBUFSIZE);
 
     /* Compare Data */
     for(u32Idx = 0; u32Idx < RXBUFSIZE; u32Idx++)
     {
-        if(g_u8RecData[u32Idx] != (u32Idx & 0xFF))
+        if(s_au8RecData[u32Idx] != (u32Idx & 0xFF))
         {
             printf("Compare Data Failed\n");
             while(1);
@@ -263,8 +267,8 @@ void UART1_IRQHandler(void)
         /* Read data until RX FIFO is empty */
         while(UART_GET_RX_EMPTY(UART1) == 0)
         {
-            u8InChar = UART_READ(UART1);
-            g_u8RecData[g_i32Pointer++] = u8InChar;
+            u8InChar = (uint8_t)UART_READ(UART1);
+            s_au8RecData[s_i32Pointer++] = u8InChar;
         }
     }
 

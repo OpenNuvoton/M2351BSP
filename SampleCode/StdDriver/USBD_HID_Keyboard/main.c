@@ -19,6 +19,9 @@
 uint8_t volatile g_u8EP2Ready = 0;
 
 
+void SYS_Init(void);
+void UART0_Init(void);
+void HID_UpdateKbData(void);
 /*--------------------------------------------------------------------------*/
 void SYS_Init(void)
 {

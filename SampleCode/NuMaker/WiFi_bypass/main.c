@@ -15,11 +15,16 @@
 #define LED_OFF         PA11 // Green LED
 #define PWR_OFF         PD7
 #define FW_UPDATE_OFF   PD6
-#define IOCTL_INIT      { \
+#define IOCTL_INIT      \
+    do{ \
     PD->MODE = (GPIO_MODE_OUTPUT << 6*2) | (GPIO_MODE_OUTPUT << 7*2); \
-    PA->MODE = (GPIO_MODE_OUTPUT << 10*2) | (GPIO_MODE_OUTPUT << 11*2) ;}
+    PA->MODE = (GPIO_MODE_OUTPUT << 10*2) | (GPIO_MODE_OUTPUT << 11*2); \
+    }while(0)
 
 
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+void WIFI_PORT_Init(void);
 
 void SYS_Init(void)
 {

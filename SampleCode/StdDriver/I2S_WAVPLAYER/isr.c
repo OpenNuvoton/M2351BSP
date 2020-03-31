@@ -12,8 +12,10 @@
 
 #include "config.h"
 
-extern volatile uint8_t g_u8PCMBuffer_Full[2];
-extern volatile uint8_t g_u8PCMBuffer_Playing;
+extern volatile uint8_t s_au8PCMBufferFull[2];
+extern volatile uint8_t s_u8PCMBufferPlaying;
+
+void PDMA0_IRQHandler(void);
 
 void PDMA0_IRQHandler(void)
 {
@@ -23,8 +25,8 @@ void PDMA0_IRQHandler(void)
     {
         if(PDMA_GET_TD_STS(PDMA0) & 0x4)
         {
-            g_u8PCMBuffer_Full[g_u8PCMBuffer_Playing] = 0;       //set empty flag
-            g_u8PCMBuffer_Playing ^= 1;
+            s_au8PCMBufferFull[s_u8PCMBufferPlaying] = 0;       //set empty flag
+            s_u8PCMBufferPlaying ^= 1;
         }
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
     }

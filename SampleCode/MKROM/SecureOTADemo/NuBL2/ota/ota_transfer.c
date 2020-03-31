@@ -24,12 +24,14 @@ volatile uint32_t g_u32SendbytesLen = 8;
 volatile uint8_t g_u8SendbytesFlag = 1;
 volatile uint8_t g_u8ResetFlag = 0;
 volatile uint8_t g_u8DisconnFlag = 0;
-volatile uint8_t g_u8InitialWifiFail = 0;
+static volatile uint8_t s_u8InitialWifiFail = 0;
 
+#if INPUT_WIFI_PROMPT
 uint8_t g_au8WifiName[32];
 uint8_t g_au8WifiPass[32];
 uint8_t g_au8WifiIp[32];
 //uint8_t g_au8WifiPort[32];
+#endif
 
 #define WIFI_PORT   UART3    // Used to connect to WIFI module
 
@@ -42,25 +44,25 @@ uint8_t g_au8WifiIp[32];
 
 
 /* ESP working structure and result enumeration */
-evol ESP_t ESP;
-ESP_Result_t espRes;
+static evol ESP_t ESP;
+static ESP_Result_t espRes;
 
 /* Client connection pointer */
-ESP_CONN_t* conn;
+static ESP_CONN_t* conn;
 
 /* Connection manupulation */
-uint32_t bw;
-const uint8_t requestData[] = ""
-"GET / HTTP/1.1\r\n"
-"Host: example.com\r\n"
-"Connection: close\r\n"
-"\r\n";
+static uint32_t s_u32BW;
 
 /* ESP callback declaration */
 int ESP_Callback(ESP_Event_t evt, ESP_EventParams_t* params);
 
-struct pt PT;
+static struct pt PT;
 
+void SysTick_Handler(void);
+__WEAK void UART3_ReceiveHandler(uint8_t c);
+void UART3_IRQHandler(void);
+void UART3_Init(void);
+    
 static
 PT_THREAD(CLIENT_THREAD(struct pt* pt)) {
     PT_BEGIN(pt);
@@ -73,7 +75,7 @@ PT_THREAD(CLIENT_THREAD(struct pt* pt)) {
 //          printf("Connection to OTA server has been successfull!\r\n");
 
         /* Send HTTP request for example in non-blocking mode */
-        if ((espRes = ESP_CONN_Send(&ESP, conn, g_au8SendBuf, g_u32SendbytesLen, &bw, 0)) == espOK) {
+        if ((espRes = ESP_CONN_Send(&ESP, conn, g_au8SendBuf, g_u32SendbytesLen, &s_u32BW, 0)) == espOK) {
             //DEBUG_MSG("Data sending has started successfully\r\n");
 
             PT_WAIT_UNTIL(pt, ESP_IsReady(&ESP) == espOK);  /* Wait for stack to finish */
@@ -81,8 +83,8 @@ PT_THREAD(CLIENT_THREAD(struct pt* pt)) {
 
             /* Check if data sent */
             if (espRes == espOK) {
-                //printf("Data sent! Number of bytes sent: %d. We expect connection will be closed by remote server\r\n", bw);
-                DEBUG_MSG("Data sent! Number of bytes sent: %d.\n", bw);
+                //printf("Data sent! Number of bytes sent: %d. We expect connection will be closed by remote server\r\n", s_u32BW);
+                DEBUG_MSG("Data sent! Number of bytes sent: %d.\n", s_u32BW);
             } else {
                 printf("Data were not sent: %d\r\n", espRes);
             }
@@ -95,7 +97,7 @@ PT_THREAD(CLIENT_THREAD(struct pt* pt)) {
         printf("Problems to connect to example.com: %d\r\n", espRes);
     }
     g_u8SendbytesFlag = 0;
-    PT_END(pt);
+    PT_END(pt)
 }
 
 #if (PERIODIC_CHK_NEW_VER)
@@ -134,8 +136,11 @@ uint8_t Transfer_Connect(void)
   */
 uint8_t Transfer_SysTickProcess(uint32_t u32Ticks)
 {
+    (void)u32Ticks;
     static uint32_t u32ChkNewVerTick = 0;
+#if (PERIODIC_CHK_NEW_VER)
     uint8_t u8Ret;
+#endif
 
     u32ChkNewVerTick++;
     ESP_UpdateTime(&ESP, 1);                                /* Update ESP library time for 1 ms */
@@ -183,7 +188,7 @@ void SysTick_Handler(void)
 
 }
 
-__WEAK void UART3_ReceiveHandler(uint8_t c) { }
+__WEAK void UART3_ReceiveHandler(uint8_t c) {(void)c; }
 
 /**
   * @brief        Read received transfer data
@@ -198,7 +203,7 @@ void Transfer_WiFiProcess(void)
         while(UART_IS_RX_READY(WIFI_PORT))
 		{
 //            printf("%c",UART_READ(WIFI_PORT));
-            UART3_ReceiveHandler(UART_READ(WIFI_PORT));
+            UART3_ReceiveHandler((uint8_t)UART_READ(WIFI_PORT));
         }
     }
 }
@@ -215,18 +220,18 @@ void UART3_IRQHandler(void)
 /**               Library callback            **/
 /***********************************************/
 int ESP_Callback(ESP_Event_t evt, ESP_EventParams_t* params) {
-    switch (evt) {                              /* Check events */
+    switch ((uint8_t)evt) {                              /* Check events */
         case espEventIdle:
 //            printf("Stack is IDLE!\r\n");
             break;
         case espEventConnActive: {
-            ESP_CONN_t* conn = (ESP_CONN_t *)params->CP1;   /* Get connection for event */
+            ESP_CONN_t* conn = (ESP_CONN_t *)(uint32_t)params->CP1;   /* Get connection for event */
             printf("Connection %d just became active!\r\n", conn->Number);
 
             break;
         }
         case espEventConnClosed: {
-            ESP_CONN_t* conn = (ESP_CONN_t *)params->CP1;   /* Get connection for event */
+            ESP_CONN_t* conn = (ESP_CONN_t *)(uint32_t)params->CP1;   /* Get connection for event */
             printf("Connection %d was just closed!\r\n", conn->Number);
             if (g_u8ResetFlag)
             {
@@ -237,9 +242,9 @@ int ESP_Callback(ESP_Event_t evt, ESP_EventParams_t* params) {
         }
         case espEventDataReceived: {
             //ESP_CONN_t* conn = (ESP_CONN_t *)params->CP1;   /* Get connection for event */
-            conn = (ESP_CONN_t *)params->CP1;
-            uint8_t* data = (uint8_t *)params->CP2;         /* Get actual received data */
-            uint16_t datalen = params->UI;                  /* Print length of received data in current part packet */
+            conn = (ESP_CONN_t *)(uint32_t)params->CP1;
+            uint8_t* data = (uint8_t *)(uint32_t)params->CP2;         /* Get actual received data */
+            uint16_t datalen = (uint16_t)params->UI;                  /* Print length of received data in current part packet */
 
             DEBUG_MSG("%d bytes of data received\r\n", datalen);
             (void)(data);                                   /* Prevent compiler warnings */
@@ -281,7 +286,7 @@ void Transfer_Init(void)
 {
     UART3_Init();
 
-    IOCTL_INIT;
+    IOCTL_INIT
     LED_OFF = 1;
     PWR_OFF = 1;
     FW_UPDATE_OFF = 1;
@@ -383,11 +388,11 @@ int8_t Transfer_Process(void)
 
     if ((espRes = ESP_CONN_Start(&ESP, &conn, ESP_CONN_Type_TCP, (const char *)g_au8WifiIp, 1111, 0)) == espOK) {//can get IP address of AP by ESP_AP_GetIP()
         printf("Connection to OTA server has started!\r\n");
-        g_u8InitialWifiFail = 0;
+        s_u8InitialWifiFail = 0;
 
     } else {
         printf("Problems trying to start connection to server as client: %d\r\n", espRes);
-        g_u8InitialWifiFail = 1;
+        s_u8InitialWifiFail = 1;
     }
 #else
     /* Try to connect to wifi network in blocking mode */
@@ -417,7 +422,7 @@ int8_t Transfer_Process(void)
         {
             if (g_u8DisconnFlag == 1)
             {
-                printf("Data sent! Number of bytes sent: %d.\n", bw);
+                printf("Data sent! Number of bytes sent: %d.\n", s_u32BW);
                 g_u8DisconnFlag = 0;
                 ESP_CONN_Close(&ESP, conn, 0);
 //                if ((FMC_GetVECMAP() == 0x40000)||(FMC_GetVECMAP() == 0x60000))
@@ -441,9 +446,9 @@ int8_t Transfer_Process(void)
                 break;
             }
         }
-        if (g_u8InitialWifiFail == 1)
+        if (s_u8InitialWifiFail == 1)
         {
-            g_u8InitialWifiFail = 0;
+            s_u8InitialWifiFail = 0;
             SYS_UnlockReg();
             FMC_Open();
             //check current firmware

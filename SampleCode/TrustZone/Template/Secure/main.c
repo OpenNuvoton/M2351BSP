@@ -24,7 +24,19 @@
 typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 typedef int32_t (*Secure_funcptr)(uint32_t);
 
-
+__NONSECURE_ENTRY
+int32_t Secure_func(void);
+__NONSECURE_ENTRY
+int32_t Secure_LED_On(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_LED_Off(uint32_t num);
+__NONSECURE_ENTRY
+int32_t Secure_LED_On_callback(NonSecure_funcptr *callback);
+__NONSECURE_ENTRY
+int32_t Secure_LED_Off_callback(NonSecure_funcptr *callback);
+int32_t LED_On(void);
+int32_t LED_Off(void);
+void SysTick_Handler(void);
 /*----------------------------------------------------------------------------
   Secure functions exported to NonSecure application
   Must place in Non-secure Callable
@@ -40,6 +52,7 @@ int32_t Secure_func(void)
 __NONSECURE_ENTRY
 int32_t Secure_LED_On(uint32_t num)
 {
+    (void)num;
     printf("Secure LED On call by Non-secure\n");
     PA10 = 0;
     PB0 = 0;
@@ -49,6 +62,7 @@ int32_t Secure_LED_On(uint32_t num)
 __NONSECURE_ENTRY
 int32_t Secure_LED_Off(uint32_t num)
 {
+    (void)num;
     printf("Secure LED Off call by Non-secure\n");
     PA10 = 1;
     PB0 = 1;
@@ -59,20 +73,20 @@ int32_t Secure_LED_Off(uint32_t num)
   NonSecure callable function for NonSecure callback
  *----------------------------------------------------------------------------*/
 
-NonSecure_funcptr pfNonSecure_LED_On = (NonSecure_funcptr)NULL;
-NonSecure_funcptr pfNonSecure_LED_Off = (NonSecure_funcptr)NULL;
+static NonSecure_funcptr s_pfNonSecure_LED_On = (NonSecure_funcptr)NULL;
+static NonSecure_funcptr s_pfNonSecure_LED_Off = (NonSecure_funcptr)NULL;
 
 __NONSECURE_ENTRY
 int32_t Secure_LED_On_callback(NonSecure_funcptr *callback)
 {
-    pfNonSecure_LED_On = (NonSecure_funcptr)cmse_nsfptr_create(callback);
+    s_pfNonSecure_LED_On = (NonSecure_funcptr)cmse_nsfptr_create(callback);
     return 0;
 }
 
 __NONSECURE_ENTRY
 int32_t Secure_LED_Off_callback(NonSecure_funcptr *callback)
 {
-    pfNonSecure_LED_Off = (NonSecure_funcptr)cmse_nsfptr_create(callback);
+    s_pfNonSecure_LED_Off = (NonSecure_funcptr)cmse_nsfptr_create(callback);
     return 0;
 }
 
@@ -111,15 +125,15 @@ void SysTick_Handler(void)
             LED_Off();
             break;
         case 300:
-            if(pfNonSecure_LED_On != NULL)
+            if(s_pfNonSecure_LED_On != NULL)
             {
-                pfNonSecure_LED_On(1u);
+                s_pfNonSecure_LED_On(1u);
             }
             break;
         case 500:
-            if(pfNonSecure_LED_Off != NULL)
+            if(s_pfNonSecure_LED_Off != NULL)
             {
-                pfNonSecure_LED_Off(1u);
+                s_pfNonSecure_LED_Off(1u);
             }
             break;
 

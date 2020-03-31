@@ -12,8 +12,8 @@
 
 #define TEST_COUNT  64
 
-uint32_t g_au32SourceData[TEST_COUNT];
-uint32_t g_au32DestinationData[TEST_COUNT];
+static uint32_t s_au32SourceData[TEST_COUNT];
+static uint32_t s_au32DestinationData[TEST_COUNT];
 
 /* Function prototype declaration */
 void SYS_Init(void);
@@ -57,8 +57,8 @@ int main()
     /* set the source data and clear the destination buffer */
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
-        g_au32SourceData[u32DataCount] = u32DataCount;
-        g_au32DestinationData[u32DataCount] = 0;
+        s_au32SourceData[u32DataCount] = u32DataCount;
+        s_au32DestinationData[u32DataCount] = 0;
     }
 
     u32Err = 0;
@@ -67,8 +67,8 @@ int main()
         /* set the source data and clear the destination buffer */
         for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
         {
-            g_au32SourceData[u32DataCount]++;
-            g_au32DestinationData[u32DataCount] = 0;
+            s_au32SourceData[u32DataCount]++;
+            s_au32DestinationData[u32DataCount] = 0;
         }
 
         u32DataCount = 0;
@@ -81,11 +81,11 @@ int main()
         while(1)
         {
             /* Write to TX register */
-            USPI_WRITE_TX(USPI1, g_au32SourceData[u32DataCount]);
+            USPI_WRITE_TX(USPI1, s_au32SourceData[u32DataCount]);
             /* Check SPI1 busy status */
             while(USPI_IS_BUSY(USPI1));
             /* Read received data */
-            g_au32DestinationData[u32DataCount] = USPI_READ_RX(USPI1);
+            s_au32DestinationData[u32DataCount] = USPI_READ_RX(USPI1);
             u32DataCount++;
             if(u32DataCount == TEST_COUNT)
                 break;
@@ -94,7 +94,7 @@ int main()
         /*  Check the received data */
         for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
         {
-            if(g_au32DestinationData[u32DataCount] != g_au32SourceData[u32DataCount])
+            if(s_au32DestinationData[u32DataCount] != s_au32SourceData[u32DataCount])
                 u32Err = 1;
         }
 

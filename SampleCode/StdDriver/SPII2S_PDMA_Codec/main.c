@@ -26,10 +26,18 @@ typedef struct
     uint32_t FIRST;
 } DESC_TABLE_T;
 
-volatile uint8_t u8TxIdx = 0, u8RxIdx = 0;
-uint32_t g_au32PcmRxBuff[2][BUFF_LEN] = {0};
-uint32_t g_au32PcmTxBuff[2][BUFF_LEN] = {0};
-DESC_TABLE_T g_asDescTable_TX[2], g_asDescTable_RX[2];
+static volatile uint8_t s_u8TxIdx = 0, s_u8RxIdx = 0;
+static uint32_t s_au32PcmRxBuff[2][BUFF_LEN] = {{0}};
+static uint32_t s_au32PcmTxBuff[2][BUFF_LEN] = {{0}};
+static DESC_TABLE_T s_asDescTable_TX[2], s_asDescTable_RX[2];
+
+
+void I2C_WriteNAU8822(uint8_t u8Addr, uint16_t u16Data);
+void NAU8822_Setup(void);
+void SYS_Init(void);
+void PDMA_Init(void);
+void I2C2_Init(void);
+void PDMA0_IRQHandler(void);
 
 
 #if NAU8822
@@ -310,33 +318,33 @@ void SYS_Init(void)
 void PDMA_Init(void)
 {
     /* Tx description */
-    g_asDescTable_TX[0].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    g_asDescTable_TX[0].SA = (uint32_t)&g_au32PcmTxBuff[0];
-    g_asDescTable_TX[0].DA = (uint32_t)&SPI0->TX;
-    g_asDescTable_TX[0].FIRST = (uint32_t)&g_asDescTable_TX[1] - (PDMA0->SCATBA);
+    s_asDescTable_TX[0].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+    s_asDescTable_TX[0].SA = (uint32_t)&s_au32PcmTxBuff[0];
+    s_asDescTable_TX[0].DA = (uint32_t)&SPI0->TX;
+    s_asDescTable_TX[0].FIRST = (uint32_t)&s_asDescTable_TX[1] - (PDMA0->SCATBA);
 
-    g_asDescTable_TX[1].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    g_asDescTable_TX[1].SA = (uint32_t)&g_au32PcmTxBuff[1];
-    g_asDescTable_TX[1].DA = (uint32_t)&SPI0->TX;
-    g_asDescTable_TX[1].FIRST = (uint32_t)&g_asDescTable_TX[0] - (PDMA0->SCATBA);   //link to first description
+    s_asDescTable_TX[1].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+    s_asDescTable_TX[1].SA = (uint32_t)&s_au32PcmTxBuff[1];
+    s_asDescTable_TX[1].DA = (uint32_t)&SPI0->TX;
+    s_asDescTable_TX[1].FIRST = (uint32_t)&s_asDescTable_TX[0] - (PDMA0->SCATBA);   //link to first description
 
     /* Rx description */
-    g_asDescTable_RX[0].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    g_asDescTable_RX[0].SA = (uint32_t)&SPI0->RX;
-    g_asDescTable_RX[0].DA = (uint32_t)&g_au32PcmRxBuff[0];
-    g_asDescTable_RX[0].FIRST = (uint32_t)&g_asDescTable_RX[1] - (PDMA0->SCATBA);
+    s_asDescTable_RX[0].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+    s_asDescTable_RX[0].SA = (uint32_t)&SPI0->RX;
+    s_asDescTable_RX[0].DA = (uint32_t)&s_au32PcmRxBuff[0];
+    s_asDescTable_RX[0].FIRST = (uint32_t)&s_asDescTable_RX[1] - (PDMA0->SCATBA);
 
-    g_asDescTable_RX[1].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    g_asDescTable_RX[1].SA = (uint32_t)&SPI0->RX;
-    g_asDescTable_RX[1].DA = (uint32_t)&g_au32PcmRxBuff[1];
-    g_asDescTable_RX[1].FIRST = (uint32_t)&g_asDescTable_RX[0] - (PDMA0->SCATBA);   //link to first description
+    s_asDescTable_RX[1].CTL = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+    s_asDescTable_RX[1].SA = (uint32_t)&SPI0->RX;
+    s_asDescTable_RX[1].DA = (uint32_t)&s_au32PcmRxBuff[1];
+    s_asDescTable_RX[1].FIRST = (uint32_t)&s_asDescTable_RX[0] - (PDMA0->SCATBA);   //link to first description
 
     /* Open PDMA channel 1 for SPI TX and channel 2 for SPI RX */
     PDMA_Open(PDMA0, 0x3 << 1);
 
     /* Configure PDMA transfer mode */
-    PDMA_SetTransferMode(PDMA0, 1, PDMA_SPI0_TX, 1, (uint32_t)&g_asDescTable_TX[0]);
-    PDMA_SetTransferMode(PDMA0, 2, PDMA_SPI0_RX, 1, (uint32_t)&g_asDescTable_RX[0]);
+    PDMA_SetTransferMode(PDMA0, 1, PDMA_SPI0_TX, 1, (uint32_t)&s_asDescTable_TX[0]);
+    PDMA_SetTransferMode(PDMA0, 2, PDMA_SPI0_RX, 1, (uint32_t)&s_asDescTable_RX[0]);
 
     /* Enable PDMA channel 1&2 interrupt */
     PDMA_EnableInt(PDMA0, 1, 0);
@@ -431,13 +439,13 @@ void PDMA0_IRQHandler(void)
         if(PDMA_GET_TD_STS(PDMA0) & 0x4)              /* channel 2 done */
         {
             /* Copy RX data to TX buffer */
-            memcpy(&g_au32PcmTxBuff[u8TxIdx ^ 1], &g_au32PcmRxBuff[u8RxIdx], BUFF_LEN * 4);
-            u8RxIdx ^= 1;
+            memcpy(&s_au32PcmTxBuff[s_u8TxIdx ^ 1], &s_au32PcmRxBuff[s_u8RxIdx], BUFF_LEN * 4);
+            s_u8RxIdx ^= 1;
             PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
         }
         if(PDMA_GET_TD_STS(PDMA0) & 0x2)              /* channel 1 done */
         {
-            u8TxIdx ^= 1;
+            s_u8TxIdx ^= 1;
             PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF1_Msk);
         }
     }

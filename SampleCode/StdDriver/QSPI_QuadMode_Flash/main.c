@@ -13,8 +13,24 @@
 
 #define SPI_FLASH_PORT  QSPI0
 
-uint8_t g_au8SrcArray[TEST_LENGTH];
-uint8_t g_au8DestArray[TEST_LENGTH];
+static uint8_t s_au8SrcArray[TEST_LENGTH];
+static uint8_t s_au8DestArray[TEST_LENGTH];
+
+
+void D2D3_SwitchToNormalMode(void);
+void D2D3_SwitchToQuadMode(void);
+uint16_t SpiFlash_ReadMidDid(void);
+void SpiFlash_ChipErase(void);
+uint8_t SpiFlash_ReadStatusReg(void);
+uint8_t SpiFlash_ReadStatusReg2(void);
+void SpiFlash_WriteStatusReg(uint8_t u8Value1, uint8_t u8Value2);
+void SpiFlash_WaitReady(void);
+void SpiFlash_NormalPageProgram(uint32_t u32StartAddress, uint8_t *u8DataBuffer);
+void spiFlash_EnableQEBit(void);
+void spiFlash_DisableQEBit(void);
+void SpiFlash_QuadFastRead(uint32_t u32StartAddress, uint8_t *u8DataBuffer);
+void SYS_Init(void);
+
 
 void D2D3_SwitchToNormalMode(void)
 {
@@ -56,9 +72,9 @@ uint16_t SpiFlash_ReadMidDid(void)
     QSPI_SET_SS_HIGH(SPI_FLASH_PORT);
 
     while(!QSPI_GET_RX_FIFO_EMPTY_FLAG(SPI_FLASH_PORT))
-        u8RxData[u8IDCnt ++] = QSPI_READ_RX(SPI_FLASH_PORT);
+        u8RxData[u8IDCnt ++] = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
 
-    return ((u8RxData[4] << 8) | u8RxData[5]);
+    return (uint16_t)((u8RxData[4] << 8) | u8RxData[5]);
 }
 
 void SpiFlash_ChipErase(void)
@@ -114,8 +130,8 @@ uint8_t SpiFlash_ReadStatusReg(void)
     QSPI_SET_SS_HIGH(SPI_FLASH_PORT);
 
     // skip first rx data
-    u8Val = QSPI_READ_RX(SPI_FLASH_PORT);
-    u8Val = QSPI_READ_RX(SPI_FLASH_PORT);
+    u8Val = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
+    u8Val = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
 
     return u8Val;
 }
@@ -142,8 +158,8 @@ uint8_t SpiFlash_ReadStatusReg2(void)
     QSPI_SET_SS_HIGH(SPI_FLASH_PORT);
 
     // skip first rx data
-    u8Val = QSPI_READ_RX(SPI_FLASH_PORT);
-    u8Val = QSPI_READ_RX(SPI_FLASH_PORT);
+    u8Val = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
+    u8Val = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
 
     return u8Val;
 }
@@ -299,7 +315,7 @@ void SpiFlash_QuadFastRead(uint32_t u32StartAddress, uint8_t *u8DataBuffer)
     {
         QSPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
         while(QSPI_IS_BUSY(SPI_FLASH_PORT));
-        u8DataBuffer[u32Cnt] = QSPI_READ_RX(SPI_FLASH_PORT);
+        u8DataBuffer[u32Cnt] = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
     }
 
     // wait tx finish
@@ -425,7 +441,7 @@ int main(void)
     /* init source data buffer */
     for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
     {
-        g_au8SrcArray[u32ByteCount] = u32ByteCount;
+        s_au8SrcArray[u32ByteCount] = (uint8_t)u32ByteCount;
     }
 
     printf("Start to write data to Flash ...");
@@ -434,7 +450,7 @@ int main(void)
     for(u32PageNumber = 0; u32PageNumber < TEST_NUMBER; u32PageNumber++)
     {
         /* page program */
-        SpiFlash_NormalPageProgram(u32FlashAddress, g_au8SrcArray);
+        SpiFlash_NormalPageProgram(u32FlashAddress, s_au8SrcArray);
         SpiFlash_WaitReady();
         u32FlashAddress += 0x100;
     }
@@ -444,7 +460,7 @@ int main(void)
     /* clear destination data buffer */
     for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
     {
-        g_au8DestArray[u32ByteCount] = 0;
+        s_au8DestArray[u32ByteCount] = 0;
     }
 
     printf("Read & Compare ...");
@@ -454,12 +470,12 @@ int main(void)
     for(u32PageNumber = 0; u32PageNumber < TEST_NUMBER; u32PageNumber++)
     {
         /* page read */
-        SpiFlash_QuadFastRead(u32FlashAddress, g_au8DestArray);
+        SpiFlash_QuadFastRead(u32FlashAddress, s_au8DestArray);
         u32FlashAddress += 0x100;
 
         for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
         {
-            if(g_au8DestArray[u32ByteCount] != g_au8SrcArray[u32ByteCount])
+            if(s_au8DestArray[u32ByteCount] != s_au8SrcArray[u32ByteCount])
                 u32Error ++;
         }
     }

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "fmc_user.h"
 
+int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end, unsigned int *data);
 
 int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end, unsigned int *data)
 {
@@ -22,7 +23,7 @@ int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end
         }
 
         FMC->ISPTRG = 0x1;
-        __ISB();
+        __ISB()
 
         /* Wait ISP cmd complete */
         while (FMC->ISPTRG);
@@ -138,7 +139,7 @@ int EraseAP(unsigned int addr_start, unsigned int size)
         FMC->ISPCMD = u32Cmd;
         FMC->ISPADDR = u32Addr;
         FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
-        __ISB();
+        __ISB()
 
         while (FMC->ISPTRG & FMC_ISPTRG_ISPGO_Msk) ;  /* Wait for ISP command done. */
 

@@ -9,20 +9,25 @@
 #include "platform.h"
 
 /* timer ticks - 100 ticks per second */
-volatile uint32_t  g_tick_cnt;
+static volatile uint32_t  s_u32TickCnt;
 
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void start_timer0(void);
+uint32_t  get_timer0_counter(void);
+int SHA256Test(void);
 
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;
+    s_u32TickCnt++;
 }
 
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -146,7 +151,7 @@ int SHA256Test(void)
 
             for( j = 0; j < 1000; j++ )
             {
-                ret = mbedtls_sha256_update_ret( &ctx, buf, buflen );
+                ret = mbedtls_sha256_update_ret( &ctx, buf, (size_t)buflen );
                 if( ret != 0 )
                     goto fail;
             }
@@ -165,7 +170,7 @@ int SHA256Test(void)
             goto fail;
 
 
-        if( memcmp( sha256sum, sha256_test_sum[i], 32 - k * 4 ) != 0 )
+        if( memcmp( sha256sum, sha256_test_sum[i], (size_t)(32 - k * 4 )) != 0 )
         {
             ret = 1;
             goto fail;
@@ -175,7 +180,7 @@ int SHA256Test(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d us,  %d ticks\n", u32Time, g_tick_cnt);
+        printf("     takes %d us,  %d ticks\n", u32Time, s_u32TickCnt);
     }
 
     printf( "\n" );

@@ -14,7 +14,7 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32AdcIntFlag;
+static volatile uint32_t s_u32AdcIntFlag;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
@@ -22,7 +22,9 @@ volatile uint32_t g_u32AdcIntFlag;
 int32_t main(void);
 uint32_t GetTemperatureCodeFromADC(void);
 double GetTemperature(void);
-
+void SYS_Init(void);
+void UART0_Init(void);
+void EADC0_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -130,11 +132,11 @@ uint32_t GetTemperatureCodeFromADC(void)
     NVIC_EnableIRQ(EADC0_IRQn);
 
     /* Reset the ADC interrupt indicator and trigger sample module 17 to start A/D conversion */
-    g_u32AdcIntFlag = 0;
+    s_u32AdcIntFlag = 0;
     EADC_START_CONV(EADC, BIT17);
 
     /* Wait EADC conversion done */
-    while(g_u32AdcIntFlag == 0);
+    while(s_u32AdcIntFlag == 0);
 
     /* Disable the ADINT0 interrupt */
     EADC_DISABLE_INT(EADC, BIT0);
@@ -149,7 +151,7 @@ uint32_t GetTemperatureCodeFromADC(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC0_IRQHandler(void)
 {
-    g_u32AdcIntFlag = 1;
+    s_u32AdcIntFlag = 1;
     /* Clear the A/D ADINT0 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF0_Msk);
 }
@@ -159,7 +161,7 @@ void EADC0_IRQHandler(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint32_t u32Temperature;
+    double dTemperature;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -179,11 +181,11 @@ int32_t main(void)
     printf("+--------------------------------------------+\n\n");
 
     /* Measure temperature */
-    u32Temperature = (int)GetTemperature();
-    if(u32Temperature > 50)
-        printf("Abnormal temperature: %dC\n", u32Temperature);
+    dTemperature = GetTemperature();
+    if(dTemperature > 50)
+        printf("Abnormal temperature: %dC\n", (int32_t)dTemperature);
     else
-        printf("Chip temperature: %dC\n", u32Temperature);
+        printf("Chip temperature: %dC\n", (int32_t)dTemperature);
 
     /* Reset EADC module */
     SYS_ResetModule(EADC_RST);

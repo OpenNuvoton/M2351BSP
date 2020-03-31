@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "NuMicro.h"
+#include "ProcessVendorCmd.h"
 
 /*
     Increase Stack_Size=0x1800 for SecureISP application.
@@ -18,9 +19,14 @@
 /* Global variables for initial SecureISP function                                                         */
 /*---------------------------------------------------------------------------------------------------------*/
 ISP_INFO_T      g_ISPInfo = {0};
-BL_USBD_INFO_T  g_USBDInfo = {0};
+static BL_USBD_INFO_T  s_USBDInfo;
 extern void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len);
 
+void USBD_IRQHandler(void);
+void UART1_IRQHandler(void);
+void EnableXOM0(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       IRQ Handler for USBD Interrupt
@@ -31,7 +37,7 @@ extern void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len);
 void USBD_IRQHandler(void)
 {
     /* Process USBD data */
-    BL_ProcessUSBDInterrupt((uint32_t *)g_ISPInfo.pfnUSBDEP, (uint32_t *)&g_ISPInfo, (uint32_t *)&g_USBDInfo);
+    BL_ProcessUSBDInterrupt((uint32_t *)g_ISPInfo.pfnUSBDEP, (uint32_t *)&g_ISPInfo, (uint32_t *)(uint32_t)&s_USBDInfo);
 }
 
 /**
@@ -138,7 +144,8 @@ static int32_t ConfigureUART1ISP(uint32_t mode)
 void EnableXOM0(void)
 {
     int32_t i32Status;
-    uint32_t u32Base = 0x10000, u32Page = 2;
+    uint32_t u32Base = 0x10000;
+    uint8_t u8Page = 2;
     
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -149,11 +156,11 @@ void EnableXOM0(void)
     
     if((FMC->XOMSTS & 0x1) != 0x1)
     {
-        printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u32Page);
+        printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u8Page);
         
         if(FMC_GetXOMState(XOMR0) == 0)
         {
-            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u32Page);
+            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u8Page);
             if(i32Status == 0)
             {
                 printf("Configure XOM0 Success.\n");
@@ -175,7 +182,7 @@ void EnableXOM0(void)
 
         /* Reset chip to enable XOM region. */
         SYS_ResetChip();
-        while(1) {};
+        while(1) {}
     }
     else
     {
@@ -238,7 +245,7 @@ void UART_Init(void)
 int main(void)
 {
     int32_t     ret = 0;
-    uint32_t    u32ISPmode, u32UartClkFreq;
+    uint32_t    u32ISPmode = 0, u32UartClkFreq;
     
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -262,7 +269,7 @@ int main(void)
     ConfigureUSBDISP();
     
     /* Configure UART1 ISP */
-    u32UartClkFreq = ConfigureUART1ISP(0x0);
+    u32UartClkFreq = (uint32_t)ConfigureUART1ISP(0x0);
                 
     //printf("\n[Hit any key to enter SecureISP]\n\n");
     //getchar();    
@@ -288,7 +295,7 @@ int main(void)
             
             /* Clear global variables */   
             memset((void *)&g_ISPInfo, 0x0, sizeof(ISP_INFO_T));
-            memset((void *)&g_USBDInfo, 0x0, sizeof(BL_USBD_INFO_T));
+            memset((void *)&s_USBDInfo, 0x0, sizeof(BL_USBD_INFO_T));
             
             u32ISPmode = USB_UART_MODE;
         }
@@ -306,7 +313,7 @@ int main(void)
         g_ISPInfo.u32CmdMask = 0;
                 
         /* Initialize and start USBD and UART1 SecureISP function */
-        ret = BL_SecureISPInit(&g_ISPInfo, &g_USBDInfo, (E_ISP_MODE)u32ISPmode);  
+        ret = BL_SecureISPInit(&g_ISPInfo, &s_USBDInfo, (E_ISP_MODE)u32ISPmode);  
         if(ret == 0x8000) // 0x8000 is Re-sync command
             continue;
                 

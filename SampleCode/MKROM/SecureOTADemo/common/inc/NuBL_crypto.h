@@ -33,6 +33,8 @@ typedef enum
     SHA_SRC_FLASH,
 } E_SHA_SRC;
 
+/* For ECC NIST: Curve P-256. Declared in NuBL2_main.c */
+extern const uint32_t g_au32Eorder[];
 
 /* Function declaration */
 /**

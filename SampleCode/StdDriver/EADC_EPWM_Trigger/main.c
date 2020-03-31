@@ -12,13 +12,17 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32AdcIntFlag, g_u32COVNUMFlag = 0;
+static volatile uint32_t s_u32AdcIntFlag, s_u32COVNUMFlag = 0;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
 void EADC_FunctionTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void EPWM0_Init(void);
+void EADC0_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -137,7 +141,7 @@ void EPWM0_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
-    uint8_t  u8Option;
+    int32_t  i32Option;
     int32_t  ai32ConversionData[6] = {0};
     uint32_t u32COVNUMFlag = 0;
     uint8_t u8Index = 0;
@@ -155,8 +159,8 @@ void EADC_FunctionTest()
         printf("  [1] Single end input (channel 2 only)\n");
         printf("  [2] Differential input (channel pair 1 only)\n");
         printf("  Other keys: exit single mode test\n");
-        u8Option = getchar();
-        if(u8Option == '1')
+        i32Option = getchar();
+        if(i32Option == '1')
         {
             /* Set input mode as single-end and enable the A/D converter */
             EADC_Open(EADC, EADC_CTL_DIFFEN_SINGLE_END);
@@ -175,23 +179,23 @@ void EADC_FunctionTest()
             printf("Conversion result of channel 2:\n");
 
             /* Reset the EADC indicator and enable EPWM0 channel 0 counter */
-            g_u32AdcIntFlag = 0;
-            g_u32COVNUMFlag = 0;
+            s_u32AdcIntFlag = 0;
+            s_u32COVNUMFlag = 0;
             EPWM_Start(EPWM0, BIT0); //EPWM0 channel 0 counter start running.
 
             while(1)
             {
-                /* Wait ADC interrupt (g_u32AdcIntFlag will be set at IRQ_Handler function) */
-                while(g_u32AdcIntFlag == 0);
+                /* Wait ADC interrupt (s_u32AdcIntFlag will be set at IRQ_Handler function) */
+                while(s_u32AdcIntFlag == 0);
 
                 /* Reset the ADC interrupt indicator */
-                g_u32AdcIntFlag = 0;
+                s_u32AdcIntFlag = 0;
 
                 /* Get the conversion result of the sample module 0 */
-                u32COVNUMFlag = g_u32COVNUMFlag - 1;
+                u32COVNUMFlag = s_u32COVNUMFlag - 1;
                 ai32ConversionData[u32COVNUMFlag] = EADC_GET_CONV_DATA(EADC, 0);
 
-                if(g_u32COVNUMFlag > 6)
+                if(s_u32COVNUMFlag > 6)
                     break;
             }
 
@@ -205,7 +209,7 @@ void EADC_FunctionTest()
                 printf("                                0x%X (%d)\n", ai32ConversionData[u8Index], ai32ConversionData[u8Index]);
 
         }
-        else if(u8Option == '2')
+        else if(i32Option == '2')
         {
 
             /* Set input mode as differential and enable the A/D converter */
@@ -225,24 +229,24 @@ void EADC_FunctionTest()
             printf("Conversion result of channel 2:\n");
 
             /* Reset the EADC indicator and enable EPWM0 channel 0 counter */
-            g_u32AdcIntFlag = 0;
-            g_u32COVNUMFlag = 0;
+            s_u32AdcIntFlag = 0;
+            s_u32COVNUMFlag = 0;
             /* EPWM0 channel 0 counter start running. */
             EPWM_Start(EPWM0, BIT0);
 
             while(1)
             {
-                /* Wait ADC interrupt (g_u32AdcIntFlag will be set at IRQ_Handler function) */
-                while(g_u32AdcIntFlag == 0);
+                /* Wait ADC interrupt (s_u32AdcIntFlag will be set at IRQ_Handler function) */
+                while(s_u32AdcIntFlag == 0);
 
                 /* Reset the ADC interrupt indicator */
-                g_u32AdcIntFlag = 0;
+                s_u32AdcIntFlag = 0;
 
-                u32COVNUMFlag = g_u32COVNUMFlag - 1;
+                u32COVNUMFlag = s_u32COVNUMFlag - 1;
                 /* Get the conversion result of the sample module 0   */
                 ai32ConversionData[u32COVNUMFlag - 1] = EADC_GET_CONV_DATA(EADC, 0);
 
-                if(g_u32COVNUMFlag > 6)
+                if(s_u32COVNUMFlag > 6)
                     break;
             }
 
@@ -250,7 +254,7 @@ void EADC_FunctionTest()
             EPWM_ForceStop(EPWM0, BIT0); //EPWM0 counter stop running.
 
             /* Disable sample module 0 interrupt */
-            EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, 0x1);
+            EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, 0x1ul);
 
             for(u8Index = 0; (u8Index) < 6; u8Index++)
                 printf("                                0x%X (%d)\n", ai32ConversionData[u8Index], ai32ConversionData[u8Index]);
@@ -270,8 +274,8 @@ void EADC_FunctionTest()
 void EADC0_IRQHandler(void)
 {
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF0_Msk);      /* Clear the A/D ADINT0 interrupt flag */
-    g_u32AdcIntFlag = 1;
-    g_u32COVNUMFlag++;
+    s_u32AdcIntFlag = 1;
+    s_u32COVNUMFlag++;
 }
 
 /*---------------------------------------------------------------------------------------------------------*/

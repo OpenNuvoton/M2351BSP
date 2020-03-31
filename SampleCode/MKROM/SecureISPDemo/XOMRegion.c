@@ -19,6 +19,8 @@
 #pragma default_function_attributes = __root
 #endif
 
+int32_t XOM_CalIDsECDSA(char *pOutR, char *pOutS);
+
 static uint8_t Byte2Char(uint8_t c)
 {
     if(c < 10)
@@ -74,7 +76,7 @@ static void SetMessage(char *m)
 int32_t XOM_CalIDsECDSA(char *pOutR, char *pOutS)
 {
     char    d[70], k[70], m[70];
-    int32_t i, j, i32NBits;
+    uint32_t i, j, u32NBits;
     BL_RNG_T rng;
     uint8_t au8r[32]; // (ECC_KEY_SIZE/8)
     
@@ -86,7 +88,7 @@ int32_t XOM_CalIDsECDSA(char *pOutR, char *pOutS)
 
     ECC_ENABLE_INT(CRPT);
     
-    i32NBits = 256; //ECC_KEY_SIZE;
+    u32NBits = 256; //ECC_KEY_SIZE;
 
     /* Initial TRNG */
     BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
@@ -94,9 +96,9 @@ int32_t XOM_CalIDsECDSA(char *pOutR, char *pOutS)
     do
     {
         /* Generate random number for private key */
-        BL_Random(&rng, au8r, i32NBits / 8);
+        BL_Random(&rng, au8r, u32NBits / 8);
 
-        for(i = 0, j = 0; i < i32NBits / 8; i++)
+        for(i = 0, j = 0; i < u32NBits / 8; i++)
         {
             k[j++] = Byte2Char(au8r[i] & 0xf);
             k[j++] = Byte2Char(au8r[i] >> 4);

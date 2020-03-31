@@ -14,6 +14,10 @@
 /*---------------------------------------------------------------------------------------------------------*/
 extern void SRAM_BS616LV4017(uint32_t u32MaxSize);
 void AccessEBIWithPDMA(void);
+void Configure_EBI_16BIT_Pins(void);
+void SYS_Init(void);
+void UART_Init(void);
+void PDMA0_IRQHandler(void);
 
 void Configure_EBI_16BIT_Pins(void)
 {
@@ -170,9 +174,9 @@ int main(void)
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables for PDMA                                                                               */
 /*---------------------------------------------------------------------------------------------------------*/
-uint32_t g_u32TransLen = 64;
-volatile uint32_t g_au32SrcArray[64];
-volatile uint32_t g_u32IsTestOver = 0;
+static uint32_t s_u32TransLen = 64;
+static volatile uint32_t s_au32SrcArray[64];
+static volatile uint32_t s_u32IsTestOver = 0;
 
 /**
  * @brief       DMA IRQ
@@ -190,13 +194,13 @@ void PDMA0_IRQHandler(void)
     if(u32Status & PDMA_INTSTS_ABTIF_Msk)        /* abort */
     {
         if(PDMA_GET_ABORT_STS(PDMA0) & PDMA_ABTSTS_ABTIF2_Msk)
-            g_u32IsTestOver = 2;
+            s_u32IsTestOver = 2;
         PDMA_CLR_ABORT_FLAG(PDMA0, PDMA_ABTSTS_ABTIF2_Msk);
     }
     else if(u32Status & PDMA_INTSTS_TDIF_Msk)   /* done */
     {
         if(PDMA_GET_TD_STS(PDMA0) & PDMA_TDSTS_TDIF2_Msk)
-            g_u32IsTestOver = 1;
+            s_u32IsTestOver = 1;
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
     }
     else
@@ -218,8 +222,8 @@ void AccessEBIWithPDMA(void)
 
     for(i = 0; i < 64; i++)
     {
-        g_au32SrcArray[i] = 0x76570000 + i;
-        u32Result0 += g_au32SrcArray[i];
+        s_au32SrcArray[i] = 0x76570000 + i;
+        u32Result0 += s_au32SrcArray[i];
     }
 
     /* Open Channel 2 */
@@ -229,39 +233,39 @@ void AccessEBIWithPDMA(void)
     PDMA_SetBurstType(PDMA0, 2, PDMA_REQ_BURST, PDMA_BURST_4);
 
     /* transfer width is one word(32 bit) */
-    PDMA_SetTransferCnt(PDMA0, 2, PDMA_WIDTH_32, g_u32TransLen);
-    PDMA_SetTransferAddr(PDMA0, 2, (uint32_t)g_au32SrcArray, PDMA_SAR_INC, EBI_BANK0_BASE_ADDR, PDMA_DAR_INC);
+    PDMA_SetTransferCnt(PDMA0, 2, PDMA_WIDTH_32, s_u32TransLen);
+    PDMA_SetTransferAddr(PDMA0, 2, (uint32_t)s_au32SrcArray, PDMA_SAR_INC, EBI_BANK0_BASE_ADDR, PDMA_DAR_INC);
     PDMA_SetTransferMode(PDMA0, 2, PDMA_MEM, FALSE, 0);
 
     PDMA_EnableInt(PDMA0, 2, PDMA_INT_TRANS_DONE);
     NVIC_EnableIRQ(PDMA0_IRQn);
 
-    g_u32IsTestOver = 0;
+    s_u32IsTestOver = 0;
     PDMA_Trigger(PDMA0, 2);
-    while(g_u32IsTestOver == 0) {}
+    while(s_u32IsTestOver == 0) {}
     /* Transfer internal SRAM to EBI SRAM done */
 
     /* Clear internal SRAM data */
     for(i = 0; i < 64; i++)
     {
-        g_au32SrcArray[i] = 0x0;
+        s_au32SrcArray[i] = 0x0;
     }
 
     /* transfer width is one word(32 bit) */
-    PDMA_SetTransferCnt(PDMA0, 2, PDMA_WIDTH_32, g_u32TransLen);
-    PDMA_SetTransferAddr(PDMA0, 2, EBI_BANK0_BASE_ADDR, PDMA_SAR_INC, (uint32_t)g_au32SrcArray, PDMA_DAR_INC);
+    PDMA_SetTransferCnt(PDMA0, 2, PDMA_WIDTH_32, s_u32TransLen);
+    PDMA_SetTransferAddr(PDMA0, 2, EBI_BANK0_BASE_ADDR, PDMA_SAR_INC, (uint32_t)s_au32SrcArray, PDMA_DAR_INC);
     PDMA_SetTransferMode(PDMA0, 2, PDMA_MEM, FALSE, 0);
 
-    g_u32IsTestOver = 0;
+    s_u32IsTestOver = 0;
     PDMA_Trigger(PDMA0, 2);
-    while(g_u32IsTestOver == 0) {}
+    while(s_u32IsTestOver == 0) {}
     /* Transfer EBI SRAM to internal SRAM done */
     for(i = 0; i < 64; i++)
     {
-        u32Result1 += g_au32SrcArray[i];
+        u32Result1 += s_au32SrcArray[i];
     }
 
-    if(g_u32IsTestOver == 1)
+    if(s_u32IsTestOver == 1)
     {
         if((u32Result0 == u32Result1) && (u32Result0 != 0x5A5A))
         {

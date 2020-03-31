@@ -22,6 +22,9 @@
 
 
 uint32_t CalNewDutyCMR(EPWM_T *epwm, uint32_t u32ChannelNum, uint32_t u32DutyCycle, uint32_t u32CycleResolution);
+void EPWM0_P0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       EPWM0 IRQ Handler
@@ -141,7 +144,7 @@ uint32_t CalNewDutyCMR(EPWM_T *epwm, uint32_t u32ChannelNum, uint32_t u32DutyCyc
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint8_t  u8Option;
+    int32_t  i32Option;
     uint32_t u32NewDutyCycle = 0, u32NewCMR = 0;
 
     /* Init System, IP clock and multi-function I/O
@@ -189,21 +192,21 @@ int32_t main(void)
         printf("[3] 25%% \n");
         printf("[4] 0%% \n");
         printf("[Other] Exit \n");
-        u8Option = getchar();
+        i32Option = getchar();
 
-        if(u8Option == '1')
+        if(i32Option == '1')
         {
             u32NewDutyCycle = 100;
         }
-        else if(u8Option == '2')
+        else if(i32Option == '2')
         {
             u32NewDutyCycle = 75;
         }
-        else if(u8Option == '3')
+        else if(i32Option == '3')
         {
             u32NewDutyCycle = 25;
         }
-        else if(u8Option == '4')
+        else if(i32Option == '4')
         {
             u32NewDutyCycle = 0;
         }

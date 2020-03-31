@@ -48,17 +48,26 @@ typedef void (PFN_DRVUART_CALLBACK)(void);
 static volatile int  g_i8DbState = DB_STATE_DONE;    /* dual bank background program state       */
 static volatile uint32_t  g_u32DbLength;             /* dual bank program remaining length       */
 static volatile uint32_t  g_u32DbAddr;               /* dual bank program current flash address  */
-volatile uint32_t  g_u32TickCnt;                     /* timer ticks - 100 ticks per second       */
-uint32_t g_u32TmpData, g_u32TmpCnt;
-volatile uint32_t g_u32TxIndex, g_u32RxIndex;
+static volatile uint32_t  s_u32TickCnt;                     /* timer ticks - 100 ticks per second       */
+static uint32_t s_u32TmpData, s_u32TmpCnt;
+static volatile uint32_t s_u32RxIndex;
 
-uint8_t u8RxData[TXBUFSIZE];
+static uint8_t s_au8RxData[TXBUFSIZE];
 static PFN_DRVUART_CALLBACK *g_pfnUART1callback = NULL;
-
+void RecevieAndSendBack_Callback(void);
+void RecevieAndSendBack(UART_T * tUART);
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global Functions                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 void UART_Init(UART_T* uart, uint32_t u32ClkSrc, uint32_t u32ClkDiv, uint32_t u32BaudRate);
+void UART1_IRQHandler(void);
+void SysTick_Handler(void);
+void enable_sys_tick(int i8TicksPerSecond);
+void WDT_IRQHandler(void);
+void SYS_Init(void);
+uint32_t  SelfTest(void);
+void start_timer0(void);
+uint32_t  get_timer0_counter(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /* Interrupt Handler                                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -73,7 +82,7 @@ void UART1_IRQHandler(void)
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;                                 /* increase timer tick                      */
+    s_u32TickCnt++;                                 /* increase timer tick                      */
 
     if(g_i8DbState == DB_STATE_DONE)                /* Background program is in idle state      */
     {
@@ -122,17 +131,17 @@ void SysTick_Handler(void)
                 printf("\nErase Done g_u32DbAddr[0x%8x]\n", g_u32DbAddr);
                 g_u32DbAddr = BANK1_FW_BASE;
                 g_i8DbState = DB_STATE_PROGRAM;         /* Next state is to program flash           */
-                g_u32TmpCnt = 0;
+                s_u32TmpCnt = 0;
             }
             break;
 
         case DB_STATE_PROGRAM:
-            g_u32TmpCnt =  BANK1_FW_SIZE - g_u32DbLength;
-            g_u32TmpData = u8RxData[g_u32TmpCnt] | (u8RxData[g_u32TmpCnt + 1] << 8) | (u8RxData[g_u32TmpCnt + 2] << 16) | (u8RxData[g_u32TmpCnt + 3] << 24);
+            s_u32TmpCnt =  BANK1_FW_SIZE - g_u32DbLength;
+            s_u32TmpData = (uint32_t)(s_au8RxData[s_u32TmpCnt] | (s_au8RxData[s_u32TmpCnt + 1] << 8) | (s_au8RxData[s_u32TmpCnt + 2] << 16) | (s_au8RxData[s_u32TmpCnt + 3] << 24));
 
             FMC->ISPCMD  = FMC_ISPCMD_PROGRAM;    /* ISP word program command                 */
             FMC->ISPADDR = g_u32DbAddr;               /* word program address                     */
-            FMC->ISPDAT  = g_u32TmpData;               /* 32-bits data to be programmed            */
+            FMC->ISPDAT  = s_u32TmpData;               /* 32-bits data to be programmed            */
             FMC->ISPTRG  = FMC_ISPTRG_ISPGO_Msk;  /* trigger ISP program and no wait          */
 
             g_u32DbAddr += 4;                          /* advance to next word                    */
@@ -155,9 +164,9 @@ void SysTick_Handler(void)
 
 void enable_sys_tick(int i8TicksPerSecond)
 {
-    g_u32TickCnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = PLL_CLOCK;         /* HCLK is 64 MHz */
-    if(SysTick_Config(SystemCoreClock / i8TicksPerSecond))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)i8TicksPerSecond))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -264,7 +273,7 @@ void SYS_Init(void)
 
 uint32_t  SelfTest(void)
 {
-    uint32_t  i,  sum;
+    uint32_t  i,  sum = 0;
     for(i = 0; i < 1; i++)
     {
         sum = func_crc32(BANK0_FW_BASE, BANK0_FW_SIZE);
@@ -295,7 +304,7 @@ uint32_t  get_timer0_counter()
 void RecevieAndSendBack_Callback()
 {
     PA4 ^= 1;
-    UART_Read(UART1, &u8RxData[g_u32RxIndex++], 1);
+    UART_Read(UART1, &s_au8RxData[s_u32RxIndex++], 1);
 }
 
 /*===== for Tx and Rx data =====*/
@@ -330,15 +339,15 @@ void RecevieAndSendBack(UART_T * tUART)
     UART_EnableInt(UART1, UART_INTSTS_RDAIF_Msk);
     g_pfnUART1callback = (PFN_DRVUART_CALLBACK*)RecevieAndSendBack_Callback;
     /* Prepare Rx data */
-    for(g_u32RxIndex = 0; g_u32RxIndex < TXBUFSIZE; g_u32RxIndex++)
+    for(s_u32RxIndex = 0; s_u32RxIndex < TXBUFSIZE; s_u32RxIndex++)
     {
-        u8RxData[g_u32RxIndex] = 0xFF;
+        s_au8RxData[s_u32RxIndex] = 0xFF;
     }
 
-    g_u32RxIndex = 0;
+    s_u32RxIndex = 0;
     printf("Set BaudRate=%d, Wait Receive %dK data\n", u32TestBR, TXBUFSIZE >> 10);
-    while(g_u32RxIndex < TXBUFSIZE); /* Wait Receive enough char */
-    printf("total [%d] bytes \n", g_u32RxIndex);
+    while(s_u32RxIndex < TXBUFSIZE); /* Wait Receive enough char */
+    printf("total [%d] bytes \n", s_u32RxIndex);
 
     /* Disable Rx ready interrupt */
     UART_DisableInt(UART1, UART_INTSTS_RDAIF_Msk);
@@ -356,8 +365,9 @@ int32_t main(void)
 
     uint32_t u32Loop;                  /* loop counter                                   */
 
+    uint32_t u32i,  u32RoBase = 0x0, u32Sum = 0;
+    int32_t i32ch;
 
-    uint32_t u32ch, u32i,  u32RoBase = 0x0, u32Sum = 0;
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -419,8 +429,8 @@ int32_t main(void)
     while(1)
     {
         printf("\nDownload new FW?[y/n]\n");
-        u32ch = getchar();
-        if(u32ch == 'y')
+        i32ch = getchar();
+        if(i32ch == 'y')
         {
 
             RecevieAndSendBack(UART1);

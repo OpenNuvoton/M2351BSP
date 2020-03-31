@@ -17,6 +17,92 @@
 #define I2S             I2S0
 
 void NAU88L25_Setup(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void I2C_Init(void);
+void Codec_Delay(uint32_t delayCnt);
+uint8_t I2cWrite_MultiByteforNAU88L25(uint8_t chipadd, uint16_t subaddr, const uint8_t *p, uint32_t len);
+uint8_t I2C_WriteNAU88L25(uint16_t addr, uint16_t dat);
+void I2S0_IRQHandler(void);
+
+#if (OPTION == 0)
+
+static __attribute__((aligned(32))) int16_t s_ai16sin[96] =
+{
+    0, 0, -134, -134, -266, -266, -393, -393, -513, -513, -625, -625, -726, -726, -814, -814, -889, -889, -948, -948, -991, -991, -1018, -1018, -1026, -1026, -1018, -1018, -991, -991, -948, -948, -889, -889, -814, -814, -726, -726, -625, -625, -513, -513, -393, -393, -266, -266, -134, -134, 0, 0, 134, 134, 266, 266, 393, 393, 513, 513, 625, 625, 726, 726, 814, 814, 889, 889, 948, 948, 991, 991, 1018, 1018, 1026, 1026, 1018, 1018, 991, 991, 948, 948, 889, 889, 814, 814, 726, 726, 625, 625, 513, 513, 393, 393, 266, 266, 134, 134
+};
+
+static uint32_t *g_pu32sin = (uint32_t *)(uint32_t)&s_ai16sin[0];
+static uint32_t *g_pu32sin;
+static int32_t g_i32Idx = 0;
+
+void I2S0_IRQHandler(void)
+{
+    uint32_t u32I2SIntFlag;
+
+    u32I2SIntFlag = I2S->STATUS0;//  I2S_GET_INT_FLAG(I2S, I2S_STATUS_I2STXINT_Msk | I2S_STATUS_I2SRXINT_Msk);
+    if(u32I2SIntFlag & I2S_STATUS0_TXTHIF_Msk)
+    {
+        /* Force to play sin wave */
+        /* Fill 4 word data when it is TX threshold interrupt */
+        /* Play to I2S */
+        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
+        if(g_i32Idx >= 48) g_i32Idx = 0;
+        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
+        if(g_i32Idx >= 48) g_i32Idx = 0;
+        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
+        if(g_i32Idx >= 48) g_i32Idx = 0;
+        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
+        if(g_i32Idx >= 48) g_i32Idx = 0;
+
+    }
+
+    if(u32I2SIntFlag & I2S_STATUS0_RXTHIF_Msk)
+    {
+        I2S_READ_RX_FIFO(I2S);
+        I2S_READ_RX_FIFO(I2S);
+        I2S_READ_RX_FIFO(I2S);
+        I2S_READ_RX_FIFO(I2S);
+    }
+
+
+}
+
+
+#else
+
+static volatile uint32_t s_au32Tmp[8] = {0};
+void I2S0_IRQHandler(void)
+{
+    uint32_t u32I2SIntFlag;
+
+
+    u32I2SIntFlag = I2S->STATUS0;//  I2S_GET_INT_FLAG(I2S, I2S_STATUS_I2STXINT_Msk | I2S_STATUS_I2SRXINT_Msk);
+    if(u32I2SIntFlag & I2S_STATUS0_TXTHIF_Msk)
+    {
+        /* Force to play sin wave */
+        /* Fill 4 word data when it is TX threshold interrupt */
+        /* Play to I2S */
+        I2S_WRITE_TX_FIFO(I2S, s_au32Tmp[0]);
+        I2S_WRITE_TX_FIFO(I2S, s_au32Tmp[1]);
+        I2S_WRITE_TX_FIFO(I2S, s_au32Tmp[2]);
+        I2S_WRITE_TX_FIFO(I2S, s_au32Tmp[3]);
+
+    }
+
+    if(u32I2SIntFlag & I2S_STATUS0_RXTHIF_Msk)
+    {
+        s_au32Tmp[0] = I2S_READ_RX_FIFO(I2S);
+        s_au32Tmp[1] = I2S_READ_RX_FIFO(I2S);
+        s_au32Tmp[2] = I2S_READ_RX_FIFO(I2S);
+        s_au32Tmp[3] = I2S_READ_RX_FIFO(I2S);
+
+    }
+
+
+}
+
+#endif
 
 void SYS_Init(void)
 {
@@ -96,15 +182,14 @@ void I2C_Init(void)
 }
 
 
-
-
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+#if OPTION == 0
     int32_t i;
-
+#endif
     /* Unlock Protected Regsiter */
     SYS_UnlockReg();
 
@@ -161,6 +246,8 @@ void Codec_Delay(uint32_t delayCnt)
 }
 uint8_t I2cWrite_MultiByteforNAU88L25(uint8_t chipadd, uint16_t subaddr, const uint8_t *p, uint32_t len)
 {
+    (void)chipadd;
+    (void)len;
     /* Send START */
     I2C_START(I2C_PORT);
     I2C_WAIT_READY(I2C_PORT);
@@ -299,85 +386,6 @@ void NAU88L25_Setup(void)
     I2C_WriteNAU88L25(0x0034,  0x02CF);
 
 }
-
-#if (OPTION == 0)
-
-__attribute__((aligned(32))) int16_t g_i16sin[96] =
-{
-    0, 0, -134, -134, -266, -266, -393, -393, -513, -513, -625, -625, -726, -726, -814, -814, -889, -889, -948, -948, -991, -991, -1018, -1018, -1026, -1026, -1018, -1018, -991, -991, -948, -948, -889, -889, -814, -814, -726, -726, -625, -625, -513, -513, -393, -393, -266, -266, -134, -134, 0, 0, 134, 134, 266, 266, 393, 393, 513, 513, 625, 625, 726, 726, 814, 814, 889, 889, 948, 948, 991, 991, 1018, 1018, 1026, 1026, 1018, 1018, 991, 991, 948, 948, 889, 889, 814, 814, 726, 726, 625, 625, 513, 513, 393, 393, 266, 266, 134, 134
-};
-
-uint32_t *g_pu32sin = (uint32_t *)&g_i16sin[0];
-int32_t g_i32Idx = 0;
-
-void I2S0_IRQHandler(void)
-{
-    uint32_t u32I2SIntFlag;
-
-    u32I2SIntFlag = I2S->STATUS0;//  I2S_GET_INT_FLAG(I2S, I2S_STATUS_I2STXINT_Msk | I2S_STATUS_I2SRXINT_Msk);
-    if(u32I2SIntFlag & I2S_STATUS0_TXTHIF_Msk)
-    {
-        /* Force to play sin wave */
-        /* Fill 4 word data when it is TX threshold interrupt */
-        /* Play to I2S */
-        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
-        if(g_i32Idx >= 48) g_i32Idx = 0;
-        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
-        if(g_i32Idx >= 48) g_i32Idx = 0;
-        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
-        if(g_i32Idx >= 48) g_i32Idx = 0;
-        I2S_WRITE_TX_FIFO(I2S, g_pu32sin[g_i32Idx++]);
-        if(g_i32Idx >= 48) g_i32Idx = 0;
-
-    }
-
-    if(u32I2SIntFlag & I2S_STATUS0_RXTHIF_Msk)
-    {
-        I2S_READ_RX_FIFO(I2S);
-        I2S_READ_RX_FIFO(I2S);
-        I2S_READ_RX_FIFO(I2S);
-        I2S_READ_RX_FIFO(I2S);
-    }
-
-
-}
-
-
-#else
-
-volatile uint32_t g_u32Tmp[8] = {0};
-void I2S0_IRQHandler(void)
-{
-    uint32_t u32I2SIntFlag;
-
-
-    u32I2SIntFlag = I2S->STATUS0;//  I2S_GET_INT_FLAG(I2S, I2S_STATUS_I2STXINT_Msk | I2S_STATUS_I2SRXINT_Msk);
-    if(u32I2SIntFlag & I2S_STATUS0_TXTHIF_Msk)
-    {
-        /* Force to play sin wave */
-        /* Fill 4 word data when it is TX threshold interrupt */
-        /* Play to I2S */
-        I2S_WRITE_TX_FIFO(I2S, g_u32Tmp[0]);
-        I2S_WRITE_TX_FIFO(I2S, g_u32Tmp[1]);
-        I2S_WRITE_TX_FIFO(I2S, g_u32Tmp[2]);
-        I2S_WRITE_TX_FIFO(I2S, g_u32Tmp[3]);
-
-    }
-
-    if(u32I2SIntFlag & I2S_STATUS0_RXTHIF_Msk)
-    {
-        g_u32Tmp[0] = I2S_READ_RX_FIFO(I2S);
-        g_u32Tmp[1] = I2S_READ_RX_FIFO(I2S);
-        g_u32Tmp[2] = I2S_READ_RX_FIFO(I2S);
-        g_u32Tmp[3] = I2S_READ_RX_FIFO(I2S);
-
-    }
-
-
-}
-
-#endif
-
 
 /*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/
 

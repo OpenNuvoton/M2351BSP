@@ -17,8 +17,13 @@
 #define FLASH_PT_SIZE  (0x1000)               /* Plaintext data size. Must be DMA_BUF_SIZE alignment. */
 #define DMA_BUF_SIZE   (128)                  /* buffer for AES DMA read */
 
-uint32_t au32FlashDataBuf[DMA_BUF_SIZE/4];  /*128 bytes*/
+static uint32_t s_au32FlashDataBuf[DMA_BUF_SIZE/4];  /*128 bytes*/
 
+
+void CRPT_IRQHandler(void);
+void DumpBuffHex(uint8_t *pucBuff, int nBytes);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
 
 /* 
    NOTE: 
@@ -26,26 +31,21 @@ uint32_t au32FlashDataBuf[DMA_BUF_SIZE/4];  /*128 bytes*/
          and so on.
 */
 // Key: 0x180ED20B8B95FC7A71D35CFD47A14F940036147DBD6DA72181FB82270283E45D
-uint32_t au32MyAESKey[8] =
+static uint32_t s_au32MyAESKey[8] =
 {
     0x180ED20B, 0x8B95FC7A, 0x71D35CFD, 0x47A14F94, 
     0x0036147D, 0xBD6DA721, 0x81FB8227, 0x0283E45D, 
 };
 
 // IV: 0x10000000300000000000000000000001
-uint32_t au32MyAESIV[4] =
+static uint32_t s_au32MyAESIV[4] =
 {
     0x10000000, 0x30000000, 0x00000000, 0x00000001
 };
 
-__ALIGNED(4) uint8_t au8InputData[] =
-{
-    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-    0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
 
-__ALIGNED(4) uint8_t au8OutputData[FLASH_PT_SIZE];
-__ALIGNED(4) uint8_t au8OutputData2[FLASH_PT_SIZE];
+static __ALIGNED(4) uint8_t s_au8OutputData[FLASH_PT_SIZE];
+static __ALIGNED(4) uint8_t s_au8OutputData2[FLASH_PT_SIZE];
 
 static volatile int32_t  g_AES_done;
 
@@ -166,19 +166,19 @@ int32_t main(void)
     u32KeySizeOpt = AES_KEY_SIZE_128;
     
     /* Encrypt data in flash block by block */
-    pu8OutBuf = au8OutputData;
+    pu8OutBuf = s_au8OutputData;
     for(u32FlashAddr = FLASH_PT_BASE; u32FlashAddr < (FLASH_PT_BASE+FLASH_PT_SIZE); u32FlashAddr+=DMA_BUF_SIZE )
     {
         /* Read the data to RAM buffer */
-        memcpy(au32FlashDataBuf, (void *)u32FlashAddr, DMA_BUF_SIZE);
+        memcpy(s_au32FlashDataBuf, (void *)u32FlashAddr, DMA_BUF_SIZE);
             
         /* Encrypt the data in RAM buffer */
         AES_Open(CRPT, 0, 1, u32AesMode, u32KeySizeOpt, AES_IN_OUT_SWAP);
-        AES_SetKey(CRPT, 0, au32MyAESKey, u32KeySizeOpt);
-        AES_SetInitVect(CRPT, 0, au32MyAESIV);
+        AES_SetKey(CRPT, 0, s_au32MyAESKey, u32KeySizeOpt);
+        AES_SetInitVect(CRPT, 0, s_au32MyAESIV);
         
         /* Encrypt data will store to another RAM buffer */
-        AES_SetDMATransfer(CRPT, 0, (uint32_t)au32FlashDataBuf, (uint32_t)pu8OutBuf, DMA_BUF_SIZE);
+        AES_SetDMATransfer(CRPT, 0, (uint32_t)s_au32FlashDataBuf, (uint32_t)pu8OutBuf, DMA_BUF_SIZE);
 
         g_AES_done = 0;
         /* Start AES Eecrypt */
@@ -209,9 +209,9 @@ int32_t main(void)
 
     /* Decrypt the data in RAM buffer to checking the decrypt result */
     AES_Open(CRPT, 0, 0, u32AesMode, u32KeySizeOpt, AES_IN_OUT_SWAP);
-    AES_SetKey(CRPT, 0, au32MyAESKey, u32KeySizeOpt);
-    AES_SetInitVect(CRPT, 0, au32MyAESIV);
-    AES_SetDMATransfer(CRPT, 0, (uint32_t)au8OutputData, (uint32_t)au8OutputData2, sizeof(au8OutputData2));
+    AES_SetKey(CRPT, 0, s_au32MyAESKey, u32KeySizeOpt);
+    AES_SetInitVect(CRPT, 0, s_au32MyAESIV);
+    AES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8OutputData, (uint32_t)s_au8OutputData2, sizeof(s_au8OutputData2));
 
     g_AES_done = 0;
     /* Start AES decrypt */
@@ -222,13 +222,13 @@ int32_t main(void)
     printf("AES decrypt done.\n");
     
     printf("Encrypt data:\n");
-    DumpBuffHex(au8OutputData, FLASH_PT_SIZE);
+    DumpBuffHex(s_au8OutputData, FLASH_PT_SIZE);
     
     printf("Decrypt data:\n");
-    DumpBuffHex(au8OutputData2, FLASH_PT_SIZE);
+    DumpBuffHex(s_au8OutputData2, FLASH_PT_SIZE);
     
     /* Compare with original data */
-    if(memcmp(au8OutputData2, (void *)FLASH_PT_BASE, FLASH_PT_SIZE) == 0)
+    if(memcmp(s_au8OutputData2, (void *)FLASH_PT_BASE, FLASH_PT_SIZE) == 0)
     {
         printf("AES Encrypt/Decrypt OK!\n");
     }

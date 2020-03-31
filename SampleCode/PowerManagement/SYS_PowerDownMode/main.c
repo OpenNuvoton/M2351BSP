@@ -17,8 +17,16 @@
 
 
 extern int IsDebugFifoEmpty(void);
-uint32_t g_u32PowerDownMode;
-volatile uint32_t g_u32RTCTickINT;
+static uint32_t s_u32PowerDownMode;
+static volatile uint32_t s_u32RTCTickINT;
+
+
+void RTC_IRQHandler(void);
+void RTC_Init(void);
+void PowerDownFunction(void);
+void CheckPowerSource(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       IRQ Handler for RTC Interrupt
@@ -38,7 +46,7 @@ void RTC_IRQHandler(void)
         RTC_CLEAR_TICK_INT_FLAG(RTC);
     }
 
-    g_u32RTCTickINT++;
+    s_u32RTCTickINT++;
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -99,7 +107,7 @@ void RTC_Init(void)
 void PowerDownFunction(void)
 {
     /* Select Power-down mode */
-    CLK_SetPowerDownMode(g_u32PowerDownMode);
+    CLK_SetPowerDownMode(s_u32PowerDownMode);
 
     /* To check if all the debug messages are finished */
     while(IsDebugFifoEmpty() == 0);
@@ -124,8 +132,8 @@ void CheckPowerSource(void)
     /* Check Power Manager Status is wake-up by RTC */
     if(u32Status & CLK_PMUSTS_RTCWK_Msk)
     {
-        g_u32PowerDownMode = M32(PDMD_FLAG_ADDR);
-        switch(g_u32PowerDownMode)
+        s_u32PowerDownMode = M32(PDMD_FLAG_ADDR);
+        switch(s_u32PowerDownMode)
         {
 
             case CLK_PMUCTL_PDMSEL_PD:
@@ -246,6 +254,7 @@ void UART0_Init()
 int32_t main(void)
 {
     S_RTC_TIME_DATA_T sReadRTC;
+    uint8_t u8NeedRst = 0;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -284,8 +293,8 @@ int32_t main(void)
     {
 
         /* Select Power-down mode */
-        g_u32PowerDownMode = M32(PDMD_FLAG_ADDR);
-        switch(g_u32PowerDownMode)
+        s_u32PowerDownMode = M32(PDMD_FLAG_ADDR);
+        switch(s_u32PowerDownMode)
         {
             case CLK_PMUCTL_PDMSEL_PD:
                 printf("\nSystem enter to PD power-down mode ... ");
@@ -308,16 +317,19 @@ int32_t main(void)
             default:
                 printf("\nInit sample code. Press Reset Button and continue.\n");
                 M32(PDMD_FLAG_ADDR) = 0;
-                while(1);
+                u8NeedRst = 1;
                 break;
         }
+        
+        if (u8NeedRst)
+            while(1){}
 
         /* Unlock protected registers before setting Power-down mode */
         SYS_UnlockReg();
 
         /* Enter to Power-down mode */
         PowerDownFunction();
-        while(g_u32RTCTickINT == 0);
+        while(s_u32RTCTickINT == 0);
         printf("Wake-up!\n");
 
         /* Read current RTC date/time after wake-up */
@@ -326,7 +338,7 @@ int32_t main(void)
                sReadRTC.u32Year, sReadRTC.u32Month, sReadRTC.u32Day, sReadRTC.u32Hour, sReadRTC.u32Minute, sReadRTC.u32Second);
 
         /* Select next Power-down mode */
-        switch(g_u32PowerDownMode)
+        switch(s_u32PowerDownMode)
         {
             case CLK_PMUCTL_PDMSEL_PD:
                 M32(PDMD_FLAG_ADDR) = CLK_PMUCTL_PDMSEL_LLPD;
@@ -343,10 +355,12 @@ int32_t main(void)
             default:
                 printf("\nPress Reset Button and continue.\n");
                 M32(PDMD_FLAG_ADDR) = 0;
-                while(1);
+                u8NeedRst = 1;
                 break;
         }
 
+        if (u8NeedRst)
+            while(1){}
     }
 
 

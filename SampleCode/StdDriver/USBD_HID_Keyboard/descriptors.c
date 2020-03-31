@@ -10,7 +10,7 @@
 #include "hid_kb.h"
 
 /*!<USB HID Report Descriptor */
-uint8_t HID_KeyboardReportDescriptor[] =
+static uint8_t s_au8HIDKeyboardReportDescriptor[] =
 {
     0x05, 0x01,         /* Usage Page(Generic Desktop Controls) */
     0x09, 0x06,         /* Usage(Keyboard) */
@@ -49,7 +49,7 @@ uint8_t HID_KeyboardReportDescriptor[] =
 
 /*----------------------------------------------------------------------------*/
 /*!<USB Device Descriptor */
-uint8_t gu8DeviceDescriptor[] =
+static uint8_t s_au8DeviceDescriptor[] =
 {
     LEN_DEVICE,     /* bLength */
     DESC_DEVICE,    /* bDescriptorType */
@@ -72,7 +72,7 @@ uint8_t gu8DeviceDescriptor[] =
 };
 
 /*!<USB Configure Descriptor */
-uint8_t gu8ConfigDescriptor[] =
+static uint8_t s_au8ConfigDescriptor[] =
 {
     LEN_CONFIG,     /* bLength */
     DESC_CONFIG,    /* bDescriptorType */
@@ -104,8 +104,8 @@ uint8_t gu8ConfigDescriptor[] =
     0x01,           /* Number of HID class descriptors to follow. */
     DESC_HID_RPT,   /* Descriptor type. */
     /* Total length of report descriptor. */
-    sizeof(HID_KeyboardReportDescriptor) & 0x00FF,
-    (sizeof(HID_KeyboardReportDescriptor) & 0xFF00) >> 8,
+    sizeof(s_au8HIDKeyboardReportDescriptor) & 0x00FF,
+    (sizeof(s_au8HIDKeyboardReportDescriptor) & 0xFF00) >> 8,
 
     /* EP Descriptor: interrupt in. */
     LEN_ENDPOINT,   /* bLength */
@@ -119,7 +119,7 @@ uint8_t gu8ConfigDescriptor[] =
 };
 
 /*!<USB Language String Descriptor */
-uint8_t gu8StringLang[4] =
+static uint8_t s_au8StringLang[4] =
 {
     4,              /* bLength */
     DESC_STRING,    /* bDescriptorType */
@@ -127,7 +127,7 @@ uint8_t gu8StringLang[4] =
 };
 
 /*!<USB Vendor String Descriptor */
-uint8_t gu8VendorStringDesc[] =
+static uint8_t s_au8VendorStringDesc[] =
 {
     16,
     DESC_STRING,
@@ -135,7 +135,7 @@ uint8_t gu8VendorStringDesc[] =
 };
 
 /*!<USB Product String Descriptor */
-uint8_t gu8ProductStringDesc[] =
+static uint8_t s_au8ProductStringDesc[] =
 {
     26,
     DESC_STRING,
@@ -143,7 +143,7 @@ uint8_t gu8ProductStringDesc[] =
 };
 
 /*!<USB BOS Descriptor */
-uint8_t gu8BOSDescriptor[] =
+static uint8_t s_au8BOSDescriptor[] =
 {
     LEN_BOS,        /* bLength */
     DESC_BOS,       /* bDescriptorType */
@@ -159,29 +159,29 @@ uint8_t gu8BOSDescriptor[] =
     0x02, 0x00, 0x00, 0x00  /* bmAttributes */
 };
 
-uint8_t *gpu8UsbString[4] =
+static uint8_t *s_apu8UsbString[4] =
 {
-    gu8StringLang,
-    gu8VendorStringDesc,
-    gu8ProductStringDesc,
+    s_au8StringLang,
+    s_au8VendorStringDesc,
+    s_au8ProductStringDesc,
     NULL,
 };
 
-uint8_t *gu8UsbHidReport[3] =
+static uint8_t *s_apu8UsbHidReport[3] =
 {
-    HID_KeyboardReportDescriptor,
+    s_au8HIDKeyboardReportDescriptor,
     NULL,
     NULL,
 };
 
-uint32_t gu32UsbHidReportLen[3] =
+static uint32_t s_au32UsbHidReportLen[3] =
 {
-    sizeof(HID_KeyboardReportDescriptor),
+    sizeof(s_au8HIDKeyboardReportDescriptor),
     0,
     0,
 };
 
-uint32_t gu32ConfigHidDescIdx[3] =
+static uint32_t s_au32ConfigHidDescIdx[3] =
 {
     (LEN_CONFIG + LEN_INTERFACE),
     0,
@@ -190,12 +190,12 @@ uint32_t gu32ConfigHidDescIdx[3] =
 
 const S_USBD_INFO_T gsInfo =
 {
-    (uint8_t *)gu8DeviceDescriptor,
-    (uint8_t *)gu8ConfigDescriptor,
-    (uint8_t **)gpu8UsbString,
-    (uint8_t **)gu8UsbHidReport,
-    (uint8_t *)gu8BOSDescriptor,
-    (uint32_t *)gu32UsbHidReportLen,
-    (uint32_t *)gu32ConfigHidDescIdx
+    (uint8_t *)s_au8DeviceDescriptor,
+    (uint8_t *)s_au8ConfigDescriptor,
+    (uint8_t **)s_apu8UsbString,
+    (uint8_t **)s_apu8UsbHidReport,
+    (uint8_t *)s_au8BOSDescriptor,
+    (uint32_t *)s_au32UsbHidReportLen,
+    (uint32_t *)s_au32ConfigHidDescIdx
 };
 

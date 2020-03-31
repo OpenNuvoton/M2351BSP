@@ -19,6 +19,10 @@
 /*---------------------------------------------------------------------------------------------------------*/
 
 
+void SYS_Init(void);
+void UART0_Init(void);
+
+
 void SYS_Init(void)
 {
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */

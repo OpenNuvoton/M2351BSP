@@ -11,8 +11,8 @@
 #include "usbd_audio.h"
 
 /* DMA scatter-gather descriptor */
-DMA_DESC_T DMA_TXDESC[PDMA_TXBUFFER_CNT];
-DMA_DESC_T DMA_RXDESC[PDMA_RXBUFFER_CNT];
+static DMA_DESC_T DMA_TXDESC[PDMA_TXBUFFER_CNT];
+static DMA_DESC_T DMA_RXDESC[PDMA_RXBUFFER_CNT];
 
 extern uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN];
 extern uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN];
@@ -20,6 +20,7 @@ extern uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT];
 extern volatile uint8_t g_u8TxDataCntInBuffer;
 extern volatile uint8_t g_u8PDMATxIdx;
 extern volatile uint8_t g_u8PDMARxIdx;
+void PDMA0_IRQHandler(void);
 
 /* PDMA Interrupt handler */
 void PDMA0_IRQHandler(void)

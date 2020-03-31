@@ -13,7 +13,8 @@
 #include "config.h"
 
 static uint32_t g_au32PcmBuff[32] = {0};
-extern uint32_t volatile g_u32BuffPos;
+
+void I2S0_IRQHandler(void);
 
 void I2S0_IRQHandler(void)
 {

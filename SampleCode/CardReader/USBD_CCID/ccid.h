@@ -130,7 +130,7 @@ __INLINE static uint32_t make32(uint8_t *buf)
 
 __INLINE static uint16_t make16(uint8_t *buf)
 {
-    return ((uint16_t) buf[1] << 8) | ((uint16_t) buf[0]);
+    return (uint16_t)(((uint16_t) buf[1] << 8) | ((uint16_t) buf[0]));
 }
 /*-------------------------------------------------------------*/
 extern uint8_t UsbIntMessageBuffer[];

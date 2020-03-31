@@ -659,7 +659,7 @@ __STATIC_INLINE void USBD_ClearStall(uint8_t epnum)
   */
 __STATIC_INLINE uint32_t USBD_GetStall(uint8_t epnum)
 {
-    uint32_t u32CfgAddr = 0;
+    uint32_t u32CfgAddr = 0UL;
     uint32_t u32Cfg;
     uint32_t i;
 

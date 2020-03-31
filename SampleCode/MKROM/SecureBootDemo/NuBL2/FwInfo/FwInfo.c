@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "NuMicro.h"
-
+#include "NuBL2.h"
 
 const uint32_t g_InitialFWinfo[] =
 {

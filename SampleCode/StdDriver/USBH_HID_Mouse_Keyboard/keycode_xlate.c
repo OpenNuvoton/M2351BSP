@@ -69,6 +69,9 @@ static const uint8_t padKeys[] = { '/', '*', '-', '+', 0x13 };
 
 void kbd_ascii_input(uint8_t code);
 void kbd_function_input(uint8_t code);
+uint8_t  translate_keycode(KEYBOARD_EVENT_T *kbd, uint8_t key);
+void keycode_process(KEYBOARD_EVENT_T *kbd);
+
 
 /*
  *  Translate OEM key to ASCII code.

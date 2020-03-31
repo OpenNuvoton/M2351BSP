@@ -17,6 +17,11 @@
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 
+
+void BRAKE0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
+
 /**
  * @brief       EPWM0 Brake0 IRQ Handler
  *

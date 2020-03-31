@@ -9,22 +9,28 @@
 
 #define CRYPTO_DH_MAX_KEY_LEN 1024
 
-unsigned char buf[CRYPTO_DH_MAX_KEY_LEN];
+static unsigned char s_aucBuf[CRYPTO_DH_MAX_KEY_LEN];
 
 /* timer ticks - 100 ticks per second */
-volatile uint32_t  g_tick_cnt;
+static volatile uint32_t  s_u32TickCnt;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void start_timer0(void);
+uint32_t  get_timer0_counter(void);
+int ECDHTest(void);
 
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;
+    s_u32TickCnt++;
 }
 
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -60,7 +66,7 @@ static int myrand( void *rng_state, unsigned char *output, size_t len )
         rng_state  = NULL;
 
     for( i = 0; i < len; ++i )
-        output[i] = rand();
+        output[i] = (unsigned char)rand();
 #else
     if( rng_state != NULL )
         rng_state = NULL;
@@ -104,7 +110,7 @@ int ECDHTest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -117,7 +123,7 @@ int ECDHTest(void)
 
     /* Generates an EC key pair and exports its in the format used in a TLS ServerKeyExchange handshake message. */
     printf(" mbedtls ECDH make params  : ");
-    ret = mbedtls_ecdh_make_params(&ecdh, &size, buf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
+    ret = mbedtls_ecdh_make_params(&ecdh, &size, s_aucBuf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
 
     if(ret == 0)
     {
@@ -125,7 +131,7 @@ int ECDHTest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -138,7 +144,7 @@ int ECDHTest(void)
 
     /* Generate a public key and exports it as a TLS ClientKeyExchange payload. */
     printf(" mbedtls ECDH make public  : ");
-    ret = mbedtls_ecdh_make_public(&ecdh, &size, buf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
+    ret = mbedtls_ecdh_make_public(&ecdh, &size, s_aucBuf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
 
     if(ret == 0)
     {
@@ -146,7 +152,7 @@ int ECDHTest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -159,7 +165,7 @@ int ECDHTest(void)
 
     /* Parse and process the ECDHE payload of a TLS ClientKeyExchange message*/
     printf(" mbedtls ECDH read public  : ");
-    ret = mbedtls_ecdh_read_public(&ecdh, buf, size);
+    ret = mbedtls_ecdh_read_public(&ecdh, s_aucBuf, size);
 
     if(ret == 0)
     {
@@ -167,7 +173,7 @@ int ECDHTest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -181,7 +187,7 @@ int ECDHTest(void)
     /* Derives and exports the shared secret.                         */
     /* This is the last function used by both TLS client and servers. */
     printf(" mbedtls ECDH calc secret  : ");
-    ret = mbedtls_ecdh_calc_secret(&ecdh, &size, buf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
+    ret = mbedtls_ecdh_calc_secret(&ecdh, &size, s_aucBuf, CRYPTO_DH_MAX_KEY_LEN, myrand, NULL);
 
     if(ret == 0)
     {
@@ -189,7 +195,7 @@ int ECDHTest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {

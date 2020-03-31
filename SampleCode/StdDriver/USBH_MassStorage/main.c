@@ -22,53 +22,77 @@
 #define BUFF_SIZE       (4*1024)
 
 static UINT g_u8Len = BUFF_SIZE;
-DWORD acc_size;                         /* Work register for fs command */
-WORD acc_files, acc_dirs;
-FILINFO Finfo;
+static uint32_t s_u32AccSize;                         /* Work register for fs command */
+static uint16_t s_u16AccFiles, s_u16AccDirs;
+static FILINFO s_Finfo;
 
-char g_achLine[256];                         /* Console input buffer */
+static char s_achLine[256];                         /* Console input buffer */
 #if _USE_LFN
 char g_achLfname[512];
 #endif
 
 #ifdef __ICCARM__
 #pragma data_alignment=32
-BYTE g_u8BuffPool[BUFF_SIZE];       /* Working buffer */
-BYTE g_u8BuffPool2[BUFF_SIZE];      /* Working buffer 2 */
+BYTE s_au8BuffPool[BUFF_SIZE];       /* Working buffer */
+BYTE s_au8BuffPool2[BUFF_SIZE];      /* Working buffer 2 */
 #else
-BYTE g_u8BuffPool[BUFF_SIZE] __attribute__((aligned(32)));       /* Working buffer */
-BYTE g_u8BuffPool2[BUFF_SIZE] __attribute__((aligned(32)));      /* Working buffer 2 */
+static uint8_t s_au8BuffPool[BUFF_SIZE] __attribute__((aligned(32)));       /* Working buffer */
+static uint8_t s_au8BuffPool2[BUFF_SIZE] __attribute__((aligned(32)));      /* Working buffer 2 */
 #endif
 
-BYTE  *Buff;
-BYTE  *Buff2;
+static uint8_t  *s_pu8Buff;
+static uint8_t  *s_pu8Buff2;
 
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t  g_au8Buff1[BUFF_SIZE] ;       /* Working buffer */
-uint8_t  g_au8Buff2[BUFF_SIZE] ;       /* Working buffer */
+uint8_t  s_au8Buff1[BUFF_SIZE] ;       /* Working buffer */
+uint8_t  s_au8Buff2[BUFF_SIZE] ;       /* Working buffer */
 #else
-uint8_t  g_au8Buff1[BUFF_SIZE] __attribute__((aligned(4)));       /* Working buffer */
-uint8_t  g_au8Buff2[BUFF_SIZE] __attribute__((aligned(4)));       /* Working buffer */
+static uint8_t  s_au8Buff1[BUFF_SIZE] __attribute__((aligned(4)));       /* Working buffer */
+static uint8_t  s_au8Buff2[BUFF_SIZE] __attribute__((aligned(4)));       /* Working buffer */
 #endif
 
 
-volatile int  g_i8IntInCnt, g_i8IntOutCnt, g_i8IsoInCnt, g_i8IsoOutCnt;
+static volatile int32_t  s_i32IntInCnt, s_i32IntOutCnt, s_i32IsoInCnt, s_i32IsoOutCnt;
 
 
-volatile uint32_t  g_u32TickCnt;
-uint32_t           g_u32T0;
+static volatile uint32_t  s_u32TickCnt;
+static uint32_t  s_u32T0;
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void timer_init(void);
+uint32_t get_timer_value(void);
+void delay_us(uint32_t u32Usec);
+void  dump_buff_hex(uint8_t *pu8Buff, int i8Bytes);
+int xatoi(          /* 0:Failed, 1:Successful */
+    TCHAR **str,    /* Pointer to pointer to the string */
+    long *res       /* Pointer to a variable to store the value */
+);
+void put_dump(
+    const unsigned char* buff,  /* Pointer to the byte array to be dumped */
+    unsigned long addr,         /* Heading address value */
+    int cnt                     /* Number of bytes to be dumped */
+);
+void put_rc(FRESULT rc);
+void get_line(char *buff, int len);
+void int_xfer_read(uint8_t *pu8DataBuff, int *pu8DataLen);
+void int_xfer_write(uint8_t *pu8DataBuff, int *pu8DataLen);
+void iso_xfer_write(uint8_t *pu8DataBuff, int u8DataLen);
+void iso_xfer_read(uint8_t *pu8DataBuff, int u8DataLen);
+void SYS_Init(void);
+void UART0_Init(void);
+
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_u32TickCnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -78,23 +102,23 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_u32TickCnt;
+    return s_u32TickCnt;
 }
 
 void timer_init()
 {
-    g_u32T0 = get_ticks();
+    s_u32T0 = get_ticks();
 }
 
 uint32_t get_timer_value()
 {
-    return (get_ticks() - g_u32T0);
+    return (get_ticks() - s_u32T0);
 }
 
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32Usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -104,7 +128,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = 0x3;   /* write 1 to clear for safty */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32Usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);
@@ -156,7 +180,7 @@ int xatoi(          /* 0:Failed, 1:Successful */
     long *res       /* Pointer to a variable to store the value */
 )
 {
-    unsigned long val;
+    long val;
     unsigned char r, s = 0;
     TCHAR c;
 
@@ -252,24 +276,24 @@ FRESULT scan_files(
 {
     DIR dirs;
     FRESULT res;
-    BYTE i;
+    size_t i;
     char *fn;
 
 
     if((res = f_opendir(&dirs, path)) == FR_OK)
     {
         i = strlen(path);
-        while(((res = f_readdir(&dirs, &Finfo)) == FR_OK) && Finfo.fname[0])
+        while(((res = f_readdir(&dirs, &s_Finfo)) == FR_OK) && s_Finfo.fname[0])
         {
-            if(_FS_RPATH && Finfo.fname[0] == '.') continue;
+            if(_FS_RPATH && s_Finfo.fname[0] == '.') continue;
 #if _USE_LFN
-            fn = *Finfo.lfname ? Finfo.lfname : Finfo.fname;
+            fn = *s_Finfo.lfname ? s_Finfo.lfname : s_Finfo.fname;
 #else
-            fn = Finfo.fname;
+            fn = s_Finfo.fname;
 #endif
-            if(Finfo.fattrib & AM_DIR)
+            if(s_Finfo.fattrib & AM_DIR)
             {
-                acc_dirs++;
+                s_u16AccDirs++;
                 *(path + i) = '/';
                 strcpy(path + i + 1, fn);
                 res = scan_files(path);
@@ -279,8 +303,8 @@ FRESULT scan_files(
             else
             {
                 /*              printf("%s/%s\n", path, fn); */
-                acc_files++;
-                acc_size += Finfo.fsize;
+                s_u16AccFiles++;
+                s_u32AccSize += s_Finfo.fsize;
             }
         }
     }
@@ -312,7 +336,7 @@ void put_rc(FRESULT rc)
 
 void get_line(char *buff, int len)
 {
-    TCHAR c;
+    int c;
     int idx = 0;
 //  DWORD dw;
 
@@ -323,7 +347,7 @@ void get_line(char *buff, int len)
         putchar(c);
         if(c == '\r') break;
         if((c == '\b') && idx) idx--;
-        if((c >= ' ') && (idx < len - 1)) buff[idx++] = c;
+        if((c >= ' ') && (idx < len - 1)) buff[idx++] = (char)c;
     }
     buff[idx] = 0;
 
@@ -359,8 +383,9 @@ void int_xfer_read(uint8_t *pu8DataBuff, int *pu8DataLen)
 {
     //  Receive interrupt in transfer data. The data len is (*pu8DataLen).
     //  NOTICE: This callback function is in USB Host interrupt context!
-
-    g_i8IntInCnt++;
+    (void)pu8DataBuff;
+    (void)pu8DataLen;
+    s_i32IntInCnt++;
 }
 
 
@@ -371,9 +396,9 @@ void int_xfer_write(uint8_t *pu8DataBuff, int *pu8DataLen)
 {
     //  LBK request the interrupt out transfer data.
     //  NOTICE: This callback function is in USB Host interrupt context!
-    g_i8IntOutCnt++;
+    s_i32IntOutCnt++;
     *pu8DataLen = 8;
-    memset(pu8DataBuff, g_i8IntOutCnt & 0xff, 8);
+    memset(pu8DataBuff, s_i32IntOutCnt & 0xff, 8);
 }
 
 /*
@@ -383,8 +408,8 @@ void iso_xfer_write(uint8_t *pu8DataBuff, int u8DataLen)
 {
     //  Application feeds Isochronous-Out data here.
     //  NOTICE: This callback function is in USB Host interrupt context!
-    g_i8IsoOutCnt++;
-    memset(pu8DataBuff, g_i8IsoOutCnt & 0xff, u8DataLen);
+    s_i32IsoOutCnt++;
+    memset(pu8DataBuff, s_i32IsoOutCnt & 0xff, (size_t)u8DataLen);
 }
 
 /*
@@ -394,7 +419,9 @@ void iso_xfer_read(uint8_t *pu8DataBuff, int u8DataLen)
 {
     //  Application gets Isochronous-In data here.
     //  NOTICE: This callback function is in USB Host interrupt context!
-    g_i8IsoInCnt++;
+    (void)pu8DataBuff;
+    (void)u8DataLen;
+    s_i32IsoInCnt++;
 }
 
 void SYS_Init(void)
@@ -473,7 +500,7 @@ void UART0_Init(void)
 int32_t main(void)
 {
     char        *ptr, *ptr2;
-    long        p1, p2, p3;
+    long        p1, p2, p3, sect = 0;
     BYTE        *buf;
     FATFS       *fs;              /* Pointer to file system object */
     TCHAR       usb_path[] = { '3', ':', 0 };    /* USB drive started from 3 */
@@ -482,7 +509,7 @@ int32_t main(void)
     DIR dir;                /* Directory object */
     UINT s1, s2, cnt, sector_no;
     static const BYTE ft[] = {0, 12, 16, 32};
-    DWORD ofs = 0, sect = 0;
+    DWORD ofs = 0;
 
     SYS_Init();                        /* Init System, IP clock and multi-function I/O */
 
@@ -497,8 +524,8 @@ int32_t main(void)
     printf("|                                            |\n");
     printf("+--------------------------------------------+\n");
 
-    Buff = (BYTE *)((uint32_t)&g_u8BuffPool[0]);
-    Buff2 = (BYTE *)((uint32_t)&g_u8BuffPool2[0]);
+    s_pu8Buff = (BYTE *)((uint32_t)&s_au8BuffPool[0]);
+    s_pu8Buff2 = (BYTE *)((uint32_t)&s_au8BuffPool2[0]);
 
     usbh_core_init();
     usbh_umas_init();
@@ -506,7 +533,7 @@ int32_t main(void)
 
     printf("Init time: %d\n", get_ticks());
 
-    g_i8IntInCnt = g_i8IntOutCnt = g_i8IsoInCnt = g_i8IsoOutCnt = 0;
+    s_i32IntInCnt = s_i32IntOutCnt = s_i32IsoInCnt = s_i32IsoOutCnt = 0;
 
     f_chdrive(usb_path);               /* set default path                                */
 
@@ -517,9 +544,9 @@ int32_t main(void)
         usbh_memory_used();            /* print out UsbHostLib memory usage information   */
 
         printf(_T(">"));
-        ptr = g_achLine;
+        ptr = s_achLine;
 
-        get_line(ptr, sizeof(g_achLine));
+        get_line(ptr, sizeof(s_achLine));
 
         switch(*ptr++)
         {
@@ -531,14 +558,14 @@ int32_t main(void)
                 for(sector_no = 0; sector_no < 128000; sector_no++)
                 {
                     if(sector_no % 1000 == 0)
-                        printf("\nLBK transfer count: Ii:%d, Io: %d, Si:%d, So:%d\n", g_i8IntInCnt, g_i8IntOutCnt, g_i8IsoInCnt, g_i8IsoOutCnt);
+                        printf("\nLBK transfer count: Ii:%d, Io: %d, Si:%d, So:%d\n", s_i32IntInCnt, s_i32IntOutCnt, s_i32IsoInCnt, s_i32IsoOutCnt);
 
                     printf("Test sector %d\r", sector_no);
 
-                    memset(g_au8Buff1, 87, 512);
-                    memset(g_au8Buff2, 0x87, 512);
+                    memset(s_au8Buff1, 87, 512);
+                    memset(s_au8Buff2, 0x87, 512);
 
-                    res = (FRESULT)disk_read(3, g_au8Buff1, sector_no, 1);
+                    res = (FRESULT)disk_read(3, s_au8Buff1, sector_no, 1);
                     if(res)
                     {
                         printf("read failed at %d, rc=%d\n", sector_no, (WORD)res);
@@ -546,7 +573,7 @@ int32_t main(void)
                         break;
                     }
 
-                    res = (FRESULT)disk_read(3, g_au8Buff2, sector_no, 1);
+                    res = (FRESULT)disk_read(3, s_au8Buff2, sector_no, 1);
                     if(res)
                     {
                         printf("read failed at %d, rc=%d\n", sector_no, (WORD)res);
@@ -554,7 +581,7 @@ int32_t main(void)
                         break;
                     }
 
-                    if(memcmp(g_au8Buff1, g_au8Buff2, 512) != 0)
+                    if(memcmp(s_au8Buff1, s_au8Buff2, 512) != 0)
                     {
                         printf("\nData compare failed!!\n");
                         break;
@@ -576,7 +603,7 @@ int32_t main(void)
                 {
                     case 'd' :  /* dd [<lba>] - Dump sector */
                         if(!xatoi(&ptr, &p2)) p2 = sect;
-                        res = (FRESULT)disk_read(3, Buff, p2, 1);
+                        res = (FRESULT)disk_read(3, s_pu8Buff, (DWORD)p2, 1);
                         if(res)
                         {
                             printf("rc=%d\n", (WORD)res);
@@ -584,7 +611,7 @@ int32_t main(void)
                         }
                         sect = p2 + 1;
                         printf("Sector:%d\n", (INT)p2);
-                        for(buf = (unsigned char*)Buff, ofs = 0; ofs < 0x200; buf += 16, ofs += 16)
+                        for(buf = (unsigned char*)s_pu8Buff, ofs = 0; ofs < 0x200; buf += 16, ofs += 16)
                             put_dump(buf, ofs, 16);
                         break;
 
@@ -594,7 +621,7 @@ int32_t main(void)
                         for(s1 = 0; s1 < (0x800000 / BUFF_SIZE); s1++)
                         {
                             s2 = BUFF_SIZE / 512;   /* sector count for each read  */
-                            res = (FRESULT)disk_read(3, Buff, 10000 + s1 * s2, s2);
+                            res = (FRESULT)disk_read(3, s_pu8Buff, 10000 + s1 * s2, s2);
                             if(res)
                             {
                                 printf("read failed at %d, rc=%d\n", 10000 + s1 * s2, (WORD)res);
@@ -604,7 +631,7 @@ int32_t main(void)
                             if(s1 % 256 == 0)
                                 printf("%d KB\n", (s1 * BUFF_SIZE) / 1024);
                         }
-                        p1 = get_timer_value();
+                        p1 = (long)get_timer_value();
                         printf("time = %d.%02d\n", (INT)(p1 / 100), (INT)(p1 % 100));
                         printf("Raw read speed: %d KB/s\n", (INT)(((0x800000 * 100) / p1) / 1024));
 
@@ -613,7 +640,7 @@ int32_t main(void)
                         for(s1 = 0; s1 < (0x800000 / BUFF_SIZE); s1++)
                         {
                             s2 = BUFF_SIZE / 512;   /* sector count for each read  */
-                            res = (FRESULT)disk_write(3, Buff, 20000 + s1 * s2, s2);
+                            res = (FRESULT)disk_write(3, s_pu8Buff, 20000 + s1 * s2, s2);
                             if(res)
                             {
                                 printf("write failed at %d, rc=%d\n", 20000 + s1 * s2, (WORD)res);
@@ -623,7 +650,7 @@ int32_t main(void)
                             if(s1 % 256 == 0)
                                 printf("%d KB\n", (s1 * BUFF_SIZE) / 1024);
                         }
-                        p1 = get_timer_value();
+                        p1 = (long)get_timer_value();
                         printf("time = %d.%02d\n", (INT)(p1 / 100), (INT)(p1 % 100));
                         printf("Raw write speed: %d KB/s\n", (INT)(((0x800000 * 100) / p1) / 1024));
                         break;
@@ -640,7 +667,7 @@ int32_t main(void)
                         timer_init();
                         for(s1 = 0; s1 < (0x800000 / BUFF_SIZE); s1++)
                         {
-                            res = f_write(&file1, Buff, BUFF_SIZE, &cnt);
+                            res = f_write(&file1, s_pu8Buff, BUFF_SIZE, &cnt);
                             if(res || (cnt != BUFF_SIZE))
                             {
                                 put_rc(res);
@@ -664,7 +691,7 @@ int32_t main(void)
                         timer_init();
                         for(s1 = 0; s1 < (0x800000 / BUFF_SIZE); s1++)
                         {
-                            res = f_read(&file1, Buff, BUFF_SIZE, &cnt);
+                            res = f_read(&file1, s_pu8Buff, BUFF_SIZE, &cnt);
                             if(res || (cnt != BUFF_SIZE))
                             {
                                 put_rc(res);
@@ -673,7 +700,7 @@ int32_t main(void)
                             if(s1 % 128 == 0)
                                 printf("%d KB\n", (s1 * BUFF_SIZE) / 1024);
                         }
-                        p1 = get_timer_value();
+                        p1 = (long)get_timer_value();
                         f_close(&file1);
                         printf("time = %d.%02d\n", (INT)(p1 / 100), (INT)(p1 % 100));
                         printf("File read speed: %d KB/s\n", (INT)(((0x800000 * 100) / p1) / 1024));
@@ -686,7 +713,7 @@ int32_t main(void)
                 {
                     case 'd' :  /* bd <addr> - Dump R/W buffer */
                         if(!xatoi(&ptr, &p1)) break;
-                        for(ptr = (char*)&Buff[p1], ofs = p1, cnt = 32; cnt; cnt--, ptr += 16, ofs += 16)
+                        for(ptr = (char*)&s_pu8Buff[p1], ofs = (DWORD)p1, cnt = 32; cnt; cnt--, ptr += 16, ofs += 16)
                             put_dump((BYTE*)ptr, ofs, 16);
                         break;
 
@@ -696,16 +723,16 @@ int32_t main(void)
                         {
                             do
                             {
-                                Buff[p1++] = (BYTE)p2;
+                                s_pu8Buff[p1++] = (BYTE)p2;
                             }
                             while(xatoi(&ptr, &p2));
                             break;
                         }
                         for(;;)
                         {
-                            printf("%04X %02X-", (WORD)p1, Buff[p1]);
-                            get_line(g_achLine, sizeof(g_achLine));
-                            ptr = g_achLine;
+                            printf("%04X %02X-", (WORD)p1, s_pu8Buff[p1]);
+                            get_line(s_achLine, sizeof(s_achLine));
+                            ptr = s_achLine;
                             if(*ptr == '.') break;
                             if(*ptr < ' ')
                             {
@@ -713,7 +740,7 @@ int32_t main(void)
                                 continue;
                             }
                             if(xatoi(&ptr, &p2))
-                                Buff[p1++] = (BYTE)p2;
+                                s_pu8Buff[p1++] = (BYTE)p2;
                             else
                                 printf("???\n");
                         }
@@ -722,18 +749,18 @@ int32_t main(void)
                     case 'r' :  /* br <sector> [<n>] - Read disk into R/W buffer */
                         if(!xatoi(&ptr, &p2)) break;
                         if(!xatoi(&ptr, &p3)) p3 = 1;
-                        printf("rc=%d\n", disk_read(3, Buff, p2, p3));
+                        printf("rc=%d\n", disk_read(3, s_pu8Buff, (DWORD)p2, (UINT)p3));
                         break;
 
                     case 'w' :  /* bw <sector> [<n>] - Write R/W buffer into disk */
                         if(!xatoi(&ptr, &p2)) break;
                         if(!xatoi(&ptr, &p3)) p3 = 1;
-                        printf("rc=%d\n", disk_write(3, Buff, p2, p3));
+                        printf("rc=%d\n", disk_write(3, s_pu8Buff, (DWORD)p2, (UINT)p3));
                         break;
 
                     case 'f' :  /* bf <n> - Fill working buffer */
                         if(!xatoi(&ptr, &p1)) break;
-                        memset(Buff, (int)p1, BUFF_SIZE);
+                        memset(s_pu8Buff, (int)p1, BUFF_SIZE);
                         break;
 
                 }
@@ -759,10 +786,10 @@ int32_t main(void)
                                fs->n_rootdir, (INT)fs->fsize, (INT)(fs->n_fatent - 2),
                                (INT)fs->fatbase, (INT)fs->dirbase, (INT)fs->database
                               );
-                        acc_size = acc_files = acc_dirs = 0;
+                        s_u32AccSize = s_u16AccFiles = s_u16AccDirs = 0;
 #if _USE_LFN
-                        Finfo.lfname = g_achLfname;
-                        Finfo.lfsize = sizeof(g_achLfname);
+                        s_Finfo.lfname = g_achLfname;
+                        s_Finfo.lfsize = sizeof(g_achLfname);
 #endif
                         res = scan_files(ptr);
                         if(res)
@@ -772,7 +799,7 @@ int32_t main(void)
                         }
                         printf("\r%d files, %d bytes.\n%d folders.\n"
                                "%d KB total disk space.\n%d KB available.\n",
-                               acc_files, (INT)acc_size, acc_dirs,
+                               s_u16AccFiles, (INT)s_u32AccSize, s_u16AccDirs,
                                (INT)((fs->n_fatent - 2) * (fs->csize / 2)), (INT)(p2 * (fs->csize / 2))
                               );
                         break;
@@ -787,27 +814,27 @@ int32_t main(void)
                         p1 = s1 = s2 = 0;
                         for(;;)
                         {
-                            res = f_readdir(&dir, &Finfo);
-                            if((res != FR_OK) || !Finfo.fname[0]) break;
-                            if(Finfo.fattrib & AM_DIR)
+                            res = f_readdir(&dir, &s_Finfo);
+                            if((res != FR_OK) || !s_Finfo.fname[0]) break;
+                            if(s_Finfo.fattrib & AM_DIR)
                             {
                                 s2++;
                             }
                             else
                             {
                                 s1++;
-                                p1 += Finfo.fsize;
+                                p1 += s_Finfo.fsize;
                             }
                             printf("%c%c%c%c%c %d/%02d/%02d %02d:%02d    %9d  %s",
-                                   (Finfo.fattrib & AM_DIR) ? 'D' : '-',
-                                   (Finfo.fattrib & AM_RDO) ? 'R' : '-',
-                                   (Finfo.fattrib & AM_HID) ? 'H' : '-',
-                                   (Finfo.fattrib & AM_SYS) ? 'S' : '-',
-                                   (Finfo.fattrib & AM_ARC) ? 'A' : '-',
-                                   (Finfo.fdate >> 9) + 1980, (Finfo.fdate >> 5) & 15, Finfo.fdate & 31,
-                                   (Finfo.ftime >> 11), (Finfo.ftime >> 5) & 63, (INT)Finfo.fsize, Finfo.fname);
+                                   (s_Finfo.fattrib & AM_DIR) ? 'D' : '-',
+                                   (s_Finfo.fattrib & AM_RDO) ? 'R' : '-',
+                                   (s_Finfo.fattrib & AM_HID) ? 'H' : '-',
+                                   (s_Finfo.fattrib & AM_SYS) ? 'S' : '-',
+                                   (s_Finfo.fattrib & AM_ARC) ? 'A' : '-',
+                                   (s_Finfo.fdate >> 9) + 1980, (s_Finfo.fdate >> 5) & 15, s_Finfo.fdate & 31,
+                                   (s_Finfo.ftime >> 11), (s_Finfo.ftime >> 5) & 63, (INT)s_Finfo.fsize, s_Finfo.fname);
 #if _USE_LFN
-                            for(p2 = strlen(Finfo.fname); p2 < 14; p2++)
+                            for(p2 = strlen(s_Finfo.fname); p2 < 14; p2++)
                                 printf(" ");
                             printf("%s\n", g_achLfname);
 #else
@@ -832,7 +859,7 @@ int32_t main(void)
 
                     case 'e' :  /* fe - Seek file pointer */
                         if(!xatoi(&ptr, &p1)) break;
-                        res = f_lseek(&file1, p1);
+                        res = f_lseek(&file1, (DWORD)p1);
                         put_rc(res);
                         if(res == FR_OK)
                             printf("fptr=%d(0x%lX)\n", (INT)file1.fptr, file1.fptr);
@@ -850,17 +877,17 @@ int32_t main(void)
                             }
                             else
                             {
-                                cnt = p1;
+                                cnt = (UINT)p1;
                                 p1 = 0;
                             }
-                            res = f_read(&file1, Buff, cnt, &cnt);
+                            res = f_read(&file1, s_pu8Buff, cnt, &cnt);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
                                 break;
                             }
                             if(!cnt) break;
-                            put_dump(Buff, ofs, cnt);
+                            put_dump(s_pu8Buff, ofs, (int)cnt);
                             ofs += 16;
                         }
                         break;
@@ -878,10 +905,10 @@ int32_t main(void)
                             }
                             else
                             {
-                                cnt = p1;
+                                cnt = (UINT)p1;
                                 p1 = 0;
                             }
-                            res = f_read(&file1, Buff, cnt, &s2);
+                            res = f_read(&file1, s_pu8Buff, cnt, &s2);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
@@ -890,14 +917,14 @@ int32_t main(void)
                             p2 += s2;
                             if(cnt != s2) break;
                         }
-                        p1 = get_timer_value();
+                        p1 = (long)get_timer_value();
                         if(p1)
                             printf("%d bytes read with %d kB/sec.\n", (INT)p2, (INT)(((p2 * 100) / p1) / 1024));
                         break;
 
                     case 'w' :  /* fw <len> <val> - write file */
                         if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2)) break;
-                        memset(Buff, (BYTE)p2, g_u8Len);
+                        memset(s_pu8Buff, (BYTE)p2, g_u8Len);
                         p2 = 0;
                         timer_init();
                         while(p1)
@@ -909,10 +936,10 @@ int32_t main(void)
                             }
                             else
                             {
-                                cnt = p1;
+                                cnt = (UINT)p1;
                                 p1 = 0;
                             }
-                            res = f_write(&file1, Buff, cnt, &s2);
+                            res = f_write(&file1, s_pu8Buff, cnt, &s2);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
@@ -921,7 +948,7 @@ int32_t main(void)
                             p2 += s2;
                             if(cnt != s2) break;
                         }
-                        p1 = get_timer_value();
+                        p1 = (long)get_timer_value();
                         if(p1)
                             printf("%d bytes written with %d kB/sec.\n", (INT)p2, (INT)(((p2 * 100) / p1) / 1024));
                         break;
@@ -952,15 +979,15 @@ int32_t main(void)
                     case 'a' :  /* fa <atrr> <mask> <name> - Change file/dir attribute */
                         if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2)) break;
                         while(*ptr == ' ') ptr++;
-                        put_rc(f_chmod(ptr, p1, p2));
+                        put_rc(f_chmod(ptr, (BYTE)p1, (BYTE)p2));
                         break;
 
                     case 't' :  /* ft <year> <month> <day> <hour> <min> <sec> <name> - Change timestamp */
                         if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2) || !xatoi(&ptr, &p3)) break;
-                        Finfo.fdate = (WORD)(((p1 - 1980) << 9) | ((p2 & 15) << 5) | (p3 & 31));
+                        s_Finfo.fdate = (WORD)(((p1 - 1980) << 9) | ((p2 & 15) << 5) | (p3 & 31));
                         if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2) || !xatoi(&ptr, &p3)) break;
-                        Finfo.ftime = (WORD)(((p1 & 31) << 11) | ((p1 & 63) << 5) | ((p1 >> 1) & 31));
-                        put_rc(f_utime(ptr, &Finfo));
+                        s_Finfo.ftime = (WORD)(((p1 & 31) << 11) | ((p1 & 63) << 5) | ((p1 >> 1) & 31));
+                        put_rc(f_utime(ptr, &s_Finfo));
                         break;
 
                     case 'x' : /* fx <src_name> <dst_name> - Copy file */
@@ -990,9 +1017,9 @@ int32_t main(void)
                         p1 = 0;
                         for(;;)
                         {
-                            res = f_read(&file1, Buff, BUFF_SIZE, &s1);
+                            res = f_read(&file1, s_pu8Buff, BUFF_SIZE, &s1);
                             if(res || s1 == 0) break;    /* error or eof */
-                            res = f_write(&file2, Buff, s1, &s2);
+                            res = f_write(&file2, s_pu8Buff, s1, &s2);
                             p1 += s2;
                             if(res || s2 < s1) break;    /* error or disk full */
 
@@ -1032,14 +1059,14 @@ int32_t main(void)
                         p1 = 0;
                         for(;;)
                         {
-                            res = f_read(&file1, Buff, BUFF_SIZE, &s1);
+                            res = f_read(&file1, s_pu8Buff, BUFF_SIZE, &s1);
                             if(res || s1 == 0)
                             {
                                 printf("\nRead file %s terminated. (%d)\n", ptr, res);
                                 break;     /* error or eof */
                             }
 
-                            res = f_read(&file2, Buff2, BUFF_SIZE, &s2);
+                            res = f_read(&file2, s_pu8Buff2, BUFF_SIZE, &s2);
                             if(res || s2 == 0)
                             {
                                 printf("\nRead file %s terminated. (%d)\n", ptr2, res);
@@ -1049,7 +1076,7 @@ int32_t main(void)
                             p1 += s2;
                             if(res || s2 < s1) break;    /* error or disk full */
 
-                            if(memcmp(Buff, Buff2, s1) != 0)
+                            if(memcmp(s_pu8Buff, s_pu8Buff2, s1) != 0)
                             {
                                 printf("Compre failed!! %d %d\n", s1, s2);
                                 break;
@@ -1081,14 +1108,14 @@ int32_t main(void)
                     case 'm' :  /* fm <partition rule> <sect/clust> - Create file system */
                         if(!xatoi(&ptr, &p2) || !xatoi(&ptr, &p3)) break;
                         printf("The memory card will be formatted. Are you sure? (Y/n)=");
-                        get_line(ptr, sizeof(g_achLine));
+                        get_line(ptr, sizeof(s_achLine));
                         if(*ptr == 'Y')
                             put_rc(f_mkfs(0, (BYTE)p2, (WORD)p3));
                         break;
 #endif
                     case 'z' :  /* fz [<rw size>] - Change R/W length for fr/fw/fx command */
                         if(xatoi(&ptr, &p1) && p1 >= 1 && (size_t)p1 <= BUFF_SIZE)
-                            g_u8Len = p1;
+                            g_u8Len = (UINT)p1;
                         printf("blen=%d\n", g_u8Len);
                         break;
                 }

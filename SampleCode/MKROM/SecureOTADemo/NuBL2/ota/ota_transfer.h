@@ -22,6 +22,11 @@ extern "C"
 #define WIFIIP				"192.168.1.100"
 #define WIFIPORT            (1111U)
 
+extern volatile uint32_t g_u32SendbytesLen;
+extern volatile uint8_t g_u8SendbytesFlag;
+extern volatile uint8_t g_u8ResetFlag;
+extern volatile uint8_t g_u8DisconnFlag;
+
 /**
   * @brief      Init hardware for transfer task
   * @param      None

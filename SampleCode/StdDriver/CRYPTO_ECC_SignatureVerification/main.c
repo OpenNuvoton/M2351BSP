@@ -10,6 +10,9 @@
 #include <string.h>
 #include "NuMicro.h"
 
+void CRPT_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
 
 void CRPT_IRQHandler()
 {

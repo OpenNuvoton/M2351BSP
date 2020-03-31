@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void SC0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
   * @brief  The interrupt services routine of smartcard port 0

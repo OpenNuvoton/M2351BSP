@@ -19,6 +19,10 @@
 /*---------------------------------------------------------------------------------------------------------*/
 
 
+void CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch);
+void SYS_Init(void);
+void UART0_Init(void);
+
 /*--------------------------------------------------------------------------------------*/
 /* Capture function to calculate the input waveform information                         */
 /* au32Count[4] : Keep the internal counter value when input signal rising / falling     */
@@ -34,7 +38,7 @@
 /*--------------------------------------------------------------------------------------*/
 void CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
 {
-    uint16_t au32Count[4];
+    uint16_t au16Count[4];
     uint32_t u32i;
     uint16_t u16RisingTime, u16FallingTime, u16HighPeriod, u16LowPeriod, u16TotalPeriod;
 
@@ -58,7 +62,7 @@ void CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
         EPWM_ClearCaptureIntFlag(EPWM, u32Ch, EPWM_CAPTURE_INT_FALLING_LATCH | EPWM_CAPTURE_INT_RISING_LATCH);
 
         /* Get Capture Falling Latch Counter Data */
-        au32Count[u32i++] = EPWM_GET_CAPTURE_FALLING_DATA(EPWM, u32Ch);
+        au16Count[u32i++] = (uint16_t)EPWM_GET_CAPTURE_FALLING_DATA(EPWM, u32Ch);
 
         /* Wait for Capture Rising Indicator */
         while(EPWM_GetCaptureIntFlag(EPWM, u32Ch) < 2);
@@ -67,18 +71,18 @@ void CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
         EPWM_ClearCaptureIntFlag(EPWM, u32Ch, EPWM_CAPTURE_INT_RISING_LATCH);
 
         /* Get Capture Rising Latch Counter Data */
-        au32Count[u32i++] = EPWM_GET_CAPTURE_RISING_DATA(EPWM, u32Ch);
+        au16Count[u32i++] = (uint16_t)EPWM_GET_CAPTURE_RISING_DATA(EPWM, u32Ch);
     }
 
-    u16RisingTime = au32Count[1];
+    u16RisingTime = au16Count[1];
 
-    u16FallingTime = au32Count[0];
+    u16FallingTime = au16Count[0];
 
-    u16HighPeriod = au32Count[1] - au32Count[2];
+    u16HighPeriod = au16Count[1] - au16Count[2];
 
-    u16LowPeriod = 0x10000 - au32Count[1];
+    u16LowPeriod = (uint16_t)(0x10000 - au16Count[1]);
 
-    u16TotalPeriod = 0x10000 - au32Count[2];
+    u16TotalPeriod = (uint16_t)(0x10000 - au16Count[2]);
 
     printf("\nEPWM generate: \nHigh Period=19199 ~ 19201, Low Period=44799 ~ 44801, Total Period=63999 ~ 64001\n");
     printf("\nCapture Result: Rising Time = %d, Falling Time = %d \nHigh Period = %d, Low Period = %d, Total Period = %d.\n\n",

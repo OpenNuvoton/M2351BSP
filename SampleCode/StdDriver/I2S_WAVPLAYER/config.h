@@ -10,6 +10,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "ff.h"
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -26,6 +27,12 @@ typedef struct dma_desc_t
     uint32_t offset;
 } DMA_DESC_T;
 
+extern uint8_t bAudioPlaying;
+extern FATFS FatFs[];      /* File system object for logical drive */
+
+extern signed int aiPCMBuffer[2][PCM_BUFFER_SIZE];
+extern volatile uint8_t s_au8PCMBufferFull[2];
+extern volatile uint8_t s_u8PCMBufferPlaying;
 
 void PDMA_Reset_SCTable(uint8_t id);
 void WAVPlayer(void);

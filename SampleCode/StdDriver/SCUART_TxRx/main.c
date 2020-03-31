@@ -10,7 +10,11 @@
 
 
 /* This is the string we used in loopback demo */
-uint8_t g_au8TxBuf[] = "Hello World!";
+static uint8_t s_au8TxBuf[] = "Hello World!";
+
+void SC0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
   * @brief  The interrupt services routine of smartcard port 0
@@ -124,7 +128,7 @@ int main(void)
         Send the demo string out from SC0_CLK pin,
         Received data from SC0_DAT pin will be print out to UART console
     */
-    SCUART_Write(SC0, g_au8TxBuf, sizeof(g_au8TxBuf));
+    SCUART_Write(SC0, s_au8TxBuf, sizeof(s_au8TxBuf));
 
     while(1) {}
 }

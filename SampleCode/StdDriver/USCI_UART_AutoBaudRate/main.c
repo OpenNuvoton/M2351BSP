@@ -17,6 +17,10 @@
 void USCI_AutoBaudRate_Test(void);
 void USCI_AutoBaudRate_TxTest(void);
 void USCI_AutoBaudRate_RxTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void USCI0_Init(void);
+uint32_t GetUuartBaudrate(UUART_T *uuart);
 
 
 void SYS_Init(void)
@@ -169,7 +173,7 @@ void USCI_AutoBaudRate_Test(void)
     printf("|  Please select Master or Slave test                       |\n");
     printf("|  [0] Master    [1] Slave                                  |\n");
     printf("+-----------------------------------------------------------+\n");
-    u32Item = getchar();
+    u32Item = (uint32_t)getchar();
 
     if(u32Item == '0')
         USCI_AutoBaudRate_TxTest();
@@ -201,7 +205,7 @@ void USCI_AutoBaudRate_TxTest(void)
         printf("+-----------------------------------------------------------+\n");
         printf("| Quit                                              - [ESC] |\n");
         printf("+-----------------------------------------------------------+\n\n");
-        u32Item = getchar();
+        u32Item = (uint32_t)getchar();
         if(u32Item==27) break;
         printf("%c\n", u32Item);
 

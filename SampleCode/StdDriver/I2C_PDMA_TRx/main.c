@@ -23,22 +23,36 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-uint8_t g_u8MasterTx_Buffer[PDMA_TEST_LENGTH];
-uint8_t g_u8MasterRx_Buffer[PDMA_TEST_LENGTH];
-uint8_t g_u8SlaveTx_Buffer[PDMA_TEST_LENGTH];
-uint8_t g_u8SlaveRx_Buffer[PDMA_TEST_LENGTH];
-volatile uint32_t g_u32PDMADoneFlag = 0;
+static uint8_t s_au8MasterTxBuffer[PDMA_TEST_LENGTH];
+static uint8_t s_au8MasterRxBuffer[PDMA_TEST_LENGTH];
+static uint8_t s_au8SlaveTxBuffer[PDMA_TEST_LENGTH];
+static uint8_t s_au8SlaveRxBuffer[PDMA_TEST_LENGTH];
+static volatile uint32_t s_u32PDMADoneFlag = 0;
 
-volatile uint8_t g_u8DeviceAddr = 0x16;
-volatile uint8_t g_u8EndFlag = 0;
-volatile uint8_t g_u8MasterDataLen = 0;
-volatile uint8_t g_u8SlaveDataLen = 0;
-volatile uint16_t g_u8SlaveBufferAddr = 0;
+static volatile uint8_t s_u8DeviceAddr = 0x16;
+static volatile uint8_t s_u8MasterDataLen = 0;
+static volatile uint8_t s_u8SlaveDataLen = 0;
+static volatile uint16_t s_u16SlaveBufferAddr = 0;
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 
 static I2C_FUNC s_I2C0HandlerFn = NULL;
 static I2C_FUNC s_I2C1HandlerFn = NULL;
+
+
+void PDMA0_IRQHandler(void);
+void I2C0_IRQHandler(void);
+void I2C1_IRQHandler(void);
+void I2C_PDMA_SlaveRx(uint32_t u32Status);
+void I2C_PDMA_SlaveTx(uint32_t u32Status);
+void I2C_PDMA_MasterTx(uint32_t u32Status);
+void I2C_PDMA_MasterRx(uint32_t u32Status);
+void SYS_Init(void);
+void UART0_Init(void);
+void I2C0_Init(void);
+void I2C1_Init(void);
+void PDMA_Init(void);
+void I2C_PDMA(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  PDMA IRQ Handler                                                                                       */
@@ -59,7 +73,7 @@ void PDMA0_IRQHandler(void)
     {
         printf("\n I2C0 Rx done  ");
         PDMA0->TDSTS = 0x1 << I2C0_PDMA_RX_CH;
-        g_u32PDMADoneFlag = 1;
+        s_u32PDMADoneFlag = 1;
     }
 
     /* Slave RX */
@@ -67,7 +81,7 @@ void PDMA0_IRQHandler(void)
     {
         printf("\n I2C1 Rx done  ");
         PDMA0->TDSTS = 0x1 << I2C1_PDMA_RX_CH;
-        g_u32PDMADoneFlag = 1;
+        s_u32PDMADoneFlag = 1;
     }
 
     /* Slave TX */
@@ -167,17 +181,17 @@ void I2C_PDMA_SlaveTx(uint32_t u32Status)
 
     if (u32Status == 0x60)                       /* Own SLA+W has been receive; ACK has been return */
     {
-        g_u8SlaveDataLen = 0;
+        s_u8SlaveDataLen = 0;
         I2C_SET_CONTROL_REG(I2C1, I2C_CTL_SI_AA);
     }
     else if (u32Status == 0x80)                 /* Previously address with own SLA address
                                                    Data has been received; ACK has been returned*/
     {
         u8data = (unsigned char) I2C_GET_DATA(I2C1);
-        g_u8SlaveRx_Buffer[g_u8SlaveDataLen++] = u8data;
-        g_u8SlaveBufferAddr = (g_u8SlaveRx_Buffer[0] << 8) + g_u8SlaveRx_Buffer[1];
+        s_au8SlaveRxBuffer[s_u8SlaveDataLen++] = u8data;
+        s_u16SlaveBufferAddr = (uint16_t)((s_au8SlaveRxBuffer[0] << 8) + s_au8SlaveRxBuffer[1]);
 
-        if(g_u8SlaveDataLen == 2)
+        if(s_u8SlaveDataLen == 2)
         {
 
             I2C_SET_CONTROL_REG(I2C1, I2C_CTL_SI);
@@ -283,13 +297,13 @@ void I2C_PDMA_MasterRx(uint32_t u32Status)
 {
     if(u32Status == 0x08)                          /* START has been transmitted and prepare SLA+W */
     {
-        I2C_SET_DATA(I2C0, (g_u8DeviceAddr << 1) | 0x00);     /* Write SLA+W to Register I2CDAT */
+        I2C_SET_DATA(I2C0, (uint32_t)((s_u8DeviceAddr << 1) | 0x00));     /* Write SLA+W to Register I2CDAT */
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
     }
     else if(u32Status == 0x18)                     /* SLA+W has been transmitted and ACK has been received */
     {
-        g_u8MasterDataLen = 1;
-        I2C_SET_DATA(I2C0, g_u8MasterTx_Buffer[g_u8MasterDataLen++]);
+        s_u8MasterDataLen = 1;
+        I2C_SET_DATA(I2C0, s_au8MasterTxBuffer[s_u8MasterDataLen++]);
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
     }
     else if(u32Status == 0x20)                     /* SLA+W has been transmitted and NACK has been received */
@@ -299,9 +313,9 @@ void I2C_PDMA_MasterRx(uint32_t u32Status)
     }
     else if(u32Status == 0x28)                     /* DATA has been transmitted and ACK has been received */
     {
-        if(g_u8MasterDataLen <= 2)
+        if(s_u8MasterDataLen <= 2)
         {
-            I2C_SET_DATA(I2C0, g_u8MasterTx_Buffer[g_u8MasterDataLen++]);
+            I2C_SET_DATA(I2C0, s_au8MasterTxBuffer[s_u8MasterDataLen++]);
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
         }
         else
@@ -311,7 +325,7 @@ void I2C_PDMA_MasterRx(uint32_t u32Status)
     }
     else if(u32Status == 0x10)                    /* Repeat START has been transmitted and prepare SLA+R */
     {
-        I2C_SET_DATA(I2C0, (g_u8DeviceAddr << 1) | 0x01);   /* Write SLA+R to Register I2CDAT */
+        I2C_SET_DATA(I2C0, (uint32_t)((s_u8DeviceAddr << 1) | 0x01));   /* Write SLA+R to Register I2CDAT */
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
     }
     else if(u32Status == 0x40)                    /* SLA+R has been transmitted and ACK has been received */
@@ -478,10 +492,10 @@ void PDMA_Init(void)
     PDMA_SetTransferCnt(PDMA0, I2C0_PDMA_RX_CH, PDMA_WIDTH_8, PDMA_TEST_LENGTH - 3); /* except Slave Address and two bytes Data Address */
     PDMA_SetTransferCnt(PDMA0, I2C1_PDMA_TX_CH, PDMA_WIDTH_8, PDMA_TEST_LENGTH - 3); /* except Slave Address and two bytes Data Address */
     /* Set PDMA Transfer Address */
-    PDMA_SetTransferAddr(PDMA0, I2C0_PDMA_TX_CH, ((uint32_t)(&g_u8MasterTx_Buffer[0])), PDMA_SAR_INC, (uint32_t)(&(I2C0->DAT)), PDMA_DAR_FIX);
-    PDMA_SetTransferAddr(PDMA0, I2C1_PDMA_RX_CH, (uint32_t)(&(I2C1->DAT)), PDMA_SAR_FIX, ((uint32_t)(&g_u8SlaveRx_Buffer[0])), PDMA_DAR_INC);
-    PDMA_SetTransferAddr(PDMA0, I2C0_PDMA_RX_CH, (uint32_t)(&(I2C0->DAT)), PDMA_SAR_FIX, ((uint32_t)(&g_u8MasterRx_Buffer[0])), PDMA_DAR_INC);
-    PDMA_SetTransferAddr(PDMA0, I2C1_PDMA_TX_CH, ((uint32_t)(&g_u8SlaveTx_Buffer[0])), PDMA_SAR_INC, (uint32_t)(&(I2C1->DAT)), PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, I2C0_PDMA_TX_CH, ((uint32_t)(&s_au8MasterTxBuffer[0])), PDMA_SAR_INC, (uint32_t)(&(I2C0->DAT)), PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, I2C1_PDMA_RX_CH, (uint32_t)(&(I2C1->DAT)), PDMA_SAR_FIX, ((uint32_t)(&s_au8SlaveRxBuffer[0])), PDMA_DAR_INC);
+    PDMA_SetTransferAddr(PDMA0, I2C0_PDMA_RX_CH, (uint32_t)(&(I2C0->DAT)), PDMA_SAR_FIX, ((uint32_t)(&s_au8MasterRxBuffer[0])), PDMA_DAR_INC);
+    PDMA_SetTransferAddr(PDMA0, I2C1_PDMA_TX_CH, ((uint32_t)(&s_au8SlaveTxBuffer[0])), PDMA_SAR_INC, (uint32_t)(&(I2C1->DAT)), PDMA_DAR_FIX);
     /* Select Single Request */
     PDMA_SetBurstType(PDMA0, I2C0_PDMA_TX_CH, PDMA_REQ_SINGLE, 0);
     PDMA_SetBurstType(PDMA0, I2C1_PDMA_RX_CH, PDMA_REQ_SINGLE, 0);
@@ -503,17 +517,17 @@ void PDMA_Init(void)
 
 void I2C_PDMA(void)
 {
-    uint32_t i;
+    uint8_t i;
 
     for (i = 0; i < PDMA_TEST_LENGTH; i++)
     {
-        g_u8MasterTx_Buffer[i] = i;
-        g_u8SlaveRx_Buffer[i] = 0xff;
+        s_au8MasterTxBuffer[i] = i;
+        s_au8SlaveRxBuffer[i] = 0xff;
     }
 
-    g_u8MasterTx_Buffer[0] = ((g_u8DeviceAddr << 1) | 0x00);   /* 1 byte SLV + W */
-    g_u8MasterTx_Buffer[1] = 0x00;                             /* 2 bytes Data address */
-    g_u8MasterTx_Buffer[2] = 0x00;
+    s_au8MasterTxBuffer[0] = (uint8_t)((s_u8DeviceAddr << 1) | 0x00);   /* 1 byte SLV + W */
+    s_au8MasterTxBuffer[1] = 0x00;                             /* 2 bytes Data address */
+    s_au8MasterTxBuffer[2] = 0x00;
 
     PDMA_Init();
 
@@ -525,7 +539,7 @@ void I2C_PDMA(void)
     /* I2C1 function to Slave receive data */
     s_I2C1HandlerFn = I2C_PDMA_SlaveRx;
 
-    g_u32PDMADoneFlag = 0;
+    s_u32PDMADoneFlag = 0;
 
     /* Enable I2C TX */
     I2C0->CTL1 = I2C_CTL1_TXPDMAEN_Msk;
@@ -535,7 +549,7 @@ void I2C_PDMA(void)
     /* Send START condition, start the PDMA data transmit */
     I2C_START(I2C0);
 
-    while (!g_u32PDMADoneFlag);
+    while (!s_u32PDMADoneFlag);
 
     /* Disable I2C0 PDMA TX mode */
     I2C0->CTL1 &= ~I2C_CTL1_TXPDMAEN_Msk;
@@ -544,7 +558,7 @@ void I2C_PDMA(void)
 
     for (i = 0; i < PDMA_TEST_LENGTH; i++)
     {
-        if (g_u8SlaveRx_Buffer[i] != g_u8MasterTx_Buffer[i])
+        if (s_au8SlaveRxBuffer[i] != s_au8MasterTxBuffer[i])
         {
             printf("\n Slave Receive Data Compare Error !!");
             while (1);
@@ -552,7 +566,7 @@ void I2C_PDMA(void)
         else
         {
             if(i > 2)
-                g_u8SlaveTx_Buffer[i-3] = g_u8MasterTx_Buffer[i];
+                s_au8SlaveTxBuffer[i-3] = s_au8MasterTxBuffer[i];
         }
     }
 
@@ -563,12 +577,12 @@ void I2C_PDMA(void)
     /* I2C1 function to Slave transmit data */
     s_I2C1HandlerFn = I2C_PDMA_SlaveTx;
 
-    g_u32PDMADoneFlag = 0;
+    s_u32PDMADoneFlag = 0;
 
     /* Send START condition */
     I2C_START(I2C0);
 
-    while (!g_u32PDMADoneFlag);
+    while (!s_u32PDMADoneFlag);
     I2C_STOP(I2C0);
     /* Disable I2C0 PDMA RX mode */
     I2C0->CTL1 &= ~I2C_CTL1_RXPDMAEN_Msk;
@@ -577,7 +591,7 @@ void I2C_PDMA(void)
 
     for (i = 0; i < PDMA_TEST_LENGTH - 3; i++)
     {
-        if (g_u8MasterRx_Buffer[i] != g_u8MasterTx_Buffer[i+3])
+        if (s_au8MasterRxBuffer[i] != s_au8MasterTxBuffer[i+3])
         {
             printf("\n Slave Receive Data Compare Error !!");
 

@@ -29,6 +29,8 @@ extern "C"
 #define BUF_SIZE	128
 #define ALIGN_BUFF_SIZE 64
 
+extern uint8_t g_au8SendBuf[BUF_SIZE];
+
 /**
   * @brief      OTA task routine
   * @param      None

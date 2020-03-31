@@ -13,11 +13,23 @@
 
 #define NAU8822     0
 
-uint32_t g_au32PcmBuff[BUFF_LEN] = {0};
 uint32_t volatile g_u32BuffPos = 0;
 
-#if NAU8822
 
+void SYS_Init(void);
+void I2C2_Init(void);
+
+#if NAU8822
+void I2C_WriteNAU8822(uint8_t u8Addr, uint16_t u16Data);
+void NAU8822_Setup(void);
+#else
+uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len);
+uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat);
+void NAU88L25_Reset(void);
+void NAU88L25_Setup(void);
+#endif
+
+#if NAU8822
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Write 9-bit data to 7-bit address register of NAU8822 with I2C2                                        */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -76,6 +88,7 @@ void NAU8822_Setup()
 
 uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len)
 {
+    (void)u32Len;
     /* Send START */
     I2C_START(I2C2);
     I2C_WAIT_READY(I2C2);

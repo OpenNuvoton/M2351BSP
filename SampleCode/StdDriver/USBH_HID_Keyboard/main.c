@@ -19,12 +19,12 @@
 
 #ifdef __ICCARM__
 #pragma data_alignment=32
-uint8_t  g_au8BuffPool[1024];
+uint8_t  s_au8BuffPool[1024];
 #else
-uint8_t  g_au8BuffPool[1024] __attribute__((aligned(32)));
+static uint8_t  s_au8BuffPool[1024] __attribute__((aligned(32)));
 #endif
 
-HID_DEV_T   *g_hid_list[CONFIG_HID_MAX_DEV];
+static HID_DEV_T   *s_HidList[CONFIG_HID_MAX_DEV];
 
 extern int  kbd_parse_report(HID_DEV_T *hdev, uint8_t *pu8Buf, int i8Len);
 
@@ -33,17 +33,28 @@ static uint8_t    g_au8DataToDo[8];
 
 extern int kbhit(void);                        /* function in retarget.c                 */
 
-volatile uint32_t  g_u32TickCnt;
+static volatile uint32_t  s_u32TickCnt;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void  dump_buff_hex(uint8_t *pu8Buff, int i8Bytes);
+int  is_a_new_hid_device(HID_DEV_T *hdev);
+void update_hid_device_list(HID_DEV_T *hdev);
+void  int_read_callback(HID_DEV_T *hdev, uint16_t u16EpAddr, int i8Status, uint8_t *pu8RData, uint32_t u32DataLen);
+int  init_hid_device(HID_DEV_T *hdev);
+void SYS_Init(void);
+void UART0_Init(void);
+
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_u32TickCnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -53,13 +64,13 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_u32TickCnt;
+    return s_u32TickCnt;
 }
 
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32Usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -69,7 +80,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32Usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);
@@ -99,8 +110,8 @@ int  is_a_new_hid_device(HID_DEV_T *hdev)
     int    i;
     for(i = 0; i < CONFIG_HID_MAX_DEV; i++)
     {
-        if((g_hid_list[i] != NULL) && (g_hid_list[i] == hdev) &&
-                (g_hid_list[i]->uid == hdev->uid))
+        if((s_HidList[i] != NULL) && (s_HidList[i] == hdev) &&
+                (s_HidList[i]->uid == hdev->uid))
             return 0;
     }
     return 1;
@@ -109,10 +120,10 @@ int  is_a_new_hid_device(HID_DEV_T *hdev)
 void update_hid_device_list(HID_DEV_T *hdev)
 {
     int  i = 0;
-    memset(g_hid_list, 0, sizeof(g_hid_list));
+    memset(s_HidList, 0, sizeof(s_HidList));
     while((i < CONFIG_HID_MAX_DEV) && (hdev != NULL))
     {
-        g_hid_list[i++] = hdev;
+        s_HidList[i++] = hdev;
         hdev = hdev->next;
     }
 }
@@ -123,6 +134,9 @@ void  int_read_callback(HID_DEV_T *hdev, uint16_t u16EpAddr, int i8Status, uint8
      *  This callback is in interrupt context.
      *  Copy the device and data and then handle it somewhere not in interrupt context.
      */
+    (void)u16EpAddr;
+    (void)i8Status;
+    (void)u32DataLen;
     //dump_buff_hex(pu8RData, u32DataLen);
     hdev_ToDo = hdev;
     memcpy(g_au8DataToDo, pu8RData, sizeof(g_au8DataToDo));
@@ -134,7 +148,7 @@ int  init_hid_device(HID_DEV_T *hdev)
     uint8_t   *pu8DataBuff;
     int       i8Ret;
 
-    pu8DataBuff = (uint8_t *)((uint32_t)g_au8BuffPool);
+    pu8DataBuff = (uint8_t *)((uint32_t)s_au8BuffPool);
 
     printf("\n\n==================================\n");
     printf("  Init HID device : 0x%x\n", (int)hdev);
@@ -251,7 +265,7 @@ int32_t main(void)
     usbh_hid_init();
     usbh_memory_used();
 
-    memset(g_hid_list, 0, sizeof(g_hid_list));
+    memset(s_HidList, 0, sizeof(s_HidList));
 
     while(1)
     {

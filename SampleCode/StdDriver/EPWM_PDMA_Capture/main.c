@@ -17,9 +17,14 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-uint16_t g_au16Count[4];
-volatile uint32_t g_u32IsTestOver = 0;
+static uint16_t s_au16Count[4];
+static volatile uint32_t s_u32IsTestOver = 0;
 
+
+void PDMA0_IRQHandler(void);
+void CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       PDMA IRQ Handler
@@ -37,13 +42,13 @@ void PDMA0_IRQHandler(void)
     if(u32Status & 0x1)    /* abort */
     {
         if(PDMA_GET_ABORT_STS(PDMA0) & 0x1)
-            g_u32IsTestOver = 2;
+            s_u32IsTestOver = 2;
         PDMA_CLR_ABORT_FLAG(PDMA0, PDMA_ABTSTS_ABTIF0_Msk);
     }
     else if(u32Status & 0x2)      /* done */
     {
         if(PDMA_GET_TD_STS(PDMA0) & 0x1)
-            g_u32IsTestOver = 1;
+            s_u32IsTestOver = 1;
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF0_Msk);
     }
     else
@@ -52,7 +57,7 @@ void PDMA0_IRQHandler(void)
 
 /*--------------------------------------------------------------------------------------*/
 /* Capture function to calculate the input waveform information                         */
-/* g_au16Count[4] : Keep the internal counter value when input signal rising / falling  */
+/* s_au16Count[4] : Keep the internal counter value when input signal rising / falling  */
 /*               happens                                                                */
 /*                                                                                      */
 /* time    A    B     C     D                                                           */
@@ -67,19 +72,21 @@ void CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
 {
     uint16_t u16RisingTime, u16FallingTime, u16HighPeriod, u16LowPeriod, u16TotalPeriod;
 
-    g_u32IsTestOver = 0;
-    /* Wait PDMA interrupt (g_u32IsTestOver will be set at IRQ_Handler function) */
-    while(g_u32IsTestOver == 0);
+    (void)EPWM;
+    (void)u32Ch;
+    s_u32IsTestOver = 0;
+    /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
+    while(s_u32IsTestOver == 0);
 
-    u16RisingTime = g_au16Count[1];
+    u16RisingTime = s_au16Count[1];
 
-    u16FallingTime = g_au16Count[0];
+    u16FallingTime = s_au16Count[0];
 
-    u16HighPeriod = g_au16Count[1] - g_au16Count[2];
+    u16HighPeriod = s_au16Count[1] - s_au16Count[2];
 
-    u16LowPeriod = 0x10000 - g_au16Count[1];
+    u16LowPeriod = (uint16_t)(0x10000 - s_au16Count[1]);
 
-    u16TotalPeriod = 0x10000 - g_au16Count[2];
+    u16TotalPeriod = (uint16_t)(0x10000 - s_au16Count[2]);
 
     printf("\nEPWM generate: \nHigh Period=19199 ~ 19201, Low Period=44799 ~ 44801, Total Period=63999 ~ 64001\n");
     printf("\nCapture Result: Rising Time = %d, Falling Time = %d \nHigh Period = %d, Low Period = %d, Total Period = %d.\n\n",
@@ -250,8 +257,8 @@ int32_t main(void)
         /* Transfer width is half word(16 bit) and transfer count is 4 */
         PDMA_SetTransferCnt(PDMA0, 0, PDMA_WIDTH_16, 4);
 
-        /* Set source address as EPWM capture channel PDMA register(no increment) and destination address as g_au16Count array(increment) */
-        PDMA_SetTransferAddr(PDMA0, 0, (uint32_t)&EPWM1->PDMACAP[1], PDMA_SAR_FIX, (uint32_t)&g_au16Count[0], PDMA_DAR_INC);
+        /* Set source address as EPWM capture channel PDMA register(no increment) and destination address as s_au16Count array(increment) */
+        PDMA_SetTransferAddr(PDMA0, 0, (uint32_t)&EPWM1->PDMACAP[1], PDMA_SAR_FIX, (uint32_t)&s_au16Count[0], PDMA_DAR_INC);
 
         /* Select PDMA request source as EPWM RX(EPWM1 channel 2 should be EPWM1 pair 2) */
         PDMA_SetTransferMode(PDMA0, 0, PDMA_EPWM1_P2_RX, FALSE, 0);

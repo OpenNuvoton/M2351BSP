@@ -17,9 +17,13 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-uint16_t g_au16Period[2] = {31999, 15999};
-volatile uint32_t g_u32IsTestOver = 0;
+static uint16_t s_au16Period[2] = {31999, 15999};
+static volatile uint32_t s_u32IsTestOver = 0;
 
+
+void PDMA0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       PDMA IRQ Handler
@@ -37,13 +41,13 @@ void PDMA0_IRQHandler(void)
     if(u32Status & PDMA_INTSTS_ABTIF_Msk)    /* abort */
     {
         if(PDMA_GET_ABORT_STS(PDMA0) & PDMA_ABTSTS_ABTIF0_Msk)
-            g_u32IsTestOver = 2;
+            s_u32IsTestOver = 2;
         PDMA_CLR_ABORT_FLAG(PDMA0, PDMA_ABTSTS_ABTIF0_Msk);
     }
     else if(u32Status & PDMA_INTSTS_TDIF_Msk)      /* done */
     {
         if(PDMA_GET_TD_STS(PDMA0) & PDMA_TDSTS_TDIF0_Msk)
-            g_u32IsTestOver = 1;
+            s_u32IsTestOver = 1;
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF0_Msk);
     }
     else
@@ -218,7 +222,7 @@ int32_t main(void)
     PDMA_SetTransferCnt(PDMA0, 0, PDMA_WIDTH_16, 1);
 
     /* Set source address as g_u32Count array(increment) and destination address as EPWM1 channel 0 period register(no increment) */
-    PDMA_SetTransferAddr(PDMA0, 0, (uint32_t)&g_au16Period[0], PDMA_SAR_INC, (uint32_t) & (EPWM1->PERIOD[0]), PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, 0, (uint32_t)&s_au16Period[0], PDMA_SAR_INC, (uint32_t) & (EPWM1->PERIOD[0]), PDMA_DAR_FIX);
 
     /* Select PDMA request source as EPWM1_CH0_TX(EPWM1 channel 0 accumulator interrupt) */
     PDMA_SetTransferMode(PDMA0, 0, PDMA_EPWM1_CH0_TX, FALSE, 0);
@@ -229,10 +233,10 @@ int32_t main(void)
     PDMA_EnableInt(PDMA0, 0, PDMA_INT_TRANS_DONE);
     NVIC_EnableIRQ(PDMA0_IRQn);
 
-    g_u32IsTestOver = 0;
+    s_u32IsTestOver = 0;
 
     /* Wait for PDMA transfer done */
-    while(g_u32IsTestOver != 1);
+    while(s_u32IsTestOver != 1);
 
     u32NewCNR = EPWM_GET_CNR(EPWM1, 0);
     printf("\n\nEPWM1 channel0 period register is updated to %d(0x%x)\n", u32NewCNR, u32NewCNR);

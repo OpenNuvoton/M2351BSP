@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-
+void CLKFAIL_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Clock Fail Detector IRQ Handler                                                                        */

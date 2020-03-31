@@ -11,7 +11,7 @@
 #include "NuMicro.h"
 
 /* TDES Key:  1e4678a17f2c8a33 800e15ac47891a4c a011453291c23340 */
-uint32_t g_au8MyTDESKey[3][2] =
+static uint32_t s_au8MyTDESKey[3][2] =
 {
     { 0x1e4678a1, 0x7f2c8a33 },
     { 0x800e15ac, 0x47891a4c },
@@ -19,16 +19,16 @@ uint32_t g_au8MyTDESKey[3][2] =
 };
 
 /* Initial vector: 1234567890abcdef */
-uint32_t g_au32MyTDESIV[2] = {  0x12345678, 0x90abcdef };
+static uint32_t s_au32MyTDESIV[2] = {  0x12345678, 0x90abcdef };
 
 
 /* The input data for TDES test. NOTE: The input data size must be 8 bytes alignment */
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t g_au8InputData[] =
+uint8_t s_au8InputData[] =
 {
 #else
-__attribute__((aligned(4))) uint8_t g_au8InputData[] =
+static __attribute__((aligned(4))) uint8_t s_au8InputData[] =
 {
 #endif
     0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x11, 0x22
@@ -37,12 +37,19 @@ __attribute__((aligned(4))) uint8_t g_au8InputData[] =
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t g_au8OutputData[1024];
+uint8_t s_au8OutputData[1024];
 #else
-__attribute__((aligned(4))) uint8_t g_au8OutputData[1024];
+static __attribute__((aligned(4))) uint8_t s_au8OutputData[1024];
 #endif
 
 static volatile int  g_TDES_done;
+
+
+void CRPT_IRQHandler(void);
+void DumpBuffHex(uint8_t *pucBuff, int nBytes);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+
 
 void CRPT_IRQHandler()
 {
@@ -149,7 +156,7 @@ int32_t main(void)
     printf("+--------------------------------------------+\n");
 
     /* Check input data size */
-    if((sizeof(g_au8InputData) & 0x7) != 0)
+    if((sizeof(s_au8InputData) & 0x7) != 0)
     {
         printf("ERR: The input data size is not 8 bytes alignment.\n");
         printf("     You may pad 0x0 to let it be 8 bytes alignment.\n");
@@ -164,9 +171,9 @@ int32_t main(void)
      *  TDES CBC mode encrypt
      *---------------------------------------*/
     TDES_Open(CRPT, 0, 1, 1, 1, TDES_MODE_CBC, TDES_IN_OUT_WHL_SWAP);
-    TDES_SetKey(CRPT, 0, g_au8MyTDESKey);
-    TDES_SetInitVect(CRPT, 0, g_au32MyTDESIV[0], g_au32MyTDESIV[1]);
-    TDES_SetDMATransfer(CRPT, 0, (uint32_t)g_au8InputData, (uint32_t)g_au8OutputData, sizeof(g_au8InputData));
+    TDES_SetKey(CRPT, 0, s_au8MyTDESKey);
+    TDES_SetInitVect(CRPT, 0, s_au32MyTDESIV[0], s_au32MyTDESIV[1]);
+    TDES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8InputData, (uint32_t)s_au8OutputData, sizeof(s_au8InputData));
 
     g_TDES_done = 0;
     /* Start TDEC calculation */
@@ -176,22 +183,22 @@ int32_t main(void)
     while(!g_TDES_done);
 
     printf("TDES encrypt done.\n\n");
-    DumpBuffHex(g_au8OutputData, sizeof(g_au8InputData));
+    DumpBuffHex(s_au8OutputData, sizeof(s_au8InputData));
 
     /*---------------------------------------
      *  TDES CBC mode decrypt
      *---------------------------------------*/
     TDES_Open(CRPT, 0, 0, 1, 1, TDES_MODE_CBC, TDES_IN_OUT_WHL_SWAP);
-    TDES_SetKey(CRPT, 0, g_au8MyTDESKey);
-    TDES_SetInitVect(CRPT, 0, g_au32MyTDESIV[0], g_au32MyTDESIV[1]);
-    TDES_SetDMATransfer(CRPT, 0, (uint32_t)g_au8OutputData, (uint32_t)g_au8InputData, sizeof(g_au8InputData));
+    TDES_SetKey(CRPT, 0, s_au8MyTDESKey);
+    TDES_SetInitVect(CRPT, 0, s_au32MyTDESIV[0], s_au32MyTDESIV[1]);
+    TDES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8OutputData, (uint32_t)s_au8InputData, sizeof(s_au8InputData));
 
     g_TDES_done = 0;
     TDES_Start(CRPT, 0, CRYPTO_DMA_ONE_SHOT);
     while(!g_TDES_done);
 
     printf("TDES decrypt done.\n\n");
-    DumpBuffHex(g_au8InputData, sizeof(g_au8InputData));
+    DumpBuffHex(s_au8InputData, sizeof(s_au8InputData));
 
 lexit:
 

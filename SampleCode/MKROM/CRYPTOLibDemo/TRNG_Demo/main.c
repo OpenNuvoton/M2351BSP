@@ -12,6 +12,8 @@
 
 #define BYTE_COUNT      32  /* Number of byte counts */
 
+void SYS_Init(void);
+void UART_Init(void);
 
 void SYS_Init(void)
 {

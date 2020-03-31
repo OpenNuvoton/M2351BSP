@@ -9,7 +9,9 @@
 #include  "NuMicro.h"
 #include  "micro_printer.h"
 
-uint32_t volatile g_u32OutToggle = 0;
+static uint32_t volatile s_u32OutToggle = 0;
+
+void USBD_IRQHandler(void);
 
 /*--------------------------------------------------------------------------*/
 void USBD_IRQHandler(void)
@@ -53,7 +55,7 @@ void USBD_IRQHandler(void)
             /* Bus reset */
             USBD_ENABLE_USB();
             USBD_SwReset();
-            g_u32OutToggle = 0;
+            s_u32OutToggle = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
@@ -111,7 +113,7 @@ void USBD_IRQHandler(void)
         {
             /* Clear event flag */
             USBD_CLR_INT_FLAG(USBD_INTSTS_EP3);
-            if(g_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
+            if(s_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
             {
                 USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
             }
@@ -119,7 +121,7 @@ void USBD_IRQHandler(void)
             {
                 // Bulk Out -> receive printer data
                 PTR_Data_Receive();
-                g_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
+                s_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
             }
         }
 
@@ -255,6 +257,8 @@ void PTR_Data_Receive(void)
     uint8_t *pu8Buf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3));
     uint32_t u32Size = USBD_GET_PAYLOAD_LEN(EP3);
 
+	  (void)pu8Buf;
+	  (void)u32Size;
     /* trigger next OUT data */
     USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
 }

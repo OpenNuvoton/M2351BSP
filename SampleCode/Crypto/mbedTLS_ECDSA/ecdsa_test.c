@@ -9,24 +9,29 @@
 
 #define CRYPTO_MAX_KEY_LEN 1024
 
-unsigned char buf[CRYPTO_MAX_KEY_LEN];
-unsigned char tmp[CRYPTO_MAX_KEY_LEN];
+static unsigned char s_aucBuf[CRYPTO_MAX_KEY_LEN];
+static unsigned char s_aucTmp[CRYPTO_MAX_KEY_LEN];
 
 /* timer ticks - 100 ticks per second */
-volatile uint32_t  g_tick_cnt;
+static volatile uint32_t  s_u32TickCnt;
 
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void start_timer0(void);
+uint32_t  get_timer0_counter(void);
+int ECDSATest(void);
 
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;
+    s_u32TickCnt++;
 }
 
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = 64000000;         /* HCLK is 64 MHz */
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -61,7 +66,7 @@ static int myrand( void *rng_state, unsigned char *output, size_t len )
         rng_state  = NULL;
 
     for( i = 0; i < len; ++i )
-        output[i] = rand();
+        output[i] = (unsigned char)rand();
 #else
     if( rng_state != NULL )
         rng_state = NULL;
@@ -86,7 +91,7 @@ int ECDSATest(void)
 
     /* Initializes an ECDSA context. */
     mbedtls_ecdsa_init( &ecdsa );
-    memset( buf, 0x2A, sizeof( buf ) );
+    memset( s_aucBuf, 0x2A, sizeof( s_aucBuf ) );
 
     printf(" mbedtls ECDSA init done  \n\n");
 
@@ -101,7 +106,7 @@ int ECDSATest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -121,7 +126,7 @@ int ECDSATest(void)
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -135,14 +140,14 @@ int ECDSATest(void)
 
     /* Computes the ECDSA signature and writes it to a buffer */
     printf(" mbedtls ECDSA signature generate : ");
-    ret = mbedtls_ecdsa_write_signature( &ecdsa, MBEDTLS_MD_SHA256, buf, curve_info->bit_size, tmp, &sig_len, myrand, NULL);
+    ret = mbedtls_ecdsa_write_signature( &ecdsa, MBEDTLS_MD_SHA256, s_aucBuf, curve_info->bit_size, s_aucTmp, &sig_len, myrand, NULL);
     if(ret == 0)
     {
         printf("passed");
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {
@@ -156,14 +161,14 @@ int ECDSATest(void)
 
     /* Reads and verifies an ECDSA signature */
     printf(" mbedtls ECDSA signature verify   : ");
-    ret = mbedtls_ecdsa_read_signature(&ecdsa, buf, curve_info->bit_size, tmp, sig_len);
+    ret = mbedtls_ecdsa_read_signature(&ecdsa, s_aucBuf, curve_info->bit_size, s_aucTmp, sig_len);
     if(ret == 0)
     {
         printf("passed");
         u32Time = get_timer0_counter();
 
         /* TIMER0->CNT is the elapsed us */
-        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, g_tick_cnt);
+        printf("     takes %d.%d seconds,  %d ticks\n", u32Time / 1000000, u32Time / 1000, s_u32TickCnt);
     }
     else
     {

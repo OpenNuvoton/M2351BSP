@@ -10,6 +10,10 @@
 #include "NuMicro.h"
 
 
+void PowerDownFunction(void);
+void GPB_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Function for System Entry to Power Down Mode                                                           */

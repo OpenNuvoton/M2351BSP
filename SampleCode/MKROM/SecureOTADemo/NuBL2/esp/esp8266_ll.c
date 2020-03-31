@@ -47,11 +47,12 @@ osMutexId id;
 #define ESP_RESET_PIN           7
 //#endif /* defined(M2351_NUMAKER) */
 
+void UART3_ReceiveHandler(uint8_t ch);
 
 uint8_t ESP_LL_Callback(ESP_LL_Control_t ctrl, void* param, void* result) {
     switch (ctrl) {
         case ESP_LL_Control_Init: {                 /* Initialize low-level part of communication */
-            ESP_LL_t* LL = (ESP_LL_t *)param;       /* Get low-level value from callback */
+            //ESP_LL_t* LL = (ESP_LL_t *)param;       /* Get low-level value from callback */
             
             /************************************/
             /*  Device specific initialization  */
@@ -78,7 +79,7 @@ uint8_t ESP_LL_Callback(ESP_LL_Control_t ctrl, void* param, void* result) {
         case ESP_LL_Control_Send: {
             ESP_LL_Send_t* send = (ESP_LL_Send_t *)param;   /* Get send parameters */
             /* Send actual data to UART */
-            UART_Write(ESP_USART, (uint8_t *)send->Data, send->Count);   /* Send actual data */
+            UART_Write(ESP_USART, (uint8_t *)(uint32_t)send->Data, send->Count);   /* Send actual data */
             
             if (result) {
                 *(uint8_t *)result = 0;             /* Successfully send */

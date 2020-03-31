@@ -17,9 +17,13 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-__attribute__((aligned)) uint8_t au8SrcArray[256];
-__attribute__((aligned)) uint8_t au8DestArray[256];
-uint32_t volatile g_u32IsTestOver = 0;
+static __attribute__((aligned)) uint8_t s_au8SrcArray[256];
+static __attribute__((aligned)) uint8_t s_au8DestArray[256];
+static uint32_t volatile s_u32IsTestOver = 0;
+
+void PDMA0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       DMA0 IRQ
@@ -38,7 +42,7 @@ void PDMA0_IRQHandler(void)
     {
         /* Check if channel 2 has abort error */
         if(PDMA_GET_ABORT_STS(PDMA0) & PDMA_ABTSTS_ABTIF2_Msk)
-            g_u32IsTestOver = 2;
+            s_u32IsTestOver = 2;
         /* Clear abort flag of channel 2 */
         PDMA_CLR_ABORT_FLAG(PDMA0, PDMA_ABTSTS_ABTIF2_Msk);
     }
@@ -46,7 +50,7 @@ void PDMA0_IRQHandler(void)
     {
         /* Check transmission of channel 2 has been transfer done */
         if(PDMA_GET_TD_STS(PDMA0) & PDMA_TDSTS_TDIF2_Msk)
-            g_u32IsTestOver = 1;
+            s_u32IsTestOver = 1;
         /* Clear transfer done flag of channel 2 */
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
     }
@@ -143,7 +147,7 @@ int main(void)
 
     /*------------------------------------------------------------------------------------------------------
 
-                         au8SrcArray                         au8DestArray
+                         s_au8SrcArray                         s_au8DestArray
                          ---------------------------   -->   ---------------------------
                        /| [0]  | [1]  |  [2] |  [3] |       | [0]  | [1]  |  [2] |  [3] |\
                         |      |      |      |      |       |      |      |      |      |
@@ -163,9 +167,9 @@ int main(void)
 
         Transfer count = PDMA_TEST_LENGTH
         Transfer width = 32 bits(one word)
-        Source address = au8SrcArray
+        Source address = s_au8SrcArray
         Source address increment size = 32 bits(one word)
-        Destination address = au8DestArray
+        Destination address = s_au8DestArray
         Destination address increment size = 32 bits(one word)
         Transfer type = burst transfer
 
@@ -176,8 +180,8 @@ int main(void)
     PDMA_Open(PDMA0, 1 << 2);
     /* Transfer count is PDMA_TEST_LENGTH, transfer width is 32 bits(one word) */
     PDMA_SetTransferCnt(PDMA0, 2, PDMA_WIDTH_32, PDMA_TEST_LENGTH);
-    /* Set source address is au8SrcArray, destination address is au8DestArray, Source/Destination increment size is 32 bits(one word) */
-    PDMA_SetTransferAddr(PDMA0, 2, (uint32_t)au8SrcArray, PDMA_SAR_INC, (uint32_t)au8DestArray, PDMA_DAR_INC);
+    /* Set source address is s_au8SrcArray, destination address is s_au8DestArray, Source/Destination increment size is 32 bits(one word) */
+    PDMA_SetTransferAddr(PDMA0, 2, (uint32_t)s_au8SrcArray, PDMA_SAR_INC, (uint32_t)s_au8DestArray, PDMA_DAR_INC);
     /* Request source is memory to memory */
     PDMA_SetTransferMode(PDMA0, 2, PDMA_MEM, FALSE, 0);
     /* Transfer type is burst transfer and burst size is 4 */
@@ -188,18 +192,18 @@ int main(void)
 
     /* Enable NVIC for PDMA */
     NVIC_EnableIRQ(PDMA0_IRQn);
-    g_u32IsTestOver = 0;
+    s_u32IsTestOver = 0;
 
     /* Generate a software request to trigger transfer with PDMA channel 2  */
     PDMA_Trigger(PDMA0, 2);
 
     /* Waiting for transfer done */
-    while(g_u32IsTestOver == 0);
+    while(s_u32IsTestOver == 0);
 
     /* Check transfer result */
-    if(g_u32IsTestOver == 1)
+    if(s_u32IsTestOver == 1)
         printf("test done...\n");
-    else if(g_u32IsTestOver == 2)
+    else if(s_u32IsTestOver == 2)
         printf("target abort...\n");
 
     /* Close channel 2 */

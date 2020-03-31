@@ -22,6 +22,9 @@
 void IrDA_FunctionTest(void);
 void IrDA_FunctionTxTest(void);
 void IrDA_FunctionRxTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void UART1_Init(void);
 
 
 void SYS_Init(void)
@@ -148,7 +151,7 @@ int32_t main(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void IrDA_FunctionTest(void)
 {
-    uint8_t u8Item;
+    int32_t i32Item;
 
     printf("\n");
     printf("+-----------------------------------------------------------+\n");
@@ -186,9 +189,9 @@ void IrDA_FunctionTest(void)
     printf("|  Please select Master or Slave test                         |\n");
     printf("|  [0] Master    [1] Slave                                    |\n");
     printf("+-------------------------------------------------------------+\n");
-    u8Item = getchar();
+    i32Item = getchar();
 
-    if(u8Item == '0')
+    if(i32Item == '0')
         IrDA_FunctionTxTest();
     else
         IrDA_FunctionRxTest();
@@ -200,7 +203,7 @@ void IrDA_FunctionTest(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void IrDA_FunctionTxTest(void)
 {
-    uint8_t u8OutChar;
+    int32_t i32OutChar;
 
     printf("\n");
     printf("+-----------------------------------------------------------+\n");
@@ -219,11 +222,11 @@ void IrDA_FunctionTxTest(void)
     /* Wait Terminal input to send data to UART1 TX pin */
     do
     {
-        u8OutChar = getchar();
-        printf("   Input: %c , Send %c out\n", u8OutChar, u8OutChar);
-        UART_WRITE(UART1, u8OutChar);
+        i32OutChar = getchar();
+        printf("   Input: %c , Send %c out\n", i32OutChar, i32OutChar);
+        UART_WRITE(UART1, (uint32_t)i32OutChar);
     }
-    while(u8OutChar != '0');
+    while(i32OutChar != '0');
 
     printf("\nIrDA Sample Code End.\n");
 }
@@ -258,7 +261,7 @@ void IrDA_FunctionRxTest(void)
     {
         if(UART_IS_RX_READY(UART1))
         {
-            u8InChar = UART_READ(UART1);
+            u8InChar = (uint8_t)UART_READ(UART1);
             printf("   Input: %c \n", u8InChar);
         }
     }

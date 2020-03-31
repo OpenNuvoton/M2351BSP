@@ -10,7 +10,12 @@
 #include "NuMicro.h"
 
 
-volatile uint8_t g_u8IsComplete = 0;
+static volatile uint8_t s_u8IsComplete = 0;
+
+
+void TMR1_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       Timer1 IRQ
@@ -26,7 +31,7 @@ void TMR1_IRQHandler(void)
     /* Timer clock is according to HCLK, counter value records the duration for 100 event counts. */
     printf("Event frequency is %d Hz\n", SystemCoreClock / TIMER_GetCounter(TIMER1) * 100);
     TIMER_ClearCaptureIntFlag(TIMER1);
-    g_u8IsComplete = 1;
+    s_u8IsComplete = 1;
 }
 
 void SYS_Init(void)
@@ -93,8 +98,6 @@ void UART_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    volatile uint32_t u32DelayTime;
-
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -138,10 +141,10 @@ int main(void)
 
     while(1)
     {
-        g_u8IsComplete = 0;
+        s_u8IsComplete = 0;
         /* Count event by timer0, disable drop count (set to 0), disable timeout (set to 0). Enable interrupt after complete */
         TIMER_EnableFreqCounter(TIMER0, 0, 0, TRUE);
-        while(g_u8IsComplete == 0) {}
+        while(s_u8IsComplete == 0) {}
     }
 }
 

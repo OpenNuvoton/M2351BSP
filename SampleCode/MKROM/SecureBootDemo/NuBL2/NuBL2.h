@@ -50,4 +50,6 @@ typedef struct
 
 int32_t VerifyNuBL3x(uint32_t *pu32FwInfo, uint32_t u32InfoBase);
 
+extern const uint32_t g_InitialFWinfo[]; // A global variable to store NuBL2 FWINFO address, declared in FwInfo.c
+
 /*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/

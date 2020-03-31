@@ -19,9 +19,11 @@ typedef int32_t (*funcptr)(uint32_t);
 extern int32_t Secure_func(void);
 void App_Init(uint32_t u32BootBase);
 void DEBUG_PORT_Init(void);
-
-
-
+int32_t NonSecure_LED_On(uint32_t num);
+int32_t NonSecure_LED_Off(uint32_t num);
+void LED_On(uint32_t us);
+void LED_Off(uint32_t us);
+void SysTick_Handler(void);
 /*----------------------------------------------------------------------------
   NonSecure Callable Functions from Secure Region
  *----------------------------------------------------------------------------*/
@@ -35,6 +37,7 @@ extern int32_t Secure_LED_Off(uint32_t num);
  *----------------------------------------------------------------------------*/
 int32_t NonSecure_LED_On(uint32_t num)
 {
+    (void)num;
     printf("Nonsecure LED On call by Secure\n");
     PC0 = 0;
     return 0;
@@ -42,6 +45,7 @@ int32_t NonSecure_LED_On(uint32_t num)
 
 int32_t NonSecure_LED_Off(uint32_t num)
 {
+    (void)num;
     printf("Nonsecure LED Off call by Secure\n");
     PC0 = 1;
     return 0;
@@ -52,12 +56,14 @@ int32_t NonSecure_LED_Off(uint32_t num)
  *----------------------------------------------------------------------------*/
 void LED_On(uint32_t us)
 {
+    (void)us;
     printf("Nonsecure LED On\n");
     PC1 = 0;
 }
 
 void LED_Off(uint32_t us)
 {
+    (void)us;
     printf("Nonsecure LED Off\n");
     PC1 = 1;
 }

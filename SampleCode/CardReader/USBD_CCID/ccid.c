@@ -11,7 +11,10 @@
 #include "ccid.h"
 #include "ccid_if.h"
 
-uint32_t volatile g_u32OutToggle = 0;
+static uint32_t volatile s_u32OutToggle = 0;
+
+void USBD_IRQHandler(void);
+void EP4_Handler(void);
 
 /*--------------------------------------------------------------------------*/
 void USBD_IRQHandler(void)
@@ -55,7 +58,7 @@ void USBD_IRQHandler(void)
             /* Bus reset */
             USBD_ENABLE_USB();
             USBD_SwReset();
-            g_u32OutToggle = 0;
+            s_u32OutToggle = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
@@ -189,9 +192,9 @@ void EP2_Handler(void)
         }
         else
         {
-            u32Length = gi32UsbdMessageLength;
+            u32Length = (uint32_t)gi32UsbdMessageLength;
             USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2)), pUsbMessageBuffer, u32Length);
-            USBD_SET_PAYLOAD_LEN(EP2, gi32UsbdMessageLength);
+            USBD_SET_PAYLOAD_LEN(EP2, (uint32_t)gi32UsbdMessageLength);
             gi32UsbdMessageLength = 0;
             gu8IsBulkInReady = 0;
         }
@@ -206,13 +209,13 @@ void EP3_Handler(void)
     static int offset = 0;
     uint32_t len;
 
-    if(g_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
+    if(s_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
     {
         USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
     }
     else
     {
-        g_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
+        s_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
         len = USBD_GET_PAYLOAD_LEN(EP3);
 
         USBD_MemCopy(&UsbMessageBuffer[offset], (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3)), len);
@@ -222,7 +225,7 @@ void EP3_Handler(void)
             if(offset == 0)
             {
                 /* Calculate number of byte to receive to finish the message  */
-                gi32UsbdMessageLength = USB_MESSAGE_HEADER_SIZE + make32(&UsbMessageBuffer[OFFSET_DWLENGTH]);
+                gi32UsbdMessageLength = (int32_t)(USB_MESSAGE_HEADER_SIZE + make32(&UsbMessageBuffer[OFFSET_DWLENGTH]));
             }
 
             gi32UsbdMessageLength -= (int) len;
@@ -377,7 +380,7 @@ void CCID_BulkInMessage(void)
 {
     uint32_t u32Length;
 
-    gi32UsbdMessageLength = USB_MESSAGE_HEADER_SIZE + make32(&UsbMessageBuffer[OFFSET_DWLENGTH]);
+    gi32UsbdMessageLength = (int32_t)(USB_MESSAGE_HEADER_SIZE + make32(&UsbMessageBuffer[OFFSET_DWLENGTH]));
 
     pUsbMessageBuffer = UsbMessageBuffer;
 
@@ -394,9 +397,9 @@ void CCID_BulkInMessage(void)
         }
         else
         {
-            u32Length = gi32UsbdMessageLength;
+            u32Length = (uint32_t)gi32UsbdMessageLength;
             USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2)), pUsbMessageBuffer, u32Length);
-            USBD_SET_PAYLOAD_LEN(EP2, gi32UsbdMessageLength);
+            USBD_SET_PAYLOAD_LEN(EP2, (uint32_t)gi32UsbdMessageLength);
             gi32UsbdMessageLength = 0;
             gu8IsBulkInReady = 0;
         }

@@ -19,7 +19,7 @@
 
 volatile uint32_t gNuBL2_32Key[8], gNuBL2_33Key[8];
 
-volatile ISP_INFO_T g_NuBL2ISPInfo = {0};
+static volatile ISP_INFO_T s_NuBL2ISPInfo = {0};
 
 #define PLL_CLOCK       64000000
 
@@ -27,6 +27,13 @@ volatile ISP_INFO_T g_NuBL2ISPInfo = {0};
 const uint32_t g_au32Eorder[] = {
     0xFC632551, 0xF3B9CAC2, 0xA7179E84, 0xBCE6FAAD, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF
 };
+
+void WDT_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
+void HardFault_Handler(void)__attribute__((noreturn));
+void WdtEnableAndCheck(void);
+int8_t NuBLTrustBootInit(void);
 
 /**
  * @brief       IRQ Handler for WDT Interrupt
@@ -203,7 +210,10 @@ int main(void)
 {
     uint8_t u8FailNuBL3x; /* Bit0 = 1: NuBL32, Bit1 = 1: NuBL33 */
     uint8_t u32NeedReset = 0;
-
+#if 0
+    uint32_t    u32NuBL2ISPInfoAddr;
+    ISP_INFO_T  *pu32NuBL2ISPInfoAddr;
+#endif
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -366,12 +376,12 @@ _VERIFY_FAIL:
             printf("\nClear NuBL33 F/W version failed.\n");
         }
     }
-#endif
+
     SYS_UnlockReg();
     FMC_Open();
     FMC_ENABLE_AP_UPDATE();
     /* init OTA */
-    OTA_Init(__HSI, (ISP_INFO_T *)&g_NuBL2ISPInfo);
+    OTA_Init(__HSI, (ISP_INFO_T *)&s_NuBL2ISPInfo);
     if (OTA_TaskProcess() == 0)
     {
         /* check OTA status and re-boot for update firmware */
@@ -382,7 +392,7 @@ _VERIFY_FAIL:
         }
     }
     goto reset;
-    while(1) {}
+#endif
 
 reset:
     while(!(UART_IS_TX_EMPTY(DEBUG_PORT)));
@@ -395,9 +405,12 @@ reset:
 #else /* update on the fly */
 int main(void)
 {
-    uint32_t    count;
+#if 0
     uint32_t u32NeedReset = 0;
+#endif
+#if (WDT_RST_ENABLE)
     uint32_t u32Cfg;
+#endif
     uint8_t u8FailNuBL3x; /* Bit0 = 1: NuBL32, Bit1 = 1: NuBL33 */
 
     /* Unlock protected registers */
@@ -409,7 +422,7 @@ int main(void)
     /* Init UART for printf */
     UART_Init();
 
-    printf("\n\n[HCLK %d Hz] (%s, %s)\n", SystemCoreClock, __DATE__, __TIME__);
+    printf("\n\n[HCLK %d Hz]\n", SystemCoreClock);
     printf("+------------------------------------+\n");
     printf("|    M2351 Secure OTA Sample Code    |\n");
     printf("+------------------------------------+\n\n");
@@ -438,7 +451,7 @@ int main(void)
     if (FMC_Read(OTA_STATUS_BASE) == 1)
     {
         /* init wifi module and connect to OTA server */
-        OTA_Init(__HSI, (ISP_INFO_T *)&g_NuBL2ISPInfo);
+        OTA_Init(__HSI, (ISP_INFO_T *)(uint32_t)&s_NuBL2ISPInfo);
         if (OTA_TaskProcess() == 0)
         {
             SYS_UnlockReg();
@@ -543,7 +556,7 @@ _VERIFY_FAIL:
             printf("\nClear NuBL33 F/W version failed.\n");
         }
     }
-#endif
+
     SYS_UnlockReg();
     FMC_Open();
     FMC_ENABLE_AP_UPDATE();
@@ -552,7 +565,7 @@ _VERIFY_FAIL:
     FMC_Write(OTA_STATUS_BASE, 0x1UL);
 
     /* init OTA */
-    OTA_Init(__HSI, (ISP_INFO_T *)&g_NuBL2ISPInfo);
+    OTA_Init(__HSI, (ISP_INFO_T *)&s_NuBL2ISPInfo);
     if (OTA_TaskProcess() == 0)
     {
         /* check OTA status and re-boot for update firmware */
@@ -563,8 +576,7 @@ _VERIFY_FAIL:
         }
     }
     goto reset;
-
-    while(1) {}
+#endif
 
 reset:
     while(!(UART_IS_TX_EMPTY(DEBUG_PORT)));
@@ -616,10 +628,10 @@ int32_t NuBL2_Init(void)
             printf("\tBoot from LDROM.\n");
     }
 
-    u32XOMStatus = FMC_GetXOMState(XOMR0);
+    u32XOMStatus = (uint32_t)FMC_GetXOMState(XOMR0);
     printf("\t[XOM0            : %s]", (u32XOMStatus==1)?"Active":"Inactive");
     printf("\tBase: 0x%08x; Page count: 0x%08x.\n", (FMC->XOMR0STS>>8), (FMC->XOMR0STS&0xFF));
-    u32XOMStatus = FMC_GetXOMState(XOMR1);
+    u32XOMStatus = (uint32_t)FMC_GetXOMState(XOMR1);
     printf("\t[XOM1            : %s]", (u32XOMStatus==1)?"Active":"Inactive");
     printf("\tBase: 0x%08x; Page count: 0x%08x.\n", (FMC->XOMR1STS>>8), (FMC->XOMR1STS&0xFF));
 

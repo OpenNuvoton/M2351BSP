@@ -12,25 +12,30 @@
 #include <string.h>
 #include "NuMicro.h"
 
+void CRPT_IRQHandler(void);
+void DumpBuffHex(uint8_t *pucBuff, int nBytes);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+
 /* 
    NOTE: 
          AES Engine key format is Key0_Reg = First key word, Key1_Reg = Second key word,
          and so on.
 */
 // Key: 0x9C866E5FD8E0DBA8F76044C2AAB1E50C115D8153534AC15185419F0A5B3E6A4B
-uint32_t au32MyAESKey[8] =
+static uint32_t s_au32MyAESKey[8] =
 {
     0x9C866E5F,    0xD8E0DBA8,    0xF76044C2,    0xAAB1E50C,
     0x115D8153,    0x534AC151,    0x85419F0A,    0x5B3E6A4B
 };
 
 // IV: 0x1000000030000000000000000000000a
-uint32_t au32MyAESIV[4] =
+static uint32_t s_au32MyAESIV[4] =
 {
     0x10000000, 0x30000000, 0x00000000, 0x0000000a
 };
 
-__ALIGNED(4) uint8_t au8InputData[] =
+static __ALIGNED(4) uint8_t s_au8InputData[] =
 {
     0xd7, 0x3e, 0xbb, 0x64, 0x93, 0xdc, 0x47, 0x93, 
     0x44, 0xe7, 0xd9, 0x06, 0x46, 0x72, 0x77, 0x2a, 
@@ -43,8 +48,8 @@ __ALIGNED(4) uint8_t au8InputData[] =
 
 };
 
-__ALIGNED(4) uint8_t au8OutputData[1024];
-__ALIGNED(4) uint8_t au8OutputData2[1024];
+static __ALIGNED(4) uint8_t s_au8OutputData[1024];
+static __ALIGNED(4) uint8_t s_au8OutputData2[1024];
 
 static volatile int32_t  g_AES_done;
 
@@ -140,7 +145,7 @@ void DEBUG_PORT_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    int32_t i;
+    uint32_t i;
     uint32_t u32AesMode;
     uint32_t u32KeySizeOpt;
     
@@ -166,12 +171,12 @@ int32_t main(void)
     u32KeySizeOpt = AES_KEY_SIZE_256;
      
     AES_Open(CRPT, 0, 1, u32AesMode, u32KeySizeOpt, AES_IN_OUT_SWAP);
-    AES_SetKey(CRPT, 0, au32MyAESKey, u32KeySizeOpt);
+    AES_SetKey(CRPT, 0, s_au32MyAESKey, u32KeySizeOpt);
     
     /* The IV should be changed at each encrypt/decrypt */
-    AES_SetInitVect(CRPT, 0, au32MyAESIV);
+    AES_SetInitVect(CRPT, 0, s_au32MyAESIV);
     
-    AES_SetDMATransfer(CRPT, 0, (uint32_t)au8InputData, (uint32_t)au8OutputData, sizeof(au8InputData));
+    AES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8InputData, (uint32_t)s_au8OutputData, sizeof(s_au8InputData));
 
     g_AES_done = 0;
     /* Start AES Eecrypt */
@@ -180,18 +185,18 @@ int32_t main(void)
     while(!g_AES_done);
 
     printf("AES encrypt done.\n\n");
-    DumpBuffHex(au8OutputData, sizeof(au8InputData));
+    DumpBuffHex(s_au8OutputData, sizeof(s_au8InputData));
 
     /*---------------------------------------
      *  AES decrypt
      *---------------------------------------*/
     AES_Open(CRPT, 0, 0, u32AesMode, u32KeySizeOpt, AES_IN_OUT_SWAP);
-    AES_SetKey(CRPT, 0, au32MyAESKey, u32KeySizeOpt);
+    AES_SetKey(CRPT, 0, s_au32MyAESKey, u32KeySizeOpt);
     
     /* The IV should be changed at each encrypt/decrypt */
-    AES_SetInitVect(CRPT, 0, au32MyAESIV);
+    AES_SetInitVect(CRPT, 0, s_au32MyAESIV);
     
-    AES_SetDMATransfer(CRPT, 0, (uint32_t)au8OutputData, (uint32_t)au8OutputData2, sizeof(au8InputData));
+    AES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8OutputData, (uint32_t)s_au8OutputData2, sizeof(s_au8InputData));
 
     g_AES_done = 0;
     /* Start AES decrypt */
@@ -202,22 +207,22 @@ int32_t main(void)
     printf("AES decrypt done.\n\n");
     
     printf("Original data:\n");
-    DumpBuffHex(au8InputData, sizeof(au8InputData));
+    DumpBuffHex(s_au8InputData, sizeof(s_au8InputData));
     
     printf("Decrypt data :\n");
-    DumpBuffHex(au8OutputData2, sizeof(au8InputData));
+    DumpBuffHex(s_au8OutputData2, sizeof(s_au8InputData));
 
     /* Compare the decrpt results */
-    for(i=0;i<sizeof(au8InputData);i++)
+    for(i=0;i<sizeof(s_au8InputData);i++)
     {
-        if(au8InputData[i] != au8OutputData2[i])
+        if(s_au8InputData[i] != s_au8OutputData2[i])
         {
             printf("FAIL: Decrypt result is not correct!\n");
             break;
         }
     }
     
-    if(i == sizeof(au8InputData))
+    if(i == sizeof(s_au8InputData))
     {
         printf("AES Encrypt/Decrypt OK!\n");
     }

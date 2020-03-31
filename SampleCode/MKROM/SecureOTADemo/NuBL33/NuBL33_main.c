@@ -13,9 +13,11 @@
 
 /* Non-secure Callable function of NuBL32 */
 extern void ShowCountersInNuBL32(uint32_t *in);
-extern void BL32_OTA_Start();
+extern void BL32_OTA_Start(void);
 extern void WdtResetCnt(void);
 extern int32_t BL32_GetBL33FwVer(uint32_t * pu32FwVer);
+
+void SysTick_Handler(void);
 
 void SysTick_Handler(void)
 {
@@ -34,7 +36,6 @@ void SysTick_Handler(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    uint32_t temp;
     uint32_t    u32FwVer = 0;
 
     printf("\n");
@@ -42,11 +43,11 @@ int main(void)
     printf("|    M2351 NuBL33(Non-secure) Sample Code    |\n");
     printf("+--------------------------------------------+\n\n");
 {
-    extern const FW_INFO_T g_InitialFWinfo;
-    uint32_t cfg = g_InitialFWinfo.mData.u32AuthCFGs;
+    extern const FW_INFO_T g_FWinfoInitial;
+    uint32_t cfg = g_FWinfoInitial.mData.u32AuthCFGs;
     printf("\n[AuthCFG: 0x%08x]\n", cfg);
 }
-    
+
     if (BL32_GetBL33FwVer((uint32_t *)&u32FwVer) == 0)
         printf("NuBL33 Firmware Ver: 0x%08x\n\n", u32FwVer);
     else
@@ -58,7 +59,6 @@ int main(void)
     SysTick_Config(SystemCoreClock / 100);
 
     BL32_OTA_Start();
-//    ShowCountersInNuBL32(&temp);
 
     while(1) {}
 }

@@ -70,6 +70,14 @@ Build & Debug flow:
 
 *----------------------------------------------------------------------------*/
 
+__attribute__((cmse_nonsecure_entry))
+uint32_t GetSystemCoreClock(void);
+__attribute__((cmse_nonsecure_entry))
+void SecureWrite(uint32_t u32Addr, uint32_t u32Data);
+__attribute__((cmse_nonsecure_entry))
+uint32_t SecureRead(uint32_t u32Addr);
+void SysTick_Handler(void);
+void HardFault_Handlerx(void)__attribute__((noreturn));
 /*----------------------------------------------------------------------------
   Secure functions exported to NonSecure application
   Must place in Non-secure Callable
@@ -132,9 +140,9 @@ int main(void)
 {
     uint32_t u32MSP_s, u32PSP_s;
     uint32_t u32MSP_ns, u32PSP_ns;
-    volatile uint32_t NonSecure_ResetHandler;
-    NonSecure_funcptr fp;
-    char ch;
+//    volatile uint32_t NonSecure_ResetHandler;
+//    NonSecure_funcptr fp;
+//    char ch;
 
     SYS_UnlockReg();
     SYS_Init();
@@ -167,7 +175,6 @@ int main(void)
     
     while(1);
 
-    return 0;
 }
 
 
@@ -216,7 +223,7 @@ void Nonsecure_Init(void)
 
 void SYS_Init(void)
 {
-    int32_t i;
+//    int32_t i;
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/

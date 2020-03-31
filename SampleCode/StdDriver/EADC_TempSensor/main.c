@@ -12,13 +12,16 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32AdcIntFlag;
+static volatile uint32_t s_u32AdcIntFlag;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
 void EADC_FunctionTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void EADC0_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -114,11 +117,11 @@ void EADC_FunctionTest()
     NVIC_EnableIRQ(EADC0_IRQn);
 
     /* Reset the ADC interrupt indicator and trigger sample module 17 to start A/D conversion */
-    g_u32AdcIntFlag = 0;
+    s_u32AdcIntFlag = 0;
     EADC_START_CONV(EADC, BIT17);
 
     /* Wait EADC conversion done */
-    while(g_u32AdcIntFlag == 0);
+    while(s_u32AdcIntFlag == 0);
 
     /* Disable the ADINT0 interrupt */
     EADC_DISABLE_INT(EADC, BIT0);
@@ -135,7 +138,7 @@ void EADC_FunctionTest()
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC0_IRQHandler(void)
 {
-    g_u32AdcIntFlag = 1;
+    s_u32AdcIntFlag = 1;
     /* Clear the A/D ADINT0 interrupt flag */
     EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADIF0_Msk);
 }

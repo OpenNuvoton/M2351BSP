@@ -1,5 +1,5 @@
 /**************************************************************************//**
- * @file     lbk_driver.c
+ * @file     s_LbkDriver.c
  * @version  1.0.1
  * @brief    M2351 MCU USB Host Vendor LBK driver
  *
@@ -38,7 +38,7 @@ typedef struct lbk_device_t
     UTR_T        *utr_iso_out[ISO_UTR_NUM];
 }  LBK_DEV_T;
 
-volatile struct lbk_device_t  g_lbk_dev;
+static volatile struct lbk_device_t  s_LbkDev;
 
 
 /*
@@ -50,10 +50,10 @@ int  lbk_vendor_set_data(uint8_t *buff)
     uint32_t   xfer_len = 0;
     int        ret;
 
-    if(g_lbk_dev.udev == NULL)
+    if(s_LbkDev.udev == NULL)
         return -1;
 
-    ret = usbh_ctrl_xfer(g_lbk_dev.udev,
+    ret = usbh_ctrl_xfer(s_LbkDev.udev,
                          REQ_TYPE_OUT | REQ_TYPE_CLASS_DEV | REQ_TYPE_TO_DEV,  /* bmRequestType  */
                          REQ_SET_DATA,                  /* bRequest                              */
                          0,                             /* wValue: not used in this command      */
@@ -80,10 +80,10 @@ int  lbk_vendor_get_data(uint8_t *buff)
     uint32_t   xfer_len = 0;
     int        ret;
 
-    if(g_lbk_dev.udev == NULL)
+    if(s_LbkDev.udev == NULL)
         return -1;
 
-    ret = usbh_ctrl_xfer(g_lbk_dev.udev,
+    ret = usbh_ctrl_xfer(s_LbkDev.udev,
                          REQ_TYPE_IN | REQ_TYPE_CLASS_DEV | REQ_TYPE_TO_DEV,   /* bmRequestType  */
                          REQ_GET_DATA,                  /* bRequest                              */
                          0,                             /* wValue: not used in this command      */
@@ -105,20 +105,20 @@ int  lbk_vendor_get_data(uint8_t *buff)
  *  Write a block of data to Vendor LBK device.
  *  Use bulk-out transfer.
  */
-int lbk_bulk_write(uint8_t *data_buff, int data_len, int timeout_ticks)
+int lbk_bulk_write(uint8_t *data_buff, uint32_t data_len, uint32_t timeout_ticks)
 {
     UTR_T     *utr;
     uint32_t  t0;
     int       ret;
 
-    if((g_lbk_dev.udev == NULL) || (g_lbk_dev.ep_bulk_out == NULL))
+    if((s_LbkDev.udev == NULL) || (s_LbkDev.ep_bulk_out == NULL))
         return -1;
 
-    utr = alloc_utr(g_lbk_dev.udev);
+    utr = alloc_utr(s_LbkDev.udev);
     if(!utr)
         return USBH_ERR_MEMORY_OUT;
 
-    utr->ep = g_lbk_dev.ep_bulk_out;
+    utr->ep = s_LbkDev.ep_bulk_out;
     utr->buff = data_buff;
     utr->data_len = data_len;
     utr->xfer_len = 0;
@@ -151,20 +151,20 @@ int lbk_bulk_write(uint8_t *data_buff, int data_len, int timeout_ticks)
  *  Read a block of data from Vendor LBK device.
  *  Use bulk-in transfer.
  */
-int lbk_bulk_read(uint8_t *data_buff, int data_len, int timeout_ticks)
+int lbk_bulk_read(uint8_t *data_buff, uint32_t data_len, uint32_t timeout_ticks)
 {
     UTR_T     *utr;
     uint32_t  t0;
     int       ret;
 
-    if((g_lbk_dev.udev == NULL) || (g_lbk_dev.ep_bulk_in == NULL))
+    if((s_LbkDev.udev == NULL) || (s_LbkDev.ep_bulk_in == NULL))
         return -1;
 
-    utr = alloc_utr(g_lbk_dev.udev);
+    utr = alloc_utr(s_LbkDev.udev);
     if(!utr)
         return USBH_ERR_MEMORY_OUT;
 
-    utr->ep = g_lbk_dev.ep_bulk_in;
+    utr->ep = s_LbkDev.ep_bulk_in;
     utr->buff = data_buff;
     utr->data_len = data_len;
     utr->xfer_len = 0;
@@ -198,39 +198,39 @@ static void  int_in_done(UTR_T *utr)
     int         ret;
 
     //printf("int_in_done. %d\n", utr->xfer_len);
-    if(g_lbk_dev.int_in_func == NULL)
+    if(s_LbkDev.int_in_func == NULL)
         goto err_out;           /* interrupt-in stopped */
 
     if(utr->status != 0)
     {
-        g_lbk_dev.int_in_func(utr->status, utr->buff, utr->xfer_len);
+        s_LbkDev.int_in_func(utr->status, utr->buff, (int)utr->xfer_len);
         printf("int_in_done - stop or error: 0x%x\n", utr->status);
         goto err_out;
     }
 
-    if(g_lbk_dev.int_in_func && utr->xfer_len)
-        g_lbk_dev.int_in_func(utr->status, utr->buff, utr->xfer_len);
+    if(s_LbkDev.int_in_func && utr->xfer_len)
+        s_LbkDev.int_in_func(utr->status, utr->buff, (int)utr->xfer_len);
 
     utr->xfer_len = 0;
     ret = usbh_int_xfer(utr);
     if(ret != 0)
     {
         printf("int_in_done - failed to re-submit interrupt-in request (%d)", ret);
-        g_lbk_dev.int_in_func(ret, utr->buff, 0);
+        s_LbkDev.int_in_func(ret, utr->buff, 0);
         goto err_out;
     }
     return;
 
 err_out:
-    if(utr == g_lbk_dev.utr_int_in[0])
+    if(utr == s_LbkDev.utr_int_in[0])
     {
-        free_utr(g_lbk_dev.utr_int_in[0]);
-        g_lbk_dev.utr_int_in[0] = NULL;
+        free_utr(s_LbkDev.utr_int_in[0]);
+        s_LbkDev.utr_int_in[0] = NULL;
     }
-    else if(utr == g_lbk_dev.utr_int_in[1])
+    else if(utr == s_LbkDev.utr_int_in[1])
     {
-        free_utr(g_lbk_dev.utr_int_in[1]);
-        g_lbk_dev.utr_int_in[1] = NULL;
+        free_utr(s_LbkDev.utr_int_in[1]);
+        s_LbkDev.utr_int_in[1] = NULL;
     }
 }
 
@@ -242,29 +242,29 @@ int lbk_interrupt_in_start(INT_CB_FUNC *func)
     UTR_T     *utr;
     int       i, ret;
 
-    if((g_lbk_dev.udev == NULL) || (g_lbk_dev.ep_int_in == NULL) || (func == NULL))
+    if((s_LbkDev.udev == NULL) || (s_LbkDev.ep_int_in == NULL) || (func == NULL))
         return -1;
 
     for(i = 0; i < 2; i++)
     {
-        utr = alloc_utr(g_lbk_dev.udev);
+        utr = alloc_utr(s_LbkDev.udev);
         if(!utr)
             return USBH_ERR_MEMORY_OUT;
 
-        utr->ep = g_lbk_dev.ep_int_in;
-        utr->buff = (uint8_t *)g_lbk_dev.buff_int_in[i];
+        utr->ep = s_LbkDev.ep_int_in;
+        utr->buff = (uint8_t *)(uint32_t)s_LbkDev.buff_int_in[i];
         utr->data_len = utr->ep->wMaxPacketSize;
         utr->xfer_len = 0;
         utr->func = int_in_done;
-        g_lbk_dev.int_in_func = func;
-        g_lbk_dev.utr_int_in[i] = utr;
+        s_LbkDev.int_in_func = func;
+        s_LbkDev.utr_int_in[i] = utr;
 
         ret = usbh_int_xfer(utr);
         if(ret < 0)
         {
             //printf("Error - failed to submit interrupt-in transfer (%d)\n", ret);
             free_utr(utr);
-            g_lbk_dev.utr_int_in[i] = NULL;
+            s_LbkDev.utr_int_in[i] = NULL;
             return ret;
         }
     }
@@ -276,17 +276,17 @@ void lbk_interrupt_in_stop(void)
     int   i;
 
     /* clear <int_in_func> to stop cascading transfers */
-    g_lbk_dev.int_in_func = NULL;
+    s_LbkDev.int_in_func = NULL;
     delay_us(32000);
 
     for(i = 0; i < 2; i++)
     {
-        if(g_lbk_dev.utr_int_in[i] != NULL)
+        if(s_LbkDev.utr_int_in[i] != NULL)
         {
-            usbh_quit_utr(g_lbk_dev.utr_int_in[i]);    /* force to stop the transfer   */
+            usbh_quit_utr(s_LbkDev.utr_int_in[i]);    /* force to stop the transfer   */
             delay_us(32000);
-            free_utr(g_lbk_dev.utr_int_in[i]);
-            g_lbk_dev.utr_int_in[i] = NULL;
+            free_utr(s_LbkDev.utr_int_in[i]);
+            s_LbkDev.utr_int_in[i] = NULL;
         }
     }
 }
@@ -296,40 +296,40 @@ static void  int_out_done(UTR_T *utr)
     int         ret;
 
     //printf("int_out_done. %d\n", utr->xfer_len);
-    if(g_lbk_dev.int_out_func == NULL)
+    if(s_LbkDev.int_out_func == NULL)
         goto err_out;              /* interrupt-out stopped */
 
     if(utr->status != 0)
     {
         printf("int_out_done - stop or error: 0x%x\n", utr->status);
-        utr->data_len = g_lbk_dev.int_out_func(utr->status, utr->buff, utr->ep->wMaxPacketSize);
+        utr->data_len = (uint32_t)s_LbkDev.int_out_func(utr->status, utr->buff, utr->ep->wMaxPacketSize);
         goto err_out;
     }
 
     /* callback to prepare data for next interrupt out trasnfer */
-    if(g_lbk_dev.int_out_func)
-        utr->data_len = g_lbk_dev.int_out_func(0, utr->buff, utr->ep->wMaxPacketSize);
+    if(s_LbkDev.int_out_func)
+        utr->data_len = (uint32_t)s_LbkDev.int_out_func(0, utr->buff, utr->ep->wMaxPacketSize);
 
     utr->xfer_len = 0;
     ret = usbh_int_xfer(utr);
     if(ret != 0)
     {
         printf("int_out_done - failed to re-submit interrupt-out request (%d)", ret);
-        g_lbk_dev.int_out_func(-1, utr->buff, 0);
+        s_LbkDev.int_out_func(-1, utr->buff, 0);
         goto err_out;
     }
     return;
 
 err_out:
-    if(utr == g_lbk_dev.utr_int_out[0])
+    if(utr == s_LbkDev.utr_int_out[0])
     {
-        free_utr(g_lbk_dev.utr_int_out[0]);
-        g_lbk_dev.utr_int_out[0] = NULL;
+        free_utr(s_LbkDev.utr_int_out[0]);
+        s_LbkDev.utr_int_out[0] = NULL;
     }
-    else if(utr == g_lbk_dev.utr_int_out[1])
+    else if(utr == s_LbkDev.utr_int_out[1])
     {
-        free_utr(g_lbk_dev.utr_int_out[1]);
-        g_lbk_dev.utr_int_out[1] = NULL;
+        free_utr(s_LbkDev.utr_int_out[1]);
+        s_LbkDev.utr_int_out[1] = NULL;
     }
 }
 
@@ -341,29 +341,29 @@ int lbk_interrupt_out_start(INT_CB_FUNC *func)
     UTR_T     *utr;
     int       i, ret;
 
-    if((g_lbk_dev.udev == NULL) || (g_lbk_dev.ep_int_out == NULL) || (func == NULL))
+    if((s_LbkDev.udev == NULL) || (s_LbkDev.ep_int_out == NULL) || (func == NULL))
         return -1;
 
     for(i = 0; i < 2; i++)
     {
-        utr = alloc_utr(g_lbk_dev.udev);
+        utr = alloc_utr(s_LbkDev.udev);
         if(!utr)
             return USBH_ERR_MEMORY_OUT;
 
-        utr->ep = g_lbk_dev.ep_int_out;
-        utr->buff = (uint8_t *)g_lbk_dev.buff_int_out[i];
+        utr->ep = s_LbkDev.ep_int_out;
+        utr->buff = (uint8_t *)(uint32_t)s_LbkDev.buff_int_out[i];
         utr->xfer_len = 0;
         utr->func = int_out_done;
-        g_lbk_dev.int_out_func = func;
-        g_lbk_dev.utr_int_out[i] = utr;
-        utr->data_len = g_lbk_dev.int_out_func(0, utr->buff, utr->ep->wMaxPacketSize);
+        s_LbkDev.int_out_func = func;
+        s_LbkDev.utr_int_out[i] = utr;
+        utr->data_len = (uint32_t)s_LbkDev.int_out_func(0, utr->buff, utr->ep->wMaxPacketSize);
 
         ret = usbh_int_xfer(utr);
         if(ret < 0)
         {
             //printf("Error - failed to submit interrupt-out transfer (%d)\n", ret);
             free_utr(utr);
-            g_lbk_dev.utr_int_out[i] = NULL;
+            s_LbkDev.utr_int_out[i] = NULL;
             return ret;
         }
     }
@@ -375,17 +375,17 @@ void lbk_interrupt_out_stop(void)
     int   i;
 
     /* clear <int_in_func> to stop cascading transfers */
-    g_lbk_dev.int_out_func = NULL;
+    s_LbkDev.int_out_func = NULL;
     delay_us(32000);
 
     for(i = 0; i < 2; i++)
     {
-        if(g_lbk_dev.utr_int_out[i] != NULL)
+        if(s_LbkDev.utr_int_out[i] != NULL)
         {
-            usbh_quit_utr(g_lbk_dev.utr_int_out[i]);    /* force to stop the transfer   */
+            usbh_quit_utr(s_LbkDev.utr_int_out[i]);    /* force to stop the transfer   */
             delay_us(32000);
-            free_utr(g_lbk_dev.utr_int_out[i]);
-            g_lbk_dev.utr_int_out[i] = NULL;
+            free_utr(s_LbkDev.utr_int_out[i]);
+            s_LbkDev.utr_int_out[i] = NULL;
         }
     }
 }
@@ -395,7 +395,7 @@ static void iso_in_done(UTR_T *utr)
     int         i, ret;
 
     //printf("SF=%d, 0x%x\n", utr->iso_sf, (int)utr);
-    if(!g_lbk_dev.iso_in_func)
+    if(!s_LbkDev.iso_in_func)
         return;
 
     utr->bIsoNewSched = 0;
@@ -404,8 +404,8 @@ static void iso_in_done(UTR_T *utr)
     {
         if(utr->iso_status[i] == 0)
         {
-            if(g_lbk_dev.iso_in_func && (utr->iso_xlen[i] > 0))
-                g_lbk_dev.iso_in_func(utr->buff, utr->xfer_len);
+            if(s_LbkDev.iso_in_func && (utr->iso_xlen[i] > 0))
+                s_LbkDev.iso_in_func(utr->buff, (int)utr->xfer_len);
         }
         else
         {
@@ -435,8 +435,8 @@ int lbk_isochronous_in_start(ISO_CB_FUNC *func)
     uint8_t      *buff;
     int          i, j, ret;
 
-    g_lbk_dev.iso_in_func = func;
-    ep = g_lbk_dev.ep_iso_in;
+    s_LbkDev.iso_in_func = func;
+    ep = s_LbkDev.ep_iso_in;
 
     if((ep == NULL) || (func == NULL))
         return -1;
@@ -446,8 +446,8 @@ int lbk_isochronous_in_start(ISO_CB_FUNC *func)
     /*------------------------------------------------------------------------------------*/
     for(i = 0; i < ISO_UTR_NUM; i++)        /* allocate UTRs                              */
     {
-        g_lbk_dev.utr_iso_in[i] = alloc_utr(g_lbk_dev.udev);      /* allocate UTR         */
-        if(g_lbk_dev.utr_iso_in[i] == NULL)
+        s_LbkDev.utr_iso_in[i] = alloc_utr(s_LbkDev.udev);      /* allocate UTR         */
+        if(s_LbkDev.utr_iso_in[i] == NULL)
         {
             printf("Memory not enough! Please increase the UTR number.\n");
             ret = USBH_ERR_MEMORY_OUT;      /* memory allocate failed                     */
@@ -466,7 +466,7 @@ int lbk_isochronous_in_start(ISO_CB_FUNC *func)
     for(i = 0; i < ISO_UTR_NUM; i++)        /* dispatch buffers                           */
     {
         /* divide buffer equally                      */
-        utr = g_lbk_dev.utr_iso_in[i];
+        utr = s_LbkDev.utr_iso_in[i];
         utr->buff = buff + (ep->wMaxPacketSize * IF_PER_UTR * i);
         utr->data_len = ep->wMaxPacketSize * IF_PER_UTR;
         for(j = 0; j < IF_PER_UTR; j++)
@@ -480,11 +480,11 @@ int lbk_isochronous_in_start(ISO_CB_FUNC *func)
     /*  Start UTRs                                                                        */
     /*------------------------------------------------------------------------------------*/
 
-    g_lbk_dev.utr_iso_in[0]->bIsoNewSched = 1;
+    s_LbkDev.utr_iso_in[0]->bIsoNewSched = 1;
 
     for(i = 0; i < ISO_UTR_NUM; i++)
     {
-        utr = g_lbk_dev.utr_iso_in[i];
+        utr = s_LbkDev.utr_iso_in[i];
         utr->ep = ep;
         utr->func = iso_in_done;
         ret = usbh_iso_xfer(utr);
@@ -500,20 +500,20 @@ err_out:
 
     for(i = 0; i < ISO_UTR_NUM; i++)            /* quit all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_in[i])
-            usbh_quit_utr(g_lbk_dev.utr_iso_in[i]);
+        if(s_LbkDev.utr_iso_in[i])
+            usbh_quit_utr(s_LbkDev.utr_iso_in[i]);
     }
 
     /* free USB transfer buffer                   */
-    if((g_lbk_dev.utr_iso_in[0] != NULL) &&
-            (g_lbk_dev.utr_iso_in[0]->buff != NULL))
-        usbh_free_mem(g_lbk_dev.utr_iso_in[0]->buff, g_lbk_dev.utr_iso_in[0]->data_len * ISO_UTR_NUM);
+    if((s_LbkDev.utr_iso_in[0] != NULL) &&
+            (s_LbkDev.utr_iso_in[0]->buff != NULL))
+        usbh_free_mem(s_LbkDev.utr_iso_in[0]->buff, (int)s_LbkDev.utr_iso_in[0]->data_len * ISO_UTR_NUM);
 
     for(i = 0; i < ISO_UTR_NUM; i++)            /* free all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_in[i])
-            free_utr(g_lbk_dev.utr_iso_in[i]);
-        g_lbk_dev.utr_iso_in[i] = NULL;
+        if(s_LbkDev.utr_iso_in[i])
+            free_utr(s_LbkDev.utr_iso_in[i]);
+        s_LbkDev.utr_iso_in[i] = NULL;
     }
     return ret;
 }
@@ -523,23 +523,23 @@ void lbk_isochronous_in_stop(void)
     int          i;
 
     /* clear <iso_in_func> to stop cascading transfers */
-    g_lbk_dev.iso_in_func = NULL;
+    s_LbkDev.iso_in_func = NULL;
 
     for(i = 0; i < ISO_UTR_NUM; i++)        /* stop all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_in[i])
-            usbh_quit_utr(g_lbk_dev.utr_iso_in[i]);
+        if(s_LbkDev.utr_iso_in[i])
+            usbh_quit_utr(s_LbkDev.utr_iso_in[i]);
     }
 
-    if((g_lbk_dev.utr_iso_in[0] != NULL) &&
-            (g_lbk_dev.utr_iso_in[0]->buff != NULL))       /* free audio buffer                */
-        usbh_free_mem(g_lbk_dev.utr_iso_in[0]->buff, g_lbk_dev.utr_iso_in[0]->data_len * ISO_UTR_NUM);
+    if((s_LbkDev.utr_iso_in[0] != NULL) &&
+            (s_LbkDev.utr_iso_in[0]->buff != NULL))       /* free audio buffer                */
+        usbh_free_mem(s_LbkDev.utr_iso_in[0]->buff, (int)s_LbkDev.utr_iso_in[0]->data_len * ISO_UTR_NUM);
 
     for(i = 0; i < ISO_UTR_NUM; i++)        /* free all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_in[i])
-            free_utr(g_lbk_dev.utr_iso_in[i]);
-        g_lbk_dev.utr_iso_in[i] = NULL;
+        if(s_LbkDev.utr_iso_in[i])
+            free_utr(s_LbkDev.utr_iso_in[i]);
+        s_LbkDev.utr_iso_in[i] = NULL;
     }
 }
 
@@ -548,7 +548,7 @@ static void iso_out_done(UTR_T *utr)
     int   i, ret;
     //printf("SF=%d, 0x%x\n", utr->iso_sf, (int)utr);
 
-    if(!g_lbk_dev.iso_out_func)
+    if(!s_LbkDev.iso_out_func)
         return;
 
     utr->bIsoNewSched = 0;
@@ -561,8 +561,8 @@ static void iso_out_done(UTR_T *utr)
             if((utr->iso_status[i] == USBH_ERR_NOT_ACCESS0) || (utr->iso_status[i] == USBH_ERR_NOT_ACCESS1))
                 utr->bIsoNewSched = 1;
         }
-        if(g_lbk_dev.iso_out_func)
-            utr->iso_xlen[i] = g_lbk_dev.iso_out_func(utr->iso_buff[i], utr->ep->wMaxPacketSize);
+        if(s_LbkDev.iso_out_func)
+            utr->iso_xlen[i] = (uint16_t)s_LbkDev.iso_out_func(utr->iso_buff[i], utr->ep->wMaxPacketSize);
     }
 
     /* schedule the following isochronous transfers */
@@ -581,8 +581,8 @@ int lbk_isochronous_out_start(ISO_CB_FUNC *func)
     uint8_t      *buff;
     int          i, j, ret;
 
-    g_lbk_dev.iso_out_func = func;
-    ep = g_lbk_dev.ep_iso_out;
+    s_LbkDev.iso_out_func = func;
+    ep = s_LbkDev.ep_iso_out;
 
     if((ep == NULL) || (func == NULL))
         return -1;
@@ -592,8 +592,8 @@ int lbk_isochronous_out_start(ISO_CB_FUNC *func)
     /*------------------------------------------------------------------------------------*/
     for(i = 0; i < ISO_UTR_NUM; i++)        /* allocate UTRs                              */
     {
-        g_lbk_dev.utr_iso_out[i] = alloc_utr(g_lbk_dev.udev);     /* allocate UTR         */
-        if(g_lbk_dev.utr_iso_out[i] == NULL)
+        s_LbkDev.utr_iso_out[i] = alloc_utr(s_LbkDev.udev);     /* allocate UTR         */
+        if(s_LbkDev.utr_iso_out[i] == NULL)
         {
             printf("Memory not enough! Please increase the UTR number.\n");
             ret = USBH_ERR_MEMORY_OUT;      /* memory allocate failed                     */
@@ -612,26 +612,26 @@ int lbk_isochronous_out_start(ISO_CB_FUNC *func)
     for(i = 0; i < ISO_UTR_NUM; i++)            /* dispatch buffers                           */
     {
         /* divide buffer equally                      */
-        g_lbk_dev.utr_iso_out[i]->buff = buff + (ep->wMaxPacketSize * IF_PER_UTR * i);
-        g_lbk_dev.utr_iso_out[i]->data_len = ep->wMaxPacketSize * IF_PER_UTR;
+        s_LbkDev.utr_iso_out[i]->buff = buff + (ep->wMaxPacketSize * IF_PER_UTR * i);
+        s_LbkDev.utr_iso_out[i]->data_len = ep->wMaxPacketSize * IF_PER_UTR;
     }
 
     /*------------------------------------------------------------------------------------*/
     /*  Start UTRs                                                                        */
     /*------------------------------------------------------------------------------------*/
 
-    g_lbk_dev.utr_iso_out[0]->bIsoNewSched = 1;
+    s_LbkDev.utr_iso_out[0]->bIsoNewSched = 1;
 
     for(i = 0; i < ISO_UTR_NUM; i++)
     {
-        utr = g_lbk_dev.utr_iso_out[i];
+        utr = s_LbkDev.utr_iso_out[i];
         utr->ep = ep;
         utr->func = iso_out_done;
 
         for(j = 0; j < IF_PER_UTR; j++)     /* get audio out data from user               */
         {
             utr->iso_buff[j] = utr->buff + (ep->wMaxPacketSize * j);
-            utr->iso_xlen[j] = g_lbk_dev.iso_out_func(utr->iso_buff[j], ep->wMaxPacketSize);
+            utr->iso_xlen[j] = (uint16_t)s_LbkDev.iso_out_func(utr->iso_buff[j], ep->wMaxPacketSize);
         }
 
         ret = usbh_iso_xfer(utr);
@@ -647,19 +647,19 @@ err_out:
 
     for(i = 0; i < ISO_UTR_NUM; i++)            /* quit all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_out[i])
-            usbh_quit_utr(g_lbk_dev.utr_iso_out[i]);
+        if(s_LbkDev.utr_iso_out[i])
+            usbh_quit_utr(s_LbkDev.utr_iso_out[i]);
     }
 
-    if((g_lbk_dev.utr_iso_out[0] != NULL) &&            /* free USB transfer buffer                   */
-            (g_lbk_dev.utr_iso_out[0]->buff != NULL))
-        usbh_free_mem(g_lbk_dev.utr_iso_out[0]->buff, g_lbk_dev.utr_iso_out[0]->data_len * ISO_UTR_NUM);
+    if((s_LbkDev.utr_iso_out[0] != NULL) &&            /* free USB transfer buffer                   */
+            (s_LbkDev.utr_iso_out[0]->buff != NULL))
+        usbh_free_mem(s_LbkDev.utr_iso_out[0]->buff, (int)s_LbkDev.utr_iso_out[0]->data_len * ISO_UTR_NUM);
 
     for(i = 0; i < ISO_UTR_NUM; i++)            /* free all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_out[i])
-            free_utr(g_lbk_dev.utr_iso_out[i]);
-        g_lbk_dev.utr_iso_out[i] = NULL;
+        if(s_LbkDev.utr_iso_out[i])
+            free_utr(s_LbkDev.utr_iso_out[i]);
+        s_LbkDev.utr_iso_out[i] = NULL;
     }
     return ret;
 }
@@ -669,23 +669,23 @@ void lbk_isochronous_out_stop(void)
     int          i;
 
     /* clear <iso_out_func> to stop cascading transfers */
-    g_lbk_dev.iso_out_func = NULL;
+    s_LbkDev.iso_out_func = NULL;
 
     for(i = 0; i < ISO_UTR_NUM; i++)            /* stop all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_out[i])
-            usbh_quit_utr(g_lbk_dev.utr_iso_out[i]);
+        if(s_LbkDev.utr_iso_out[i])
+            usbh_quit_utr(s_LbkDev.utr_iso_out[i]);
     }
 
-    if((g_lbk_dev.utr_iso_out[0] != NULL) &&
-            (g_lbk_dev.utr_iso_out[0]->buff != NULL))       /* free transfer buffer           */
-        usbh_free_mem(g_lbk_dev.utr_iso_out[0]->buff, g_lbk_dev.utr_iso_out[0]->data_len * ISO_UTR_NUM);
+    if((s_LbkDev.utr_iso_out[0] != NULL) &&
+            (s_LbkDev.utr_iso_out[0]->buff != NULL))       /* free transfer buffer           */
+        usbh_free_mem(s_LbkDev.utr_iso_out[0]->buff, (int)s_LbkDev.utr_iso_out[0]->data_len * ISO_UTR_NUM);
 
     for(i = 0; i < ISO_UTR_NUM; i++)            /* free all UTRs                              */
     {
-        if(g_lbk_dev.utr_iso_out[i])
-            free_utr(g_lbk_dev.utr_iso_out[i]);
-        g_lbk_dev.utr_iso_out[i] = NULL;
+        if(s_LbkDev.utr_iso_out[i])
+            free_utr(s_LbkDev.utr_iso_out[i]);
+        s_LbkDev.utr_iso_out[i] = NULL;
     }
 }
 
@@ -711,7 +711,7 @@ static int lbk_probe(IFACE_T *iface)
         return USBH_ERR_NOT_MATCHED;
     }
 
-    if(g_lbk_dev.udev != NULL)
+    if(s_LbkDev.udev != NULL)
     {
         printf("A Vendor LBK device is connected, do not support multiple devices!\n");
         return USBH_ERR_NOT_MATCHED;
@@ -729,29 +729,29 @@ static int lbk_probe(IFACE_T *iface)
         {
             printf("Bulk-%s endpoint: 0x%x\n", ((aif->ep[i].bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN) ? "in" : "out", aif->ep[i].bEndpointAddress);
             if((aif->ep[i].bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN)
-                g_lbk_dev.ep_bulk_in = &aif->ep[i];
+                s_LbkDev.ep_bulk_in = &aif->ep[i];
             else
-                g_lbk_dev.ep_bulk_out = &aif->ep[i];
+                s_LbkDev.ep_bulk_out = &aif->ep[i];
         }
         else if((aif->ep[i].bmAttributes & EP_ATTR_TT_MASK) == EP_ATTR_TT_INT)
         {
             printf("Interrupt-%s endpoint: 0x%x\n", ((aif->ep[i].bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN) ? "in" : "out", aif->ep[i].bEndpointAddress);
             if((aif->ep[i].bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN)
-                g_lbk_dev.ep_int_in = &aif->ep[i];
+                s_LbkDev.ep_int_in = &aif->ep[i];
             else
-                g_lbk_dev.ep_int_out = &aif->ep[i];
+                s_LbkDev.ep_int_out = &aif->ep[i];
         }
         else if((aif->ep[i].bmAttributes & EP_ATTR_TT_MASK) == EP_ATTR_TT_ISO)
         {
             printf("Isochronous-%s endpoint: 0x%x\n", ((aif->ep[i].bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN) ? "in" : "out", aif->ep[i].bEndpointAddress);
             if((aif->ep[i].bEndpointAddress & EP_ADDR_DIR_MASK) == EP_ADDR_DIR_IN)
-                g_lbk_dev.ep_iso_in = &aif->ep[i];
+                s_LbkDev.ep_iso_in = &aif->ep[i];
             else
-                g_lbk_dev.ep_iso_out = &aif->ep[i];
+                s_LbkDev.ep_iso_out = &aif->ep[i];
         }
     }
-    g_lbk_dev.udev = udev;
-    g_lbk_dev.iface = iface;
+    s_LbkDev.udev = udev;
+    s_LbkDev.iface = iface;
     return 0;
 }
 
@@ -768,10 +768,10 @@ static void  lbk_disconnect(IFACE_T *iface)
     {
         iface->udev->hc_driver->quit_xfer(NULL, &(iface->aif->ep[i]));
     }
-    memset((void *)&g_lbk_dev, 0, sizeof(g_lbk_dev));
+    memset((void *)(uint32_t)&s_LbkDev, 0, sizeof(s_LbkDev));
 }
 
-UDEV_DRV_T  lbk_driver =
+static UDEV_DRV_T  s_LbkDriver =
 {
     lbk_probe,
     lbk_disconnect,
@@ -788,8 +788,8 @@ UDEV_DRV_T  lbk_driver =
   */
 void usbh_lbk_init(void)
 {
-    memset((void *)&g_lbk_dev, 0, sizeof(g_lbk_dev));
-    usbh_register_driver(&lbk_driver);
+    memset((void *)(uint32_t)&s_LbkDev, 0, sizeof(s_LbkDev));
+    usbh_register_driver(&s_LbkDriver);
 }
 
 /**
@@ -801,7 +801,7 @@ int lbk_device_is_connected(void)
 {
     usbh_pooling_hubs();
 
-    if(g_lbk_dev.udev != NULL)
+    if(s_LbkDev.udev != NULL)
         return 1;
     else
         return 0;
@@ -817,10 +817,10 @@ int lbk_device_is_high_speed(void)
 {
     usbh_pooling_hubs();
 
-    if(g_lbk_dev.udev == NULL)
+    if(s_LbkDev.udev == NULL)
         return -1;
 
-    if(g_lbk_dev.udev->speed == SPEED_HIGH)
+    if(s_LbkDev.udev->speed == SPEED_HIGH)
         return 1;
     else
         return 0;
@@ -828,8 +828,8 @@ int lbk_device_is_high_speed(void)
 
 int lbk_device_reset(void)
 {
-    if(g_lbk_dev.udev != NULL)
-        return usbh_reset_device(g_lbk_dev.udev);
+    if(s_LbkDev.udev != NULL)
+        return usbh_reset_device(s_LbkDev.udev);
     return 0;
 }
 

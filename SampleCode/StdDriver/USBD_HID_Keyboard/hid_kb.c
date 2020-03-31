@@ -12,6 +12,9 @@
 #include "hid_kb.h"
 
 
+void USBD_IRQHandler(void);
+
+
 void USBD_IRQHandler(void)
 {
     uint32_t u32IntSts = USBD_GET_INT_FLAG();

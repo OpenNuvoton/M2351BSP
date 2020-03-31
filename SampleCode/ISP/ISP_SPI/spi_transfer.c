@@ -7,6 +7,7 @@
  ******************************************************************************/
 #include <stdio.h>
 #include "targetdev.h"
+#include "spi_transfer.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
@@ -14,10 +15,12 @@
 #define TEST_COUNT 16
 
 uint32_t spi_rcvbuf[TEST_COUNT];
-volatile uint32_t g_u32TxDataCount;
-volatile uint32_t g_u32RxDataCount;
+static volatile uint32_t s_u32TxDataCount;
+static volatile uint32_t s_u32RxDataCount;
 
 volatile uint8_t bSpiDataReady = 0;
+
+void SPI1_IRQHandler(void);
 
 void SPI_Init(void)
 {
@@ -53,17 +56,17 @@ void SPI1_IRQHandler(void)
     {
         SPI1->STATUS |= SPI_STATUS_SSACTIF_Msk;
         SPI1->FIFOCTL |= (SPI_FIFOCTL_RXFBCLR_Msk | SPI_FIFOCTL_TXFBCLR_Msk);
-        g_u32TxDataCount = 0;
-        g_u32RxDataCount = 0;
+        s_u32TxDataCount = 0;
+        s_u32RxDataCount = 0;
 
         // Active
         while(!(SPI1->STATUS & SPI_STATUS_SSINAIF_Msk))
         {
             /* Check TX FULL flag and TX data count */
-            if((SPI_GET_TX_FIFO_FULL_FLAG(SPI1) == 0) && (g_u32TxDataCount < TEST_COUNT))
+            if((SPI_GET_TX_FIFO_FULL_FLAG(SPI1) == 0) && (s_u32TxDataCount < TEST_COUNT))
             {
-                SPI_WRITE_TX(SPI1, _response_buff[g_u32TxDataCount]);    /* Write to TX FIFO */
-                g_u32TxDataCount++;
+                SPI_WRITE_TX(SPI1, _response_buff[s_u32TxDataCount]);    /* Write to TX FIFO */
+                s_u32TxDataCount++;
                 /* Disable SysTick counter */
                 SysTick->CTRL = 0UL;
                 SysTick->LOAD = 1000 * CyclesPerUs;
@@ -74,8 +77,8 @@ void SPI1_IRQHandler(void)
             /* Check RX EMPTY flag */
             if(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI1) == 0)
             {
-                g_u32RxDataCount &= 0x0F;
-                spi_rcvbuf[g_u32RxDataCount++] = SPI_READ_RX(SPI1);    /* Read RX FIFO */
+                s_u32RxDataCount &= 0x0F;
+                spi_rcvbuf[s_u32RxDataCount++] = SPI_READ_RX(SPI1);    /* Read RX FIFO */
             }
 
             if(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
@@ -90,14 +93,14 @@ void SPI1_IRQHandler(void)
         {
             SPI1->STATUS |= SPI_STATUS_SSINAIF_Msk;
 
-            if((g_u32RxDataCount == 16) && ((spi_rcvbuf[0] & 0xFFFFFF00) == 0x53504900))
+            if((s_u32RxDataCount == 16) && ((spi_rcvbuf[0] & 0xFFFFFF00) == 0x53504900))
             {
                 bSpiDataReady = 1;
             }
 
             spi_rcvbuf[0] &= 0x000000FF;
-            g_u32TxDataCount = 0;
-            g_u32RxDataCount = 0;
+            s_u32TxDataCount = 0;
+            s_u32RxDataCount = 0;
 
             if(SPI_GET_TX_FIFO_FULL_FLAG(SPI1) == 0)
             {

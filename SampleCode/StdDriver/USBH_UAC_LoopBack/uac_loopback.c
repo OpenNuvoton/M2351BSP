@@ -19,33 +19,36 @@
 
 
 /* Global variables  */
-volatile uint8_t g_u8RecEn = 0;
-volatile uint8_t g_u8PlayEn = 0;
+static volatile uint8_t s_u8RecEn = 0;
+static volatile uint8_t s_u8PlayEn = 0;
 
 volatile int8_t  g_i8MicIsMono = 0;
 
 /* UAC audio in/out PCM buffer.  */
 #ifdef __ICCARM__
 #pragma data_alignment=32
-uint8_t g_u8PcmBuf[PCM_BUF_LEN];
+uint8_t s_au8PcmBuf[PCM_BUF_LEN];
 #else
-uint8_t g_u8PcmBuf[PCM_BUF_LEN] __attribute__((aligned(4)));
+static uint8_t s_au8PcmBuf[PCM_BUF_LEN] __attribute__((aligned(4)));
 #endif
-volatile uint32_t g_u32UacRecPos = 0;       /* UAC record pointer of PCM buffer       */
-volatile uint32_t g_u32UacPlayPos = 0;      /* UAC playback pointer of PCM buffer     */
+static volatile uint32_t s_u32UacRecPos = 0;       /* UAC record pointer of PCM buffer       */
+static volatile uint32_t s_u32UacPlayPos = 0;      /* UAC playback pointer of PCM buffer     */
 volatile uint32_t g_u32UacRecCnt = 0;       /* Counter of UAC record data             */
 volatile uint32_t g_u32UacPlayCnt = 0;      /* Counter UAC playback data              */
 
+void ResetAudioLoopBack(void);
+int audio_in_callback(UAC_DEV_T *dev, uint8_t *pu8Data, int i8Len);
+int audio_out_callback(UAC_DEV_T *dev, uint8_t *pu8Data, int i8Len);
 
 void ResetAudioLoopBack(void)
 {
-    memset(g_u8PcmBuf, 0, sizeof(g_u8PcmBuf));
-    g_u32UacRecPos = 0;
-    g_u32UacPlayPos = 0;
+    memset(s_au8PcmBuf, 0, sizeof(s_au8PcmBuf));
+    s_u32UacRecPos = 0;
+    s_u32UacPlayPos = 0;
     g_u32UacRecCnt = 0;
     g_u32UacPlayCnt = 0;
-    g_u8RecEn = 0;
-    g_u8PlayEn = 0;
+    s_u8RecEn = 0;
+    s_u8PlayEn = 0;
 }
 
 
@@ -62,70 +65,71 @@ int audio_in_callback(UAC_DEV_T *dev, uint8_t *pu8Data, int i8Len)
     int        i8Cnt, i8CpLen;
     uint16_t   *pu16Dptr, *pu16Bptr;
 
+    (void)dev;
     if(g_i8MicIsMono)
     {
-        if(g_u32UacRecPos + i8Len * 2 >= PCM_BUF_LEN)
+        if(s_u32UacRecPos + (uint32_t)i8Len * 2 >= PCM_BUF_LEN)
         {
-            i8CpLen = (PCM_BUF_LEN - g_u32UacRecPos) / 2;
+            i8CpLen = (PCM_BUF_LEN - s_u32UacRecPos) / 2;
         }
         else
         {
             i8CpLen = i8Len;
         }
 
-        pu16Dptr = (uint16_t *)pu8Data;
-        pu16Bptr = (uint16_t *)&g_u8PcmBuf[g_u32UacRecPos];
+        pu16Dptr = (uint16_t *)(uint32_t)pu8Data;
+        pu16Bptr = (uint16_t *)(uint32_t)&s_au8PcmBuf[s_u32UacRecPos];
         for(i8Cnt = 0; i8Cnt < i8CpLen; i8Cnt += 2)
         {
             *pu16Bptr++ = *pu16Dptr;                /* 16-bit PCM data                            */
             *pu16Bptr++ = *pu16Dptr++;              /* duplicate PCM data                         */
         }
 
-        g_u32UacRecPos = (g_u32UacRecPos + i8CpLen * 2) % PCM_BUF_LEN;
-        g_u32UacRecCnt += i8CpLen;
+        s_u32UacRecPos = (s_u32UacRecPos + (uint32_t)i8CpLen * 2) % PCM_BUF_LEN;
+        g_u32UacRecCnt += (uint32_t)i8CpLen;
         i8Len -= i8CpLen;
 
         if(i8Len)
         {
-            pu16Dptr = (uint16_t *)&pu8Data[i8CpLen];
-            pu16Bptr = (uint16_t *)g_u8PcmBuf;
+            pu16Dptr = (uint16_t *)(uint32_t)&pu8Data[i8CpLen];
+            pu16Bptr = (uint16_t *)s_au8PcmBuf;
             for(i8Cnt = 0; i8Cnt < i8Len; i8Cnt += 2)
             {
                 *pu16Bptr++ = *pu16Dptr;            /* 16-bit PCM data                            */
                 *pu16Bptr++ = *pu16Dptr++;          /* duplicate PCM data                         */
             }
-            g_u32UacRecPos = i8Len * 2;
-            g_u32UacRecCnt += i8Len;
+            s_u32UacRecPos = (uint32_t)i8Len * 2;
+            g_u32UacRecCnt += (uint32_t)i8Len;
         }
     }
     else
     {
-        if(g_u32UacRecPos + i8Len >= PCM_BUF_LEN)
+        if(s_u32UacRecPos + (uint32_t)i8Len >= PCM_BUF_LEN)
         {
-            i8CpLen = PCM_BUF_LEN - g_u32UacRecPos;
+            i8CpLen = (int)(PCM_BUF_LEN - s_u32UacRecPos);
         }
         else
         {
             i8CpLen = i8Len;
         }
-        memcpy(&g_u8PcmBuf[g_u32UacRecPos], pu8Data, i8CpLen);
+        memcpy(&s_au8PcmBuf[s_u32UacRecPos], pu8Data, (uint32_t)i8CpLen);
 
-        g_u32UacRecPos = (g_u32UacRecPos + i8CpLen) % PCM_BUF_LEN;
-        g_u32UacRecCnt += i8CpLen;
+        s_u32UacRecPos = (s_u32UacRecPos + (uint32_t)i8CpLen) % PCM_BUF_LEN;
+        g_u32UacRecCnt += (uint32_t)i8CpLen;
         i8Len -= i8CpLen;
 
         if(i8Len)
         {
-            memcpy(&g_u8PcmBuf[0], &pu8Data[i8CpLen], i8Len);
-            g_u32UacRecPos = i8Len;
-            g_u32UacRecCnt += i8Len;
+            memcpy(&s_au8PcmBuf[0], &pu8Data[i8CpLen], (uint32_t)i8Len);
+            s_u32UacRecPos = (uint32_t)i8Len;
+            g_u32UacRecCnt += (uint32_t)i8Len;
         }
     }
 
-    if((g_u8PlayEn == 0) && (g_u32UacRecPos >= PCM_BUF_LEN / 2))
+    if((s_u8PlayEn == 0) && (s_u32UacRecPos >= PCM_BUF_LEN / 2))
     {
-        g_u32UacPlayPos = g_u32UacPlayCnt = 0;
-        g_u8PlayEn = 1;
+        s_u32UacPlayPos = g_u32UacPlayCnt = 0;
+        s_u8PlayEn = 1;
     }
 
     return 0;
@@ -145,29 +149,32 @@ int audio_out_callback(UAC_DEV_T *dev, uint8_t *pu8Data, int i8Len)
 {
     int  i8CpLen;
 
-    if(!g_u8PlayEn)
+    (void)dev;
+    (void)i8Len;
+
+    if(!s_u8PlayEn)
     {
         memset(pu8Data, 0, 192);
         g_u32UacPlayCnt += 192;
         return 192;
     }
 
-    if(PCM_BUF_LEN - g_u32UacPlayPos < 192)
+    if(PCM_BUF_LEN - s_u32UacPlayPos < 192)
     {
-        i8CpLen = PCM_BUF_LEN - g_u32UacPlayPos;
+        i8CpLen = (int)(PCM_BUF_LEN - s_u32UacPlayPos);
     }
     else
     {
         i8CpLen = 192;
     }
 
-    memcpy(pu8Data, &g_u8PcmBuf[g_u32UacPlayPos], i8CpLen);
-    g_u32UacPlayPos = (g_u32UacPlayPos + i8CpLen) % PCM_BUF_LEN;
+    memcpy(pu8Data, &s_au8PcmBuf[s_u32UacPlayPos], (uint32_t)i8CpLen);
+    s_u32UacPlayPos = (s_u32UacPlayPos + (uint32_t)i8CpLen) % PCM_BUF_LEN;
 
     if(i8CpLen < 192)
     {
-        memcpy(&pu8Data[i8CpLen], &g_u8PcmBuf[0], 192 - i8CpLen);
-        g_u32UacPlayPos = 192 - i8CpLen;
+        memcpy(&pu8Data[i8CpLen], &s_au8PcmBuf[0], (uint32_t)(192 - i8CpLen));
+        s_u32UacPlayPos = (uint32_t)(192 - i8CpLen);
     }
     g_u32UacPlayCnt += 192;
 

@@ -21,26 +21,25 @@ static volatile uint8_t g_u8PlayVolumeRAdjust = FALSE;
 /* Global variables for Audio class */
 uint32_t g_usbd_UsbAudioState = 0;
 
-uint8_t  g_usbd_RecMute = 0x01;
-int16_t  g_usbd_RecVolume = 0x1000;
-int16_t  g_usbd_RecMaxVolume = 0x7FFF;
-int16_t  g_usbd_RecMinVolume = 0x8000;
-int16_t  g_usbd_RecResVolume = 0x400;
+static uint8_t  s_u8UsbdRecMute = 0x01;
+static int16_t  s_u16UsbdRecVolume = 0x1000;
+static int16_t  s_u16UsbdRecMaxVolume = 0x7FFF;
+static int16_t  s_u16UsbdRecMinVolume = (int16_t)0x8000;
+static int16_t  s_u16UsbdRecResVolume = 0x400;
 
-uint8_t  g_usbd_PlayMute = 0x01;
-int16_t  g_usbd_PlayVolumeL = 0x1000;
-int16_t  g_usbd_PlayVolumeR = 0x1000;
-int16_t  g_usbd_PlayMaxVolume = 0x7FFF;
-int16_t  g_usbd_PlayMinVolume = 0x8000;
-int16_t  g_usbd_PlayResVolume = 0x400;
+static uint8_t  s_u8UsbdPlayMute = 0x01;
+static int16_t  s_u16UsbdPlayVolumeL = 0x1000;
+static int16_t  s_u16UsbdPlayVolumeR = 0x1000;
+static int16_t  s_u16UsbdPlayMaxVolume = 0x7FFF;
+static int16_t  s_u16UsbdPlayMinVolume = (int16_t)0x8000;
+static int16_t  s_u16UsbdPlayResVolume = 0x400;
 
-uint8_t volatile g_u8PlayEn = 0;
+static uint8_t volatile s_u8PlayEn = 0;
 uint8_t volatile g_u8AudioPlaying = 0;
 uint8_t volatile g_u8TxDataCntInBuffer = 0;
 uint8_t volatile g_u8PDMATxIdx = 0;
 
-uint8_t volatile g_u8RecEn = 0;
-uint8_t volatile g_u8RxDataCntInBuffer = 0;
+static uint8_t volatile s_u8RecEn = 0;
 uint8_t volatile g_u8PDMARxIdx = 0;
 
 uint32_t volatile g_u32BuffLen = 0, g_u32RxBuffLen = 0;
@@ -49,23 +48,26 @@ uint32_t volatile g_u32BuffLen = 0, g_u32RxBuffLen = 0;
 #ifdef __ICCARM__
 #pragma data_alignment=4
 uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN] = {0};
-uint32_t g_au32PcmPlayBuffLen[PDMA_TXBUFFER_CNT] = {0};
+uint32_t s_au32PcmPlayBuffLen[PDMA_TXBUFFER_CNT] = {0};
 
-uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] = {0};
+uint8_t s_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] = {0};
 uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT] = {0};
 #else
-uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN] __attribute__((aligned(4))) = {0};
-uint32_t g_au32PcmPlayBuffLen[PDMA_TXBUFFER_CNT] __attribute__((aligned(4))) = {0};
+uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN] __attribute__((aligned(4))) = {{0}};
+static uint32_t s_au32PcmPlayBuffLen[PDMA_TXBUFFER_CNT] __attribute__((aligned(4))) = {0};
 
-uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] __attribute__((aligned(4))) = {0};
+uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] __attribute__((aligned(4))) = {{0}};
 uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT] __attribute__((aligned(4))) = {0};
 #endif
 
-volatile uint32_t g_u32BufPlayIdx = 0;
-volatile uint32_t g_u32PlayBufPos = 0;
-volatile uint32_t g_u32BufRecIdx = 0;
+static volatile uint32_t s_u32BufPlayIdx = 0;
+static volatile uint32_t s_u32PlayBufPos = 0;
+static volatile uint32_t s_u32BufRecIdx = 0;
 
 
+
+void USBD_IRQHandler(void);
+void TMR0_IRQHandler(void);
 /*--------------------------------------------------------------------------*/
 
 
@@ -347,9 +349,9 @@ void UAC_ClassRequest(void)
             {
                 if((buf[0] & 0x0f) == 0x2)
                 {
-                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_SampleRate;
-                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_SampleRate >> 8;
-                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 2) = g_usbd_SampleRate >> 16;
+                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)g_usbd_SampleRate;
+                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(g_usbd_SampleRate >> 8);
+                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 2) = (uint8_t)(g_usbd_SampleRate >> 16);
                     /* Data stage */
                     USBD_SET_DATA1(EP0);
                     USBD_SET_PAYLOAD_LEN(EP0, buf[6]);
@@ -361,9 +363,9 @@ void UAC_ClassRequest(void)
                         case MUTE_CONTROL:
                         {
                             if(REC_FEATURE_UNITID == buf[5])
-                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_RecMute;
+                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = s_u8UsbdRecMute;
                             else if(PLAY_FEATURE_UNITID == buf[5])
-                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_PlayMute;
+                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = s_u8UsbdPlayMute;
 
                             /* Data stage */
                             USBD_SET_DATA1(EP0);
@@ -374,20 +376,20 @@ void UAC_ClassRequest(void)
                         {
                             if(REC_FEATURE_UNITID == buf[5])
                             {
-                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_RecVolume;
-                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_RecVolume >> 8;
+                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdRecVolume;
+                                M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdRecVolume >> 8);
                             }
                             else if(PLAY_FEATURE_UNITID == buf[5])
                             {
                                 if(buf[2] == 1)
                                 {
-                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_PlayVolumeL;
-                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_PlayVolumeL >> 8;
+                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdPlayVolumeL;
+                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdPlayVolumeL >> 8);
                                 }
                                 else
                                 {
-                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_PlayVolumeR;
-                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_PlayVolumeR >> 8;
+                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdPlayVolumeR;
+                                    M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdPlayVolumeR >> 8);
                                 }
                             }
                             /* Data stage */
@@ -416,13 +418,13 @@ void UAC_ClassRequest(void)
                     {
                         if(REC_FEATURE_UNITID == buf[5])
                         {
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_RecMinVolume;
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_RecMinVolume >> 8;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdRecMinVolume;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdRecMinVolume >> 8);
                         }
                         else if(PLAY_FEATURE_UNITID == buf[5])
                         {
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_PlayMinVolume;
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_PlayMinVolume >> 8;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdPlayMinVolume;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdPlayMinVolume >> 8);
                         }
                         /* Data stage */
                         USBD_SET_DATA1(EP0);
@@ -447,13 +449,13 @@ void UAC_ClassRequest(void)
                     {
                         if(REC_FEATURE_UNITID == buf[5])
                         {
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_RecMaxVolume;
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_RecMaxVolume >> 8;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdRecMaxVolume;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdRecMaxVolume >> 8);
                         }
                         else if(PLAY_FEATURE_UNITID == buf[5])
                         {
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_PlayMaxVolume;
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_PlayMaxVolume >> 8;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdPlayMaxVolume;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdPlayMaxVolume >> 8);
                         }
                         /* Data stage */
                         USBD_SET_DATA1(EP0);
@@ -478,13 +480,13 @@ void UAC_ClassRequest(void)
                     {
                         if(REC_FEATURE_UNITID == buf[5])
                         {
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_RecResVolume;
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_RecResVolume >> 8;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdRecResVolume;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdRecResVolume >> 8);
                         }
                         else if(PLAY_FEATURE_UNITID == buf[5])
                         {
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = g_usbd_PlayResVolume;
-                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = g_usbd_PlayResVolume >> 8;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)) = (uint8_t)s_u16UsbdPlayResVolume;
+                            M8(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1) = (uint8_t)(s_u16UsbdPlayResVolume >> 8);
                         }
                         /* Data stage */
                         USBD_SET_DATA1(EP0);
@@ -517,7 +519,7 @@ void UAC_ClassRequest(void)
             {
                 if((buf[0] & 0x0f) == 0x02)
                 {
-                    USBD_PrepareCtrlOut((uint8_t *)&g_usbd_SampleRate, buf[6]);
+                    USBD_PrepareCtrlOut((uint8_t *)(uint32_t)&g_usbd_SampleRate, buf[6]);
                     /* Status stage */
                     USBD_SET_DATA1(EP0);
                     USBD_SET_PAYLOAD_LEN(EP0, 0);
@@ -529,9 +531,9 @@ void UAC_ClassRequest(void)
                     {
                         case MUTE_CONTROL:
                             if(REC_FEATURE_UNITID == buf[5])
-                                USBD_PrepareCtrlOut((uint8_t *)&g_usbd_RecMute, buf[6]);
+                                USBD_PrepareCtrlOut((uint8_t *)&s_u8UsbdRecMute, buf[6]);
                             else if(PLAY_FEATURE_UNITID == buf[5])
-                                USBD_PrepareCtrlOut((uint8_t *)&g_usbd_PlayMute, buf[6]);
+                                USBD_PrepareCtrlOut((uint8_t *)&s_u8UsbdPlayMute, buf[6]);
                             /* Status stage */
                             USBD_SET_DATA1(EP0);
                             USBD_SET_PAYLOAD_LEN(EP0, 0);
@@ -539,25 +541,25 @@ void UAC_ClassRequest(void)
 
                         case VOLUME_CONTROL:
                             if(REC_FEATURE_UNITID == buf[5])
-                                USBD_PrepareCtrlOut((uint8_t *)&g_usbd_RecVolume, buf[6]);
+                                USBD_PrepareCtrlOut((uint8_t *)&s_u16UsbdRecVolume, buf[6]);
                             else if(PLAY_FEATURE_UNITID == buf[5])
                             {
                                 if(buf[2] == 1)
                                 {
-                                    USBD_PrepareCtrlOut((uint8_t *)&g_usbd_PlayVolumeL, buf[6]);
-                                    if(g_usbd_PlayVolumeL & 0x8000)
-                                        g_usbd_PlayVolumeL = (g_usbd_PlayVolumeL & 0x7FFF) >> 8;
+                                    USBD_PrepareCtrlOut((uint8_t *)&s_u16UsbdPlayVolumeL, buf[6]);
+                                    if(s_u16UsbdPlayVolumeL & 0x8000)
+                                        s_u16UsbdPlayVolumeL = (s_u16UsbdPlayVolumeL & 0x7FFF) >> 8;
                                     else
-                                        g_usbd_PlayVolumeL = (g_usbd_PlayVolumeL >> 7);
+                                        s_u16UsbdPlayVolumeL = (s_u16UsbdPlayVolumeL >> 7);
                                     g_u8PlayVolumeLAdjust = TRUE; //ATOM_I2C_WriteWAU8822(11, i16PlayVolumeL | 0x100);   /* Set left DAC volume */
                                 }
                                 else
                                 {
-                                    USBD_PrepareCtrlOut((uint8_t *)&g_usbd_PlayVolumeR, buf[6]);
-                                    if(g_usbd_PlayVolumeR & 0x8000)
-                                        g_usbd_PlayVolumeR = (g_usbd_PlayVolumeR & 0x7FFF) >> 8;
+                                    USBD_PrepareCtrlOut((uint8_t *)&s_u16UsbdPlayVolumeR, buf[6]);
+                                    if(s_u16UsbdPlayVolumeR & 0x8000)
+                                        s_u16UsbdPlayVolumeR = (s_u16UsbdPlayVolumeR & 0x7FFF) >> 8;
                                     else
-                                        g_usbd_PlayVolumeR = (g_usbd_PlayVolumeR >> 7);
+                                        s_u16UsbdPlayVolumeR = (s_u16UsbdPlayVolumeR >> 7);
                                     g_u8PlayVolumeRAdjust = TRUE; //ATOM_I2C_WriteWAU8822(12, i16PlayVolumeR | 0x100);   /* Set right DAC volume */
                                 }
                             }
@@ -640,18 +642,18 @@ void UAC_DeviceEnable(uint32_t u32IsPlay)
     if(u32IsPlay)
     {
         /* Enable play hardware */
-        g_u8PlayEn = 1;
+        s_u8PlayEn = 1;
         TIMER_Start(TIMER0);
     }
     else
     {
         /* Enable record hardware */
-        if(!g_u8RecEn)
+        if(!s_u8RecEn)
         {
             AudioStartRecord(g_usbd_SampleRate);
         }
 
-        g_u8RecEn = 1;
+        s_u8RecEn = 1;
     }
 }
 
@@ -666,7 +668,7 @@ void UAC_DeviceDisable(uint32_t u32IsPlay)
     if(u32IsPlay)
     {
         /* Disable play hardware/stop play */
-        g_u8PlayEn = 0;
+        s_u8PlayEn = 0;
         /* Disable I2S Tx function */
         I2S_DISABLE_TXDMA(I2S0);
         I2S_DISABLE_TX(I2S0);
@@ -676,8 +678,8 @@ void UAC_DeviceDisable(uint32_t u32IsPlay)
         printf("Stop Play ...\n");
 
         /* Reset some variables */
-        g_u32BufPlayIdx = 0;
-        g_u32PlayBufPos = 0;
+        s_u32BufPlayIdx = 0;
+        s_u32PlayBufPos = 0;
         g_u8PDMATxIdx = 0;
         g_u8AudioPlaying = 0;
         g_u8TxDataCntInBuffer = 0;
@@ -690,7 +692,7 @@ void UAC_DeviceDisable(uint32_t u32IsPlay)
     else
     {
         /* Disable record hardware/stop record */
-        g_u8RecEn = 0;
+        s_u8RecEn = 0;
         /* Disable I2S Rx function */
         I2S_DISABLE_RXDMA(I2S0);
         I2S_DISABLE_RX(I2S0);
@@ -700,7 +702,7 @@ void UAC_DeviceDisable(uint32_t u32IsPlay)
         printf("Stop Record ..\n");
 
         /* Reset some variables */
-        g_u32BufRecIdx = 0;
+        s_u32BufRecIdx = 0;
         g_u8PDMARxIdx = 0;
 
         /* flush PCM buffer */
@@ -730,28 +732,28 @@ void UAC_GetPlayData(uint8_t *pu8Src, uint32_t u32Samples)
 
     u32len = u32Samples / 4;
     /* Ring buffer check */
-    if((g_u32PlayBufPos + u32len) > g_u32BuffLen)
+    if((s_u32PlayBufPos + u32len) > g_u32BuffLen)
     {
-        g_au32PcmPlayBuffLen[g_u32BufPlayIdx] = g_u32PlayBufPos;
-        g_u32PlayBufPos = 0;
-        g_u32BufPlayIdx ++;
+        s_au32PcmPlayBuffLen[s_u32BufPlayIdx] = s_u32PlayBufPos;
+        s_u32PlayBufPos = 0;
+        s_u32BufPlayIdx ++;
 
         /* change buffer index */
-        if(g_u32BufPlayIdx >= PDMA_TXBUFFER_CNT)
-            g_u32BufPlayIdx = 0;
+        if(s_u32BufPlayIdx >= PDMA_TXBUFFER_CNT)
+            s_u32BufPlayIdx = 0;
 
         /* increase data count in buffer */
         g_u8TxDataCntInBuffer ++;
     }
 
-    pu32Buff = &g_au32PcmPlayBuff[g_u32BufPlayIdx][g_u32PlayBufPos];
-    pu32Src = (uint32_t *) pu8Src;
+    pu32Buff = &g_au32PcmPlayBuff[s_u32BufPlayIdx][s_u32PlayBufPos];
+    pu32Src = (uint32_t *)(uint32_t)pu8Src;
     for(i = 0; i < u32len; i++)
     {
         pu32Buff[i] = pu32Src[i];
     }
 
-    g_u32PlayBufPos += u32len;
+    s_u32PlayBufPos += u32len;
 }
 
 
@@ -792,18 +794,18 @@ void AudioStartPlay(uint32_t u32SampleRate)
 void UAC_SendRecData(void)
 {
     /* When record buffer full, send data to host */
-    if(g_au8PcmRxBufFull[g_u32BufRecIdx])
+    if(g_au8PcmRxBufFull[s_u32BufRecIdx])
     {
         /* Set empty flag */
-        g_au8PcmRxBufFull[g_u32BufRecIdx] = 0;
+        g_au8PcmRxBufFull[s_u32BufRecIdx] = 0;
 
-        USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2)), (void *)&g_au8PcmRecBuff[g_u32BufRecIdx][0], g_u32RxBuffLen);
+        USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP2)), (void *)&g_au8PcmRecBuff[s_u32BufRecIdx][0], g_u32RxBuffLen);
         USBD_SET_PAYLOAD_LEN(EP2, g_u32RxBuffLen);
 
         /* Change to next PCM buffer */
-        g_u32BufRecIdx ++;
-        if(g_u32BufRecIdx >= PDMA_RXBUFFER_CNT)
-            g_u32BufRecIdx = 0;
+        s_u32BufRecIdx ++;
+        if(s_u32BufRecIdx >= PDMA_RXBUFFER_CNT)
+            s_u32BufRecIdx = 0;
 
     }
     else
@@ -842,7 +844,7 @@ void TMR0_IRQHandler(void)
 {
     TIMER_ClearIntFlag(TIMER0);
 
-    if(g_u8PlayEn)
+    if(s_u8PlayEn)
     {
         if((g_u8TxDataCntInBuffer >= (PDMA_TXBUFFER_CNT / 2)) && (g_u8TxDataCntInBuffer <= (PDMA_TXBUFFER_CNT / 2 + 1)))
             AdjustCodecPll(E_RS_NONE);

@@ -23,20 +23,38 @@
 #endif
 extern int kbhit(void);    /* in retarget.c */
 
-volatile int       has_error;
-volatile int       int_in_cnt, int_out_cnt;
-volatile int       iso_in_cnt, iso_out_cnt;
-volatile uint32_t  g_tick_cnt;
+static volatile int       s_iHasError;
+static volatile int       s_iIntInCnt, s_iIntOutCnt;
+static volatile int       s_iIsoInCnt, s_iIsoOutCnt;
+static volatile uint32_t  s_u32TickCnt;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void SYS_Init(void);
+void UART0_Init(void);
+void connect_func(UDEV_T *udev, int param);
+void disconnect_func(UDEV_T *udev, int param);
+void demo_ctrl_xfer(void);
+void demo_bulk_xfer(void);
+int int_in_callback(int status, uint8_t *rdata, int data_len);
+int int_out_callback(int status, uint8_t *rdata, int data_len);
+void demo_interrupt_xfer(void);
+int iso_in_callback(uint8_t *rdata, int data_len);
+int iso_out_callback(uint8_t *rdata, int data_len);
+void demo_isochronous_xfer(void);
+void vendor_lbk_demo(void);
+
+
 
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -46,13 +64,13 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_tick_cnt;
+    return s_u32TickCnt;
 }
 
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32Usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -62,7 +80,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32Usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);
@@ -152,6 +170,8 @@ void connect_func(UDEV_T *udev, int param)
     struct hub_dev_t *parent;
     int    i;
 
+    (void)param;
+
     parent = udev->parent;
 
     printf("Device [0x%x,0x%x] was connected.\n",
@@ -195,6 +215,7 @@ void connect_func(UDEV_T *udev, int param)
  */
 void disconnect_func(UDEV_T *udev, int param)
 {
+    (void)param;
     printf("Device [0x%x,0x%x] was disconnected.\n",
            udev->descriptor.idVendor, udev->descriptor.idProduct);
 }
@@ -300,13 +321,16 @@ void demo_bulk_xfer(void)
 
 int int_in_callback(int status, uint8_t *rdata, int data_len)
 {
+    (void)rdata;
+    (void)data_len;
+
     if(status < 0)
     {
         printf("Interrupt-in trnasfer error %d!\n", status);
-        has_error = 1;
+        s_iHasError = 1;
         return 0;
     }
-    int_in_cnt++;
+    s_iIntInCnt++;
     return 0;
 }
 
@@ -315,14 +339,14 @@ int int_out_callback(int status, uint8_t *rdata, int data_len)
     if(status < 0)
     {
         printf("interrupt out transfer error.\n");
-        has_error = 1;
+        s_iHasError = 1;
         return 0;
     }
 
     /* add code here to send data to device */
     /* ... */
-    memset(rdata, (int_out_cnt & 0xff), data_len);
-    int_out_cnt++;
+    memset(rdata, (s_iIntOutCnt & 0xff), (uint32_t)data_len);
+    s_iIntOutCnt++;
     return data_len;
 }
 
@@ -333,9 +357,9 @@ void demo_interrupt_xfer(void)
     printf("\nPress 'x' to stop loop...\n\n");
     msg_tick = get_ticks();
 
-    int_in_cnt = 0;
-    int_out_cnt = 0;
-    has_error = 0;
+    s_iIntInCnt = 0;
+    s_iIntOutCnt = 0;
+    s_iHasError = 0;
 
     lbk_interrupt_in_start(int_in_callback);
     lbk_interrupt_out_start(int_out_callback);
@@ -352,12 +376,12 @@ void demo_interrupt_xfer(void)
             }
         }
 
-        if(!lbk_device_is_connected() || has_error)
+        if(!lbk_device_is_connected() || s_iHasError)
             return;
 
         if(get_ticks() - msg_tick >= 100)
         {
-            printf("Interrupt transfer loop RX: %d, TX: %d    \r", int_in_cnt, int_out_cnt);
+            printf("Interrupt transfer loop RX: %d, TX: %d    \r", s_iIntInCnt, s_iIntOutCnt);
             msg_tick = get_ticks();
         }
     }
@@ -372,7 +396,10 @@ int iso_in_callback(uint8_t *rdata, int data_len)
 {
     /* add code here to collect data recevied from device */
     /* ... */
-    iso_in_cnt++;
+    (void)rdata;
+    (void)data_len;
+
+    s_iIsoInCnt++;
     return 0;
 }
 
@@ -385,8 +412,8 @@ int iso_out_callback(uint8_t *rdata, int data_len)
 {
     /* add code here to send data to device */
     /* ... */
-    memset(rdata, (iso_out_cnt & 0xff), data_len);
-    iso_out_cnt++;
+    memset(rdata, (s_iIsoOutCnt & 0xff), (uint32_t)data_len);
+    s_iIsoOutCnt++;
     return data_len;
 }
 
@@ -397,9 +424,9 @@ void demo_isochronous_xfer(void)
     printf("\nPress 'x' to stop loop...\n\n");
     msg_tick = get_ticks();
 
-    iso_in_cnt = 0;
-    iso_out_cnt = 0;
-    has_error = 0;
+    s_iIsoInCnt = 0;
+    s_iIsoOutCnt = 0;
+    s_iHasError = 0;
 
     lbk_isochronous_in_start(iso_in_callback);
     lbk_isochronous_out_start(iso_out_callback);
@@ -421,7 +448,7 @@ void demo_isochronous_xfer(void)
 
         if(get_ticks() - msg_tick >= 100)
         {
-            printf("Isochronous transfer loop RX: %d, TX: %d    \r", iso_in_cnt, iso_out_cnt);
+            printf("Isochronous transfer loop RX: %d, TX: %d    \r", s_iIsoInCnt, s_iIsoOutCnt);
             msg_tick = get_ticks();
         }
     }
@@ -502,7 +529,7 @@ int32_t main(void)
     usbh_pooling_hubs();
 
     if(!lbk_device_is_connected())
-        printf("Waitng for M2351 Vendor Loopback device be connected...\n");
+        printf("Waiting for M2351 Vendor Loopback device to be connected...\n");
 
     while(1)
     {
@@ -514,7 +541,7 @@ int32_t main(void)
         /* do not return unless LBK device disconnected */
         vendor_lbk_demo();
 
-        printf("\n\nWaitng for M2351 Vendor Loopback device be connected...\n");
+        printf("\n\nWaiting for M2351 Vendor Loopback device to be connected...\n");
         usbh_memory_used();
     }
 }

@@ -12,9 +12,12 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global Interface Variables Declarations                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8IsINTEvent;
-volatile uint32_t g_u32WakeupCounts;
+static volatile uint8_t s_u8IsINTEvent;
+static volatile uint32_t s_u32WakeupCounts;
 
+void WDT_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       IRQ Handler for WDT Interrupt
@@ -27,7 +30,7 @@ volatile uint32_t g_u32WakeupCounts;
  */
 void WDT_IRQHandler(void)
 {
-    if(g_u32WakeupCounts < 10)
+    if(s_u32WakeupCounts < 10)
     {
         WDT_RESET_COUNTER();
     }
@@ -37,7 +40,7 @@ void WDT_IRQHandler(void)
         /* Clear WDT time-out interrupt flag */
         WDT_CLEAR_TIMEOUT_INT_FLAG();
 
-        g_u8IsINTEvent = 1;
+        s_u8IsINTEvent = 1;
     }
 
     if(WDT_GET_TIMEOUT_WAKEUP_FLAG() == 1)
@@ -45,7 +48,7 @@ void WDT_IRQHandler(void)
         /* Clear WDT time-out wake-up flag */
         WDT_CLEAR_TIMEOUT_WAKEUP_FLAG();
 
-        g_u32WakeupCounts++;
+        s_u32WakeupCounts++;
     }
 }
 
@@ -164,7 +167,7 @@ int main(void)
     SYS_UnlockReg();
 
     /* Configure WDT settings and start WDT counting */
-    g_u8IsINTEvent = g_u32WakeupCounts = 0;
+    s_u8IsINTEvent = s_u32WakeupCounts = 0;
     WDT_Open(WDT_TIMEOUT_2POW14, WDT_RESET_DELAY_18CLK, TRUE, TRUE);
 
     /* Enable WDT interrupt function */
@@ -181,11 +184,11 @@ int main(void)
         CLK_PowerDown();
 
         /* Check if WDT time-out interrupt and wake-up occurred or not */
-        while(g_u8IsINTEvent == 0) {}
+        while(s_u8IsINTEvent == 0) {}
         PA2 ^= 1;
 
-        g_u8IsINTEvent = 0;
-        printf("System has been waken up done. WDT wake-up counts: %d.\n\n", g_u32WakeupCounts);
+        s_u8IsINTEvent = 0;
+        printf("System has been waken up done. WDT wake-up counts: %d.\n\n", s_u32WakeupCounts);
     }
 }
 

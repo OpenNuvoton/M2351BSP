@@ -108,6 +108,11 @@ typedef enum
 } RESAMPLE_STATE_T;
 
 
+extern uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN];
+extern uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN];
+extern uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT];
+extern volatile uint8_t g_u8PDMARxIdx;
+extern volatile uint8_t g_u8PDMATxIdx;
 /*-------------------------------------------------------------*/
 extern uint32_t volatile g_u32BuffLen, g_u32RxBuffLen;
 extern uint32_t g_usbd_UsbAudioState;

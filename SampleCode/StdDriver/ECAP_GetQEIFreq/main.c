@@ -15,8 +15,18 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-uint32_t u32Status;
-uint32_t u32IC0Hold;
+static uint32_t s_u32Status;
+static uint32_t s_u32IC0Hold;
+
+
+void TMR0_IRQHandler(void);
+void ECAP0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void ECAP0_Init(void);
+void QEI0_Init(void);
+void Timer0_Init(void);
+
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Timer0 IRQ Handler                                                                                     */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -37,41 +47,41 @@ void TMR0_IRQHandler(void)
 void ECAP0_IRQHandler(void)
 {
     /* Get input Capture status */
-    u32Status = ECAP_GET_INT_STATUS(ECAP0);
+    s_u32Status = ECAP_GET_INT_STATUS(ECAP0);
 
     /* Check input capture channel 0 flag */
-    if((u32Status & ECAP_STATUS_CAPTF0_Msk) == ECAP_STATUS_CAPTF0_Msk)
+    if((s_u32Status & ECAP_STATUS_CAPTF0_Msk) == ECAP_STATUS_CAPTF0_Msk)
     {
         /* Clear input capture channel 0 flag */
         ECAP_CLR_CAPTURE_FLAG(ECAP0, ECAP_STATUS_CAPTF0_Msk);
 
         /* Get input capture counter hold value */
-        u32IC0Hold = ECAP0->HLD0;
+        s_u32IC0Hold = ECAP0->HLD0;
     }
 
     /* Check input capture channel 1 flag */
-    if((u32Status & ECAP_STATUS_CAPTF1_Msk) == ECAP_STATUS_CAPTF1_Msk)
+    if((s_u32Status & ECAP_STATUS_CAPTF1_Msk) == ECAP_STATUS_CAPTF1_Msk)
     {
         /* Clear input capture channel 1 flag */
         ECAP_CLR_CAPTURE_FLAG(ECAP0, ECAP_STATUS_CAPTF1_Msk);
     }
 
     /* Check input capture channel 2 flag */
-    if((u32Status & ECAP_STATUS_CAPTF2_Msk) == ECAP_STATUS_CAPTF2_Msk)
+    if((s_u32Status & ECAP_STATUS_CAPTF2_Msk) == ECAP_STATUS_CAPTF2_Msk)
     {
         /* Clear input capture channel 2 flag */
         ECAP_CLR_CAPTURE_FLAG(ECAP0, ECAP_STATUS_CAPTF2_Msk);
     }
 
     /* Check input capture compare-match flag */
-    if((u32Status & ECAP_STATUS_CAPCMPF_Msk) == ECAP_STATUS_CAPCMPF_Msk)
+    if((s_u32Status & ECAP_STATUS_CAPCMPF_Msk) == ECAP_STATUS_CAPCMPF_Msk)
     {
         /* Clear input capture compare-match flag */
         ECAP_CLR_CAPTURE_FLAG(ECAP0, ECAP_STATUS_CAPCMPF_Msk);
     }
 
     /* Check input capture overflow flag */
-    if((u32Status & ECAP_STATUS_CAPOVF_Msk) == ECAP_STATUS_CAPOVF_Msk)
+    if((s_u32Status & ECAP_STATUS_CAPOVF_Msk) == ECAP_STATUS_CAPOVF_Msk)
     {
         /* Clear input capture overflow flag */
         ECAP_CLR_CAPTURE_FLAG(ECAP0, ECAP_STATUS_CAPOVF_Msk);
@@ -250,21 +260,21 @@ int32_t main(void)
     CLK_SysTickDelay(200000);
 
     /* Init & clear ECAP interrupt status flags */
-    u32Status = ECAP_GET_INT_STATUS(ECAP0);
-    ECAP0->STATUS = u32Status;
+    s_u32Status = ECAP_GET_INT_STATUS(ECAP0);
+    ECAP0->STATUS = s_u32Status;
 
     /* ECAP_CNT starts up-counting */
     ECAP_CNT_START(ECAP0);
 
     while(1)
     {
-        if(u32Status != 0)
+        if(s_u32Status != 0)
         {
             /* Input Capture status is changed, and get a new hold value of input capture counter */
-            u32Status = 0;
+            s_u32Status = 0;
 
             /* Caculate the IC0 input frequency */
-            u32Hz_DET = (SystemCoreClock / 2) / (u32IC0Hold + 1);
+            u32Hz_DET = (SystemCoreClock / 2) / (s_u32IC0Hold + 1);
 
             if(u32Hz != u32Hz_DET)
             {
@@ -273,7 +283,7 @@ int32_t main(void)
             }
             else
             {
-                printf("\nECAP0_IC0 input frequency is %d (Hz),u32IC0Hold=0x%08x\n", u32Hz, u32IC0Hold);
+                printf("\nECAP0_IC0 input frequency is %d (Hz),s_u32IC0Hold=0x%08x\n", u32Hz, s_u32IC0Hold);
                 TIMER_Stop(TIMER0); //Disable timer Counting.
                 break;
             }

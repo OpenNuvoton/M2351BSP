@@ -11,10 +11,10 @@
 #include <string.h>
 #include "NuMicro.h"
 #include "hid_transfer.h"
+#include "fmc_user.h"
 
 __attribute__((aligned(4))) uint8_t usb_rcvbuf[64];
 
-uint8_t volatile g_u8EP2Ready = 0;
 uint8_t volatile bUsbDataReady = 0;
 
 extern __attribute__((aligned(4))) uint8_t response_buff[64];

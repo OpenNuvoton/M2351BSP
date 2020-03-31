@@ -53,7 +53,8 @@ static __INLINE uint32_t get_be32(uint8_t *buf)
 /******************************************************************************/
 /*                USBD Mass Storage Structure                                 */
 /******************************************************************************/
-
+#pragma pack(push)
+#pragma pack(1)
 /*!<USB Mass Storage Class - Command Block Wrapper Structure */
 struct CBW
 {
@@ -67,8 +68,10 @@ struct CBW
     uint8_t   u8LUN;
     uint8_t   au8Data[14];
 };
-
+#pragma pack(pop)
 /*!<USB Mass Storage Class - Command Status Wrapper Structure */
+#pragma pack(push)
+#pragma pack(1)
 struct CSW
 {
     uint32_t  dCSWSignature;
@@ -76,6 +79,7 @@ struct CSW
     uint32_t  dCSWDataResidue;
     uint8_t   bCSWStatus;
 };
+#pragma pack(pop)
 
 /*-------------------------------------------------------------*/
 #define DATA_FLASH_STORAGE_SIZE    (64*1024)  /* Configure the DATA FLASH storage size */

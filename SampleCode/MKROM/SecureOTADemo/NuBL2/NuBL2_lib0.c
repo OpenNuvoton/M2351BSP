@@ -15,7 +15,16 @@
 
 #define printf(...)
 
+#define DEBUG_CMD 0
+
+
 void NuBL2_BytesSwap(char *buf, int32_t len);
+void SetECCRegisters(int32_t i32Mode, uint32_t *pPriv, uint32_t *pPub);
+void GetNuBL2AES256Key(uint32_t *key);
+uint16_t cmd_CalCRC16Sum(uint32_t *pu32buf, uint32_t len);
+int32_t cmd_VerifyCRC16Sum(uint32_t *pu32buf);
+int32_t GenCmdSessionKey(uint32_t key[]);
+int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t i32Mode);
 
 static uint32_t IsAccessDenied(void)
 {
@@ -28,11 +37,11 @@ static uint32_t IsAccessDenied(void)
         * Clear SRAM, crypto and others secure information
     */
     return 0;
-
+#if 0
     if(FMC_GetXOMState(XOMR0) != 1)
     {
         NUBL_MSG("\n[XOM attributes FAIL. XOM0 is not active]\n\n");
-        return -1;
+        return (uint32_t)-1;
     }
 
     if((FMC->XOMR0STS>>8) == NUBL2_LIB_BASE)
@@ -44,14 +53,15 @@ static uint32_t IsAccessDenied(void)
         else
         {
             NUBL_MSG("\n[XOM attributes FAIL. Invalid XOM0 region page counts]\n\n");
-            return -2;
+            return (uint32_t)-2;
         }
     }
     else
     {
         NUBL_MSG("\n[XOM attributes FAIL. Invalid XOM0 region base address]\n\n");
-        return -3;
+        return (uint32_t)-3;
     }
+    #endif
 }
 
 static void SetNuBL2PrivKey(void)
@@ -80,12 +90,12 @@ static uint32_t NuBL_Swap32(uint32_t value)
     return val;
 }
 
-void SetECCRegisters(int32_t mode, uint32_t *pPriv, uint32_t *pPub)
+void SetECCRegisters(int32_t i32Mode, uint32_t *pPriv, uint32_t *pPub)
 {
     volatile int32_t    i;
     ECC_PUBKEY_T        *pPubKey;
 
-    if(mode == 0x00020000)
+    if(i32Mode == 0x00020000)
     {
         pPubKey = (ECC_PUBKEY_T *)pPub;
         SetNuBL2PrivKey();
@@ -96,7 +106,7 @@ void SetECCRegisters(int32_t mode, uint32_t *pPriv, uint32_t *pPub)
         for(i=0; i<8; i++)
             CRPT->ECC_Y1[i] = pPubKey->au32Key1[i];
     }
-    if(mode == 0x000F000F)
+    if(i32Mode == 0x000F000F)
     {
         pPubKey = (ECC_PUBKEY_T *)pPub;
         for(i=0; i<8; i++)
@@ -146,11 +156,12 @@ void GetNuBL2AES256Key(uint32_t *key)
   */
 int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
 {
-    volatile int32_t    i, ret = -1000;
+    volatile int32_t    ret = -1000;
     uint32_t            *keybuf, *infobuf, base, len, start, end;
     ECC_PUBKEY_T        PubKey;
     FW_INFO_T           FwInfo;
     uint32_t            AESkey[8], Hash[8], HashValue[8];
+    volatile uint32_t    i;
 
     if(!((mode == 0) || (mode == 1) || (mode == 0x10) || (mode == 0x11)))
     {
@@ -158,7 +169,7 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
         return ret;
     }
 
-    if((ret=IsAccessDenied()) != 0)
+    if((ret=(int32_t)IsAccessDenied()) != 0)
         return ret;
 
     NUBL_MSG("\nNuBL2 verify NuBL3%d. \n\n", ((mode&BIT0)==0)?2:3);
@@ -168,14 +179,14 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
     memset(&FwInfo, 0x0, sizeof(FW_INFO_T));
 
     if(buf == NULL)
-        infobuf = (uint32_t *)&FwInfo;
+        infobuf = (uint32_t *)(uint32_t)&FwInfo;
     else
         infobuf = buf;
 
     /* Check NuBL3x Key Storage Hash */
     /* Get encrypted NuBL3x public key from Key Storage */
     len = sizeof(ECC_PUBKEY_T);
-    if((mode&BIT0) == 0)
+    if((((uint32_t)mode)&BIT0) == 0)
     {
         extern uint32_t g_NuBL32EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
         base = (uint32_t)&g_NuBL32EnCryptPubKeyBase;  /* encrypted NuBL32 pub key address */
@@ -185,7 +196,7 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
         extern uint32_t g_NuBL33EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
         base = (uint32_t)&g_NuBL33EnCryptPubKeyBase;  /* encrypted NuBL33 pub key address */
     }
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = inpw(base + (i*4));
 
@@ -195,7 +206,7 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
 
     /* Get encrypted NuBL3x public key from Key Storage Hash base */
     len = sizeof(ECC_PUBKEY_T);
-    if((mode&BIT0) == 0)
+    if((((uint32_t)mode)&BIT0) == 0)
     {
         extern uint32_t g_NuBL32EnCryptPubKeyHashBase;  /* declared in LoadKeyStorage.s */
         base = (uint32_t)&g_NuBL32EnCryptPubKeyHashBase;  /* encrypted NuBL32 pub key hash address */
@@ -233,7 +244,7 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
 
     /* Get encrypted NuBL3x public key from Key Storage */
     len = sizeof(ECC_PUBKEY_T);
-    if((mode&BIT0) == 0)
+    if((((uint32_t)mode)&BIT0) == 0)
     {
         extern uint32_t g_NuBL32EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
         base = (uint32_t)&g_NuBL32EnCryptPubKeyBase;  /* encrypted NuBL32 pub key address */
@@ -243,7 +254,7 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
         extern uint32_t g_NuBL33EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
         base = (uint32_t)&g_NuBL33EnCryptPubKeyBase;  /* encrypted NuBL33 pub key address */
     }
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = inpw(base + (i*4));
 
@@ -259,9 +270,9 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
 /* Step 2. Decrypt or get NuBL3x info */
     /* Get NuBL3x F/W info */
     len = sizeof(FW_INFO_T);
-    if((mode&BIT4) != BIT4)
+    if((((uint32_t)mode)&BIT4) != BIT4)
     {
-        if((mode&BIT0) == 0)
+        if((((uint32_t)mode)&BIT0) == 0)
             base = NUBL32_FW_INFO_BASE;   // NuBL32 F/W info address
         else
             base = NUBL33_FW_INFO_BASE;   // NuBL33 F/W info address
@@ -325,7 +336,7 @@ int32_t NuBL2_ExecuteVerifyNuBL3x(uint32_t *buf, int32_t mode)
 
 
 /* Step 5. Verify NuBL3x F/W Hash */
-    if((mode&BIT4) != BIT4) /* if BIT4 == 0, dnubo not check F/W integrity */
+    if((((uint32_t)mode)&BIT4) != BIT4) /* if BIT4 == 0, dnubo not check F/W integrity */
     {
         uint32_t au32Hash[8];
 
@@ -386,12 +397,13 @@ _exit_NuBL2_ExecuteVerifyNuBL3x:
 */
 int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
 {
-    volatile int32_t    i, ret = -1000;
+    volatile int32_t    ret = -1000;
     uint32_t            *keybuf, base, len;
     ECC_PUBKEY_T        PubKey;
     uint32_t            AESkey[8];
+    volatile uint32_t    i;
 
-    if((ret=IsAccessDenied()) != 0)
+    if((ret=(int32_t)IsAccessDenied()) != 0)
         return ret;
 
     NUBL_MSG("\nCalculate (NuBL2*NuBL3) and (NuBL2*NuBL33) ECDH keys.\n\n");
@@ -405,7 +417,7 @@ int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
     len = sizeof(ECC_PUBKEY_T);
     extern uint32_t g_NuBL32EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
     base = (uint32_t)&g_NuBL32EnCryptPubKeyBase;  /* encrypted NuBL32 pub key address */
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
 
@@ -425,7 +437,7 @@ int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
     }
 
     /* Select NuBL2_priv * NuBL32_pub */
-    SetECCRegisters(0x00020000, NULL, (uint32_t *)&PubKey);
+    SetECCRegisters(0x00020000, NULL, (uint32_t *)(uint32_t)&PubKey);
 
     /* Calculate ECDH shared key */
     if(NuBL_ECCGenerateECDHKey() != 0)
@@ -435,7 +447,7 @@ int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
     }
 
     /* Get ECDH shared key */
-    memcpy(Key32, (void *)&CRPT->ECC_X1[0], sizeof(AESkey));
+    memcpy(Key32, (void *)(uint32_t)&CRPT->ECC_X1[0], sizeof(AESkey));
     NuBL2_BytesSwap((char *)Key32, sizeof(AESkey));
     for(i=0; i<8; i++)
         Key32[i] = NuBL_Swap32(Key32[i]);
@@ -448,7 +460,7 @@ int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
     len = sizeof(ECC_PUBKEY_T);
     extern uint32_t g_NuBL33EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
     base = (uint32_t)&g_NuBL33EnCryptPubKeyBase;  /* encrypted NuBL33 pub key address */
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
 
@@ -468,7 +480,7 @@ int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
     }
 
     /* Select NuBL2_priv * NuBL33_pub */
-    SetECCRegisters(0x00020000, NULL, (uint32_t *)&PubKey);
+    SetECCRegisters(0x00020000, NULL, (uint32_t *)(uint32_t)&PubKey);
 
     /* Calculate ECDH shared key */
     if(NuBL_ECCGenerateECDHKey() != 0)
@@ -478,7 +490,7 @@ int32_t NuBL2_GetNuBL3xECDHKeys(uint32_t Key32[], uint32_t Key33[])
     }
 
     /* Get ECDH shared key */
-    memcpy(Key33, (void *)&CRPT->ECC_X1[0], sizeof(AESkey));
+    memcpy(Key33, (void *)(uint32_t)&CRPT->ECC_X1[0], sizeof(AESkey));
     NuBL2_BytesSwap((char *)Key33, sizeof(AESkey));
     for(i=0; i<8; i++)
         Key33[i] = NuBL_Swap32(Key33[i]);
@@ -499,20 +511,22 @@ _exit_NuBL2_GetNuBL3xECDHKeys:
 /*
     Update NuBL3x F/W info to specify destination address
 */
-int32_t NuBL2_UpdateNuBL3xFwInfo(uint32_t *pFwInfo, uint32_t size, int32_t mode, uint32_t dest)
+int32_t NuBL2_UpdateNuBL3xFwInfo(uint32_t *pFwInfo, uint32_t size, int32_t i32Mode, uint32_t dest)
 {
-    volatile int32_t    i, ret = -1000;
+    (void)dest;
+    volatile int32_t    ret = -1000;
     uint32_t            base;
+    volatile uint32_t   i;
 
-    if((mode == -1) || (pFwInfo == NULL))
+    if((i32Mode == -1) || (pFwInfo == NULL))
         return -1;
 
-    if((ret=IsAccessDenied()) != 0)
+    if((ret=(int32_t)IsAccessDenied()) != 0)
         return ret;
 
-    NUBL_MSG("\nNuBL2 update NuBL3%d F/W info.\n\n", (mode==0)?2:3);
+    NUBL_MSG("\nNuBL2 update NuBL3%d F/W info.\n\n", (i32Mode==0)?2:3);
 
-    if(mode == 0)
+    if(i32Mode == 0)
         base = NUBL32_FW_INFO_BASE;
     else
         base = NUBL33_FW_INFO_BASE;
@@ -553,13 +567,13 @@ void NuBL2_BytesSwap(char *buf, int32_t len)
 */
 int32_t NuBL2_VerifyNuBL3xECDSASignature(uint32_t *msg, ECDSA_SIGN_T *sign, ECC_PUBKEY_T *pubkey, int32_t mode)
 {
-    volatile int32_t    ret;
+    volatile int32_t    ret = 0;
     uint32_t    m[8], k0[8], k1[8], r[8], s[8];
 
     if(mode == -1)
         return ret;
 
-    if((ret=IsAccessDenied()) != 0)
+    if((ret=(int32_t)IsAccessDenied()) != 0)
         return ret;
 
     NUBL_MSG("\nNuBL2 verify NuBL3%d FW info signature.\n", ((mode&BIT0)==0)?2:3);
@@ -586,7 +600,7 @@ uint16_t cmd_CalCRC16Sum(uint32_t *pu32buf, uint32_t len)
     uint16_t            *pu16buf;
 
     if(len > 56) // data byte count
-        return -1;
+        return (uint16_t)-1;
 
     CLK->AHBCLK |= CLK_AHBCLK_CRCCKEN_Msk;
     CRC->SEED = 0xFFFFFFFFul;
@@ -648,10 +662,11 @@ int32_t cmd_VerifyCRC16Sum(uint32_t *pu32buf)
 
 int32_t GenCmdSessionKey(uint32_t key[])
 {
-    volatile int32_t    i, ret = -1000;
-    uint32_t            *keybuf, *infobuf, base, len, start, end;
+    volatile int32_t    ret = -1000;
+    uint32_t            *keybuf, base, len, start, end;
     ECC_PUBKEY_T        PubKey;
-    uint32_t            AESkey[8], Hash[8], HashValue[8];;
+    uint32_t            AESkey[8], Hash[8], HashValue[8];
+    volatile uint32_t    i;
 
     memset(&AESkey, 0x0, sizeof(AESkey));
 
@@ -660,7 +675,7 @@ int32_t GenCmdSessionKey(uint32_t key[])
     len = sizeof(ECC_PUBKEY_T);
     extern uint32_t g_HostEnCryptPubKeyBase;  /* declared in LoadHostKey.s */
     base = (uint32_t)&g_HostEnCryptPubKeyBase;  /* encrypted Host pub key address */
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = inpw(base + (i*4));
 
@@ -698,7 +713,7 @@ int32_t GenCmdSessionKey(uint32_t key[])
     len = sizeof(ECC_PUBKEY_T);
     base = (uint32_t)&g_HostEnCryptPubKeyBase;  /* encrypted Host pub key address */
 
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
 
@@ -719,7 +734,7 @@ int32_t GenCmdSessionKey(uint32_t key[])
     }
 
     /* Select NuBL2_priv * Host_pub */
-    SetECCRegisters(0x00020000, NULL, (uint32_t *)&PubKey);
+    SetECCRegisters(0x00020000, NULL, (uint32_t *)(uint32_t)&PubKey);
 
     /* Calculate ECDH shared key */
     if(NuBL_ECCGenerateECDHKey() != 0)
@@ -729,7 +744,7 @@ int32_t GenCmdSessionKey(uint32_t key[])
     }
 
     /* Get ECDH shared key for follows AES encrypt/decrypt */
-    memcpy(key, (void *)&CRPT->ECC_X1[0], sizeof(AESkey));
+    memcpy(key, (void *)(uint32_t)&CRPT->ECC_X1[0], sizeof(AESkey));
 #if (DEBUG_CMD == 1)
     for(i=0; i<8; i++)
         NUBL_MSG("\tSharedKey: 0x%08x. (NuBL2_priv * Host_pub)\n", key[i]);
@@ -748,7 +763,7 @@ _exit_GenCmdSessionKey:
 
 /*
     Identify public keys mached or mismatch
-        mode:
+        i32Mode:
             0: p32Buf means public keys
             1: p32Buf means public key Hash
     Return:
@@ -762,14 +777,15 @@ _exit_GenCmdSessionKey:
             0: No Host pubic key;
             1: Host public key match
 */
-int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
+int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t i32Mode)
 {
-    volatile int32_t    i, ret = -1000, sts = 0;
+    volatile int32_t    ret = -1000, sts = 0;
     uint32_t            *keybuf, base, len, start, end;
     ECC_PUBKEY_T        PubKey, *pInPubKey;
     uint32_t            AESkey[8], Hash[8];
+    volatile uint32_t    i;
 
-    if(mode == -1)
+    if(i32Mode == -1)
         return ret;
 
     memset(&AESkey, 0x0, sizeof(AESkey));
@@ -783,7 +799,7 @@ int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
     extern uint32_t g_NuBL32EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
     base = (uint32_t)&g_NuBL32EnCryptPubKeyBase;  /* encrypted NuBL32 pub key address */
 
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
     /* Trigger decryption... */
@@ -792,7 +808,7 @@ int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
         ret = -1003;
         goto _exit_IdentifyPublicKey;
     }
-    if(mode == 0)
+    if(i32Mode == 0)
     {
         /* Identify NuBL32 public key */
         if(memcmp(&PubKey.au32Key0[0], &pInPubKey->au32Key0[0], sizeof(ECC_PUBKEY_T)) == 0)
@@ -817,7 +833,7 @@ int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
     extern uint32_t g_NuBL33EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
     base = (uint32_t)&g_NuBL33EnCryptPubKeyBase;  /* encrypted NuBL33 pub key address */
 
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
     /* Trigger decryption... */
@@ -826,7 +842,7 @@ int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
         ret = -1003;
         goto _exit_IdentifyPublicKey;
     }
-    if(mode == 0)
+    if(i32Mode == 0)
     {
         /* Identify NuBL33 public key */
         if(memcmp(&PubKey.au32Key0[0], &pInPubKey->au32Key0[0], sizeof(ECC_PUBKEY_T)) == 0)
@@ -851,7 +867,7 @@ int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
     extern uint32_t g_HostEnCryptPubKeyBase;  /* declared in LoadHostKey.s */
     base = (uint32_t)&g_HostEnCryptPubKeyBase;  /* encrypted Host pub key address */
 
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
     /* Trigger decryption... */
@@ -860,7 +876,7 @@ int32_t IdentifyPublicKey(uint32_t *p32Buf, int32_t mode)
         ret = -1003;
         goto _exit_IdentifyPublicKey;
     }
-    if(mode == 0)
+    if(i32Mode == 0)
     {
         /* Identify Host public key */
         if(memcmp(&PubKey.au32Key0[0], &pInPubKey->au32Key0[0], sizeof(ECC_PUBKEY_T)) == 0)
@@ -905,12 +921,13 @@ _exit_IdentifyPublicKey:
   */
 int32_t VerifyNuBL3xKeyHash(uint32_t * pu32KeyHash)
 {
-    volatile int32_t    i, ret = -1000;
+    volatile int32_t    ret = -1000;
     uint32_t            *keybuf, *infobuf, base, len, start, end;
     ECC_PUBKEY_T        PubKey;
     FW_INFO_T           FwInfo;
     uint32_t            AESkey[8];
     uint32_t            au32HashBuf[8];
+    volatile uint32_t    i;
 
     NUBL_MSG("\nNuBL2 verify NuBL3x.\n\n");
 
@@ -918,7 +935,7 @@ int32_t VerifyNuBL3xKeyHash(uint32_t * pu32KeyHash)
     memset(&PubKey, 0x0, sizeof(ECC_PUBKEY_T));
     memset(&FwInfo, 0x0, sizeof(FW_INFO_T));
 
-    infobuf = (uint32_t *)&FwInfo;
+    infobuf = (uint32_t *)(uint32_t)&FwInfo;
 
     /* reset crypto */
     SYS->IPRST0 |= SYS_IPRST0_CRPTRST_Msk;
@@ -935,7 +952,7 @@ int32_t VerifyNuBL3xKeyHash(uint32_t * pu32KeyHash)
     extern uint32_t g_NuBL32EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
     base = (uint32_t)&g_NuBL32EnCryptPubKeyBase;  /* encrypted NuBL32 pub key address */
 
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
 
@@ -962,7 +979,7 @@ int32_t VerifyNuBL3xKeyHash(uint32_t * pu32KeyHash)
     extern uint32_t g_NuBL33EnCryptPubKeyBase;  /* declared in LoadKeyStorage.s */
     base = (uint32_t)&g_NuBL33EnCryptPubKeyBase;  /* encrypted NuBL33 pub key address */
 
-    keybuf = (uint32_t *)&PubKey;
+    keybuf = (uint32_t *)(uint32_t)&PubKey;
     for(i=0; i<(len/4); i++)
         keybuf[i] = FMC_Read(base + (i*4));
 

@@ -13,9 +13,18 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-STR_CANMSG_T rrMsg;
+static STR_CANMSG_T rrMsg;
 
 void CAN_ShowMsg(STR_CANMSG_T* Msg);
+void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR);
+void CAN0_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+void CAN_Init(CAN_T  *tCAN);
+void CAN_STOP(CAN_T  *tCAN);
+void Note_Configure(void);
+void CAN_ResetIF(CAN_T *tCAN, uint8_t u8IF_Num);
+void Test_BasicMode_Tx_Rx(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                            */
@@ -92,7 +101,7 @@ void CAN0_IRQHandler(void)
 
         CAN_MsgInterrupt(CAN0, u8IIDRstatus);
 
-        CAN_CLR_INT_PENDING_BIT(CAN0, ((CAN0->IIDR) - 1)); /* Clear Interrupt Pending */
+        CAN_CLR_INT_PENDING_BIT(CAN0, (uint8_t)((CAN0->IIDR) - 1)); /* Clear Interrupt Pending */
     }
     else if(CAN0->WU_STATUS == 1)
     {

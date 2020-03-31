@@ -20,9 +20,9 @@
 extern uint32_t Image$$RW$$Base;
 #endif
 
-__attribute__((aligned)) uint8_t au8SrcArray[256];
-__attribute__((aligned)) uint8_t au8DestArray0[256];
-__attribute__((aligned)) uint8_t au8DestArray1[256];
+static __attribute__((aligned)) uint8_t s_au8SrcArray[256];
+static __attribute__((aligned)) uint8_t s_au8DestArray0[256];
+static __attribute__((aligned)) uint8_t s_au8DestArray1[256];
 
 typedef struct dma_desc_t
 {
@@ -32,7 +32,12 @@ typedef struct dma_desc_t
     uint32_t u32Offset;
 } DMA_DESC_T;
 
-DMA_DESC_T DMA_DESC[2]; /* Descriptor table */
+static DMA_DESC_T DMA_DESC[2]; /* Descriptor table */
+
+
+void PDMA0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       DMA IRQ
@@ -135,9 +140,9 @@ int main(void)
     printf("|    M2351 PDMA Memory to Memory Driver Sample Code (Scatter-gather)     | \n");
     printf("+-----------------------------------------------------------------------+ \n");
 
-    u32Src = (uint32_t)au8SrcArray;
-    u32Dst0 = (uint32_t)au8DestArray0;
-    u32Dst1 = (uint32_t)au8DestArray1;
+    u32Src = (uint32_t)s_au8SrcArray;
+    u32Dst0 = (uint32_t)s_au8DestArray0;
+    u32Dst1 = (uint32_t)s_au8DestArray1;
 
     /* This sample will transfer data by finished two descriptor table in sequence.(descriptor table 1 -> descriptor table 2) */
 
@@ -172,7 +177,7 @@ int main(void)
 
     /*------------------------------------------------------------------------------------------------------
 
-                         au8SrcArray                         au8DestArray0
+                         s_au8SrcArray                         s_au8DestArray0
                          ---------------------------   -->   ---------------------------
                        /| [0]  | [1]  |  [2] |  [3] |       | [0]  | [1]  |  [2] |  [3] |\
                         |      |      |      |      |       |      |      |      |      |
@@ -191,9 +196,9 @@ int main(void)
 
         Transfer count = PDMA_TEST_LENGTH
         Transfer width = 32 bits(one word)
-        Source address = au8SrcArray
+        Source address = s_au8SrcArray
         Source address increment size = 32 bits(one word)
-        Destination address = au8DestArray0
+        Destination address = s_au8DestArray0
         Destination address increment size = 32 bits(one word)
         Transfer type = burst transfer
 
@@ -219,7 +224,7 @@ int main(void)
 
     /*------------------------------------------------------------------------------------------------------
 
-                         au8DestArray0                       au8DestArray1
+                         s_au8DestArray0                       s_au8DestArray1
                          ---------------------------   -->   ---------------------------
                        /| [0]  | [1]  |  [2] |  [3] |       | [0]  | [1]  |  [2] |  [3] |\
                         |      |      |      |      |       |      |      |      |      |
@@ -237,9 +242,9 @@ int main(void)
 
         Transfer count = PDMA_TEST_LENGTH
         Transfer width = 32 bits(one word)
-        Source address = au8DestArray0
+        Source address = s_au8DestArray0
         Source address increment size = 32 bits(one word)
-        Destination address = au8DestArray1
+        Destination address = s_au8DestArray1
         Destination address increment size = 32 bits(one word)
         Transfer type = burst transfer
 

@@ -19,26 +19,35 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8DeviceHAddr;
-volatile uint8_t g_u8DeviceLAddr;
-volatile uint8_t g_u8SlvData[256];
-volatile uint8_t g_u8DeviceAddr;
-volatile uint8_t g_au8MstTxData[3];
-volatile uint8_t g_u8MstRxData;
-volatile uint8_t g_u8MstEndFlag = 0;
-volatile uint32_t slave_buff_addr;
-volatile uint8_t g_au8SlvRxData[4];
-volatile uint16_t g_u16SlvRcvAddr;
-volatile uint8_t g_u8MstDataLen;
-volatile uint8_t g_u8SlvDataLen;
+static volatile uint8_t s_u8DeviceHAddr;
+static volatile uint8_t s_u8DeviceLAddr;
+static volatile uint8_t s_u8SlvData[256];
+static volatile uint8_t s_au8MstTxData[3];
+static volatile uint8_t s_u8MstRxData;
+static volatile uint8_t s_u8MstEndFlag = 0;
+static volatile uint32_t s_u32SlaveBuffAddr;
+static volatile uint8_t s_au8SlvRxData[4];
+static volatile uint16_t s_u16SlvRcvAddr;
+static volatile uint8_t s_u8MstDataLen;
+static volatile uint8_t s_u8SlvDataLen;
 
-volatile enum UI2C_MASTER_EVENT m_Event;
-volatile enum UI2C_SLAVE_EVENT s_Event;
+static volatile enum UI2C_MASTER_EVENT s_eMasterEvent;
+static volatile enum UI2C_SLAVE_EVENT s_eSlaveEvent;
 
 typedef void (*UI2C_FUNC)(uint32_t u32Status);
 
 volatile static UI2C_FUNC s_UI2C0HandlerFn = NULL;
 volatile static UI2C_FUNC s_UI2C1HandlerFn = NULL;
+
+void USCI0_IRQHandler(void);
+void USCI1_IRQHandler(void);
+void UI2C_MasterRx(uint32_t u32Status);
+void UI2C_MasterTx(uint32_t u32Status);
+void UI2C_LB_SlaveTRx(uint32_t u32Status);
+void SYS_Init(void);
+void UI2C0_Init(uint32_t u32ClkSpeed);
+void UI2C1_Init(uint32_t u32ClkSpeed);
+int32_t Read_Write_SLAVE(uint16_t u16SlvAddr);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  USCI0_I2C IRQ Handler                                                                                  */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -77,15 +86,15 @@ void UI2C_MasterRx(uint32_t u32Status)
     {
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STARIF_Msk);  /* Clear START INT Flag */
 
-        if(m_Event == MASTER_SEND_START)
+        if(s_eMasterEvent == MASTER_SEND_START)
         {
-            UI2C_SET_DATA(UI2C0, (g_u8DeviceHAddr << 1) | 0x00); /* Write SLA+W to Register TXDAT */
-            m_Event = MASTER_SEND_H_WR_ADDRESS;
+            UI2C_SET_DATA(UI2C0, (uint16_t)(s_u8DeviceHAddr << 1) | 0x00); /* Write SLA+W to Register TXDAT */
+            s_eMasterEvent = MASTER_SEND_H_WR_ADDRESS;
         }
-        else if(m_Event == MASTER_SEND_REPEAT_START)
+        else if(s_eMasterEvent == MASTER_SEND_REPEAT_START)
         {
-            UI2C_SET_DATA(UI2C0, (g_u8DeviceHAddr << 1) | 0x01); /* Write SLA+R to Register TXDAT */
-            m_Event = MASTER_SEND_H_RD_ADDRESS;
+            UI2C_SET_DATA(UI2C0, (uint16_t)(s_u8DeviceHAddr << 1) | 0x01); /* Write SLA+R to Register TXDAT */
+            s_eMasterEvent = MASTER_SEND_H_RD_ADDRESS;
         }
 
         UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
@@ -93,34 +102,34 @@ void UI2C_MasterRx(uint32_t u32Status)
     else if((u32Status & UI2C_PROTSTS_ACKIF_Msk) == UI2C_PROTSTS_ACKIF_Msk)
     {
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_ACKIF_Msk);  /* Clear ACK INT Flag */
-        if(m_Event == MASTER_SEND_H_WR_ADDRESS)
+        if(s_eMasterEvent == MASTER_SEND_H_WR_ADDRESS)
         {
-            UI2C_SET_DATA(UI2C0, g_u8DeviceLAddr);
-            m_Event = MASTER_SEND_L_ADDRESS;
+            UI2C_SET_DATA(UI2C0, s_u8DeviceLAddr);
+            s_eMasterEvent = MASTER_SEND_L_ADDRESS;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
         }
-        else if(m_Event == MASTER_SEND_L_ADDRESS)
+        else if(s_eMasterEvent == MASTER_SEND_L_ADDRESS)
         {
-            UI2C_SET_DATA(UI2C0, g_au8MstTxData[g_u8MstDataLen++]);  /* SLA+W has been transmitted and write ADDRESS to Register TXDAT */
-            m_Event = MASTER_SEND_DATA;
+            UI2C_SET_DATA(UI2C0, s_au8MstTxData[s_u8MstDataLen++]);  /* SLA+W has been transmitted and write ADDRESS to Register TXDAT */
+            s_eMasterEvent = MASTER_SEND_DATA;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
         }
-        else if(m_Event == MASTER_SEND_DATA)
+        else if(s_eMasterEvent == MASTER_SEND_DATA)
         {
-            if(g_u8MstDataLen != 2)
+            if(s_u8MstDataLen != 2)
             {
-                UI2C_SET_DATA(UI2C0, g_au8MstTxData[g_u8MstDataLen++]);  /* ADDRESS has been transmitted and write DATA to Register TXDAT */
+                UI2C_SET_DATA(UI2C0, s_au8MstTxData[s_u8MstDataLen++]);  /* ADDRESS has been transmitted and write DATA to Register TXDAT */
                 UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
             }
             else
             {
-                m_Event = MASTER_SEND_REPEAT_START;
+                s_eMasterEvent = MASTER_SEND_REPEAT_START;
                 UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STA));    /* Send repeat START signal */
             }
         }
-        else if(m_Event == MASTER_SEND_H_RD_ADDRESS)
+        else if(s_eMasterEvent == MASTER_SEND_H_RD_ADDRESS)
         {
-            m_Event = MASTER_READ_DATA;
+            s_eMasterEvent = MASTER_READ_DATA;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
         }
     }
@@ -128,21 +137,21 @@ void UI2C_MasterRx(uint32_t u32Status)
     {
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_NACKIF_Msk);      /* Clear NACK INT Flag */
 
-        if(m_Event == MASTER_SEND_H_WR_ADDRESS)
+        if(s_eMasterEvent == MASTER_SEND_H_WR_ADDRESS)
         {
-            m_Event = MASTER_SEND_START;
+            s_eMasterEvent = MASTER_SEND_START;
             UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STA));    /* Send START signal */
         }
-        else if(m_Event == MASTER_SEND_L_ADDRESS)
+        else if(s_eMasterEvent == MASTER_SEND_L_ADDRESS)
         {
-            m_Event = MASTER_STOP;
+            s_eMasterEvent = MASTER_STOP;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STO);
         }
-        else if(m_Event == MASTER_READ_DATA)
+        else if(s_eMasterEvent == MASTER_READ_DATA)
         {
-            g_u8MstRxData = (uint8_t) UI2C_GET_DATA(UI2C0);
+            s_u8MstRxData = (uint8_t) UI2C_GET_DATA(UI2C0);
 
-            m_Event = MASTER_STOP;
+            s_eMasterEvent = MASTER_STOP;
             UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));    /* DATA has been received and send STOP signal */
         }
         else
@@ -151,7 +160,7 @@ void UI2C_MasterRx(uint32_t u32Status)
     }
     else if((u32Status & UI2C_PROTSTS_STORIF_Msk) == UI2C_PROTSTS_STORIF_Msk)
     {
-        g_u8MstEndFlag = 1;
+        s_u8MstEndFlag = 1;
 
         /* Clear STOP INT Flag */
         UI2C0->PROTSTS =  UI2C_PROTSTS_STORIF_Msk;
@@ -175,8 +184,8 @@ void UI2C_MasterTx(uint32_t u32Status)
     {
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STARIF_Msk);               /* Clear START INT Flag */
 
-        UI2C_SET_DATA(UI2C0, (g_u8DeviceHAddr << 1) | 0x00);     /* Write SLA+W to Register TXDAT */
-        m_Event = MASTER_SEND_H_WR_ADDRESS;
+        UI2C_SET_DATA(UI2C0, (uint16_t)(s_u8DeviceHAddr << 1) | 0x00);     /* Write SLA+W to Register TXDAT */
+        s_eMasterEvent = MASTER_SEND_H_WR_ADDRESS;
 
         UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
     }
@@ -185,28 +194,28 @@ void UI2C_MasterTx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_ACKIF_Msk);   /* Clear ACK INT Flag */
 
         /* Event process */
-        if(m_Event == MASTER_SEND_H_WR_ADDRESS)
+        if(s_eMasterEvent == MASTER_SEND_H_WR_ADDRESS)
         {
-            UI2C_SET_DATA(UI2C0, g_u8DeviceLAddr);
-            m_Event = MASTER_SEND_L_ADDRESS;
+            UI2C_SET_DATA(UI2C0, s_u8DeviceLAddr);
+            s_eMasterEvent = MASTER_SEND_L_ADDRESS;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
         }
-        else if(m_Event == MASTER_SEND_L_ADDRESS)
+        else if(s_eMasterEvent == MASTER_SEND_L_ADDRESS)
         {
-            UI2C_SET_DATA(UI2C0, g_au8MstTxData[g_u8MstDataLen++]);  /* SLA+W has been transmitted and write ADDRESS to Register TXDAT */
-            m_Event = MASTER_SEND_DATA;
+            UI2C_SET_DATA(UI2C0, s_au8MstTxData[s_u8MstDataLen++]);  /* SLA+W has been transmitted and write ADDRESS to Register TXDAT */
+            s_eMasterEvent = MASTER_SEND_DATA;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
         }
-        else if(m_Event == MASTER_SEND_DATA)
+        else if(s_eMasterEvent == MASTER_SEND_DATA)
         {
-            if(g_u8MstDataLen != 3)
+            if(s_u8MstDataLen != 3)
             {
-                UI2C_SET_DATA(UI2C0, g_au8MstTxData[g_u8MstDataLen++]);  /* ADDRESS has been transmitted and write DATA to Register TXDAT */
+                UI2C_SET_DATA(UI2C0, s_au8MstTxData[s_u8MstDataLen++]);  /* ADDRESS has been transmitted and write DATA to Register TXDAT */
                 UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
             }
             else
             {
-                m_Event = MASTER_STOP;
+                s_eMasterEvent = MASTER_STOP;
                 UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));        /* Send STOP signal */
             }
         }
@@ -215,23 +224,23 @@ void UI2C_MasterTx(uint32_t u32Status)
     {
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_NACKIF_Msk);  /* Clear NACK INT Flag */
 
-        g_u8MstEndFlag = 0;
-        if(m_Event == MASTER_SEND_H_WR_ADDRESS)
+        s_u8MstEndFlag = 0;
+        if(s_eMasterEvent == MASTER_SEND_H_WR_ADDRESS)
         {
             /* SLA+W has been transmitted and NACK has been received */
-            m_Event = MASTER_SEND_START;
+            s_eMasterEvent = MASTER_SEND_START;
             UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STA));            /* Send START signal */
         }
-        else if(m_Event == MASTER_SEND_L_ADDRESS)
+        else if(s_eMasterEvent == MASTER_SEND_L_ADDRESS)
         {
             /* ADDRESS has been transmitted and NACK has been received */
-            m_Event = MASTER_STOP;
+            s_eMasterEvent = MASTER_STOP;
             UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));            /* Send STOP signal */
         }
-        else if(m_Event == MASTER_SEND_DATA)
+        else if(s_eMasterEvent == MASTER_SEND_DATA)
         {
             /* ADDRESS has been transmitted and NACK has been received */
-            m_Event = MASTER_STOP;
+            s_eMasterEvent = MASTER_STOP;
             UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));            /* Send STOP signal */
         }
         else
@@ -239,7 +248,7 @@ void UI2C_MasterTx(uint32_t u32Status)
     }
     else if((u32Status & UI2C_PROTSTS_STORIF_Msk) == UI2C_PROTSTS_STORIF_Msk)
     {
-        g_u8MstEndFlag = 1;
+        s_u8MstEndFlag = 1;
 
         /* Clear STOP INT Flag */
         UI2C0->PROTSTS =  UI2C_PROTSTS_STORIF_Msk;
@@ -260,8 +269,8 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C1, UI2C_PROTSTS_STARIF_Msk);
 
         /* Event process */
-        g_u8SlvDataLen = 0;
-        s_Event = SLAVE_H_RD_ADDRESS_ACK;
+        s_u8SlvDataLen = 0;
+        s_eSlaveEvent = SLAVE_H_RD_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C1, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -271,52 +280,52 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C1, UI2C_PROTSTS_ACKIF_Msk);
 
         /* Event process */
-        if(s_Event == SLAVE_H_WR_ADDRESS_ACK)
+        if(s_eSlaveEvent == SLAVE_H_WR_ADDRESS_ACK)
         {
-            g_u8SlvDataLen = 0;
+            s_u8SlvDataLen = 0;
 
-            s_Event = SLAVE_L_WR_ADDRESS_ACK;
-            g_u16SlvRcvAddr = (uint8_t)UI2C_GET_DATA(UI2C1);
+            s_eSlaveEvent = SLAVE_L_WR_ADDRESS_ACK;
+            s_u16SlvRcvAddr = (uint8_t)UI2C_GET_DATA(UI2C1);
         }
-        else if(s_Event == SLAVE_H_RD_ADDRESS_ACK)
+        else if(s_eSlaveEvent == SLAVE_H_RD_ADDRESS_ACK)
         {
-            g_u8SlvDataLen = 0;
+            s_u8SlvDataLen = 0;
 
-            UI2C_SET_DATA(UI2C1, g_u8SlvData[slave_buff_addr]);
-            slave_buff_addr++;
-            g_u16SlvRcvAddr = (uint8_t)UI2C_GET_DATA(UI2C1);
+            UI2C_SET_DATA(UI2C1, s_u8SlvData[s_u32SlaveBuffAddr]);
+            s_u32SlaveBuffAddr++;
+            s_u16SlvRcvAddr = (uint8_t)UI2C_GET_DATA(UI2C1);
         }
-        else if(s_Event == SLAVE_L_WR_ADDRESS_ACK)
+        else if(s_eSlaveEvent == SLAVE_L_WR_ADDRESS_ACK)
         {
             if((UI2C1->PROTSTS & UI2C_PROTSTS_SLAREAD_Msk) == UI2C_PROTSTS_SLAREAD_Msk)
             {
-                UI2C_SET_DATA(UI2C1, g_u8SlvData[slave_buff_addr]);
-                slave_buff_addr++;
+                UI2C_SET_DATA(UI2C1, s_u8SlvData[s_u32SlaveBuffAddr]);
+                s_u32SlaveBuffAddr++;
             }
             else
             {
-                s_Event = SLAVE_GET_DATA;
+                s_eSlaveEvent = SLAVE_GET_DATA;
             }
-            g_u16SlvRcvAddr = (uint8_t)UI2C_GET_DATA(UI2C1);
+            s_u16SlvRcvAddr = (uint8_t)UI2C_GET_DATA(UI2C1);
         }
-        else if(s_Event == SLAVE_L_RD_ADDRESS_ACK)
+        else if(s_eSlaveEvent == SLAVE_L_RD_ADDRESS_ACK)
         {
-            UI2C_SET_DATA(UI2C1, g_u8SlvData[slave_buff_addr]);
-            slave_buff_addr++;
+            UI2C_SET_DATA(UI2C1, s_u8SlvData[s_u32SlaveBuffAddr]);
+            s_u32SlaveBuffAddr++;
         }
-        else if(s_Event == SLAVE_GET_DATA)
+        else if(s_eSlaveEvent == SLAVE_GET_DATA)
         {
-            g_au8SlvRxData[g_u8SlvDataLen] = (uint8_t)UI2C_GET_DATA(UI2C1);
-            g_u8SlvDataLen++;
+            s_au8SlvRxData[s_u8SlvDataLen] = (uint8_t)UI2C_GET_DATA(UI2C1);
+            s_u8SlvDataLen++;
 
-            if(g_u8SlvDataLen == 2)
+            if(s_u8SlvDataLen == 2)
             {
-                slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+                s_u32SlaveBuffAddr = (uint16_t)(s_au8SlvRxData[0] << 8) + s_au8SlvRxData[1];
             }
-            if(g_u8SlvDataLen == 3)
+            if(s_u8SlvDataLen == 3)
             {
-                g_u8SlvData[slave_buff_addr] = g_au8SlvRxData[2];
-                g_u8SlvDataLen = 0;
+                s_u8SlvData[s_u32SlaveBuffAddr] = s_au8SlvRxData[2];
+                s_u8SlvDataLen = 0;
             }
         }
 
@@ -328,8 +337,8 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C1, UI2C_PROTSTS_NACKIF_Msk);
 
         /* Event process */
-        g_u8SlvDataLen = 0;
-        s_Event = SLAVE_H_WR_ADDRESS_ACK;
+        s_u8SlvDataLen = 0;
+        s_eSlaveEvent = SLAVE_H_WR_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C1, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -339,8 +348,8 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C1, UI2C_PROTSTS_STORIF_Msk);
 
         /* Event process */
-        g_u8SlvDataLen = 0;
-        s_Event = SLAVE_H_WR_ADDRESS_ACK;
+        s_u8SlvDataLen = 0;
+        s_eSlaveEvent = SLAVE_H_WR_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C1, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -460,46 +469,45 @@ int32_t Read_Write_SLAVE(uint16_t u16SlvAddr)
     uint32_t i;
 
     /* Init Send 10-bit Addr */
-    g_u8DeviceHAddr = (u16SlvAddr >> 8) | SLV_10BIT_ADDR;
-    g_u8DeviceLAddr = u16SlvAddr & 0xFF;
+    s_u8DeviceHAddr = (u16SlvAddr >> 8) | SLV_10BIT_ADDR;
+    s_u8DeviceLAddr = u16SlvAddr & 0xFF;
 
     for(i = 0; i < 0x100; i++)
     {
-        g_au8MstTxData[0] = (uint8_t)((i & 0xFF00) >> 8);
-        g_au8MstTxData[1] = (uint8_t)(i & 0x00FF);
-        g_au8MstTxData[2] = (uint8_t)(g_au8MstTxData[1] + 3);
+        s_au8MstTxData[0] = (uint8_t)((i & 0xFF00) >> 8);
+        s_au8MstTxData[1] = (uint8_t)(i & 0x00FF);
+        s_au8MstTxData[2] = (uint8_t)(s_au8MstTxData[1] + 3);
 
-        g_u8MstDataLen = 0;
-        g_u8MstEndFlag = 0;
+        s_u8MstDataLen = 0;
+        s_u8MstEndFlag = 0;
 
         /* USCI_I2C function to write data to slave */
         s_UI2C0HandlerFn = (UI2C_FUNC)UI2C_MasterTx;
 
         /* USCI_I2C as master sends START signal */
-        m_Event = MASTER_SEND_START;
+        s_eMasterEvent = MASTER_SEND_START;
         UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STA);
 
         /* Wait USCI_I2C Tx Finish */
-        while(g_u8MstEndFlag == 0);
-        g_u8MstEndFlag = 0;
+        while(s_u8MstEndFlag == 0);
+        s_u8MstEndFlag = 0;
 
         /* USCI_I2C function to read data from slave */
         s_UI2C0HandlerFn = (UI2C_FUNC)UI2C_MasterRx;
 
-        g_u8MstDataLen = 0;
-        g_u8DeviceAddr = u16SlvAddr;
+        s_u8MstDataLen = 0;
 
-        m_Event = MASTER_SEND_START;
+        s_eMasterEvent = MASTER_SEND_START;
         UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STA);
 
         /* Wait USCI_I2C Rx Finish */
-        while(g_u8MstEndFlag == 0);
-        g_u8MstEndFlag = 0;
+        while(s_u8MstEndFlag == 0);
+        s_u8MstEndFlag = 0;
 
         /* Compare data */
-        if(g_u8MstRxData != g_au8MstTxData[2])
+        if(s_u8MstRxData != s_au8MstTxData[2])
         {
-            printf("USCI_I2C Byte Write/Read Failed, Data 0x%x\n", g_u8MstRxData);
+            printf("USCI_I2C Byte Write/Read Failed, Data 0x%x\n", s_u8MstRxData);
             return -1;
         }
     }
@@ -547,11 +555,11 @@ int main()
     UI2C0_Init(100000);
     UI2C1_Init(100000);
 
-    s_Event = SLAVE_H_WR_ADDRESS_ACK;
+    s_eSlaveEvent = SLAVE_H_WR_ADDRESS_ACK;
     UI2C_SET_CONTROL_REG(UI2C1, (UI2C_CTL_PTRG | UI2C_CTL_AA));
 
     for(u32i = 0; u32i < 0x100; u32i++)
-        g_u8SlvData[u32i] = 0;
+        s_u8SlvData[u32i] = 0;
 
     /* I2C1 function to Slave receive/transmit data */
     s_UI2C1HandlerFn = UI2C_LB_SlaveTRx;

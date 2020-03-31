@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void SYS_Init(void);
+void CLKFAIL_IRQHandler(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Clock Failed IRQ Handler                                                                               */

@@ -17,11 +17,10 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8DeviceAddr;
-volatile uint8_t g_au8MstTxData[3];
-volatile uint8_t g_u8MstRxData;
-volatile uint8_t g_u8MstEndFlag = 0;
-volatile uint8_t g_u8MstDataLen;
+static volatile uint8_t s_u8DeviceAddr;
+
+void SYS_Init(void);
+void UI2C0_Init(uint32_t u32ClkSpeed);
 
 void SYS_Init(void)
 {
@@ -100,7 +99,7 @@ void UI2C0_Init(uint32_t u32ClkSpeed)
 
 int main(void)
 {
-    uint32_t u32i;
+    uint16_t u16i;
     uint8_t au8TxBuf[256] = {0}, au8rDataBuf[256] = {0};
 
     /* Unlock protected registers */
@@ -137,17 +136,17 @@ int main(void)
     UI2C0_Init(100000);
 
     /* Slave address */
-    g_u8DeviceAddr = 0x15;
+    s_u8DeviceAddr = 0x15;
 
-    for(u32i = 0; u32i < 256; u32i++)
+    for(u16i = 0; u16i < 256; u16i++)
     {
-        au8TxBuf[u32i] = (uint8_t) u32i + 3;
+        au8TxBuf[u16i] = (uint8_t) u16i + 3;
     }
 
-    for(u32i = 0; u32i < 256; u32i += 32)
+    for(u16i = 0; u16i < 256; u16i += 32)
     {
         /* Write 32 bytes data to Slave */
-        while(UI2C_WriteMultiBytesTwoRegs(UI2C0, g_u8DeviceAddr, u32i, &au8TxBuf[u32i], 32) < 32);
+        while(UI2C_WriteMultiBytesTwoRegs(UI2C0, s_u8DeviceAddr, u16i, &au8TxBuf[u16i], 32) < 32);
     }
 
     printf("Multi bytes Write access Pass.....\n");
@@ -155,13 +154,13 @@ int main(void)
     printf("\n");
 
     /* Use Multi Bytes Read from Slave (Two Registers) */
-    while(UI2C_ReadMultiBytesTwoRegs(UI2C0, g_u8DeviceAddr, 0x0000, au8rDataBuf, 256) < 256);
+    while(UI2C_ReadMultiBytesTwoRegs(UI2C0, s_u8DeviceAddr, 0x0000, au8rDataBuf, 256) < 256);
 
     /* Compare TX data and RX data */
-    for(u32i = 0; u32i < 256; u32i++)
+    for(u16i = 0; u16i < 256; u16i++)
     {
-        if(au8TxBuf[u32i] != au8rDataBuf[u32i])
-            printf("Data compare fail... R[%d] Data: 0x%X\n",u32i, au8rDataBuf[u32i]);
+        if(au8TxBuf[u16i] != au8rDataBuf[u16i])
+            printf("Data compare fail... R[%d] Data: 0x%X\n",u16i, au8rDataBuf[u16i]);
     }
     printf("Multi bytes Read access Pass.....\n");
 

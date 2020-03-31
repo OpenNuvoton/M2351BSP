@@ -103,7 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
-        <nTsel>8</nTsel>
+        <nTsel>7</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -162,7 +162,7 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>&lt;1&gt;..\..\..\..\..\Library\Device\Nuvoton\M2351\Source\ARM\startup_M2351.s</Filename>
+          <Filename>..\..\..\..\..\Library\Device\Nuvoton\M2351\Source\ARM\startup_M2351.s</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\Secure\../../../../../Library/Device/Nuvoton/M2351/Source/ARM/startup_M2351.s\221</Expression>
         </Bp>

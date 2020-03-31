@@ -15,6 +15,10 @@
 # if defined (__GNUC__)
 extern void initialise_monitor_handles(void);
 #endif
+
+void UART0_Init(void);
+
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* Main Function                                                                                            */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -37,7 +41,7 @@ void UART0_Init(void)
 
 int32_t main()
 {
-    char ch;
+    int32_t i32Ch;
 
     /*
         To enable semihost, user must define "DEBUG_ENABLE_SEMIHOST" constant when buildind sample code.
@@ -82,13 +86,13 @@ int32_t main()
     while(1)
     {
         /* Get input character */
-        ch = getchar();
+        i32Ch = getchar();
         /*
         PC14 ^= 1;
         */
 
         /* Print input character back */
-        printf("%c\n", ch);
+        printf("%c\n", i32Ch);
 
     }
 }

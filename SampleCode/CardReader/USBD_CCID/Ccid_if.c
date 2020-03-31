@@ -18,7 +18,9 @@ extern uint8_t g_bBulkOutCompleteFlag, g_bBulkInCompleteFlag;
 extern uint8_t UsbIntMessageBuffer[];
 extern uint8_t UsbMessageBuffer[];
 
-extern unsigned char g_ChainParameter;
+extern uint8_t s_u8ChainParameter;
+
+void ccid_T1TimeExtension(void);
 
 //======================================================
 // Bulk-Out Message Functions
@@ -289,7 +291,7 @@ void RDR_to_PC_DataBlock(uint8_t ErrorCode)
         UsbMessageBuffer[OFFSET_DWLENGTH + 3] = 0x00;
         UsbMessageBuffer[OFFSET_BERROR] = ErrorCode;
     }
-    UsbMessageBuffer[OFFSET_BCHAINPARAMETER] = g_ChainParameter;
+    UsbMessageBuffer[OFFSET_BCHAINPARAMETER] = s_u8ChainParameter;
     gu8IsBulkInReady = 1;
 }
 

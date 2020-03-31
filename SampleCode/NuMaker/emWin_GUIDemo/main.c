@@ -17,12 +17,13 @@
 
 extern volatile GUI_TIMER_TIME OS_TimeMS;
 
-volatile int g_enable_Touch;
+static volatile int s_enable_Touch;
 
 extern int ts_writefile(void);
 extern int ts_readfile(void);
 int ts_calibrate(int xsize, int ysize);
 void ts_test(int xsize, int ysize);
+void TMR0_IRQHandler(void);
 
 /*********************************************************************
 *
@@ -108,7 +109,7 @@ void TMR0_IRQHandler(void)
 #if GUI_SUPPORT_TOUCH
     if(OS_TimeMS % 10 == 0)
     {
-        if(g_enable_Touch == 1)
+        if(s_enable_Touch == 1)
         {
             GUI_TOUCH_Exec();
         }
@@ -139,7 +140,7 @@ int main(void)
     //
     UART_Open(UART0, 115200);
 
-    g_enable_Touch = 0;
+    s_enable_Touch = 0;
     //
     // Enable Timer0 clock and select Timer0 clock source
     //
@@ -193,7 +194,7 @@ int main(void)
     /* Lock protected registers */
     SYS_LockReg();
 
-    g_enable_Touch = 1;
+    s_enable_Touch = 1;
 
 #endif
 
@@ -201,7 +202,7 @@ int main(void)
     // Start application
     //
     MainTask();
-    while(1) {};
+    while(1) {}
 }
 
 /*************************** End of file ****************************/

@@ -15,12 +15,16 @@
 
 #define B2C(c)    (((uint8_t)(c)<10)?((uint8_t)(c)+'0'):((uint8_t)(c)-10+'a'))
 
-char d[68];                         /* private key */
-char d2[68];                        /* private key */
-char Qx[68], Qy[68];                /* temporary buffer used to keep output public keys */
-char Qx2[68], Qy2[68];              /* temporary buffer used to keep output public keys */
-char k[68];                         /* random integer k form [1, n-1]                */
-char k2[68];                        /* random integer k form [1, n-1]                */
+static char d1[68];                        /* private key */
+static char d2[68];                        /* private key */
+static char Qx[68], Qy[68];                /* temporary buffer used to keep output public keys */
+static char Qx2[68], Qy2[68];              /* temporary buffer used to keep output public keys */
+static char k[68];                         /* random integer k form [1, n-1]                */
+static char k2[68];                        /* random integer k form [1, n-1]                */
+
+void GenPrivateKey(XTRNG_T *rng, char *d, int32_t i32NBits);
+void SYS_Init(void);
+void UART_Init(void);
 
 void GenPrivateKey(XTRNG_T *rng, char *d, int32_t i32NBits)
 {
@@ -30,7 +34,7 @@ void GenPrivateKey(XTRNG_T *rng, char *d, int32_t i32NBits)
     do
     {
         /* Generate random number for private key */
-        XTRNG_Random(rng, au8r, (i32NBits + 7) / 8);
+        XTRNG_Random(rng, au8r, (uint32_t)((i32NBits + 7) / 8));
 
         for(i = 0, j = 0; i < (i32NBits + 7) / 8; i++)
         {
@@ -127,7 +131,7 @@ void UART_Init(void)
 int main(void)
 {
     XTRNG_T rng;
-    int32_t i32Ticks;
+    uint32_t u32Ticks;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -152,21 +156,21 @@ int main(void)
 
 //------------------------------------------------------------------------
     // Generate a private key A
-    GenPrivateKey(&rng, d, ECC_KEY_SIZE);
-    printf("Private key A = %s\n", d);
+    GenPrivateKey(&rng, d1, ECC_KEY_SIZE);
+    printf("Private key A = %s\n", d1);
 
     // Generate public Key A
     /* Reset SysTick to measure time */
     SysTick->VAL = 0;
-    if(XECC_GeneratePublicKey(XCRPT, ECC_CURVE_TYPE, d, Qx, Qy) < 0)
+    if(XECC_GeneratePublicKey(XCRPT, ECC_CURVE_TYPE, d1, Qx, Qy) < 0)
     {
         printf("ECC key generation failed!!\n");
         while(1) {}
     }
-    i32Ticks = 0xffffff - SysTick->VAL;
+    u32Ticks = 0xffffff - SysTick->VAL;
     printf("Pub Key    Ax = %s\n", Qx);
     printf("Pub Key    Ay = %s\n", Qy);
-    printf("Elapsed time: %d.%d ms\n\n", i32Ticks / CyclesPerUs / 1000, i32Ticks / CyclesPerUs % 1000);
+    printf("Elapsed time: %d.%d ms\n\n", u32Ticks / CyclesPerUs / 1000, u32Ticks / CyclesPerUs % 1000);
 
 //------------------------------------------------------------------------
     // Generate a private key B
@@ -181,14 +185,14 @@ int main(void)
         printf("ECC key generation failed!!\n");
         while(1) {}
     }
-    i32Ticks = 0xffffff - SysTick->VAL;
+    u32Ticks = 0xffffff - SysTick->VAL;
     printf("Pub Key     Bx = %s\n", Qx2);
     printf("Pub Key     By = %s\n", Qy2);
-    printf("Elapsed time: %d.%d ms\n\n", i32Ticks / CyclesPerUs / 1000, i32Ticks / CyclesPerUs % 1000);
+    printf("Elapsed time: %d.%d ms\n\n", u32Ticks / CyclesPerUs / 1000, u32Ticks / CyclesPerUs % 1000);
 
 //------------------------------------------------------------------------
     // Calcualte Share Key by private key A and publick key B
-    if(XECC_GenerateSecretZ(XCRPT, ECC_CURVE_TYPE, d, Qx2, Qy2, k) < 0)
+    if(XECC_GenerateSecretZ(XCRPT, ECC_CURVE_TYPE, d1, Qx2, Qy2, k) < 0)
     {
         printf("ECC ECDH share key calculation fail!!\n");
         while(1) {}

@@ -22,12 +22,12 @@ extern uint32_t Image$$RW$$Base;
 #endif
 
 
-__attribute__((aligned)) uint32_t g_au32SrcArray0[1] = {0x55555555};
-__attribute__((aligned)) uint32_t g_au32SrcArray1[1] = {0xAAAAAAAA};
-__attribute__((aligned)) uint32_t g_au32DestArray[1];
-uint32_t volatile g_u32IsTestOver = 0;
-uint32_t volatile g_u32TransferredCount = 0;
-uint32_t g_u32DMAConfig = 0;
+static __attribute__((aligned)) uint32_t s_au32SrcArray0[1] = {0x55555555};
+static __attribute__((aligned)) uint32_t s_au32SrcArray1[1] = {0xAAAAAAAA};
+static __attribute__((aligned)) uint32_t s_au32DestArray[1];
+static uint32_t volatile s_u32IsTestOver = 0;
+static uint32_t volatile s_u32TransferredCount = 0;
+static uint32_t s_u32DMAConfig = 0;
 
 typedef struct dma_desc_t
 {
@@ -37,7 +37,11 @@ typedef struct dma_desc_t
     uint32_t u32Offset;
 } DMA_DESC_T;
 
-DMA_DESC_T DMA_DESC[2]; /* Descriptor table */
+static  DMA_DESC_T DMA_DESC[2]; /* Descriptor table */
+
+void PDMA0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /**
  * @brief       DMA IRQ
@@ -53,16 +57,16 @@ void PDMA0_IRQHandler(void)
     /* Check channel transfer done status */
     if(PDMA_GET_TD_STS(PDMA0) == PDMA_TDSTS_TDIF4_Msk)
     {
-        /* When finished a descriptor table then g_u32TransferredCount increases 1 */
-        g_u32TransferredCount++;
+        /* When finished a descriptor table then s_u32TransferredCount increases 1 */
+        s_u32TransferredCount++;
 
         /* Check if PDMA has finished PDMA_TEST_COUNT tasks */
-        if(g_u32TransferredCount >= PDMA_TEST_COUNT)
+        if(s_u32TransferredCount >= PDMA_TEST_COUNT)
         {
             /* Set PDMA into idle state by Descriptor table */
             DMA_DESC[0].u32Ctl &= ~PDMA_DSCT_CTL_OPMODE_Msk;
             DMA_DESC[1].u32Ctl &= ~PDMA_DSCT_CTL_OPMODE_Msk;
-            g_u32IsTestOver = 1;
+            s_u32IsTestOver = 1;
         }
         /* Clear transfer done flag of channel 4 */
         PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF4_Msk);
@@ -191,7 +195,7 @@ int main(void)
 #endif
 
     /* Scatter-Gather descriptor table configuration in SRAM */
-    g_u32DMAConfig = \
+    s_u32DMAConfig = \
                      (0 << PDMA_DSCT_CTL_TXCNT_Pos) | /* Transfer count is 1 */ \
                      PDMA_WIDTH_32 |  /* Transfer width is 32 bits(one word) */ \
                      PDMA_SAR_FIX |   /* Source increment size is fixed(no increment) */ \
@@ -203,13 +207,13 @@ int main(void)
        Note: PDMA_REQ_BURST is only supported in memory-to-memory transfer mode.
              PDMA transfer type should be set as PDMA_REQ_SINGLE in memory-to-peripheral and peripheral-to-memory transfer mode,
              then above code will be modified as follows:
-             g_u32DMAConfig = (0 << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_FIX | PDMA_BURST_1 | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
+             s_u32DMAConfig = (0 << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_FIX | PDMA_BURST_1 | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
     -----------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
     /*------------------------------------------------------------------------------------------------------
       Descriptor table 1 configuration:
 
-             g_au32SrcArray0               transfer 1 times    g_au32DestArray
+             s_au32SrcArray0               transfer 1 times    s_au32DestArray
              ---------------------------   ----------------->  ---------------------------
             |            [0]            |                     |            [0]            |
              ---------------------------                       ---------------------------
@@ -222,7 +226,7 @@ int main(void)
 
         Transfer count = 1
         Transfer width = 32 bits(one word)
-        Source address = g_au32SrcArray0
+        Source address = s_au32SrcArray0
         Source address increment size = fixed address(no increment)
         Destination address = au8DestArray0
         Destination address increment size = fixed address(no increment)
@@ -230,18 +234,18 @@ int main(void)
 
         Total transfer length = 1 * 32 bits
     ------------------------------------------------------------------------------------------------------*/
-    DMA_DESC[0].u32Ctl = g_u32DMAConfig;
+    DMA_DESC[0].u32Ctl = s_u32DMAConfig;
     /* Configure source address */
-    DMA_DESC[0].u32Src = (uint32_t)g_au32SrcArray0; /* Ping-Pong buffer 1 */
+    DMA_DESC[0].u32Src = (uint32_t)s_au32SrcArray0; /* Ping-Pong buffer 1 */
     /* Configure destination address */
-    DMA_DESC[0].u32Dest = (uint32_t)&g_au32DestArray[0];
+    DMA_DESC[0].u32Dest = (uint32_t)&s_au32DestArray[0];
     /* Configure next descriptor table address */
     DMA_DESC[0].u32Offset = (uint32_t)&DMA_DESC[1] - (PDMA0->SCATBA); /* next operation table is table 2 */
 
     /*------------------------------------------------------------------------------------------------------
       Descriptor table 2 configuration:
 
-             g_au32SrcArray1               transfer 1 times    g_au32DestArray
+             s_au32SrcArray1               transfer 1 times    s_au32DestArray
              ---------------------------   ----------------->  ---------------------------
             |            [0]            |                     |            [0]            |
              ---------------------------                       ---------------------------
@@ -254,7 +258,7 @@ int main(void)
 
         Transfer count = 1
         Transfer width = 32 bits(one word)
-        Source address = g_au32SrcArray1
+        Source address = s_au32SrcArray1
         Source address increment size = fixed address(no increment)
         Destination address = au8DestArray0
         Destination address increment size = fixed address(no increment)
@@ -262,11 +266,11 @@ int main(void)
 
         Total transfer length = 1 * 32 bits
     ------------------------------------------------------------------------------------------------------*/
-    DMA_DESC[1].u32Ctl = g_u32DMAConfig;
+    DMA_DESC[1].u32Ctl = s_u32DMAConfig;
     /* Configure source address */
-    DMA_DESC[1].u32Src = (uint32_t)g_au32SrcArray1; /* Ping-Pong buffer 2 */
+    DMA_DESC[1].u32Src = (uint32_t)s_au32SrcArray1; /* Ping-Pong buffer 2 */
     /* Configure destination address */
-    DMA_DESC[1].u32Dest = (uint32_t)&g_au32DestArray[0];
+    DMA_DESC[1].u32Dest = (uint32_t)&s_au32DestArray[0];
     /* Configure next descriptor table address */
     DMA_DESC[1].u32Offset = (uint32_t)&DMA_DESC[0] - (PDMA0->SCATBA); /* next operation table is table 1 */
 
@@ -274,16 +278,16 @@ int main(void)
     /* Enable transfer done interrupt */
     PDMA_EnableInt(PDMA0, 4, PDMA_INT_TRANS_DONE);
     NVIC_EnableIRQ(PDMA0_IRQn);
-    g_u32IsTestOver = 0;
+    s_u32IsTestOver = 0;
 
     /* Start PDMA operatin */
     PDMA_Trigger(PDMA0, 4);
 
     while(1)
     {
-        if(g_u32IsTestOver == 1)
+        if(s_u32IsTestOver == 1)
         {
-            g_u32IsTestOver = 0;
+            s_u32IsTestOver = 0;
             printf("test done...\n");
 
             /* Close PDMA channel */

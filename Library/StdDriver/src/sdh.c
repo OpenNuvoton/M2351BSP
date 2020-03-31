@@ -275,23 +275,26 @@ void SDH_Set_clock(SDH_T *sdh, uint32_t u32SDClockKhz)
         uint32_t u32Rate, u32Div1;
         static uint32_t u32SDClkSrc = 0UL;
 
-        /* M2351 is only support SDH0 */
-        u32SDClkSrc = (CLK->CLKSEL0 & CLK_CLKSEL0_SDH0SEL_Msk);
-        if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_HXT)
+        if (sdh == SDH0)
         {
-            _SDH_ReferenceClock = (CLK_GetHXTFreq() / 1000UL);
-        }
-        else if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_HIRC)
-        {
-            _SDH_ReferenceClock = (__HIRC / 1000UL);
-        }
-        else if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_PLL)
-        {
-            _SDH_ReferenceClock = (CLK_GetPLLClockFreq() / 1000UL);
-        }
-        else if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_HCLK)
-        {
-            _SDH_ReferenceClock = (CLK_GetHCLKFreq() / 1000UL);
+            /* M2351 is only support SDH0 */
+            u32SDClkSrc = (CLK->CLKSEL0 & CLK_CLKSEL0_SDH0SEL_Msk);
+            if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_HXT)
+            {
+                _SDH_ReferenceClock = (CLK_GetHXTFreq() / 1000UL);
+            }
+            else if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_HIRC)
+            {
+                _SDH_ReferenceClock = (__HIRC / 1000UL);
+            }
+            else if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_PLL)
+            {
+                _SDH_ReferenceClock = (CLK_GetPLLClockFreq() / 1000UL);
+            }
+            else if(u32SDClkSrc == CLK_CLKSEL0_SDH0SEL_HCLK)
+            {
+                _SDH_ReferenceClock = (CLK_GetHCLKFreq() / 1000UL);
+            }
         }
 
         if(u32SDClockKhz >= 50000UL)
@@ -322,9 +325,12 @@ void SDH_Set_clock(SDH_T *sdh, uint32_t u32SDClockKhz)
         }
 
         /* --- setup register */
-        /* M2351 is only support SDH0 */
-        CLK->CLKDIV0 &= ~CLK_CLKDIV0_SDH0DIV_Msk;
-        CLK->CLKDIV0 |= (u32Div1 << CLK_CLKDIV0_SDH0DIV_Pos);
+        if (sdh == SDH0)
+        {
+            /* M2351 is only support SDH0 */
+            CLK->CLKDIV0 &= ~CLK_CLKDIV0_SDH0DIV_Msk;
+            CLK->CLKDIV0 |= (u32Div1 << CLK_CLKDIV0_SDH0DIV_Pos);
+        }
     }
 }
 
@@ -523,6 +529,7 @@ uint32_t SDH_SwitchToHighSpeed(SDH_T *sdh, SDH_INFO_T *pSD)
     uint32_t volatile u32Status = 0UL;
     uint16_t u16CurrentComsumption, u16BusyStatus0;
 
+    (void)pSD;
     sdh->DMASA = (uint32_t)_SDH_ucSDHCBuffer;    /* set DMA transfer starting address */
     sdh->BLEN = 63UL;    /* 512 bit */
 

@@ -18,6 +18,7 @@ __attribute__((aligned(4))) uint8_t g_au8uart_rcvbuf[MAX_PKT_SIZE] = {0};
 uint8_t volatile g_u8bUartDataReady = 0;
 uint8_t volatile g_u8bufhead = 0;
 
+void UART0_IRQHandler(void);
 
 /* please check "targetdev.h" for chip specific define option */
 
@@ -35,7 +36,7 @@ void UART0_IRQHandler(void)
         /* Read data until RX FIFO is empty or data is over maximum packet size */ 
         while (((UART0->FIFOSTS & UART_FIFOSTS_RXEMPTY_Msk) == 0) && (g_u8bufhead < MAX_PKT_SIZE)) 
         {
-            g_au8uart_rcvbuf[g_u8bufhead++] = UART0->DAT;
+            g_au8uart_rcvbuf[g_u8bufhead++] = (uint8_t)UART0->DAT;
         }
     }
 

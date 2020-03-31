@@ -9,6 +9,10 @@
 #include "NuMicro.h"
 #include "usbd_audio.h"
 
+
+uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat);
+uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len);
+
 #if NAU8822
 
 /**************************************/
@@ -81,15 +85,15 @@ static void ATOM_I2C_WriteNAU8822(uint8_t u8Addr, uint16_t u16Data)
     I2C_WriteNAU8822(u8Addr, u16Data);
 }
 
-uint32_t u32OldSampleRate = 0;
+static uint32_t s_u32OldSampleRate = 0;
 
 /* config play sampling rate */
 void NAU8822_ConfigSampleRate(uint32_t u32SampleRate)
 {
-    if(u32SampleRate == u32OldSampleRate)
+    if(u32SampleRate == s_u32OldSampleRate)
         return;
 
-    u32OldSampleRate = u32SampleRate;
+    s_u32OldSampleRate = u32SampleRate;
 
     printf("[NAU8822] Configure Sampling Rate to %d\n", u32SampleRate);
 
@@ -209,6 +213,8 @@ void AdjustCodecPll(RESAMPLE_STATE_T r)
 /***************************************/
 uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len)
 {
+    (void)u32Len;
+
     /* Send START */
     I2C_START(I2C2);
     I2C_WAIT_READY(I2C2);
@@ -255,15 +261,15 @@ uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat)
     return (I2C_WriteMultiByteforNAU88L25(0x1A << 1, u16Addr, &u8TxData0[0], 2));
 }
 
-uint32_t u32OldSampleRate = 0;
+static uint32_t s_u32OldSampleRate = 0;
 
 /* config play sampling rate */
 void NAU88L25_ConfigSampleRate(uint32_t u32SampleRate)
 {
-    if(u32SampleRate == u32OldSampleRate)
+    if(u32SampleRate == s_u32OldSampleRate)
         return;
 
-    u32OldSampleRate = u32SampleRate;
+    s_u32OldSampleRate = u32SampleRate;
 
     printf("[NAU88L25] Configure Sampling Rate to %d\n", u32SampleRate);
 
@@ -442,8 +448,8 @@ void AdjustCodecPll(RESAMPLE_STATE_T r)
             s = 2;
             break;
         case E_RS_NONE:
-        default:
             s = 0;
+            break;
     }
 
     if((g_usbd_SampleRate % 8) == 0)

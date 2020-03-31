@@ -19,7 +19,9 @@
 typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 
 void Nonsecure_Init(void);
-
+uint32_t GetSystemCoreClock(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /*----------------------------------------------------------------------------
   Secure function for NonSecure callbacks exported to NonSecure application

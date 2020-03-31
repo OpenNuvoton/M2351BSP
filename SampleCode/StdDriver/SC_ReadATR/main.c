@@ -12,6 +12,12 @@
 
 #define SC_INTF         0 // Smartcard interface 0
 
+
+
+void SC0_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
+
 /**
   * @brief  The interrupt services routine of smartcard port 0
   * @param  None

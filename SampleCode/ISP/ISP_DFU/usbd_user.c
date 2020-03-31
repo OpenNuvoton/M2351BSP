@@ -42,7 +42,6 @@ extern "C"
     static volatile uint32_t g_USBD_u32UsbAddr = 0UL;
     static volatile uint32_t g_USBD_u32UsbConfig = 0UL;
     static volatile uint32_t g_USBD_u32CtrlMaxPktSize = 8UL;
-    static volatile uint32_t g_USBD_u32UsbAltInterface = 0UL;
     static volatile uint32_t g_USBD_u32CtrlOutToggle = 0;
     static volatile uint8_t  g_USBD_u8CtrlInZeroFlag = 0UL;
     /**
@@ -56,6 +55,8 @@ extern "C"
     SET_INTERFACE_REQ g_USBD_pfnSetInterface = NULL;    /*!< USB Set Interface Functional Pointer */
     SET_CONFIG_CB g_USBD_pfnSetConfigCallback = NULL;   /*!< USB Set configuration callback function pointer */
     uint32_t g_USBD_u32EpStallLock           = 0UL;     /*!< Bit map flag to lock specified EP when SET_FEATURE */
+
+    void USBD_GetDescriptor(void);
 
     /**
       * @brief      This function makes USBD module to be ready to use
@@ -310,8 +311,9 @@ extern "C"
       */
     void USBD_StandardRequest(void)
     {
+#if 0
         uint32_t u32Addr;
-
+#endif
         /* clear global variables for new request */
         g_USBD_pu8CtrlInPointer = 0;
         g_USBD_u32CtrlInSize = 0UL;

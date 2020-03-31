@@ -17,10 +17,16 @@
 
 #if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3U)
 #include "partition_M2351.h"
+extern void SCU_IRQHandler(void);
+void TZ_SAU_Setup(void);
+#else
+extern void SCU_IRQHandler(void)__attribute__((noreturn));
 #endif
 
 extern void *__Vectors;                   /* see startup file */
 
+
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
 
 /*----------------------------------------------------------------------------
   Clock Variable definitions
@@ -28,10 +34,14 @@ extern void *__Vectors;                   /* see startup file */
 uint32_t SystemCoreClock  = __HSI;              /*!< System Clock Frequency (Core Clock) */
 uint32_t CyclesPerUs      = (__HSI / 1000000UL);/*!< Cycles per micro second             */
 uint32_t PllClock         = __HSI;              /*!< PLL Output Clock Frequency          */
-const uint32_t gau32ClkSrcTbl[] = {__HXT, __LXT, 0UL, __LIRC, 0UL, __HIRC48, 0UL, __HIRC};
+//const uint32_t gau32ClkSrcTbl[] = {__HXT, __LXT, 0UL, __LIRC, 0UL, __HIRC48, 0UL, __HIRC};
 
 
 #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+
+void FMC_NSBA_Setup(void);
+void SCU_Setup(void);
+void NSC_Init(void);
 
 /**
  * @brief    Setup Non-secure boundary
@@ -181,7 +191,7 @@ void SCU_Setup(void)
 
 
     /* Enable SCU Int status */
-    SCU->SVIOIEN = -1;
+    SCU->SVIOIEN = (uint32_t)-1;
     NVIC_EnableIRQ(SCU_IRQn);
     
 }
@@ -200,7 +210,7 @@ void SCU_IRQHandler(void)
     const uint8_t info[] = {0x34,0x3C,0,0, 0x44,0x4C,0x54,0x5C,0x64,0,0x74,0x7C,0x84,0x8C,0x94,0x9C,0xA4,0xAC,0xB4};
     
     uint32_t u32Reg, u32Addr;
-    int32_t i;
+    uint32_t i;
     
     /* TrustZone access policy */ 
     u32Reg = SCU->SVINTSTS;
@@ -231,7 +241,7 @@ void SCU_IRQHandler(void)
  */
 void NSC_Init(void)
 {
-    int32_t i32Region;
+    uint32_t u32Region;
     uint32_t u32Base, u32Limit;
     
 #if defined (__ICCARM__)
@@ -251,8 +261,8 @@ void NSC_Init(void)
 #endif    
 
     /* SAU region 3 is dedicated for NSC */
-    i32Region = 3;
-    SAU->RNR  =  (i32Region & SAU_RNR_REGION_Msk);
+    u32Region = 3;
+    SAU->RNR  =  (u32Region & SAU_RNR_REGION_Msk);
     SAU->RBAR =  (u32Base & SAU_RBAR_BADDR_Msk);
     SAU->RLAR =  ((u32Limit-1) & SAU_RLAR_LADDR_Msk) | 
                 ((1ul << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1ul;

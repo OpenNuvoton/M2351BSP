@@ -16,7 +16,7 @@
 #define PLL_CLOCK               64000000
 #define HCLK_DIV                        1
 
-#define GPIO_SETMODE(port, pin, u32Mode) port->MODE = (port->MODE & ~(0x3ul << (pin << 1))) | (u32Mode << (pin << 1));
+#define GPIO_SETMODE(port, pin, u32Mode) (port->MODE = (port->MODE & ~(0x3ul << (pin << 1))) | (u32Mode << (pin << 1)))
 
 
 #define CAN_BAUD_RATE                     500000
@@ -41,9 +41,16 @@ typedef struct
     uint32_t  Data;
 } STR_CANMSG_ISP;
 
-STR_CANMSG_T rrMsg;
-volatile uint8_t u8CAN_PackageFlag = 0, u8CAN_AckFlag = 0;
-uint32_t Chip_EndAddress = 0;
+static STR_CANMSG_T s_rrMsg;
+static volatile uint8_t s_u8CANPackageFlag = 0, s_u8CANAckFlag = 0;
+
+void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR);
+void CAN0_IRQHandler(void);
+void SYS_Init(void);
+void CAN_Package_ACK(CAN_T *tCAN);
+void CAN_Init(void);
+void ProcessHardFault(void);
+void SH_Return(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                                       */
@@ -52,8 +59,8 @@ void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {
     if(u32IIDR == 1)
     {
-        CAN_Receive(tCAN, 0, &rrMsg);
-        u8CAN_PackageFlag = 1;
+        CAN_Receive(tCAN, 0, &s_rrMsg);
+        s_u8CANPackageFlag = 1;
     }
 }
 
@@ -78,13 +85,13 @@ void CAN0_IRQHandler(void)
         if(CAN0->STATUS & CAN_STATUS_TXOK_Msk)
         {
             CAN0->STATUS &= ~CAN_STATUS_TXOK_Msk;    /* Clear TxOK status*/
-            u8CAN_AckFlag = 0;
+            s_u8CANAckFlag = 0;
         }
     }
     else if(u8IIDRstatus != 0)
     {
         CAN_MsgInterrupt(CAN0, u8IIDRstatus);
-        CAN_CLR_INT_PENDING_BIT(CAN0, (u8IIDRstatus - 1)); /* Clear Interrupt Pending */
+        CAN_CLR_INT_PENDING_BIT(CAN0, (uint8_t)(u8IIDRstatus - 1)); /* Clear Interrupt Pending */
     }
 }
 
@@ -118,20 +125,20 @@ void SYS_Init(void)
 void CAN_Package_ACK(CAN_T *tCAN)
 {
     STR_CANMSG_T tMsg;
-    u8CAN_AckFlag = 1;
+    s_u8CANAckFlag = 1;
     /* Send a 11-bit Standard Identifier message */
     tMsg.FrameType = CAN_DATA_FRAME;
     tMsg.IdType    = CAN_STD_ID;
     tMsg.Id        = Device0_ISP_ID;
     tMsg.DLC       = CAN_ISP_DtatLength;
-    memcpy(&tMsg.Data, &rrMsg.Data, 8);
+    memcpy(&tMsg.Data, &s_rrMsg.Data, 8);
 
     if(CAN_Transmit(tCAN, MSG(5), &tMsg) == FALSE)    // Configure Msg RAM and send the Msg in the RAM
     {
         return;
     }
 
-    while(u8CAN_AckFlag);
+    while(s_u8CANAckFlag);
 }
 
 void CAN_Init(void)
@@ -174,7 +181,7 @@ int main(void)
 
     while(1)
     {
-        if(u8CAN_PackageFlag == 1)
+        if(s_u8CANPackageFlag == 1)
         {
             break;
         }
@@ -188,19 +195,19 @@ int main(void)
     /* stat update program */
     while(1)
     {
-        if(u8CAN_PackageFlag)
+        if(s_u8CANPackageFlag)
         {
-            u8CAN_PackageFlag = 0;
-            Address = inpw(&rrMsg.Data);
-            Data = inpw(&rrMsg.Data[4]);
+            s_u8CANPackageFlag = 0;
+            Address = inpw((uint32_t)&s_rrMsg.Data);
+            Data = inpw((uint32_t)&s_rrMsg.Data[4]);
 
             if(Address == CMD_GET_DEVICEID)
             {
-                outpw(&rrMsg.Data[4], SYS->PDID);
+                outpw((uint32_t)&s_rrMsg.Data[4], SYS->PDID);
             }
             else if(Address == CMD_READ_CONFIG)
             {
-                outpw(&rrMsg.Data[4], FMC_Read(Data));
+                outpw((uint32_t)&s_rrMsg.Data[4], FMC_Read(Data));
             }
             else if(Address == CMD_RUN_APROM)
             {
@@ -215,7 +222,7 @@ int main(void)
 
                 FMC_Write(Address, Data);         //program ROM
                 Data = FMC_Read(Address);
-                memcpy(&rrMsg.Data[4], &Data, 4); //update data
+                memcpy(&s_rrMsg.Data[4], &Data, 4); //update data
             }
 
             CAN_Package_ACK(CAN0);            //send CAN ISP Package (ACK)

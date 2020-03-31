@@ -81,13 +81,13 @@
 
 static __INLINE uint32_t get_be32(uint8_t *buf)
 {
-    return ((uint32_t) buf[0] << 24) | ((uint32_t) buf[1] << 16) |
-           ((uint32_t) buf[2] << 8) | ((uint32_t) buf[3]);
+    return ((uint32_t) (buf[0] << 24)) | ((uint32_t) (buf[1] << 16)) |
+           ((uint32_t) (buf[2] << 8)) | ((uint32_t) buf[3]);
 }
 
 static __INLINE uint16_t get_be16(uint8_t * buf)
 {
-    return (((uint16_t) buf[0] << 8) | ((uint16_t) buf[1]));
+    return (((uint16_t) (buf[0] << 8)) | ((uint16_t) buf[1]));
 }
 
 /******************************************************************************/
@@ -97,7 +97,8 @@ static __INLINE uint16_t get_be16(uint8_t * buf)
   M2351 USBD Mass Specific Struct
   @{
 */
-
+#pragma pack(push)
+#pragma pack(1)
 /*!<USB Mass Storage Class - Command Block Wrapper Structure */
 struct CBW
 {
@@ -111,7 +112,10 @@ struct CBW
     uint8_t   u8LUN;
     uint8_t   au8Data[14];
 };
+#pragma pack(pop)
 
+#pragma pack(push)
+#pragma pack(1)
 /*!<USB Mass Storage Class - Command Status Wrapper Structure */
 struct CSW
 {
@@ -120,7 +124,7 @@ struct CSW
     uint32_t  dCSWDataResidue;
     uint8_t   bCSWStatus;
 };
-
+#pragma pack(pop)
 /*-------------------------------------------------------------*/
 
 

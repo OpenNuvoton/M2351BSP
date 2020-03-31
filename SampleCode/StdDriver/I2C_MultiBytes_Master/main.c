@@ -18,15 +18,13 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8DeviceAddr;
-volatile uint8_t g_au8MstTxData[3];
-volatile uint8_t g_u8MstRxData;
-volatile uint8_t g_u8MstDataLen;
-volatile uint8_t g_u8MstEndFlag = 0;
+static volatile uint8_t s_u8DeviceAddr;
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
-volatile static I2C_FUNC s_I2C0HandlerFn = NULL;
 
+void SYS_Init(void);
+void I2C0_Init(void);
+void I2C0_Close(void);
 
 void SYS_Init(void)
 {
@@ -118,7 +116,7 @@ void I2C0_Close(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint32_t i;
+    uint16_t i;
     uint8_t au8TxBuf[256] = {0}, au8RDataBuf[256] = {0};
 
     /* Unlock protected registers */
@@ -152,7 +150,7 @@ int32_t main(void)
     I2C0_Init();
 
     /* Slave address */
-    g_u8DeviceAddr = 0x15;
+    s_u8DeviceAddr = 0x15;
 
     /* Prepare data for transmission */
     for(i = 0; i < 256; i++)
@@ -163,7 +161,7 @@ int32_t main(void)
     for(i = 0; i < 256; i += 32)
     {
         /* Write 32 bytes data to Slave */
-        while(I2C_WriteMultiBytesTwoRegs(I2C0, g_u8DeviceAddr, i, &au8TxBuf[i], 32) < 32);
+        while(I2C_WriteMultiBytesTwoRegs(I2C0, s_u8DeviceAddr, i, &au8TxBuf[i], 32) < 32);
     }
 
     printf("Multi bytes Write access Pass.....\n");
@@ -171,7 +169,7 @@ int32_t main(void)
     printf("\n");
 
     /* Use Multi Bytes Read from Slave (Two Registers) */
-    while(I2C_ReadMultiBytesTwoRegs(I2C0, g_u8DeviceAddr, 0x0000, au8RDataBuf, 256) < 256);
+    while(I2C_ReadMultiBytesTwoRegs(I2C0, s_u8DeviceAddr, 0x0000, au8RDataBuf, 256) < 256);
 
     /* Compare TX data and RX data */
     for(i = 0; i < 256; i++)

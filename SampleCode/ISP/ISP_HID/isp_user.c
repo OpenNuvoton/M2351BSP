@@ -32,21 +32,22 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
     static uint32_t StartAddress, StartAddress_bak, TotalLen, TotalLen_bak, LastDataLen, g_packno = 1;
     uint8_t *response;
     uint16_t lcksum;
-    uint32_t lcmd, srclen, i;
+    uint32_t lcmd, srclen;
     unsigned char *pSrc;
     static uint32_t gcmd;
+
     response = response_buff;
     pSrc = buffer;
     srclen = len;
-    lcmd = inpw(pSrc);
-    outpw(response + 4, 0);
+    lcmd = inpw((uint32_t)pSrc);
+    outpw((uint32_t)(response + 4), 0);
     pSrc += 8;
     srclen -= 8;
-    ReadData(Config0, Config0 + 16, (uint32_t *)(response + 8)); //read config
+    ReadData(Config0, Config0 + 16, (uint32_t *)((uint32_t)(response + 8))); //read config
 
     if(lcmd == CMD_SYNC_PACKNO)
     {
-        g_packno = inpw(pSrc);
+        g_packno = inpw((uint32_t)pSrc);
     }
 
     if((lcmd) && (lcmd != CMD_RESEND_PACKET))
@@ -60,7 +61,7 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
     }
     else if(lcmd == CMD_GET_DEVICEID)
     {
-        outpw(response + 8, SYS->PDID);
+        outpw((uint32_t)(response + 8), SYS->PDID);
         goto out;
     }
     else if(lcmd == CMD_RUN_APROM)
@@ -74,8 +75,8 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
     else if(lcmd == CMD_CONNECT)
     {
         g_packno = 1;
-        outpw(response + 8, g_apromSize);
-        outpw(response + 12, g_dataFlashAddr);
+        outpw((uint32_t)(response + 8), g_apromSize);
+        outpw((uint32_t)(response + 12), g_dataFlashAddr);
         goto out;
     }
     else if(lcmd == CMD_ERASE_ALL)
@@ -100,13 +101,13 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         }
         else
         {
-            StartAddress = inpw(pSrc);
-            TotalLen = inpw(pSrc + 4);
+            StartAddress = inpw((uint32_t)pSrc);
+            TotalLen = inpw((uint32_t)(pSrc + 4));
             EraseAP(StartAddress, TotalLen);
         }
 
         //StartAddress = inpw(pSrc);
-        TotalLen = inpw(pSrc + 4);
+        TotalLen = inpw((uint32_t)(pSrc + 4));
         pSrc += 8;
         srclen -= 8;
         StartAddress_bak = StartAddress;
@@ -114,7 +115,7 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
     }
     else if(lcmd == CMD_UPDATE_CONFIG)
     {
-        UpdateConfig((uint32_t *)(pSrc), (uint32_t *)(response + 8));
+        UpdateConfig((uint32_t *)(uint32_t)pSrc, (uint32_t *)((uint32_t)(response + 8)));
         goto out;
     }
     else if(lcmd == CMD_RESEND_PACKET)      //for APROM&Data flash only
@@ -149,18 +150,18 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         }
 
         TotalLen -= srclen;
-        WriteData(StartAddress, StartAddress + srclen, (uint32_t *)pSrc); //WriteData(StartAddress, StartAddress + srclen, (uint32_t*)pSrc);
+        WriteData(StartAddress, StartAddress + srclen, (uint32_t *)(uint32_t)pSrc);
         memset(pSrc, 0, srclen);
-        ReadData(StartAddress, StartAddress + srclen, (uint32_t *)pSrc);
+        ReadData(StartAddress, StartAddress + srclen, (uint32_t *)(uint32_t)pSrc);
         StartAddress += srclen;
         LastDataLen =  srclen;
     }
 
 out:
     lcksum = Checksum(buffer, len);
-    outps(response, lcksum);
+    outps((uint32_t)response, lcksum);
     ++g_packno;
-    outpw(response + 4, g_packno);
+    outpw((uint32_t)(response + 4), g_packno);
     g_packno++;
     return 0;
 }

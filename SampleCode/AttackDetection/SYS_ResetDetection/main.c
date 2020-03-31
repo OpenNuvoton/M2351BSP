@@ -8,11 +8,14 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void SysTick_Handler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32ResetFlagCount = 0;
+static volatile uint32_t s_u32ResetFlagCount = 0;
 
 
 /*--------------------------------------------------------------------------------------------------------*/
@@ -20,11 +23,11 @@ volatile uint32_t g_u32ResetFlagCount = 0;
 /*--------------------------------------------------------------------------------------------------------*/
 void SysTick_Handler(void)
 {
-    if(g_u32ResetFlagCount >= 5)
+    if(s_u32ResetFlagCount >= 5)
     {
         printf("Reset abnormalities happened! The same reset event occurs repeatedly for a fixed period of time.\n");
 
-        g_u32ResetFlagCount = 0;
+        s_u32ResetFlagCount = 0;
     }
 }
 
@@ -108,7 +111,7 @@ int32_t main(void)
             /* Clear reset source flag */
             SYS_CLEAR_RST_SOURCE(SYS_RSTSTS_PINRF_Msk);
 
-            g_u32ResetFlagCount++;
+            s_u32ResetFlagCount++;
         }
 
         /* Get reset sources are from Chip reset and CPU reset */

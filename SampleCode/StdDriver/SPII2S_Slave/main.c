@@ -10,12 +10,12 @@
 #include <string.h>
 #include "NuMicro.h"
 
-volatile uint32_t g_u32TxValue;
-volatile uint32_t g_u32DataCount;
+static volatile uint32_t s_u32TxValue;
+static volatile uint32_t s_u32DataCount;
 
 /* Function prototype declaration */
 void SYS_Init(void);
-
+void SPI0_IRQHandler(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -61,16 +61,16 @@ int32_t main(void)
     SPII2S_Open(SPI0, SPII2S_MODE_SLAVE, 0, SPII2S_DATABIT_16, SPII2S_STEREO, SPII2S_FORMAT_I2S);
 
     /* Initiate data counter */
-    g_u32DataCount = 0;
+    s_u32DataCount = 0;
     /* Initiate TX value and RX value */
-    g_u32TxValue = 0xAA00AA01;
+    s_u32TxValue = 0xAA00AA01;
     u32RxValue1 = 0;
     u32RxValue2 = 0;
     /* Enable TX threshold level interrupt */
     SPII2S_EnableInt(SPI0, SPII2S_FIFO_TXTH_INT_MASK);
     NVIC_EnableIRQ(SPI0_IRQn);
 
-    printf("Start I2S ...\nTX value: 0x%X\n", g_u32TxValue);
+    printf("Start I2S ...\nTX value: 0x%X\n", s_u32TxValue);
 
     while(1)
     {
@@ -83,14 +83,14 @@ int32_t main(void)
             {
                 u32RxValue1 = u32RxValue2;
                 /* If received value changes, print the current TX value and the new received value. */
-                printf("TX value: 0x%X;  RX value: 0x%X\n", g_u32TxValue, u32RxValue1);
+                printf("TX value: 0x%X;  RX value: 0x%X\n", s_u32TxValue, u32RxValue1);
             }
         }
-        if(g_u32DataCount >= 50000)
+        if(s_u32DataCount >= 50000)
         {
-            g_u32TxValue = 0xAA00AA00 | ((g_u32TxValue + 0x00020002) & 0x00FF00FF); /* g_u32TxValue: 0xAA00AA01, 0xAA02AA03, ..., 0xAAFEAAFF */
-            printf("TX value: 0x%X\n", g_u32TxValue);
-            g_u32DataCount = 0;
+            s_u32TxValue = 0xAA00AA00 | ((s_u32TxValue + 0x00020002) & 0x00FF00FF); /* s_u32TxValue: 0xAA00AA01, 0xAA02AA03, ..., 0xAAFEAAFF */
+            printf("TX value: 0x%X\n", s_u32TxValue);
+            s_u32DataCount = 0;
         }
     }
 }
@@ -158,9 +158,9 @@ void SYS_Init(void)
 void SPI0_IRQHandler()
 {
     /* Write 2 TX values to TX FIFO */
-    SPII2S_WRITE_TX_FIFO(SPI0, g_u32TxValue);
-    SPII2S_WRITE_TX_FIFO(SPI0, g_u32TxValue);
-    g_u32DataCount += 2;
+    SPII2S_WRITE_TX_FIFO(SPI0, s_u32TxValue);
+    SPII2S_WRITE_TX_FIFO(SPI0, s_u32TxValue);
+    s_u32DataCount += 2;
 }
 
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/

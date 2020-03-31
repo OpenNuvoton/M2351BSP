@@ -54,6 +54,8 @@ extern "C"
 /**
   * @details    CAN message structure
   */
+#pragma pack(push)
+#pragma pack(1)
 typedef struct
 {
     uint32_t  IdType;       /*!< ID type */
@@ -62,10 +64,13 @@ typedef struct
     uint8_t   DLC;          /*!< Data length */
     uint8_t   Data[8];      /*!< Data */
 } STR_CANMSG_T;
+#pragma pack(pop)
 
 /**
   * @details    CAN mask message structure
   */
+#pragma pack(push)
+#pragma pack(1)
 typedef struct
 {
     uint8_t   u8Xtd;      /*!< Extended ID */
@@ -73,6 +78,7 @@ typedef struct
     uint32_t  u32Id;      /*!< Message ID */
     uint8_t   u8IdType;   /*!< ID type*/
 } STR_CANMASK_T;
+#pragma pack(pop)
 
 /*@}*/ /* end of group CAN_EXPORTED_STRUCTS */
 

@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include "M2351.h"
 
+void SYS_Init(void);
+void UART0_Init(void);
+
 void SYS_Init(void)
 {
 

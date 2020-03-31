@@ -19,11 +19,12 @@
 static int32_t CompareBufferToValue(uint8_t* pBuf1, const uint8_t value, int32_t sizeBytes);
 static void DumpBufHex(uint8_t *pucBuff, int nBytes);
 void InitBuf(uint8_t *dataBuffer);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global parameters                                                                                */
 /*---------------------------------------------------------------------------------------------------------*/
-uint8_t dataBuffer[BUF_SIZE] = {0};
 
 
 void SYS_Init(void)
@@ -90,7 +91,7 @@ int32_t main(void)
     extern void func(void);
     uint8_t u8DataBuffer[BUF_SIZE]   = { 0 };
     int     u32Item = 0;
-    int32_t i32FlashAddr = 0;
+    uint32_t u32FlashAddr = 0;
     uint32_t u32Ver;
 
     SYS_Init();
@@ -179,7 +180,7 @@ int32_t main(void)
             case 'R':
             {
                 InitBuf(u8DataBuffer);
-                if(SFL_Exec(SFL_CMD_READ, u8DataBuffer, i32FlashAddr, BUF_SIZE) != 0)
+                if(SFL_Exec(SFL_CMD_READ, u8DataBuffer, u32FlashAddr, BUF_SIZE) != 0)
                 {
                     printf("Secure Flash Read result fail!\n");
                 }
@@ -196,12 +197,12 @@ int32_t main(void)
             case 'W':
             {
                 InitBuf(u8DataBuffer);
-                if(SFL_Exec(SFL_CMD_WRITE, u8DataBuffer, i32FlashAddr, BUF_SIZE) != 0)
+                if(SFL_Exec(SFL_CMD_WRITE, u8DataBuffer, u32FlashAddr, BUF_SIZE) != 0)
                 {
                     printf("Secure Flash Write fail!\n");
                     goto lexit;
                 }
-                if(SFL_Exec(SFL_CMD_READ, u8DataBuffer, i32FlashAddr, BUF_SIZE) != 0)
+                if(SFL_Exec(SFL_CMD_READ, u8DataBuffer, u32FlashAddr, BUF_SIZE) != 0)
                 {
                     printf("Secure Flash Read result fail!\n");
                     goto lexit;
@@ -216,12 +217,12 @@ int32_t main(void)
             case 'E':
             {
                 InitBuf(u8DataBuffer);
-                if(SFL_Exec(SFL_CMD_ERASE, u8DataBuffer, i32FlashAddr, BUF_SIZE) != 0)
+                if(SFL_Exec(SFL_CMD_ERASE, u8DataBuffer, u32FlashAddr, BUF_SIZE) != 0)
                 {
                     printf("Secure Flash Erase fail!\n");
                     break;
                 }
-                if(SFL_Exec(SFL_CMD_READ, u8DataBuffer, i32FlashAddr, BUF_SIZE) != 0)
+                if(SFL_Exec(SFL_CMD_READ, u8DataBuffer, u32FlashAddr, BUF_SIZE) != 0)
                 {
                     printf("Secure Flash Read result fail!\n");
                     break;
@@ -323,7 +324,7 @@ void InitBuf(uint8_t *u8DataBuffer)
     int32_t i = 0;
     for(i = 0; i < BUF_SIZE; i++)
     {
-        u8DataBuffer[i] = i % 256;
+        u8DataBuffer[i] = (uint8_t)(i % 256);
     }
 }
 

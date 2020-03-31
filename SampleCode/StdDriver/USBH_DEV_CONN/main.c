@@ -19,17 +19,24 @@
 
 #define CLK_PLLCTL_192MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 16) | CLK_PLLCTL_NO_1)
 
-volatile uint32_t  g_u32TickCnt;
+static volatile uint32_t  s_u32TickCnt;
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void  connect_func(struct udev_t *udev, int i8Param);
+void  disconnect_func(struct udev_t *udev, int i8Param);
+void SYS_Init(void);
+void UART0_Init(void);
+
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_u32TickCnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -39,7 +46,7 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_u32TickCnt;
+    return s_u32TickCnt;
 }
 
 /*
@@ -54,6 +61,7 @@ void  connect_func(struct udev_t *udev, int i8Param)
     struct hub_dev_t *parent;
     int    i8Cnt;
 
+    (void)i8Param;
     parent = udev->parent;
 
     printf("Device [0x%x,0x%x] was connected.\n",
@@ -97,6 +105,7 @@ void  connect_func(struct udev_t *udev, int i8Param)
  */
 void  disconnect_func(struct udev_t *udev, int i8Param)
 {
+    (void)i8Param;
     printf("Device [0x%x,0x%x] was disconnected.\n",
            udev->descriptor.idVendor, udev->descriptor.idProduct);
 }
@@ -104,7 +113,7 @@ void  disconnect_func(struct udev_t *udev, int i8Param)
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32Usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -114,7 +123,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32Usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);

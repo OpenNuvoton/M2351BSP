@@ -19,16 +19,21 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_au8SlvData[256];
-volatile uint32_t slave_buff_addr;
-volatile uint8_t g_au8SlvRxData[4] = {0};
-volatile uint16_t g_u16RecvAddr;
-volatile uint8_t g_u8SlvDataLen;
+static volatile uint8_t s_au8SlvData[256];
+static volatile uint32_t s_u32SlaveBuffAddr;
+static volatile uint8_t s_au8SlvRxData[4] = {0};
+static volatile uint16_t s_u16RecvAddr;
+static volatile uint8_t s_u8SlvDataLen;
 
-volatile enum UI2C_SLAVE_EVENT s_Event;
+static volatile enum UI2C_SLAVE_EVENT s_eSlaveEvent;
 
 typedef void (*UI2C_FUNC)(uint32_t u32Status);
 volatile static UI2C_FUNC s_UI2C0HandlerFn = NULL;
+
+void USCI0_IRQHandler(void);
+void UI2C_LB_SlaveTRx(uint32_t u32Status);
+void SYS_Init(void);
+void UI2C0_Init(uint32_t u32ClkSpeed);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  USCI_I2C0 IRQ Handler                                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -54,7 +59,7 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STARIF_Msk);
 
         /* Event process */
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         /* Trigger USCI I2C */
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
@@ -65,7 +70,7 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_ACKIF_Msk);
 
         /* Event process */
-        if(s_Event == SLAVE_ADDRESS_ACK)                                                    /* Address Data has been received */
+        if(s_eSlaveEvent == SLAVE_ADDRESS_ACK)                                                    /* Address Data has been received */
         {
             /* Check address if match address 0 or address 1*/
             if((UI2C0->ADMAT & UI2C_ADMAT_ADMAT0_Msk) == UI2C_ADMAT_ADMAT0_Msk)
@@ -87,47 +92,47 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
             /* USCI I2C receives Slave command type */
             if((UI2C0->PROTSTS & UI2C_PROTSTS_SLAREAD_Msk) == UI2C_PROTSTS_SLAREAD_Msk)
             {
-                s_Event = SLAVE_SEND_DATA;                                                  /* Slave address read has been received */
-                UI2C_SET_DATA(UI2C0, g_au8SlvData[slave_buff_addr]);
-                slave_buff_addr++;
+                s_eSlaveEvent = SLAVE_SEND_DATA;                                                  /* Slave address read has been received */
+                UI2C_SET_DATA(UI2C0, s_au8SlvData[s_u32SlaveBuffAddr]);
+                s_u32SlaveBuffAddr++;
             }
             else
             {
-                g_u8SlvDataLen = 0;                                                         /* Slave address write has been received */
-                s_Event = SLAVE_GET_DATA;
+                s_u8SlvDataLen = 0;                                                         /* Slave address write has been received */
+                s_eSlaveEvent = SLAVE_GET_DATA;
             }
 
             /* Read address from USCI I2C RXDAT*/
-            g_u16RecvAddr = (uint8_t)UI2C_GET_DATA(UI2C0);
+            s_u16RecvAddr = (uint8_t)UI2C_GET_DATA(UI2C0);
         }
-        else if(s_Event == SLAVE_GET_DATA)
+        else if(s_eSlaveEvent == SLAVE_GET_DATA)
         {
             /* Read data from USCI I2C RXDAT*/
             u8data = (uint8_t)UI2C_GET_DATA(UI2C0);
 
-            if(g_u8SlvDataLen < 2)
+            if(s_u8SlvDataLen < 2)
             {
-                g_au8SlvRxData[g_u8SlvDataLen++] = u8data;
-                slave_buff_addr = (g_au8SlvRxData[0] << 8) + g_au8SlvRxData[1];
+                s_au8SlvRxData[s_u8SlvDataLen++] = u8data;
+                s_u32SlaveBuffAddr = (uint32_t)(s_au8SlvRxData[0] << 8) + s_au8SlvRxData[1];
             }
             else
             {
-                g_au8SlvData[slave_buff_addr++] = u8data;
-                if(slave_buff_addr == 256)
+                s_au8SlvData[s_u32SlaveBuffAddr++] = u8data;
+                if(s_u32SlaveBuffAddr == 256)
                 {
-                    slave_buff_addr = 0;
+                    s_u32SlaveBuffAddr = 0;
                 }
             }
         }
-        else if(s_Event == SLAVE_SEND_DATA)
+        else if(s_eSlaveEvent == SLAVE_SEND_DATA)
         {
             /* Write transmit data to USCI I2C TXDAT*/
-            UI2C0->TXDAT = g_au8SlvData[slave_buff_addr];
-            slave_buff_addr++;
+            UI2C0->TXDAT = s_au8SlvData[s_u32SlaveBuffAddr];
+            s_u32SlaveBuffAddr++;
 
-            if(slave_buff_addr > 256)
+            if(s_u32SlaveBuffAddr > 256)
             {
-                slave_buff_addr = 0;
+                s_u32SlaveBuffAddr = 0;
             }
         }
 
@@ -140,8 +145,8 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_NACKIF_Msk);
 
         /* Event process */
-        g_u8SlvDataLen = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8SlvDataLen = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         /* Trigger USCI I2C */
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
@@ -151,8 +156,8 @@ void UI2C_LB_SlaveTRx(uint32_t u32Status)
         /* Clear STOP INT Flag */
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STORIF_Msk);
 
-        g_u8SlvDataLen = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8SlvDataLen = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         /* Trigger USCI I2C */
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
@@ -273,13 +278,13 @@ int main(void)
     /* Init UI2C0 bus bard rate */
     UI2C0_Init(100000);
 
-    s_Event = SLAVE_ADDRESS_ACK;
+    s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
     /* Trigger UI2C0 enter SLV mode */
     UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
 
     for(u32i = 0; u32i < 0x100; u32i++)
-        g_au8SlvData[u32i] = 0;
+        s_au8SlvData[u32i] = 0;
 
     /* UI2C0 function to Slave receive/transmit data */
     s_UI2C0HandlerFn = UI2C_LB_SlaveTRx;

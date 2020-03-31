@@ -13,8 +13,11 @@
 #include "targetdev.h"
 #include "i2c_transfer.h"
 
-uint32_t u32Pclk0;
 uint32_t u32Pclk1;
+
+void ProcessHardFault(void);
+void SH_Return(void);
+void SYS_Init(void);
 
 void ProcessHardFault(void) {}
 void SH_Return(void) {}

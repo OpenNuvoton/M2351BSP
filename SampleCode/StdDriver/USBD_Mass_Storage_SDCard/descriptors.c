@@ -11,7 +11,7 @@
 
 /*----------------------------------------------------------------------------*/
 /*!<USB Device Descriptor */
-uint8_t gu8DeviceDescriptor[] =
+static uint8_t s_au8DeviceDescriptor[] =
 {
     LEN_DEVICE,     /* bLength */
     DESC_DEVICE,    /* bDescriptorType */
@@ -35,7 +35,7 @@ uint8_t gu8DeviceDescriptor[] =
 };
 
 /*!<USB Configure Descriptor */
-uint8_t gu8ConfigDescriptor[] =
+static uint8_t s_au8ConfigDescriptor[] =
 {
     LEN_CONFIG,                                         // bLength
     DESC_CONFIG,                                        // bDescriptorType
@@ -75,7 +75,7 @@ uint8_t gu8ConfigDescriptor[] =
 };
 
 /*!<USB Language String Descriptor */
-uint8_t gu8StringLang[4] =
+static uint8_t s_au8StringLang[4] =
 {
     4,              /* bLength */
     DESC_STRING,    /* bDescriptorType */
@@ -83,7 +83,7 @@ uint8_t gu8StringLang[4] =
 };
 
 /*!<USB Vendor String Descriptor */
-uint8_t gu8VendorStringDesc[] =
+static uint8_t s_au8VendorStringDesc[] =
 {
     16,
     DESC_STRING,
@@ -91,7 +91,7 @@ uint8_t gu8VendorStringDesc[] =
 };
 
 /*!<USB Product String Descriptor */
-uint8_t gu8ProductStringDesc[] =
+static uint8_t s_au8ProductStringDesc[] =
 {
     22,             /* bLength          */
     DESC_STRING,    /* bDescriptorType  */
@@ -99,7 +99,7 @@ uint8_t gu8ProductStringDesc[] =
 };
 
 
-uint8_t gu8StringSerial[] =
+static uint8_t s_au8StringSerial[] =
 {
     26,             // bLength
     DESC_STRING,    // bDescriptorType
@@ -107,19 +107,19 @@ uint8_t gu8StringSerial[] =
 };
 
 
-uint8_t *gpu8UsbString[4] =
+static uint8_t *s_apu8UsbString[4] =
 {
-    gu8StringLang,
-    gu8VendorStringDesc,
-    gu8ProductStringDesc,
-    gu8StringSerial
+    s_au8StringLang,
+    s_au8VendorStringDesc,
+    s_au8ProductStringDesc,
+    s_au8StringSerial
 };
 
 const S_USBD_INFO_T gsInfo =
 {
-    (uint8_t *)gu8DeviceDescriptor,
-    (uint8_t *)gu8ConfigDescriptor,
-    (uint8_t **)gpu8UsbString,
+    (uint8_t *)s_au8DeviceDescriptor,
+    (uint8_t *)s_au8ConfigDescriptor,
+    (uint8_t **)s_apu8UsbString,
     NULL,
     NULL,
     NULL,

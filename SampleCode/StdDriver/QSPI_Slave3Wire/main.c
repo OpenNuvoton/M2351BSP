@@ -13,10 +13,12 @@
 
 #define TEST_COUNT 16
 
-uint32_t g_au32SourceData[TEST_COUNT];
-uint32_t g_au32DestinationData[TEST_COUNT];
-volatile uint32_t g_u32TxDataCount;
-volatile uint32_t g_u32RxDataCount;
+static uint32_t s_au32SourceData[TEST_COUNT];
+static uint32_t s_au32DestinationData[TEST_COUNT];
+
+void SYS_Init(void);
+void QSPI_Init(void);
+
 
 void SYS_Init(void)
 {
@@ -120,9 +122,9 @@ int main(void)
     for(u32TxDataCount = 0; u32TxDataCount < TEST_COUNT; u32TxDataCount++)
     {
         /* Write the initial value to source buffer */
-        g_au32SourceData[u32TxDataCount] = 0x00AA0000 + u32TxDataCount;
+        s_au32SourceData[u32TxDataCount] = 0x00AA0000 + u32TxDataCount;
         /* Clear destination buffer */
-        g_au32DestinationData[u32TxDataCount] = 0;
+        s_au32DestinationData[u32TxDataCount] = 0;
     }
 
     u32TxDataCount = 0;
@@ -139,17 +141,17 @@ int main(void)
     {
         /* Check TX FULL flag and TX data count */
         if((QSPI_GET_TX_FIFO_FULL_FLAG(QSPI0) == 0) && (u32TxDataCount < TEST_COUNT))
-            QSPI_WRITE_TX(QSPI0, g_au32SourceData[u32TxDataCount++]); /* Write to TX FIFO */
+            QSPI_WRITE_TX(QSPI0, s_au32SourceData[u32TxDataCount++]); /* Write to TX FIFO */
         /* Check RX EMPTY flag */
         if(QSPI_GET_RX_FIFO_EMPTY_FLAG(QSPI0) == 0)
-            g_au32DestinationData[u32RxDataCount++] = QSPI_READ_RX(QSPI0); /* Read RX FIFO */
+            s_au32DestinationData[u32RxDataCount++] = QSPI_READ_RX(QSPI0); /* Read RX FIFO */
     }
 
     /* Print the received data */
     printf("Received data:\n");
     for(u32RxDataCount = 0; u32RxDataCount < TEST_COUNT; u32RxDataCount++)
     {
-        printf("%d:\t0x%X\n", u32RxDataCount, g_au32DestinationData[u32RxDataCount]);
+        printf("%d:\t0x%X\n", u32RxDataCount, s_au32DestinationData[u32RxDataCount]);
     }
     printf("The data transfer was done.\n");
 

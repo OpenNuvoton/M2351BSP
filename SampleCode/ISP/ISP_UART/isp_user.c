@@ -33,22 +33,23 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
     uint32_t u32PageAddress;
     uint8_t *pu8Response;
     uint16_t u16Lcksum;
-    uint32_t u32Lcmd, u32srclen, u32i;
+    uint32_t u32Lcmd, u32srclen;
     uint8_t *pu8Src;
     static uint32_t u32Gcmd;
+
     pu8Response = g_au8ResponseBuff;
     pu8Src = pu8Buffer;
     u32srclen = u8len;
-    u32Lcmd = inpw(pu8Src);
-    outpw(pu8Response + 4, 0);
+    u32Lcmd = inpw((uint32_t)pu8Src);
+    outpw((uint32_t)(pu8Response + 4), 0);
     pu8Src += 8;
     u32srclen -= 8;
-    
-    ReadData(Config0, Config0 + 16, (uint32_t *)(pu8Response + 8)); /* Read config */
+
+    ReadData(Config0, Config0 + 16, (uint32_t *)(uint32_t)(pu8Response + 8)); /* Read config */
 
     if(u32Lcmd == CMD_SYNC_PACKNO)
     {
-        u32PackNo = inpw(pu8Src);
+        u32PackNo = inpw((uint32_t)pu8Src);
     }
 
     if((u32Lcmd) && (u32Lcmd != CMD_RESEND_PACKET))
@@ -62,7 +63,7 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
     }
     else if(u32Lcmd == CMD_GET_DEVICEID)
     {
-        outpw(pu8Response + 8, SYS->PDID);
+        outpw((uint32_t)(pu8Response + 8), SYS->PDID);
         goto out;
     }
     else if(u32Lcmd == CMD_RUN_APROM)
@@ -76,8 +77,8 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
     else if(u32Lcmd == CMD_CONNECT)
     {
         u32PackNo = 1;
-        outpw(pu8Response + 8, g_u32ApromSize);
-        outpw(pu8Response + 12, g_u32DataFlashAddr);
+        outpw((uint32_t)(pu8Response + 8), g_u32ApromSize);
+        outpw((uint32_t)(pu8Response + 12), g_u32DataFlashAddr);
         goto out;
     }
     else if(u32Lcmd == CMD_ERASE_ALL)
@@ -102,12 +103,12 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
         }
         else
         {
-            u32StartAddress = inpw(pu8Src);
-            u32TotalLen = inpw(pu8Src + 4);
+            u32StartAddress = inpw((uint32_t)pu8Src);
+            u32TotalLen = inpw((uint32_t)(pu8Src + 4));
             EraseAP(u32StartAddress, u32TotalLen);
         }
 
-        u32TotalLen = inpw(pu8Src + 4);
+        u32TotalLen = inpw((uint32_t)(pu8Src + 4));
         pu8Src += 8;
         u32srclen -= 8;
         u32StartAddress_bak = u32StartAddress;
@@ -115,7 +116,7 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
     }
     else if(u32Lcmd == CMD_UPDATE_CONFIG)
     {
-        UpdateConfig((uint32_t *)(pu8Src), (uint32_t *)(pu8Response + 8));
+        UpdateConfig((uint32_t *)(uint32_t)pu8Src, (uint32_t *)(uint32_t)(pu8Response + 8));
         goto out;
     }
     else if(u32Lcmd == CMD_RESEND_PACKET)      /* for APROM and Data flash only */
@@ -149,18 +150,18 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
         }
 
         u32TotalLen -= u32srclen;
-        WriteData(u32StartAddress, u32StartAddress + u32srclen, (uint32_t *)pu8Src); 
+        WriteData(u32StartAddress, u32StartAddress + u32srclen, (uint32_t *)(uint32_t)pu8Src); 
         memset(pu8Src, 0, u32srclen);
-        ReadData(u32StartAddress, u32StartAddress + u32srclen, (uint32_t *)pu8Src);
+        ReadData(u32StartAddress, u32StartAddress + u32srclen, (uint32_t *)(uint32_t)pu8Src);
         u32StartAddress += u32srclen;
         u32LastDataLen =  u32srclen;
     }
 
 out:
     u16Lcksum = Checksum(pu8Buffer, u8len);
-    outps(pu8Response, u16Lcksum);
+    outps((uint32_t)pu8Response, u16Lcksum);
     ++u32PackNo;
-    outpw(pu8Response + 4, u32PackNo);
+    outpw((uint32_t)(pu8Response + 4), u32PackNo);
     u32PackNo++;
     return 0;
 }

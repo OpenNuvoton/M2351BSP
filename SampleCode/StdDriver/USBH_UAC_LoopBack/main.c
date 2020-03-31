@@ -29,17 +29,25 @@ extern int audio_in_callback(UAC_DEV_T *dev, uint8_t *pu8Data, int i8Len);
 extern int audio_out_callback(UAC_DEV_T *dev, uint8_t *pu8Data, int i8Len);
 
 
-volatile uint32_t  g_u32TickCnt;
+static volatile uint32_t  s_u32TickCnt;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void  dump_buff_hex(uint8_t *pu8Buff, int i8Bytes);
+void  uac_control_example(UAC_DEV_T *uac_dev);
+void SYS_Init(void);
+void UART0_Init(void);
+
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_u32TickCnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts */
         printf("Set system tick error!!\n");
@@ -49,13 +57,13 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_u32TickCnt;
+    return s_u32TickCnt;
 }
 
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32Usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -65,7 +73,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32Usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);
@@ -472,7 +480,7 @@ void UART0_Init(void)
 
 int32_t main(void)
 {
-    UAC_DEV_T  *uac_dev;
+    UAC_DEV_T  *uac_dev = NULL;
     int        i8Ch;
     uint16_t   u16Val;
 

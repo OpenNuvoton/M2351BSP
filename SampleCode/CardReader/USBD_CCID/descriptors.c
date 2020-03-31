@@ -10,7 +10,7 @@
 
 /*----------------------------------------------------------------------------*/
 /*!<USB Device Descriptor */
-const uint8_t gu8DeviceDescriptor[] =
+static uint8_t s_au8DeviceDescriptor[] =
 {
     LEN_DEVICE,     /* bLength */
     DESC_DEVICE,    /* bDescriptorType */
@@ -33,7 +33,7 @@ const uint8_t gu8DeviceDescriptor[] =
 };
 
 /*!<USB Configure Descriptor */
-const uint8_t gu8ConfigDescriptor[] =
+static uint8_t s_au8ConfigDescriptor[] =
 {
     LEN_CONFIG,     /* bLength              */
     DESC_CONFIG,    /* bDescriptorType      */
@@ -108,7 +108,7 @@ const uint8_t gu8ConfigDescriptor[] =
 };
 
 /*!<USB Language String Descriptor */
-const uint8_t gu8StringLang[4] =
+static uint8_t s_au8StringLang[4] =
 {
     4,              /* bLength */
     DESC_STRING,    /* bDescriptorType */
@@ -116,7 +116,7 @@ const uint8_t gu8StringLang[4] =
 };
 
 /*!<USB Vendor String Descriptor */
-const uint8_t gu8VendorStringDesc[] =
+static uint8_t s_au8VendorStringDesc[] =
 {
     16,
     DESC_STRING,
@@ -124,7 +124,7 @@ const uint8_t gu8VendorStringDesc[] =
 };
 
 /*!<USB Product String Descriptor */
-const uint8_t gu8ProductStringDesc[] =
+static uint8_t s_au8ProductStringDesc[] =
 {
     52,             /* bLength          */
     DESC_STRING,    /* bDescriptorType  */
@@ -134,26 +134,29 @@ const uint8_t gu8ProductStringDesc[] =
     'R', 0, 'e', 0, 'a', 0, 'd', 0, 'e', 0, 'r', 0
 };
 
-const uint8_t gu8StringSerial[26] =
+static uint8_t s_au8StringSerial[26] =
 {
     26,             // bLength
     DESC_STRING,    // bDescriptorType
     'A', 0, '0', 0, '2', 0, '0', 0, '1', 0, '4', 0, '0', 0, '9', 0, '0', 0, '5', 0, '0', 0, '1', 0
 };
 
-const uint8_t *gpu8UsbString[4] =
+static uint8_t *s_apu8UsbString[4] =
 {
-    gu8StringLang,
-    gu8VendorStringDesc,
-    gu8ProductStringDesc,
-    gu8StringSerial
+    s_au8StringLang,
+    s_au8VendorStringDesc,
+    s_au8ProductStringDesc,
+    s_au8StringSerial
 };
 
 const S_USBD_INFO_T gsInfo =
 {
-    (uint8_t *)gu8DeviceDescriptor,
-    (uint8_t *)gu8ConfigDescriptor,
-    (uint8_t **)gpu8UsbString,
+    (uint8_t *)s_au8DeviceDescriptor,
+    (uint8_t *)s_au8ConfigDescriptor,
+    (uint8_t **)s_apu8UsbString,
+    NULL,
+    NULL,
+    NULL,
     NULL
 };
 

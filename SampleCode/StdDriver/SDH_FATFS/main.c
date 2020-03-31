@@ -16,28 +16,44 @@
 #define BUFF_SIZE       (8*1024)
 
 static uint32_t u32Blen = BUFF_SIZE;
-DWORD acc_size;                         /* Work register for fs command */
-WORD acc_files, acc_dirs;
-FILINFO Finfo;
+static DWORD s_u32AccSize;                         /* Work register for fs command */
+static WORD s_u16AccFiles, s_u16AccDirs;
+static FILINFO Finfo;
 
-char g_achLine[256];                         /* Console input buffer */
+static char s_achLine[256];                         /* Console input buffer */
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t g_au8BuffPool[BUFF_SIZE] ;       /* Working buffer */
+uint8_t s_au8BuffPool[BUFF_SIZE] ;       /* Working buffer */
 #else
-__attribute__((aligned)) uint8_t g_au8BuffPool[BUFF_SIZE] ;       /* Working buffer */
+static __attribute__((aligned)) uint8_t s_au8BuffPool[BUFF_SIZE] ;       /* Working buffer */
 #endif
-uint8_t  *g_pu8Buff;
-uint32_t volatile g_u32Sec = 0;
+static uint8_t  *s_pu8Buff;
+static uint32_t volatile s_u32Sec = 0;
 
-extern uint8_t volatile g_u8SDDataReadyFlag;
-extern uint8_t g_u8R3Flag;
 
+void TMR0_IRQHandler(void);
+void SDH0_IRQHandler(void);
+void timer_init(void);
+uint32_t get_timer_value(void);
+void  dump_buff_hex(uint8_t *pucBuff, int8_t i8Bytes);
+int xatoi(          /* 0:Failed, 1:Successful */
+    TCHAR **str,    /* Pointer to pointer to the string */
+    unsigned long *pi32Res       /* Pointer to a variable to store the value */
+);
+void put_dump(
+    const uint8_t* pu8Buff,  /* Pointer to the byte array to be dumped */
+    uint32_t u32Addr,         /* Heading address value */
+    int32_t i32Cnt                     /* Number of bytes to be dumped */
+);
+void get_line(char *buff, int32_t i32Len);
+void put_rc(FRESULT rc);
+void SYS_Init(void);
+		
 
 void TMR0_IRQHandler(void)
 {
-    g_u32Sec++;
+    s_u32Sec++;
 
     /* clear timer interrupt flag */
     TIMER_ClearIntFlag(TIMER0);
@@ -60,7 +76,7 @@ void timer_init()
 
 uint32_t get_timer_value()
 {
-    return g_u32Sec;
+    return s_u32Sec;
 }
 
 void  dump_buff_hex(uint8_t *pucBuff, int8_t i8Bytes)
@@ -106,14 +122,14 @@ void  dump_buff_hex(uint8_t *pucBuff, int8_t i8Bytes)
 
 int xatoi(          /* 0:Failed, 1:Successful */
     TCHAR **str,    /* Pointer to pointer to the string */
-    unsigned long *pi64Res       /* Pointer to a variable to store the value */
+    unsigned long *pi32Res       /* Pointer to a variable to store the value */
 )
 {
-    uint64_t u64Val;
+    uint32_t u32Val;
     uint8_t u8R, u8S = 0;
     TCHAR c;
 
-    *pi64Res = 0;
+    *pi32Res = 0;
     while((c = **str) == ' ')(*str)++;      /* Skip leading spaces */
 
     if(c == '-')        /* negative? */
@@ -147,7 +163,7 @@ int xatoi(          /* 0:Failed, 1:Successful */
         u8R = 10;         /* decimal */
     }
 
-    u64Val = 0;
+    u32Val = 0;
     while(c > ' ')
     {
         if(c >= 'a') c -= 0x20;
@@ -158,12 +174,12 @@ int xatoi(          /* 0:Failed, 1:Successful */
             if(c <= 9) return 0;    /* invalid char */
         }
         if(c >= u8R) return 0;        /* invalid char for current radix */
-        u64Val = u64Val * u8R + c;
+        u32Val = u32Val * u8R + c;
         c = *(++(*str));
     }
-    if(u8S) u64Val = 0 - u64Val;            /* apply sign if needed */
+    if(u8S) u32Val = 0 - u32Val;            /* apply sign if needed */
 
-    *pi64Res = u64Val;
+    *pi32Res = u32Val;
     return 1;
 }
 
@@ -173,13 +189,13 @@ int xatoi(          /* 0:Failed, 1:Successful */
 
 void put_dump(
     const uint8_t* pu8Buff,  /* Pointer to the byte array to be dumped */
-    uint64_t u64Addr,         /* Heading address value */
+    uint32_t u32Addr,         /* Heading address value */
     int32_t i32Cnt                     /* Number of bytes to be dumped */
 )
 {
     int i;
 
-    printf("%08x ", (uint32_t)u64Addr);
+    printf("%08x ", u32Addr);
 
     for(i = 0; i < i32Cnt; i++)
         printf(" %02x", pu8Buff[i]);
@@ -203,7 +219,7 @@ FRESULT scan_files(
 {
     DIR dirs;
     FRESULT res;
-    BYTE i;
+    uint32_t i;
     char *fn;
 
 
@@ -218,7 +234,7 @@ FRESULT scan_files(
 
             if(Finfo.fattrib & AM_DIR)
             {
-                acc_dirs++;
+                s_u16AccDirs++;
                 *(path + i) = '/';
                 strcpy(path + i + 1, fn);
                 res = scan_files(path);
@@ -228,8 +244,8 @@ FRESULT scan_files(
             else
             {
                 /*              printf("%s/%s\n", path, fn); */
-                acc_files++;
-                acc_size += Finfo.fsize;
+                s_u16AccFiles++;
+                s_u32AccSize += Finfo.fsize;
             }
         }
     }
@@ -259,16 +275,16 @@ void put_rc(FRESULT rc)
 
 void get_line(char *buff, int32_t i32Len)
 {
-    TCHAR c;
+    int32_t i32C;
     int32_t i32Idx = 0;
 
     for(;;)
     {
-        c = getchar();
-        putchar(c);
-        if(c == '\r') break;
-        if((c == '\b') && i32Idx) i32Idx--;
-        if((c >= ' ') && (i32Idx < i32Len - 1)) buff[i32Idx++] = c;
+        i32C = getchar();
+        putchar(i32C);
+        if(i32C == '\r') break;
+        if((i32C == '\b') && i32Idx) i32Idx--;
+        if((i32C >= ' ') && (i32Idx < i32Len - 1)) buff[i32Idx++] = (char)i32C;
     }
     buff[i32Idx] = 0;
 
@@ -454,11 +470,11 @@ void SYS_Init(void)
 
 unsigned long get_fattime(void)
 {
-    unsigned long u64Tmr;
+    unsigned long u32Tmr;
 
-    u64Tmr = 0x00000;
+    u32Tmr = 0x00000;
 
-    return u64Tmr;
+    return u32Tmr;
 }
 
 
@@ -470,7 +486,7 @@ static FIL file1, file2;        /* File objects */
 int32_t main(void)
 {
     char        *ptr, *ptr2;
-    unsigned long  i64P1, i64P2, i64P3;
+    unsigned long  i32P1, i32P2, i32P3;
     uint8_t        *pu8Buf;
     FATFS       *fs;              /* Pointer to file system object */
     BYTE        SD_Drv = 0;
@@ -482,7 +498,7 @@ int32_t main(void)
     static const uint8_t au8Ft[] = {0, 12, 16, 32};
     DWORD ofs = 0, sect = 0;
 
-    g_pu8Buff = (BYTE *)g_au8BuffPool;
+    s_pu8Buff = (BYTE *)s_au8BuffPool;
 
     SYS_Init();
     UART_Open(UART0, 115200);
@@ -510,8 +526,8 @@ int32_t main(void)
             continue;
 
         printf(_T(">"));
-        ptr = g_achLine;
-        get_line(ptr, sizeof(g_achLine));
+        ptr = s_achLine;
+        get_line(ptr, sizeof(s_achLine));
         switch(*ptr++)
         {
             case 'q' :  /* Exit program */
@@ -521,16 +537,16 @@ int32_t main(void)
                 switch(*ptr++)
                 {
                     case 'd' :  /* dd [<lba>] - Dump sector */
-                        if(!xatoi(&ptr, &i64P2)) i64P2 = sect;
-                        res = (FRESULT)disk_read(SD_Drv, g_pu8Buff, i64P2, 1);
+                        if(!xatoi(&ptr, &i32P2)) i32P2 = sect;
+                        res = (FRESULT)disk_read(SD_Drv, s_pu8Buff, i32P2, 1);
                         if(res)
                         {
                             printf("rc=%d\n", (WORD)res);
                             break;
                         }
-                        sect = i64P2 + 1;
-                        printf("Sector:%lu\n", i64P2);
-                        for(pu8Buf = (unsigned char*)g_pu8Buff, ofs = 0; ofs < 0x200; pu8Buf += 16, ofs += 16)
+                        sect = i32P2 + 1;
+                        printf("Sector:%lu\n", i32P2);
+                        for(pu8Buf = (unsigned char*)s_pu8Buff, ofs = 0; ofs < 0x200; pu8Buf += 16, ofs += 16)
                             put_dump(pu8Buf, ofs, 16);
                         break;
 
@@ -541,55 +557,55 @@ int32_t main(void)
                 switch(*ptr++)
                 {
                     case 'd' :  /* bd <addr> - Dump R/W buffer */
-                        if(!xatoi(&ptr, &i64P1)) break;
-                        for(ptr = (char*)&g_pu8Buff[i64P1], ofs = i64P1, u32Cnt = 32; u32Cnt; u32Cnt--, ptr += 16, ofs += 16)
+                        if(!xatoi(&ptr, &i32P1)) break;
+                        for(ptr = (char*)&s_pu8Buff[i32P1], ofs = i32P1, u32Cnt = 32; u32Cnt; u32Cnt--, ptr += 16, ofs += 16)
                             put_dump((BYTE*)ptr, ofs, 16);
                         break;
 
                     case 'e' :  /* be <addr> [<data>] ... - Edit R/W buffer */
-                        if(!xatoi(&ptr, &i64P1)) break;
-                        if(xatoi(&ptr, &i64P2))
+                        if(!xatoi(&ptr, &i32P1)) break;
+                        if(xatoi(&ptr, &i32P2))
                         {
                             do
                             {
-                                g_pu8Buff[i64P1++] = (BYTE)i64P2;
+                                s_pu8Buff[i32P1++] = (BYTE)i32P2;
                             }
-                            while(xatoi(&ptr, &i64P2));
+                            while(xatoi(&ptr, &i32P2));
                             break;
                         }
                         for(;;)
                         {
-                            printf("%04X %02X-", (WORD)i64P1, g_pu8Buff[i64P1]);
-                            get_line(g_achLine, sizeof(g_achLine));
-                            ptr = g_achLine;
+                            printf("%04X %02X-", (WORD)i32P1, s_pu8Buff[i32P1]);
+                            get_line(s_achLine, sizeof(s_achLine));
+                            ptr = s_achLine;
                             if(*ptr == '.') break;
                             if(*ptr < ' ')
                             {
-                                i64P1++;
+                                i32P1++;
                                 continue;
                             }
-                            if(xatoi(&ptr, &i64P2))
-                                g_pu8Buff[i64P1++] = (BYTE)i64P2;
+                            if(xatoi(&ptr, &i32P2))
+                                s_pu8Buff[i32P1++] = (BYTE)i32P2;
                             else
                                 printf("???\n");
                         }
                         break;
 
                     case 'r' :  /* br <sector> [<n>] - Read disk into R/W buffer */
-                        if(!xatoi(&ptr, &i64P2)) break;
-                        if(!xatoi(&ptr, &i64P3)) i64P3 = 1;
-                        printf("rc=%d\n", disk_read(SD_Drv, g_pu8Buff, i64P2, i64P3));
+                        if(!xatoi(&ptr, &i32P2)) break;
+                        if(!xatoi(&ptr, &i32P3)) i32P3 = 1;
+                        printf("rc=%d\n", disk_read(SD_Drv, s_pu8Buff, i32P2, i32P3));
                         break;
 
                     case 'w' :  /* bw <sector> [<n>] - Write R/W buffer into disk */
-                        if(!xatoi(&ptr, &i64P2)) break;
-                        if(!xatoi(&ptr, &i64P3)) i64P3 = 1;
-                        printf("rc=%d\n", disk_write(SD_Drv, g_pu8Buff, i64P2, i64P3));
+                        if(!xatoi(&ptr, &i32P2)) break;
+                        if(!xatoi(&ptr, &i32P3)) i32P3 = 1;
+                        printf("rc=%d\n", disk_write(SD_Drv, s_pu8Buff, i32P2, i32P3));
                         break;
 
                     case 'f' :  /* bf <n> - Fill working buffer */
-                        if(!xatoi(&ptr, &i64P1)) break;
-                        memset(g_pu8Buff, (int)i64P1, BUFF_SIZE);
+                        if(!xatoi(&ptr, &i32P1)) break;
+                        memset(s_pu8Buff, (int)i32P1, BUFF_SIZE);
                         break;
 
                 }
@@ -600,7 +616,7 @@ int32_t main(void)
                 {
 
                     case 's' :  /* fs - Show logical drive status */
-                        res = f_getfree("", (DWORD*)&i64P2, &fs);
+                        res = f_getfree("", (DWORD*)&i32P2, &fs);
                         if(res)
                         {
                             put_rc(res);
@@ -613,7 +629,7 @@ int32_t main(void)
                                fs->n_rootdir, fs->fsize, fs->n_fatent - 2,
                                fs->fatbase, fs->dirbase, fs->database
                               );
-                        acc_size = acc_files = acc_dirs = 0;
+                        s_u32AccSize = s_u16AccFiles = s_u16AccDirs = 0;
 
                         res = scan_files(ptr);
                         if(res)
@@ -623,8 +639,8 @@ int32_t main(void)
                         }
                         printf("\r%u files, %lu bytes.\n%u folders.\n"
                                "%lu KB total disk space.\n%lu KB available.\n",
-                               acc_files, acc_size, acc_dirs,
-                               (fs->n_fatent - 2) * (fs->csize / 2), i64P2 * (fs->csize / 2)
+                               s_u16AccFiles, s_u32AccSize, s_u16AccDirs,
+                               (fs->n_fatent - 2) * (fs->csize / 2), i32P2 * (fs->csize / 2)
                               );
                         break;
                     case 'l' :  /* fl [<path>] - Directory listing */
@@ -635,7 +651,7 @@ int32_t main(void)
                             put_rc(res);
                             break;
                         }
-                        i64P1 = u32S1 = u32S2 = 0;
+                        i32P1 = u32S1 = u32S2 = 0;
                         for(;;)
                         {
                             res = f_readdir(&dir, &Finfo);
@@ -647,7 +663,7 @@ int32_t main(void)
                             else
                             {
                                 u32S1++;
-                                i64P1 += Finfo.fsize;
+                                i32P1 += Finfo.fsize;
                             }
                             printf("%c%c%c%c%c %d/%02d/%02d %02d:%02d    %9lu  %s",
                                    (Finfo.fattrib & AM_DIR) ? 'D' : '-',
@@ -660,16 +676,16 @@ int32_t main(void)
 
                             printf("\n");
                         }
-                        printf("%4u File(s),%10lu bytes total\n%4u Dir(s)", u32S1, i64P1, u32S2);
-                        if(f_getfree(ptr, (DWORD*)&i64P1, &fs) == FR_OK)
-                            printf(", %10lu bytes free\n", i64P1 * fs->csize * 512);
+                        printf("%4u File(s),%10lu bytes total\n%4u Dir(s)", u32S1, i32P1, u32S2);
+                        if(f_getfree(ptr, (DWORD*)&i32P1, &fs) == FR_OK)
+                            printf(", %10lu bytes free\n", i32P1 * fs->csize * 512);
                         break;
 
 
                     case 'o' :  /* fo <mode> <file> - Open a file */
-                        if(!xatoi(&ptr, &i64P1)) break;
+                        if(!xatoi(&ptr, &i32P1)) break;
                         while(*ptr == ' ') ptr++;
-                        put_rc(f_open(&file1, ptr, (BYTE)i64P1));
+                        put_rc(f_open(&file1, ptr, (BYTE)i32P1));
                         break;
 
                     case 'c' :  /* fc - Close a file */
@@ -677,96 +693,96 @@ int32_t main(void)
                         break;
 
                     case 'e' :  /* fe - Seek file pointer */
-                        if(!xatoi(&ptr, &i64P1)) break;
-                        res = f_lseek(&file1, i64P1);
+                        if(!xatoi(&ptr, &i32P1)) break;
+                        res = f_lseek(&file1, i32P1);
                         put_rc(res);
                         if(res == FR_OK)
                             printf("fptr=%lu(0x%lX)\n", file1.fptr, file1.fptr);
                         break;
 
                     case 'd' :  /* fd <len> - read and dump file from current fp */
-                        if(!xatoi(&ptr, &i64P1)) break;
+                        if(!xatoi(&ptr, &i32P1)) break;
                         ofs = file1.fptr;
-                        while(i64P1)
+                        while(i32P1)
                         {
-                            if((UINT)i64P1 >= 16)
+                            if((UINT)i32P1 >= 16)
                             {
                                 u32Cnt = 16;
-                                i64P1 -= 16;
+                                i32P1 -= 16;
                             }
                             else
                             {
-                                u32Cnt = i64P1;
-                                i64P1 = 0;
+                                u32Cnt = i32P1;
+                                i32P1 = 0;
                             }
-                            res = f_read(&file1, g_pu8Buff, u32Cnt, &u32Cnt);
+                            res = f_read(&file1, s_pu8Buff, u32Cnt, &u32Cnt);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
                                 break;
                             }
                             if(!u32Cnt) break;
-                            put_dump(g_pu8Buff, ofs, u32Cnt);
+                            put_dump(s_pu8Buff, ofs, (int32_t)u32Cnt);
                             ofs += 16;
                         }
                         break;
 
                     case 'r' :  /* fr <len> - read file */
-                        if(!xatoi(&ptr, &i64P1)) break;
-                        i64P2 = 0;
-                        while(i64P1)
+                        if(!xatoi(&ptr, &i32P1)) break;
+                        i32P2 = 0;
+                        while(i32P1)
                         {
-                            if((UINT)i64P1 >= u32Blen)
+                            if((UINT)i32P1 >= u32Blen)
                             {
                                 u32Cnt = u32Blen;
-                                i64P1 -= u32Blen;
+                                i32P1 -= u32Blen;
                             }
                             else
                             {
-                                u32Cnt = i64P1;
-                                i64P1 = 0;
+                                u32Cnt = i32P1;
+                                i32P1 = 0;
                             }
-                            res = f_read(&file1, g_pu8Buff, u32Cnt, &u32S2);
+                            res = f_read(&file1, s_pu8Buff, u32Cnt, &u32S2);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
                                 break;
                             }
-                            i64P2 += u32S2;
+                            i32P2 += u32S2;
                             if(u32Cnt != u32S2) break;
                         }
 
-                        if(i64P1)
-                            printf("%lu bytes read with %lu kB/sec.\n", i64P2, ((i64P2 * 100) / i64P1) / 1024);
+                        if(i32P1)
+                            printf("%lu bytes read with %lu kB/sec.\n", i32P2, ((i32P2 * 100) / i32P1) / 1024);
                         break;
 
                     case 'w' :  /* fw <len> <val> - write file */
-                        if(!xatoi(&ptr, &i64P1) || !xatoi(&ptr, &i64P2)) break;
-                        memset(g_pu8Buff, (BYTE)i64P2, u32Blen);
-                        i64P2 = 0;
-                        while(i64P1)
+                        if(!xatoi(&ptr, &i32P1) || !xatoi(&ptr, &i32P2)) break;
+                        memset(s_pu8Buff, (BYTE)i32P2, u32Blen);
+                        i32P2 = 0;
+                        while(i32P1)
                         {
-                            if((UINT)i64P1 >= u32Blen)
+                            if((UINT)i32P1 >= u32Blen)
                             {
                                 u32Cnt = u32Blen;
-                                i64P1 -= u32Blen;
+                                i32P1 -= u32Blen;
                             }
                             else
                             {
-                                u32Cnt = i64P1;
-                                i64P1 = 0;
+                                u32Cnt = i32P1;
+                                i32P1 = 0;
                             }
-                            res = f_write(&file1, g_pu8Buff, u32Cnt, &u32S2);
+                            res = f_write(&file1, s_pu8Buff, u32Cnt, &u32S2);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
                                 break;
                             }
-                            i64P2 += u32S2;
+                            i32P2 += u32S2;
                             if(u32Cnt != u32S2) break;
                         }
-                        if(i64P1)
-                            printf("%lu bytes written with %lu kB/sec.\n", i64P2, ((i64P2 * 100) / i64P1) / 1024);
+                        if(i32P1)
+                            printf("%lu bytes written with %lu kB/sec.\n", i32P2, ((i32P2 * 100) / i32P1) / 1024);
                         break;
 
                     case 'n' :  /* fn <old_name> <new_name> - Change file/dir name */
@@ -793,16 +809,16 @@ int32_t main(void)
                         break;
 
                     case 'a' :  /* fa <atrr> <mask> <name> - Change file/dir attribute */
-                        if(!xatoi(&ptr, &i64P1) || !xatoi(&ptr, &i64P2)) break;
+                        if(!xatoi(&ptr, &i32P1) || !xatoi(&ptr, &i32P2)) break;
                         while(*ptr == ' ') ptr++;
-                        put_rc(f_chmod(ptr, i64P1, i64P2));
+                        put_rc(f_chmod(ptr, (BYTE)i32P1, (BYTE)i32P2));
                         break;
 
                     case 't' :  /* ft <year> <month> <day> <hour> <min> <sec> <name> - Change timestamp */
-                        if(!xatoi(&ptr, &i64P1) || !xatoi(&ptr, &i64P2) || !xatoi(&ptr, &i64P3)) break;
-                        Finfo.fdate = (WORD)(((i64P1 - 1980) << 9) | ((i64P2 & 15) << 5) | (i64P3 & 31));
-                        if(!xatoi(&ptr, &i64P1) || !xatoi(&ptr, &i64P2) || !xatoi(&ptr, &i64P3)) break;
-                        Finfo.ftime = (WORD)(((i64P1 & 31) << 11) | ((i64P1 & 63) << 5) | ((i64P1 >> 1) & 31));
+                        if(!xatoi(&ptr, &i32P1) || !xatoi(&ptr, &i32P2) || !xatoi(&ptr, &i32P3)) break;
+                        Finfo.fdate = (WORD)(((i32P1 - 1980) << 9) | ((i32P2 & 15) << 5) | (i32P3 & 31));
+                        if(!xatoi(&ptr, &i32P1) || !xatoi(&ptr, &i32P2) || !xatoi(&ptr, &i32P3)) break;
+                        Finfo.ftime = (WORD)(((i32P1 & 31) << 11) | ((i32P1 & 63) << 5) | ((i32P1 >> 1) & 31));
                         put_rc(f_utime(ptr, &Finfo));
                         break;
 
@@ -833,17 +849,17 @@ int32_t main(void)
                             break;
                         }
                         printf("Copying...");
-                        i64P1 = 0;
+                        i32P1 = 0;
                         u32Btime = get_timer_value();
                         for(;;)
                         {
-                            res = f_read(&file1, g_pu8Buff, BUFF_SIZE, &u32S1);
+                            res = f_read(&file1, s_pu8Buff, BUFF_SIZE, &u32S1);
                             if(res || u32S1 == 0) break;    /* error or eof */
-                            res = f_write(&file2, g_pu8Buff, u32S1, &u32S2);
-                            i64P1 += u32S2;
+                            res = f_write(&file2, s_pu8Buff, u32S1, &u32S2);
+                            i32P1 += u32S2;
                             if(res || u32S2 < u32S1) break;    /* error or disk full */
                         }
-                        printf("\n%lu bytes copied. %d\n", i64P1, (get_timer_value() - u32Btime));
+                        printf("\n%lu bytes copied. %d\n", i32P1, (get_timer_value() - u32Btime));
                         f_close(&file1);
                         f_close(&file2);
                     }
@@ -856,22 +872,22 @@ int32_t main(void)
 
                     case 'j' :  /* fj <drive#> - Change current drive */
                         while(*ptr == ' ') ptr++;
-                        dump_buff_hex((uint8_t *)&i64P1, 16);
+                        dump_buff_hex((uint8_t *)&i32P1, 16);
                         put_rc(f_chdrive((TCHAR *)ptr));
                         break;
 #endif
 #if _USE_MKFS
                     case 'm' :  /* fm <partition rule> <sect/clust> - Create file system */
-                        if(!xatoi(&ptr, &i64P2) || !xatoi(&ptr, &i64P3)) break;
+                        if(!xatoi(&ptr, &i32P2) || !xatoi(&ptr, &i32P3)) break;
                         printf("The memory card will be formatted. Are you sure? (Y/n)=");
-                        get_line(ptr, sizeof(g_achLine));
+                        get_line(ptr, sizeof(s_achLine));
                         if(*ptr == 'Y')
-                            put_rc(f_mkfs(0, (BYTE)i64P2, (WORD)i64P3));
+                            put_rc(f_mkfs(0, (BYTE)i32P2, (WORD)i32P3));
                         break;
 #endif
                     case 'z' :  /* fz [<rw size>] - Change R/W length for fr/fw/fx command */
-                        if(xatoi(&ptr, &i64P1) && i64P1 >= 1 && (size_t)i64P1 <= BUFF_SIZE)
-                            u32Blen = i64P1;
+                        if(xatoi(&ptr, &i32P1) && i32P1 >= 1 && (size_t)i32P1 <= BUFF_SIZE)
+                            u32Blen = i32P1;
                         printf("blen=%d\n", u32Blen);
                         break;
                 }

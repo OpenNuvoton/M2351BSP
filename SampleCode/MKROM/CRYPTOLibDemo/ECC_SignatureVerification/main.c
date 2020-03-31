@@ -12,11 +12,14 @@
 
 #define ECC_CURVE_TYPE      CURVE_P_256
 
-char sha_msg[] = "7DDD1A452CE194D7F4C1CD2C41A58C9513CCE48111461384EC9C2B6E57B837FB";    /* 256-bits message                              */
-char Qx[] = "755b3819f05a3e9f32d4d599062834aac5220f75955378414a8f63716a152ce2";         /* public key 1                                  */
-char Qy[] = "91c413f1915ed7b47473fd797647ba3d83e8224377909af5b30c530eaad79fd7";         /* public key 2                                  */
-char R[] = "742fda512ad62f9a900f686fa01013c2661ccb42ee6c95b6a998de6a1be6a777";          /* Expected answer: R of (R,S) digital signature */
-char S[] = "88221bc22161e6f45f08bf9dabc3c307da278935eedf9273722d75eea07e2028";          /* Expected answer: S of (R,S) digital signature */
+static char sha_msg[] = "7DDD1A452CE194D7F4C1CD2C41A58C9513CCE48111461384EC9C2B6E57B837FB";    /* 256-bits message                              */
+static char Qx[] = "755b3819f05a3e9f32d4d599062834aac5220f75955378414a8f63716a152ce2";         /* public key 1                                  */
+static char Qy[] = "91c413f1915ed7b47473fd797647ba3d83e8224377909af5b30c530eaad79fd7";         /* public key 2                                  */
+static char R[] = "742fda512ad62f9a900f686fa01013c2661ccb42ee6c95b6a998de6a1be6a777";          /* Expected answer: R of (R,S) digital signature */
+static char S[] = "88221bc22161e6f45f08bf9dabc3c307da278935eedf9273722d75eea07e2028";          /* Expected answer: S of (R,S) digital signature */
+
+void SYS_Init(void);
+void UART_Init(void);
 
 void SYS_Init(void)
 {

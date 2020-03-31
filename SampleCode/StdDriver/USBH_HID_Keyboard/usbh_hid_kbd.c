@@ -16,7 +16,7 @@
 #include "usbh_hid.h"
 #include "usbh_hid_kbd.h"
 
-struct hid_kbd_dev   g_kbd_dev;    /* Support one keyboard device at the same time.         */
+static struct hid_kbd_dev   s_KbdDev;    /* Support one keyboard device at the same time.         */
 /* If you want to support mulitiple keyboards, please
    implement an array and handle it.                     */
 
@@ -24,6 +24,11 @@ static const uint8_t au8NumKeys[] = { '!', '@', '#', '$', '%', '^', '&', '*', '(
 static const uint8_t au8SymKeysUp[] = { '_', '+', '{', '}', '|', '~', ':', '"', '~', '<', '>', '?' };
 static const uint8_t au8SymKeysLo[] = { '-', '=', '[', ']', '\\', ' ', ';', '\'', '`', ',', '.', '/' };
 static const uint8_t au8PadKeys[] = { '/', '*', '-', '+', 0x13 };
+
+void  print_key(uint8_t u8Mod, uint8_t u8Key);
+uint8_t  oem_key_to_ascii(HID_DEV_T *hdev, uint8_t u8Mod, uint8_t u8Key);
+int32_t  update_locking_keys(HID_DEV_T *hdev, uint8_t u8Key);
+int  kbd_parse_report(HID_DEV_T *hdev, uint8_t *pu8Buf, int i8Len);
 
 
 void  print_key(uint8_t u8Mod, uint8_t u8Key)
@@ -58,12 +63,13 @@ uint8_t  oem_key_to_ascii(HID_DEV_T *hdev, uint8_t u8Mod, uint8_t u8Key)
 {
     uint8_t    u8Shift = (u8Mod & 0x22);
 
+    (void)hdev;
     // [a-z]
     if((u8Key > 0x03) && (u8Key < 0x1e))
     {
         // Upper case letters
-        if((!(g_kbd_dev.bLED & LED_CapsLoock) && (u8Mod & 2)) ||
-                ((g_kbd_dev.bLED & LED_CapsLoock) && ((u8Mod & 2) == 0)))
+        if((!(s_KbdDev.bLED & LED_CapsLoock) && (u8Mod & 2)) ||
+                ((s_KbdDev.bLED & LED_CapsLoock) && ((u8Mod & 2) == 0)))
             return (u8Key - 4 + 'A');
 
         // Lower case letters
@@ -81,7 +87,7 @@ uint8_t  oem_key_to_ascii(HID_DEV_T *hdev, uint8_t u8Mod, uint8_t u8Key)
     // Keypad Numbers
     else if(u8Key > 0x58 && u8Key < 0x62)
     {
-        if(g_kbd_dev.bLED & LED_NumLock)
+        if(s_KbdDev.bLED & LED_NumLock)
             return (u8Key - 0x59 + '1');
     }
     else if((u8Key > 0x2c) && (u8Key < 0x39))
@@ -99,41 +105,41 @@ uint8_t  oem_key_to_ascii(HID_DEV_T *hdev, uint8_t u8Mod, uint8_t u8Key)
             case KEY_ZERO:
                 return ((u8Shift) ? ')' : '0');
             case KEY_ZERO2:
-                return ((g_kbd_dev.bLED & LED_NumLock) ? '0' : 0);
+                return ((s_KbdDev.bLED & LED_NumLock) ? '0' : 0);
             case KEY_PERIOD:
-                return ((g_kbd_dev.bLED & LED_NumLock) ? '.' : 0);
+                return ((s_KbdDev.bLED & LED_NumLock) ? '.' : 0);
         }
     }
     return 0;
 }
 
 
-uint8_t  update_locking_keys(HID_DEV_T *hdev, uint8_t u8Key)
+int32_t  update_locking_keys(HID_DEV_T *hdev, uint8_t u8Key)
 {
     uint8_t   u8OldLED;
-    int       i8Ret;
+    int32_t   i32Ret;
 
-    u8OldLED = g_kbd_dev.bLED;
+    u8OldLED = s_KbdDev.bLED;
 
     switch(u8Key)
     {
         case KEY_NUM_LOCK:
-            g_kbd_dev.bLED = g_kbd_dev.bLED ^ LED_NumLock;
+            s_KbdDev.bLED = s_KbdDev.bLED ^ LED_NumLock;
             break;
         case KEY_CAPS_LOCK:
-            g_kbd_dev.bLED = g_kbd_dev.bLED ^ LED_CapsLoock;
+            s_KbdDev.bLED = s_KbdDev.bLED ^ LED_CapsLoock;
             break;
         case KEY_SCROLL_LOCK:
-            g_kbd_dev.bLED = g_kbd_dev.bLED ^ LED_ScrollLock;
+            s_KbdDev.bLED = s_KbdDev.bLED ^ LED_ScrollLock;
             break;
     }
 
-    if(g_kbd_dev.bLED != u8OldLED)
+    if(s_KbdDev.bLED != u8OldLED)
     {
-        i8Ret = usbh_hid_set_report(hdev, 2, 0, &g_kbd_dev.bLED, 1);
-        if(i8Ret < 0)
-            printf("usbh_hid_set_report failed - %d\n", i8Ret);
-        return i8Ret;
+        i32Ret = usbh_hid_set_report(hdev, 2, 0, &s_KbdDev.bLED, 1);
+        if(i32Ret < 0)
+            printf("usbh_hid_set_report failed - %d\n", i32Ret);
+        return i32Ret;
     }
 
     return 0;
@@ -146,6 +152,7 @@ int  kbd_parse_report(HID_DEV_T *hdev, uint8_t *pu8Buf, int i8Len)
     char      chDown, chUp;
     uint8_t   u8Key;
 
+    (void)i8Len;
     // On error - return
     if(pu8Buf[2] == 1)
         return -1;
@@ -156,9 +163,9 @@ int  kbd_parse_report(HID_DEV_T *hdev, uint8_t *pu8Buf, int i8Len)
 
         for(i8CntJ = 2; i8CntJ < 8; i8CntJ++)
         {
-            if((pu8Buf[i8CntI] == g_kbd_dev.pre_data[i8CntJ]) && (pu8Buf[i8CntI] != 1))
+            if((pu8Buf[i8CntI] == s_KbdDev.pre_data[i8CntJ]) && (pu8Buf[i8CntI] != 1))
                 chDown = 1;
-            if((pu8Buf[i8CntJ] == g_kbd_dev.pre_data[i8CntI]) && (g_kbd_dev.pre_data[i8CntI] != 1))
+            if((pu8Buf[i8CntJ] == s_KbdDev.pre_data[i8CntI]) && (s_KbdDev.pre_data[i8CntI] != 1))
                 chUp = 1;
         }
 
@@ -179,7 +186,7 @@ int  kbd_parse_report(HID_DEV_T *hdev, uint8_t *pu8Buf, int i8Len)
     }
 
     for(i8CntI = 0; i8CntI < 8; ++i8CntI)
-        g_kbd_dev.pre_data[i8CntI] = pu8Buf[i8CntI];
+        s_KbdDev.pre_data[i8CntI] = pu8Buf[i8CntI];
 
     return 0;
 }

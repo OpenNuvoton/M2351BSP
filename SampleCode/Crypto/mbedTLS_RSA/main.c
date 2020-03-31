@@ -17,7 +17,7 @@
 #define MBEDTLS_EXIT_SUCCESS    0
 #define MBEDTLS_EXIT_FAILURE    -1
 
-
+void SYS_Init(void);
 
 void SYS_Init(void)
 {
@@ -121,7 +121,7 @@ int32_t main(void)
     printf("\n  RSA encrypt with hash test start\n");
 #endif
 
-    i32Ret = RSAEncryptWithHashTest(u32Verbose);
+    i32Ret = RSAEncryptWithHashTest((int)u32Verbose);
     printf("\n  RSA encrypt with hash test done\n");
 
     if(i32Ret == MBEDTLS_EXIT_SUCCESS)

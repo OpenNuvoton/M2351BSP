@@ -8,8 +8,11 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-uint32_t g_au32DataArrary[4] = {0x00000000, 0xFFFFFFFF, 0x5A5A5A5A, 0xA5A5A5A5};
+static uint32_t s_au32DataArrary[4] = {0x00000000, 0xFFFFFFFF, 0x5A5A5A5A, 0xA5A5A5A5};
 
+
+void SRAM_CompareFunction(uint32_t u32Param0, uint32_t u32Param1, uint32_t u32Param2, uint32_t u32Param3);
+void SRAM_BS616LV4017(uint32_t u32MaxSize);
 
 /**
   * @brief      This function is used to check SRAM data matched or not.
@@ -214,7 +217,7 @@ void SRAM_CompareFunction(uint32_t u32Param0, uint32_t u32Param1, uint32_t u32Pa
         /*---------------------------------------------------------------------------------------------------------*/
         /* [One Byte Read] compare */
         u32Idx = 0;
-        u32ReadData = (uint8_t)g_au32DataArrary[u32Param0];
+        u32ReadData = (uint8_t)s_au32DataArrary[u32Param0];
         while(u32Idx < u32EBIsize)
         {
             if(EBI0_READ_DATA8(EBI, u32Idx) != (uint8_t)(u32ReadData))
@@ -225,12 +228,12 @@ void SRAM_CompareFunction(uint32_t u32Param0, uint32_t u32Param1, uint32_t u32Pa
                 printf("One Byte Read compare failed ! \n\n");
                 while(1) {}
             }
-            u32Idx++;;
+            u32Idx++;
         }
 
         /* [Half Word Read] compare */
         u32Idx = 0;
-        u32ReadData = (uint16_t)g_au32DataArrary[u32Param0];
+        u32ReadData = (uint16_t)s_au32DataArrary[u32Param0];
         while(u32Idx < u32EBIsize)
         {
             if(EBI0_READ_DATA16(EBI, u32Idx) != (uint16_t)(u32ReadData))
@@ -246,7 +249,7 @@ void SRAM_CompareFunction(uint32_t u32Param0, uint32_t u32Param1, uint32_t u32Pa
 
         /* [One Word Read] compare */
         u32Idx = 0;
-        u32ReadData = (uint32_t)g_au32DataArrary[u32Param0];
+        u32ReadData = (uint32_t)s_au32DataArrary[u32Param0];
         while(u32Idx < u32EBIsize)
         {
             if(EBI0_READ_DATA32(EBI, u32Idx) != (uint32_t)(u32ReadData))
@@ -285,7 +288,7 @@ void SRAM_BS616LV4017(uint32_t u32MaxSize)
             /* Write fixed data pattern                                                                                */
             /*---------------------------------------------------------------------------------------------------------*/
             u32Idx = 0;
-            u32WriteData = g_au32DataArrary[u32DataIdx];
+            u32WriteData = s_au32DataArrary[u32DataIdx];
             printf("	All 0x%02X access ... ", (uint8_t)u32WriteData);
             while(u32Idx < u32EBIsize)
             {
@@ -334,7 +337,7 @@ void SRAM_BS616LV4017(uint32_t u32MaxSize)
             /* Write fixed data pattern                                                                                */
             /*---------------------------------------------------------------------------------------------------------*/
             u32Idx = 0;
-            u32WriteData = g_au32DataArrary[u32DataIdx];
+            u32WriteData = s_au32DataArrary[u32DataIdx];
             printf("	All 0x%04X access ... ", (uint16_t)u32WriteData);
             while(u32Idx < u32EBIsize)
             {
@@ -383,7 +386,7 @@ void SRAM_BS616LV4017(uint32_t u32MaxSize)
             /* Write fixed data pattern                                                                                */
             /*---------------------------------------------------------------------------------------------------------*/
             u32Idx = 0;
-            u32WriteData = g_au32DataArrary[u32DataIdx];
+            u32WriteData = s_au32DataArrary[u32DataIdx];
             printf("	All 0x%08X access ... ", (uint32_t)u32WriteData);
             while(u32Idx < u32EBIsize)
             {

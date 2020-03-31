@@ -14,6 +14,9 @@
 
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
+void SYS_Init(void);
+void UART0_Init(void);
+
 void SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/

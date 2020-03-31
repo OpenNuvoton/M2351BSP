@@ -119,6 +119,9 @@ typedef struct uac_dev_t {
 
 /*@}*/ /* end of group USBH_EXPORTED_STRUCTURES */
 
+extern volatile int8_t   g_i8MicIsMono;
+extern volatile uint32_t g_u32UacRecCnt;       /* Counter of UAC record data             */
+extern volatile uint32_t g_u32UacPlayCnt;      /* Counter UAC playback data              */
 
 /// @cond HIDDEN_SYMBOLS
 

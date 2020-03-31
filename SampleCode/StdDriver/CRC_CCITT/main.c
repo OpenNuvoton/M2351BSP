@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void SYS_Init(void);
+void UART_Init(void);
+
 
 void SYS_Init(void)
 {
@@ -66,7 +69,7 @@ void UART_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    const uint8_t au8CRCSrcPattern[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38};
+    const __attribute__((aligned(4))) uint8_t au8CRCSrcPattern[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38};
     uint32_t i, u32TargetChecksum = 0xA12B, u32CalChecksum = 0;
     uint16_t *pu16SrcAddr;
 
@@ -100,7 +103,7 @@ int main(void)
     CRC_Open(CRC_CCITT, 0, 0xFFFF, CRC_CPU_WDATA_16);
 
     /* Convert 16-bit source data */
-    pu16SrcAddr = (uint16_t *)au8CRCSrcPattern;
+    pu16SrcAddr = (uint16_t *)(uint32_t)au8CRCSrcPattern;
 
     /* Start to execute CRC-CCITT operation */
     for(i = 0; i < (sizeof(au8CRCSrcPattern) / 2); i++)

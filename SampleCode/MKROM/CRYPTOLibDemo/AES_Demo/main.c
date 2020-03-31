@@ -10,23 +10,23 @@
 #include "NuMicro.h"
 
 
-uint32_t g_au32MyAESKey[8] =
+static uint32_t s_au32MyAESKey[8] =
 {
     0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f,
     0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f
 };
 
-uint32_t g_au32MyAESIV[4] =
+static uint32_t s_au32MyAESIV[4] =
 {
     0x00000000, 0x00000000, 0x00000000, 0x00000000
 };
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t g_au8InputData[] =
+uint8_t s_au8InputData[] =
 {
 #else
-__attribute__((aligned(4))) uint8_t g_au8InputData[] =
+static __attribute__((aligned(4))) uint8_t s_au8InputData[] =
 {
 #endif
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
@@ -35,18 +35,23 @@ __attribute__((aligned(4))) uint8_t g_au8InputData[] =
 
 #ifdef __ICCARM__
 #pragma data_alignment=4
-uint8_t g_au8OutputData[1024];
+uint8_t s_au8OutputData[1024];
 #else
-__attribute__((aligned(4))) uint8_t g_au8OutputData[1024];
+static __attribute__((aligned(4))) uint8_t s_au8OutputData[1024];
 #endif
 
-volatile uint32_t g_u32IsAES_done = 0;
+static volatile uint32_t s_u32IsAES_done = 0;
+
+void CRPT_IRQHandler(void);
+void dump_buff_hex(uint8_t *pucBuff, int32_t i32Bytes);
+void SYS_Init(void);
+void UART_Init(void);
 
 void CRPT_IRQHandler()
 {
     if(AES_GET_INT_FLAG(CRPT))
     {
-        g_u32IsAES_done = 1;
+        s_u32IsAES_done = 1;
         AES_CLR_INT_FLAG(CRPT);
     }
 }
@@ -151,31 +156,31 @@ int main(void)
      *  AES-128 ECB mode encrypt
      *---------------------------------------*/
     XAES_Open(XCRPT, 0, 1, AES_MODE_ECB, AES_KEY_SIZE_128, AES_IN_OUT_SWAP);
-    XAES_SetKey(XCRPT, 0, g_au32MyAESKey, AES_KEY_SIZE_128);
-    XAES_SetInitVect(XCRPT, 0, g_au32MyAESIV);
-    XAES_SetDMATransfer(XCRPT, 0, (uint32_t)g_au8InputData, (uint32_t)g_au8OutputData, sizeof(g_au8InputData));
+    XAES_SetKey(XCRPT, 0, s_au32MyAESKey, AES_KEY_SIZE_128);
+    XAES_SetInitVect(XCRPT, 0, s_au32MyAESIV);
+    XAES_SetDMATransfer(XCRPT, 0, (uint32_t)s_au8InputData, (uint32_t)s_au8OutputData, sizeof(s_au8InputData));
 
-    g_u32IsAES_done = 0;
+    s_u32IsAES_done = 0;
     XAES_Start(XCRPT, 0, CRYPTO_DMA_ONE_SHOT);
-    while(g_u32IsAES_done == 0) {}
+    while(s_u32IsAES_done == 0) {}
 
     printf("AES encrypt done.\n\n");
-    dump_buff_hex(g_au8OutputData, sizeof(g_au8InputData));
+    dump_buff_hex(s_au8OutputData, sizeof(s_au8InputData));
 
     /*---------------------------------------
      *  AES-128 ECB mode decrypt
      *---------------------------------------*/
     XAES_Open(XCRPT, 0, 0, AES_MODE_ECB, AES_KEY_SIZE_128, AES_IN_OUT_SWAP);
-    XAES_SetKey(XCRPT, 0, g_au32MyAESKey, AES_KEY_SIZE_128);
-    XAES_SetInitVect(XCRPT, 0, g_au32MyAESIV);
-    XAES_SetDMATransfer(XCRPT, 0, (uint32_t)g_au8OutputData, (uint32_t)g_au8InputData, sizeof(g_au8InputData));
+    XAES_SetKey(XCRPT, 0, s_au32MyAESKey, AES_KEY_SIZE_128);
+    XAES_SetInitVect(XCRPT, 0, s_au32MyAESIV);
+    XAES_SetDMATransfer(XCRPT, 0, (uint32_t)s_au8OutputData, (uint32_t)s_au8InputData, sizeof(s_au8InputData));
 
-    g_u32IsAES_done = 0;
+    s_u32IsAES_done = 0;
     XAES_Start(XCRPT, 0, CRYPTO_DMA_ONE_SHOT);
-    while(g_u32IsAES_done == 0) {}
+    while(s_u32IsAES_done == 0) {}
 
     printf("AES decrypt done.\n\n");
-    dump_buff_hex(g_au8InputData, sizeof(g_au8InputData));
+    dump_buff_hex(s_au8InputData, sizeof(s_au8InputData));
 
     while(1) {}
 }

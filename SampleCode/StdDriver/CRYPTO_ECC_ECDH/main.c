@@ -81,6 +81,10 @@
 #define ECC_KEY_SIZE    571
 #endif
 
+void CRPT_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+void GenPrivateKey(BL_RNG_T *rng, char *d, uint32_t u32NBits);
 
 void CRPT_IRQHandler()
 {
@@ -137,22 +141,23 @@ void DEBUG_PORT_Init()
 }
 
 
-void GenPrivateKey(BL_RNG_T *rng, char *d, int32_t nbits)
+void GenPrivateKey(BL_RNG_T *rng, char *d, uint32_t u32NBits)
 {
     uint8_t u8r[(ECC_KEY_SIZE + 7) / 8];
     int32_t i, j;
+    uint32_t u32Idx;
 
     do
     {
         /* Generate random number for private key */
-        BL_Random(rng, u8r, (nbits + 7) / 8);
+        BL_Random(rng, u8r, (u32NBits + 7) / 8);
 
-        for(i = 0, j = 0; i < (nbits + 7) / 8; i++)
+        for(u32Idx = 0, j = 0; u32Idx < (u32NBits + 7) / 8; u32Idx++)
         {
-            d[j++] = B2C(u8r[i] & 0xf);
-            d[j++] = B2C(u8r[i] >> 4);
+            d[j++] = B2C(u8r[u32Idx] & 0xf);
+            d[j++] = B2C(u8r[u32Idx] >> 4);
         }
-        d[(nbits + 3) / 4] = 0;
+        d[(u32NBits + 3) / 4] = 0;
 
         /* Check if the private key valid */
         if(ECC_IsPrivateKeyValid(CRPT, ECC_CURVE_TYPE, d))
@@ -162,13 +167,13 @@ void GenPrivateKey(BL_RNG_T *rng, char *d, int32_t nbits)
         else
         {
             /* Decrease 1 bit and try again */
-            d[(nbits + 2) / 4] = 0;
+            d[(u32NBits + 2) / 4] = 0;
             if(ECC_IsPrivateKeyValid(CRPT, ECC_CURVE_TYPE, d))
             {
-                if(((nbits & 0x3) != 0) && (((nbits - 1) & 0x3) == 0))
+                if(((u32NBits & 0x3) != 0) && (((u32NBits - 1) & 0x3) == 0))
                 {
                     /* Need padding 1 nibble back */
-                    j = (nbits + 2) / 4;
+                    j = (u32NBits + 2) / 4;
                     for(i = j; i > 0; i--)
                         d[i] = d[i - 1];
                     d[i + 1] = 0;
@@ -187,14 +192,14 @@ void GenPrivateKey(BL_RNG_T *rng, char *d, int32_t nbits)
 
 }
 
-char d[168];                          /* private key */
-char d2[168];                         /* private key */
-char Qx[168], Qy[168];                /* temporary buffer used to keep output public keys */
-char Qx2[168], Qy2[168];              /* temporary buffer used to keep output public keys */
-char k[168];                          /* random integer k form [1, n-1]                */
-char k2[168];                         /* random integer k form [1, n-1]                */
-char msg[] = "78E5B4BFFDFB6798EFF1E5A761E8C60FF64B9CED835910E3D266BD01A2E24CC0";
-char R[168], S[168];                  /* temporary buffer used to keep digital signature (R,S) pair */
+static char d[168];                          /* private key */
+static char d2[168];                         /* private key */
+static char Qx[168], Qy[168];                /* temporary buffer used to keep output public keys */
+static char Qx2[168], Qy2[168];              /* temporary buffer used to keep output public keys */
+static char k[168];                          /* random integer k form [1, n-1]                */
+static char k2[168];                         /* random integer k form [1, n-1]                */
+//static char msg[] = "78E5B4BFFDFB6798EFF1E5A761E8C60FF64B9CED835910E3D266BD01A2E24CC0";
+//static char R[168], S[168];                  /* temporary buffer used to keep digital signature (R,S) pair */
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
@@ -202,7 +207,7 @@ char R[168], S[168];                  /* temporary buffer used to keep digital s
 int32_t main(void)
 {
     BL_RNG_T rng;
-    int32_t i32Time;
+    uint32_t u32Time;
 
     /* Lock protected registers */
     SYS_UnlockReg();
@@ -237,11 +242,11 @@ int32_t main(void)
         printf("ECC key generation failed!!\n");
         while(1);
     }
-    i32Time = 0xffffff - SysTick->VAL;
+    u32Time = 0xffffff - SysTick->VAL;
 
     printf("Pub Key    Ax = %s\n", Qx);
     printf("Pub Key    Ay = %s\n", Qy);
-    printf("Elapsed time: %d.%d ms\n", i32Time / CyclesPerUs / 1000, i32Time / CyclesPerUs % 1000);
+    printf("Elapsed time: %d.%d ms\n", u32Time / CyclesPerUs / 1000, u32Time / CyclesPerUs % 1000);
 
 
 /*------------------------------------------------------------------------*/
@@ -257,11 +262,11 @@ int32_t main(void)
         printf("ECC key generation failed!!\n");
         while(1);
     }
-    i32Time = 0xffffff - SysTick->VAL;
+    u32Time = 0xffffff - SysTick->VAL;
 
     printf("Pub Key     Bx = %s\n", Qx2);
     printf("Pub Key     By = %s\n", Qy2);
-    printf("Elapsed time: %d.%d ms\n", i32Time / CyclesPerUs / 1000, i32Time / CyclesPerUs % 1000);
+    printf("Elapsed time: %d.%d ms\n", u32Time / CyclesPerUs / 1000, u32Time / CyclesPerUs % 1000);
 
     /* Calcualte Share Key by private key A and publick key B */
     if(ECC_GenerateSecretZ(CRPT, ECC_CURVE_TYPE, d, Qx2, Qy2, k) < 0)

@@ -12,6 +12,8 @@
 
 #define PLL_CLOCK       64000000
 
+void SYS_Init(void);
+
 void SYS_Init(void)
 {
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */
@@ -61,7 +63,7 @@ void SYS_Init(void)
 
 int32_t main(void)
 {
-    int         ret;                   /* return value */
+    uint32_t    u32Ret;                   /* return value */
     uint32_t    u32Data;
 
     /* Unlock protected registers */
@@ -104,8 +106,8 @@ int32_t main(void)
     FMC_Erase(FMC_LDROM_BASE);         /* Erase LDROM page 0. */
 
     /* Run and check flash contents are all 0xFFFFFFFF. */
-    ret = FMC_CheckAllOne(FMC_LDROM_BASE, FMC_FLASH_PAGE_SIZE);
-    if(ret == READ_ALLONE_YES)                   /* return value READ_ALLONE_YES means all flash contents are 0xFFFFFFFF */
+    u32Ret = FMC_CheckAllOne(FMC_LDROM_BASE, FMC_FLASH_PAGE_SIZE);
+    if(u32Ret == READ_ALLONE_YES)                   /* return value READ_ALLONE_YES means all flash contents are 0xFFFFFFFF */
         printf("READ_ALLONE_YES success.\n");    /* FMC_CheckAllOne() READ_ALLONE_YES passed on LDROM page 0. */
     else
         printf("READ_ALLONE_YES failed!\n");     /* FMC_CheckAllOne() READ_ALLONE_YES failed on LDROM page 0. */
@@ -113,8 +115,8 @@ int32_t main(void)
     FMC_Write(FMC_LDROM_BASE, 0);      /* program a 0 to LDROM to make it not all 0xFFFFFFFF. */
 
     /* Run and check flash contents are not all 0xFFFFFFFF. */
-    ret = FMC_CheckAllOne(FMC_LDROM_BASE, FMC_FLASH_PAGE_SIZE);
-    if(ret == READ_ALLONE_NOT)
+    u32Ret = FMC_CheckAllOne(FMC_LDROM_BASE, FMC_FLASH_PAGE_SIZE);
+    if(u32Ret == READ_ALLONE_NOT)
         printf("READ_ALLONE_NOT success.\n");   /* FMC_CheckAllOne() READ_ALLONE_NOT passed on LDROM page 0. */
     else
         printf("READ_ALLONE_NOT failed!\n");    /* FMC_CheckAllOne() READ_ALLONE_NOT failed on LDROM page 0. */

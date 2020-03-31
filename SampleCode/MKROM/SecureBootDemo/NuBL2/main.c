@@ -16,15 +16,18 @@
 
 
 extern const uint32_t g_InitialFWinfo[]; // A global variable to store NuBL2 FWINFO address, declared in FwInfo.c
-volatile FW_INFO_T  g_NuBL3xFwInfo = {0}; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
+static volatile FW_INFO_T  s_NuBL3xFwInfo; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
 
+void EnableXOM0(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Check Booting status and show F/W info data                                                            */
 /*---------------------------------------------------------------------------------------------------------*/
 static int32_t CheckBootingStatus(void)
 {
-    int32_t     i;
+    uint32_t     i;
     uint32_t    u32CFG0, au32OTP[8];
     uint32_t    *pu32Info, u32Size;
         
@@ -92,7 +95,7 @@ static int32_t CheckBootingStatus(void)
     
     
     /* Show NuBL2 F/W info data */
-    pu32Info = (uint32_t *)g_InitialFWinfo;
+    pu32Info = (uint32_t *)(uint32_t)g_InitialFWinfo;
     u32Size = sizeof(FW_INFO_T);
     
     printf("NuBL2 F/W info in 0x%08x.\nData are:\n", (uint32_t)pu32Info);
@@ -112,8 +115,9 @@ static int32_t CheckBootingStatus(void)
 void EnableXOM0(void)
 {
     int32_t i32Status;
-    uint32_t u32Base = 0x10000, u32Page = 4;
-    
+    uint32_t u32Base = 0x10000;
+    uint8_t u8Page = 4;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -123,11 +127,11 @@ void EnableXOM0(void)
     
     if((FMC->XOMSTS & 0x1) != 0x1)
     {
-        printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u32Page);
-        
+        printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u8Page);
+
         if(FMC_GetXOMState(XOMR0) == 0)
         {
-            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u32Page);
+            i32Status = FMC_ConfigXOM(XOMR0, u32Base, u8Page);
             if(i32Status == 0)
             {
                 printf("Configure XOM0 Success.\n");
@@ -149,7 +153,7 @@ void EnableXOM0(void)
 
         /* Reset chip to enable XOM region. */
         SYS_ResetChip();
-        while(1) {};
+        while(1) {}
     }
     else
     {
@@ -230,28 +234,29 @@ int main(void)
     /* Show booting status */
     CheckBootingStatus();
     
-#if (ENABLE_XOM0_REGION == 1)
+#if (ENABLE_XOM0_REGION == 1)
+
     /* Enable XOM0, and all the functions in VerifyNuBL3x.c cannot trace in ICE debug mode  */
     EnableXOM0();
 #endif    
     
     /* Verify NuBL32 identity and F/W integrity */
-    memcpy((void *)&g_NuBL3xFwInfo, (void *)NUBL32_FW_INFO_BASE, sizeof(FW_INFO_T));
-    if(VerifyNuBL3x((uint32_t *)&g_NuBL3xFwInfo, NUBL32_FW_INFO_BASE) == -1)
+    memcpy((void *)(uint32_t)&s_NuBL3xFwInfo, (void *)NUBL32_FW_INFO_BASE, sizeof(FW_INFO_T));
+    if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL32_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL32 FAIL.\n");
         while(1) {}
     }
     else
     {
-        u32NuBL32Base = g_NuBL3xFwInfo.mData.au32FwRegion[0].u32Start;
+        u32NuBL32Base = s_NuBL3xFwInfo.mData.au32FwRegion[0].u32Start;
         printf("\nNuBL2 identify NuBL32 public key and verify NuBL32 F/W integrity PASS.\n");
     }
     
     
     /* Verify NuBL33 identity and F/W integrity */
-    memcpy((void *)&g_NuBL3xFwInfo, (void *)NUBL33_FW_INFO_BASE, sizeof(FW_INFO_T));
-    if(VerifyNuBL3x((uint32_t *)&g_NuBL3xFwInfo, NUBL33_FW_INFO_BASE) == -1)
+    memcpy((void *)(uint32_t)&s_NuBL3xFwInfo, (void *)NUBL33_FW_INFO_BASE, sizeof(FW_INFO_T));
+    if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL33_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL33 FAIL.\n");
         while(1) {}

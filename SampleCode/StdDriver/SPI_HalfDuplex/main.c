@@ -13,8 +13,8 @@
 
 #define TEST_COUNT  4
 
-uint32_t g_au32DestinationData[TEST_COUNT];
-volatile uint32_t g_u32RxDataCount;
+static uint32_t s_au32DestinationData[TEST_COUNT];
+static volatile uint32_t s_u32RxDataCount;
 
 /* Function prototype declaration */
 void SYS_Init(void);
@@ -153,21 +153,21 @@ int main(void)
     SPI0->CTL &= ~SPI_CTL_DATDIR_Msk;
 
     /* Master SPI0 receive four data from slave SPI1 */
-    for(g_u32RxDataCount = 0; g_u32RxDataCount < 4; g_u32RxDataCount++)
+    for(s_u32RxDataCount = 0; s_u32RxDataCount < 4; s_u32RxDataCount++)
     {
         /* Master write TX for generating clock */
         SPI_WRITE_TX(SPI0, 0);
         /* Wait for Rx FIFO not empty */
         while(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI0)) {}
         /* Read data from RX register */
-        g_au32DestinationData[g_u32RxDataCount] = SPI_READ_RX(SPI0);
+        s_au32DestinationData[s_u32RxDataCount] = SPI_READ_RX(SPI0);
     }
 
     /* Print the received data */
     printf("SPI0 Received data:\n");
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
-        printf("%d:\t0x%X\n", u32DataCount, g_au32DestinationData[u32DataCount]);
+        printf("%d:\t0x%X\n", u32DataCount, s_au32DestinationData[u32DataCount]);
     }
 
     /* Reset slave RX related flags. */
@@ -184,19 +184,19 @@ int main(void)
     SPI_WRITE_TX(SPI0, 0xAA550003);
 
     /* Slave SPI1 receive four data from master SPI0 */
-    for(g_u32RxDataCount = 0; g_u32RxDataCount < 4; g_u32RxDataCount++)
+    for(s_u32RxDataCount = 0; s_u32RxDataCount < 4; s_u32RxDataCount++)
     {
         /* Wait for Rx FIFO not empty */
         while(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI1)) {}
         /* Read data from RX register */
-        g_au32DestinationData[g_u32RxDataCount] = SPI_READ_RX(SPI1);
+        s_au32DestinationData[s_u32RxDataCount] = SPI_READ_RX(SPI1);
     }
 
     /* Print the received data */
     printf("SPI1 Received data:\n");
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
-        printf("%d:\t0x%X\n", u32DataCount, g_au32DestinationData[u32DataCount]);
+        printf("%d:\t0x%X\n", u32DataCount, s_au32DestinationData[u32DataCount]);
     }
 
     printf("The data transfer was done.\n");

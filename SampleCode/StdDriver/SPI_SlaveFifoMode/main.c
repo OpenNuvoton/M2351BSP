@@ -14,10 +14,15 @@
 
 #define InterruptMode /* Undefine it when using polling mode */
 
-uint32_t g_au32SourceData[TEST_COUNT];
-uint32_t g_au32DestinationData[TEST_COUNT];
-volatile uint32_t g_u32TxDataCount;
-volatile uint32_t g_u32RxDataCount;
+static uint32_t s_au32SourceData[TEST_COUNT];
+static uint32_t s_au32DestinationData[TEST_COUNT];
+static volatile uint32_t s_u32TxDataCount;
+static volatile uint32_t s_u32RxDataCount;
+
+void SYS_Init(void);
+void SPI_Init(void);
+void SPI0_IRQHandler(void);
+
 
 void SYS_Init(void)
 {
@@ -90,21 +95,21 @@ void SPI_Init(void)
 
 void SPI0_IRQHandler(void)
 {
-    while(g_u32RxDataCount < TEST_COUNT)
+    while(s_u32RxDataCount < TEST_COUNT)
     {
         /* Check RX EMPTY flag */
         while(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI0) == 0)
         {
             /* Read RX FIFO */
-            g_au32DestinationData[g_u32RxDataCount++] = SPI_READ_RX(SPI0);
+            s_au32DestinationData[s_u32RxDataCount++] = SPI_READ_RX(SPI0);
         }
         /* Check TX FULL flag and TX data count */
-        while((SPI_GET_TX_FIFO_FULL_FLAG(SPI0) == 0) && (g_u32TxDataCount < TEST_COUNT))
+        while((SPI_GET_TX_FIFO_FULL_FLAG(SPI0) == 0) && (s_u32TxDataCount < TEST_COUNT))
         {
             /* Write to TX FIFO */
-            SPI_WRITE_TX(SPI0, g_au32SourceData[g_u32TxDataCount++]);
+            SPI_WRITE_TX(SPI0, s_au32SourceData[s_u32TxDataCount++]);
         }
-        if(g_u32TxDataCount >= TEST_COUNT)
+        if(s_u32TxDataCount >= TEST_COUNT)
             SPI_DisableInt(SPI0, SPI_FIFO_TXTH_INT_MASK); /* Disable TX FIFO threshold interrupt */
 
         /* Check the RX FIFO time-out interrupt flag */
@@ -112,7 +117,7 @@ void SPI0_IRQHandler(void)
         {
             /* If RX FIFO is not empty, read RX FIFO. */
             while(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI0) == 0)
-                g_au32DestinationData[g_u32RxDataCount++] = SPI_READ_RX(SPI0);
+                s_au32DestinationData[s_u32RxDataCount++] = SPI_READ_RX(SPI0);
         }
     }
 }
@@ -153,13 +158,13 @@ int main(void)
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
         /* Write the initial value to source buffer */
-        g_au32SourceData[u32DataCount] = 0x00AA0000 + u32DataCount;
+        s_au32SourceData[u32DataCount] = 0x00AA0000 + u32DataCount;
         /* Clear destination buffer */
-        g_au32DestinationData[u32DataCount] = 0;
+        s_au32DestinationData[u32DataCount] = 0;
     }
 
-    g_u32TxDataCount = 0;
-    g_u32RxDataCount = 0;
+    s_u32TxDataCount = 0;
+    s_u32RxDataCount = 0;
     printf("Press any key if the master device configuration is ready.\n");
     getchar();
     printf("\n");
@@ -172,14 +177,14 @@ int main(void)
     NVIC_EnableIRQ(SPI0_IRQn);
 #else
     /* Access TX and RX FIFO */
-    while(g_u32RxDataCount < TEST_COUNT)
+    while(s_u32RxDataCount < TEST_COUNT)
     {
         /* Check TX FULL flag and TX data count */
-        if((SPI_GET_TX_FIFO_FULL_FLAG(SPI0) == 0) && (g_u32TxDataCount < TEST_COUNT))
-            SPI_WRITE_TX(SPI0, g_au32SourceData[g_u32TxDataCount++]); /* Write to TX FIFO */
+        if((SPI_GET_TX_FIFO_FULL_FLAG(SPI0) == 0) && (s_u32TxDataCount < TEST_COUNT))
+            SPI_WRITE_TX(SPI0, s_au32SourceData[s_u32TxDataCount++]); /* Write to TX FIFO */
         /* Check RX EMPTY flag */
         if(SPI_GET_RX_FIFO_EMPTY_FLAG(SPI0) == 0)
-            g_au32DestinationData[g_u32RxDataCount++] = SPI_READ_RX(SPI0); /* Read RX FIFO */
+            s_au32DestinationData[s_u32RxDataCount++] = SPI_READ_RX(SPI0); /* Read RX FIFO */
     }
 #endif
 
@@ -187,7 +192,7 @@ int main(void)
     printf("Received data:\n");
     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
-        printf("%d:\t0x%X\n", u32DataCount, g_au32DestinationData[u32DataCount]);
+        printf("%d:\t0x%X\n", u32DataCount, s_au32DestinationData[u32DataCount]);
     }
 #ifdef InterruptMode
     /* Disable TX FIFO threshold interrupt and RX FIFO time-out interrupt */

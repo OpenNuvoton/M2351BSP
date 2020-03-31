@@ -13,8 +13,19 @@
 
 #define SPI_FLASH_PORT  SPI0
 
-uint8_t g_au8SrcArray[TEST_LENGTH];
-uint8_t g_au8DestArray[TEST_LENGTH];
+static uint8_t s_au8SrcArray[TEST_LENGTH];
+static uint8_t s_au8DestArray[TEST_LENGTH];
+
+uint16_t SpiFlash_ReadMidDid(void);
+void SpiFlash_ChipErase(void);
+uint8_t SpiFlash_ReadStatusReg(void);
+void SpiFlash_WriteStatusReg(uint8_t u8Value);
+void SpiFlash_WaitReady(void);
+void SpiFlash_NormalPageProgram(uint32_t u32StartAddress, uint8_t *u8DataBuffer);
+void SpiFlash_NormalRead(uint32_t u32StartAddress, uint8_t *u8DataBuffer);
+void SYS_Init(void);
+	
+
 
 uint16_t SpiFlash_ReadMidDid(void)
 {
@@ -42,9 +53,9 @@ uint16_t SpiFlash_ReadMidDid(void)
     SPI_SET_SS_HIGH(SPI_FLASH_PORT);
 
     while(!SPI_GET_RX_FIFO_EMPTY_FLAG(SPI_FLASH_PORT))
-        u8RxData[u8IDCnt ++] = SPI_READ_RX(SPI_FLASH_PORT);
+        u8RxData[u8IDCnt ++] = (uint8_t)SPI_READ_RX(SPI_FLASH_PORT);
 
-    return ((u8RxData[4] << 8) | u8RxData[5]);
+    return (uint16_t)((u8RxData[4] << 8) | u8RxData[5]);
 }
 
 void SpiFlash_ChipErase(void)
@@ -216,7 +227,7 @@ void SpiFlash_NormalRead(uint32_t u32StartAddress, uint8_t *u8DataBuffer)
     {
         SPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
         while(SPI_IS_BUSY(SPI_FLASH_PORT));
-        u8DataBuffer[u32Cnt] = SPI_READ_RX(SPI_FLASH_PORT);
+        u8DataBuffer[u32Cnt] = (uint8_t)SPI_READ_RX(SPI_FLASH_PORT);
     }
 
     // wait tx finish
@@ -332,7 +343,7 @@ int main(void)
     /* init source data buffer */
     for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
     {
-        g_au8SrcArray[u32ByteCount] = u32ByteCount;
+        s_au8SrcArray[u32ByteCount] = (uint8_t)u32ByteCount;
     }
 
     printf("Start to normal write data to Flash ...");
@@ -341,7 +352,7 @@ int main(void)
     for(u32PageNumber = 0; u32PageNumber < TEST_NUMBER; u32PageNumber++)
     {
         /* page program */
-        SpiFlash_NormalPageProgram(u32FlashAddress, g_au8SrcArray);
+        SpiFlash_NormalPageProgram(u32FlashAddress, s_au8SrcArray);
         SpiFlash_WaitReady();
         u32FlashAddress += 0x100;
     }
@@ -351,7 +362,7 @@ int main(void)
     /* clear destination data buffer */
     for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
     {
-        g_au8DestArray[u32ByteCount] = 0;
+        s_au8DestArray[u32ByteCount] = 0;
     }
 
     printf("Normal Read & Compare ...");
@@ -361,12 +372,12 @@ int main(void)
     for(u32PageNumber = 0; u32PageNumber < TEST_NUMBER; u32PageNumber++)
     {
         /* page read */
-        SpiFlash_NormalRead(u32FlashAddress, g_au8DestArray);
+        SpiFlash_NormalRead(u32FlashAddress, s_au8DestArray);
         u32FlashAddress += 0x100;
 
         for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
         {
-            if(g_au8DestArray[u32ByteCount] != g_au8SrcArray[u32ByteCount])
+            if(s_au8DestArray[u32ByteCount] != s_au8SrcArray[u32ByteCount])
                 u32Error ++;
         }
     }

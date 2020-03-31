@@ -21,6 +21,10 @@
 #define TRANSMIT_MODE           (1)
 
 
+void ProcessHardFault(void);
+void SH_Return(void);
+void SYS_Init(void);
+
 void ProcessHardFault(void){}
 void SH_Return(void){}
 
@@ -112,7 +116,7 @@ int32_t main(void)
         if ((g_u8bufhead >= 4) || (g_u8bUartDataReady == TRUE))
         {
             uint32_t u32lcmd;
-            u32lcmd = inpw(g_au8uart_rcvbuf);
+            u32lcmd = inpw((uint32_t)g_au8uart_rcvbuf);
 
             if (u32lcmd == CMD_CONNECT)
             {

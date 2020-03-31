@@ -258,6 +258,7 @@ void AES_SetDMATransfer(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32SrcAddr,
 void TDES_Open(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32EncDec, int32_t Is3DES, int32_t Is3Key,
                uint32_t u32OpMode, uint32_t u32SwapType)
 {
+    (void)crpt;
     g_TDES_CTL[u32Channel] = (u32Channel << CRPT_TDES_CTL_CHANNEL_Pos) |
                              (u32EncDec << CRPT_TDES_CTL_ENCRPT_Pos) |
                              u32OpMode | (u32SwapType << CRPT_TDES_CTL_BLKSWAP_Pos);
@@ -793,7 +794,7 @@ static void dump_ecc_reg(char *str, uint32_t volatile regs[], int32_t count)
     printf("\n");
 }
 #else
-static void dump_ecc_reg(char *str, uint32_t volatile regs[], int32_t count) { }
+static void dump_ecc_reg(char *str, uint32_t volatile regs[], int32_t count) { (void)str; (void)regs; (void)count; }
 #endif
 static char  ch2hex(char ch)
 {
@@ -983,7 +984,7 @@ int ECC_IsPrivateKeyValid(CRPT_T *crpt, E_ECC_CURVE ecc_curve,  char private_k[]
 {
     uint32_t  i;
 
-
+    (void)crpt;
     pCurve = get_curve(ecc_curve);
     if(pCurve == NULL)
     {

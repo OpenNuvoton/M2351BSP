@@ -12,12 +12,16 @@
 
 #define KEY_LENGTH          192          /* Select ECC P-192 curve, 192-bits key length */
 
-char d[]  = "e5ce89a34adddf25ff3bf1ffe6803f57d0220de3118798ea";    /* private key */
-char Qx[] = "8abf7b3ceb2b02438af19543d3e5b1d573fa9ac60085840f";    /* expected answer: public key 1 */
-char Qy[] = "a87f80182dcd56a6a061f81f7da393e7cffd5e0738c6b245";    /* expected answer: public key 2 */
+static char d[]  = "e5ce89a34adddf25ff3bf1ffe6803f57d0220de3118798ea";    /* private key */
+static char Qx[] = "8abf7b3ceb2b02438af19543d3e5b1d573fa9ac60085840f";    /* expected answer: public key 1 */
+static char Qy[] = "a87f80182dcd56a6a061f81f7da393e7cffd5e0738c6b245";    /* expected answer: public key 2 */
 
-char gKey1[168], gKey2[168];             /* temporary buffer used to keep output public keys */
+static char gKey1[168], gKey2[168];             /* temporary buffer used to keep output public keys */
 
+
+void CRPT_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
 
 void CRPT_IRQHandler()
 {

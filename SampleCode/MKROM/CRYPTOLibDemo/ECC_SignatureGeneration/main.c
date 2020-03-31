@@ -12,12 +12,15 @@
 
 #define ECC_CURVE_TYPE      CURVE_P_256
 
-char sha_msg[] = "7DDD1A452CE194D7F4C1CD2C41A58C9513CCE48111461384EC9C2B6E57B837FB";    /* 256-bits message                              */
-char d[] = "380a67fcfc01ca7073da7c2c54296a61327f77262a7d4674c3d8e29a63e3fa20";          /* private key                                   */
-char k[] = "CFC0580649DB90342B4EF83E334D554CB030281FAF64DA32BBB0D8C9CBFE2F70";          /* random integer k form [1, n-1]                */
-char R[] = "742fda512ad62f9a900f686fa01013c2661ccb42ee6c95b6a998de6a1be6a777";          /* Expected answer: R of (R,S) digital signature */
-char S[] = "88221bc22161e6f45f08bf9dabc3c307da278935eedf9273722d75eea07e2028";          /* Expected answer: S of (R,S) digital signature */
-char sig_R[68], sig_S[68];          /* temporary buffer used to keep digital signature (R,S) pair */
+static char sha_msg[] = "7DDD1A452CE194D7F4C1CD2C41A58C9513CCE48111461384EC9C2B6E57B837FB";    /* 256-bits message                              */
+static char d[] = "380a67fcfc01ca7073da7c2c54296a61327f77262a7d4674c3d8e29a63e3fa20";          /* private key                                   */
+static char k[] = "CFC0580649DB90342B4EF83E334D554CB030281FAF64DA32BBB0D8C9CBFE2F70";          /* random integer k form [1, n-1]                */
+static char R[] = "742fda512ad62f9a900f686fa01013c2661ccb42ee6c95b6a998de6a1be6a777";          /* Expected answer: R of (R,S) digital signature */
+static char S[] = "88221bc22161e6f45f08bf9dabc3c307da278935eedf9273722d75eea07e2028";          /* Expected answer: S of (R,S) digital signature */
+static char sig_R[68], sig_S[68];          /* temporary buffer used to keep digital signature (R,S) pair */
+
+void SYS_Init(void);
+void UART_Init(void);
 
 void SYS_Init(void)
 {

@@ -17,6 +17,11 @@
 #define APROM_TEST_END              0x4000
 #define TEST_PATTERN                0x5A5A5A5A
 
+void SYS_Init(void);
+int32_t FillDataPattern(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Pattern);
+int32_t  VerifyData(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Pattern);
+int32_t  FlashTest(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Pattern);
+
 void SYS_Init(void)
 {
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */
@@ -141,7 +146,8 @@ int32_t  FlashTest(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Patte
 
 int32_t main(void)
 {
-    uint32_t i, u32Data;
+    uint8_t i;
+    uint32_t u32Data;
 
     /* Unlock protected registers */
     SYS_UnlockReg();

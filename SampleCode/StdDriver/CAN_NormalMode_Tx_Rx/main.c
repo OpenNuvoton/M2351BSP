@@ -10,12 +10,32 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+#define POLLING_MODE_EN 1
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-STR_CANMSG_T rrMsg;
+static STR_CANMSG_T rrMsg;
 
 void CAN_ShowMsg(STR_CANMSG_T* Msg);
+void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR);
+void CAN0_IRQHandler(void);
+void CAN1_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+void CAN_Init(CAN_T  *tCAN);
+void CAN_STOP(CAN_T  *tCAN);
+void Note_Configure(void);
+void Test_NormalMode_Tx(CAN_T *tCAN);
+void Test_NormalMode_SetRxMsg(CAN_T *tCAN);
+    /*Choose one mode to test*/
+#if POLLING_MODE_EN
+    /* Polling Mode */
+void Test_NormalMode_WaitRxMsg(CAN_T *tCAN)__attribute__((noreturn));
+#else
+    /* INT Mode */
+void Test_NormalMode_WaitRxMsg(CAN_T *tCAN);
+#endif
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                            */
@@ -92,7 +112,7 @@ void CAN0_IRQHandler(void)
 
         CAN_MsgInterrupt(CAN0, u8IIDRstatus);
 
-        CAN_CLR_INT_PENDING_BIT(CAN0, ((CAN0->IIDR) - 1));     /* Clear Interrupt Pending */
+        CAN_CLR_INT_PENDING_BIT(CAN0, (uint8_t)((CAN0->IIDR) - 1));     /* Clear Interrupt Pending */
 
     }
     else if(CAN0->WU_STATUS == 1)
@@ -153,7 +173,7 @@ void CAN1_IRQHandler(void)
 
         CAN_MsgInterrupt(CAN0, u8IIDRstatus);
 
-        CAN_CLR_INT_PENDING_BIT(CAN0, (u8IIDRstatus - 1));     /* Clear Interrupt Pending */
+        CAN_CLR_INT_PENDING_BIT(CAN0, (uint8_t)(u8IIDRstatus - 1));     /* Clear Interrupt Pending */
 
     }
     else if(CAN0->WU_STATUS == 1)
@@ -392,7 +412,7 @@ void Test_NormalMode_SetRxMsg(CAN_T *tCAN)
 void Test_NormalMode_WaitRxMsg(CAN_T *tCAN)
 {
     /*Choose one mode to test*/
-#if 1
+#if POLLING_MODE_EN
     /* Polling Mode */
     while(1)
     {
@@ -403,8 +423,8 @@ void Test_NormalMode_WaitRxMsg(CAN_T *tCAN)
 #else
     /* INT Mode */
     CAN_EnableInt(tCAN, CAN_CON_IE_Msk);
-    NVIC_SetPriority(CAN1_IRQn, (1 << __NVIC_PRIO_BITS) - 2);
-    NVIC_EnableIRQ(CAN1_IRQn);
+    NVIC_SetPriority(CAN0_IRQn, (1 << __NVIC_PRIO_BITS) - 2);
+    NVIC_EnableIRQ(CAN0_IRQn);
 
     printf("Enter any key to exit\n");
     getchar();
@@ -441,7 +461,11 @@ int main()
 
     Test_NormalMode_WaitRxMsg(CAN0);
 
+    /*Choose one mode to test*/
+#if !(POLLING_MODE_EN)
+    /* INT Mode */
     while(1) ;
+#endif
 
 }
 

@@ -1,5 +1,5 @@
 /**************************************************************************//**
- * @file     NuBL32_main.c
+ * @file     NuBL33_main.c
  * @version  V1.00
  * @brief    Demonstrate NuBL33. (Non-secure code)
  *
@@ -13,7 +13,7 @@
 
 /* Non-secure Callable function of NuBL32 */
 extern void ShowCountersInNuBL32(uint32_t *in);
-extern void BL32_OTA_Start();
+extern void BL32_OTA_Start(void);
 extern void WdtResetCnt(void);
 extern int32_t BL32_GetBL33FwVer(uint32_t * pu32FwVer);
 
@@ -27,21 +27,29 @@ extern int32_t Secure_func(void);
  *----------------------------------------------------------------------------*/
 extern int32_t Secure_LED_On_callback(int32_t (*)(uint32_t));
 extern int32_t Secure_LED_Off_callback(int32_t (*)(uint32_t));
-extern int32_t Secure_LED_On(uint32_t num);
-extern int32_t Secure_LED_Off(uint32_t num);
+extern int32_t Secure_LED_On(uint32_t u32Num);
+extern int32_t Secure_LED_Off(uint32_t u32Num);
+
+int32_t NonSecure_LED_On(uint32_t u32Num);
+int32_t NonSecure_LED_Off(uint32_t u32Num);
+void LED_On(uint32_t u32Us);
+void LED_Off(uint32_t u32Us);
+void SysTick_Handler(void);
 
 /*----------------------------------------------------------------------------
   NonSecure functions used for callbacks
  *----------------------------------------------------------------------------*/
-int32_t NonSecure_LED_On(uint32_t num)
+int32_t NonSecure_LED_On(uint32_t u32Num)
 {
+    (void)u32Num;
     printf("Nonsecure LED On call by Secure\n");
     PC0 = 0;
     return 0;
 }
 
-int32_t NonSecure_LED_Off(uint32_t num)
+int32_t NonSecure_LED_Off(uint32_t u32Num)
 {
+    (void)u32Num;
     printf("Nonsecure LED Off call by Secure\n");
     PC0 = 1;
     return 0;
@@ -50,14 +58,16 @@ int32_t NonSecure_LED_Off(uint32_t num)
 /*----------------------------------------------------------------------------
   NonSecure LED control
  *----------------------------------------------------------------------------*/
-void LED_On(uint32_t us)
+void LED_On(uint32_t u32Us)
 {
+    (void)u32Us;
     printf("Nonsecure LED On\n");
     PC1 = 0;
 }
 
-void LED_Off(uint32_t us)
+void LED_Off(uint32_t u32Us)
 {
+    (void)u32Us;
     printf("Nonsecure LED Off\n");
     PC1 = 1;
 }
@@ -104,7 +114,6 @@ void SysTick_Handler(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    uint32_t temp;
     uint32_t    u32FwVer = 0;
 
     printf("\n");
@@ -112,8 +121,8 @@ int main(void)
     printf("|    M2351 NuBL33(Non-secure) Sample Code    |\n");
     printf("+--------------------------------------------+\n\n");
 {
-    extern const FW_INFO_T g_InitialFWinfo;
-    uint32_t cfg = g_InitialFWinfo.mData.u32AuthCFGs;
+    extern const FW_INFO_T g_FWinfoInitial;
+    uint32_t cfg = g_FWinfoInitial.mData.u32AuthCFGs;
     printf("\n[AuthCFG: 0x%08x]\n", cfg);
 }
     
@@ -134,7 +143,6 @@ int main(void)
     SysTick_Config(SystemCoreClock / 100);
 
     BL32_OTA_Start();
-//    ShowCountersInNuBL32(&temp);
 
     while(1) {}
 }

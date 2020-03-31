@@ -191,7 +191,7 @@ int8_t OTA_TaskProcess(void);
 /**
   * @brief      Get NuBL32 or NuBL33 F/W Version
   * @param[in]  * pu32FwVer F/W version write buffer  \n
-  * @param[in]  u8Mode      F/W version of NuBL32 or NuBL33. bit-0: 0: NuBL32; 1: NuBL33  \n
+  * @param[in]  i32Mode      F/W version of NuBL32 or NuBL33. bit-0: 0: NuBL32; 1: NuBL33  \n
   * @retval     0           Success
   * @retval     others      Failed
   * @details    This function is used to get F/W version of NuBL32 or NuBL33. \n
@@ -200,7 +200,7 @@ int8_t OTA_TaskProcess(void);
   *                 2. Get NuBL3x F/W version (enclosed in F/W info) \n
   */
 __NONSECURE_ENTRY
-int32_t OTA_GetBLxFwVer(uint32_t * pu32FwVer, uint8_t u8Mode);
+int32_t OTA_GetBLxFwVer(uint32_t * pu32FwVer, int32_t i32Mode);
 
 /**
   * @brief      Get flag of firmware upgrade done

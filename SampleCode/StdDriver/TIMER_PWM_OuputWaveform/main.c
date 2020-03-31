@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void SYS_Init(void);
+void UART_Init(void);
+	
 
 void SYS_Init(void)
 {

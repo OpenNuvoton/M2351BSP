@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include "NuMicro.h"
-
+#include "vector_parser.h"
 
 extern uint32_t g_u32VectorDataBase, g_u32VectorDataLimit;
 static uint8_t *g_pu8FileBase;
@@ -19,15 +19,24 @@ static char  g_pi8LineBuff[20 * 1024];
 
 #ifdef __ICCARM__
 #pragma data_alignment=32
-uint8_t g_au8ShaDataPool[8192] ;
+uint8_t s_au8ShaDataPool[8192] ;
 #else
-__attribute__((aligned(32))) uint8_t g_au8ShaDataPool[8192] ;
+static __attribute__((aligned(32))) uint8_t s_au8ShaDataPool[8192] ;
 #endif
 
 
 uint8_t *g_au8ShaData;
 uint8_t g_au8ShaDigest[64];
 int32_t g_i32DataLen;
+
+void OpenTestVector(void);
+int32_t GetLine(void);
+int32_t IsHexChar(char c);
+uint8_t  char_to_hex(uint8_t c);
+int32_t Str2Hex(uint8_t *str, uint8_t *hex, int swap);
+int32_t Str2Dec(uint8_t *str);
+int GetNextPattern(void);
+
 
 void OpenTestVector(void)
 {
@@ -46,8 +55,8 @@ static int32_t ReadFile(uint8_t *pu8Buff, int i32Len)
 {
     if(g_u32FileIdx + 1 >= g_u32FileSize)
         return -1;
-    memcpy(pu8Buff, &g_pu8FileBase[g_u32FileIdx], i32Len);
-    g_u32FileIdx += i32Len;
+    memcpy(pu8Buff, &g_pu8FileBase[g_u32FileIdx], (uint32_t)i32Len);
+    g_u32FileIdx += (uint32_t)i32Len;
     return 0;
 }
 
@@ -132,7 +141,7 @@ int32_t Str2Hex(uint8_t *str, uint8_t *hex, int swap)
             return count;
         }
 
-        val8 = (val8 << 4) | char_to_hex(*str);
+        val8 = (uint8_t)((val8 << 4) | char_to_hex(*str));
         str++;
 
         hex[count] = val8;
@@ -186,7 +195,7 @@ int GetNextPattern(void)
     int32_t line_num = 1;
     uint8_t *p;
 
-    g_au8ShaData = (uint8_t *)g_au8ShaDataPool;
+    g_au8ShaData = (uint8_t *)s_au8ShaDataPool;
 
     while(GetLine() == 0)
     {

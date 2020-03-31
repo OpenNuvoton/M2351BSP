@@ -17,19 +17,27 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_au8SlvData[256];
-volatile uint32_t slave_buff_addr;
-volatile uint8_t g_au8RxData[4];
-volatile uint16_t g_u16RecvAddr;
-volatile uint8_t g_u8DataLenS;
-volatile uint8_t g_u8SlvPWRDNWK = 0, g_u8SlvI2CWK = 0;
-volatile uint32_t g_u32WKfromAddr;
+static volatile uint8_t s_au8SlvData[256];
+static volatile uint32_t s_u32SlaveBuffAddr;
+static volatile uint8_t s_au8RxData[4];
+static volatile uint16_t s_u16RecvAddr;
+static volatile uint8_t s_u8DataLenS;
+static volatile uint8_t s_u8SlvPWRDNWK = 0, s_u8SlvI2CWK = 0;
+static volatile uint32_t s_u32WKfromAddr;
 
-enum UI2C_SLAVE_EVENT s_Event;
+static enum UI2C_SLAVE_EVENT s_eSlaveEvent;
 
 typedef void (*UI2C_FUNC)(uint32_t u32Status);
 
 static UI2C_FUNC s_UI2C0HandlerFn = NULL;
+
+void PWRWU_IRQHandler(void);
+void USCI0_IRQHandler(void);
+void UI2C_SLV_Toggle_Wakeup(uint32_t u32Status);
+void UI2C_SLV_Address_Wakeup(uint32_t u32Status);
+void SYS_Init(void);
+void UI2C0_Init(uint32_t u32ClkSpeed);
+void PowerDownFunction(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Power Wake-up IRQ Handler                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -40,7 +48,7 @@ void PWRWU_IRQHandler(void)
     {
         /* Clear system power down wake-up interrupt flag */
         CLK->PWRCTL |= CLK_PWRCTL_PDWKIF_Msk;
-        g_u8SlvPWRDNWK = 1;
+        s_u8SlvPWRDNWK = 1;
     }
 }
 
@@ -63,8 +71,8 @@ void UI2C_SLV_Toggle_Wakeup(uint32_t u32Status)
 {
     if((UI2C0->WKSTS & UI2C_WKSTS_WKF_Msk) == UI2C_WKSTS_WKF_Msk)
     {
-        g_u32WKfromAddr = 0;
-        g_u8SlvI2CWK = 1;
+        s_u32WKfromAddr = 0;
+        s_u8SlvI2CWK = 1;
 
         /* Clear WKF INT Flag */
         UI2C_CLR_WAKEUP_FLAG(UI2C0);
@@ -77,8 +85,8 @@ void UI2C_SLV_Toggle_Wakeup(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STARIF_Msk);
 
         /* Event process */
-        g_u8DataLenS = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8DataLenS = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
     else if((u32Status & UI2C_PROTSTS_ACKIF_Msk) == UI2C_PROTSTS_ACKIF_Msk)
@@ -87,37 +95,37 @@ void UI2C_SLV_Toggle_Wakeup(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_ACKIF_Msk);
 
         /* Event process */
-        if(s_Event == SLAVE_ADDRESS_ACK)
+        if(s_eSlaveEvent == SLAVE_ADDRESS_ACK)
         {
-            g_u8DataLenS = 0;
+            s_u8DataLenS = 0;
 
             if((UI2C0->PROTSTS & UI2C_PROTSTS_SLAREAD_Msk) == UI2C_PROTSTS_SLAREAD_Msk)
             {
                 /* Own SLA+R has been receive; ACK has been return */
-                s_Event = SLAVE_SEND_DATA;
-                UI2C_SET_DATA(UI2C0, g_au8SlvData[slave_buff_addr]);
-                slave_buff_addr++;
+                s_eSlaveEvent = SLAVE_SEND_DATA;
+                UI2C_SET_DATA(UI2C0, s_au8SlvData[s_u32SlaveBuffAddr]);
+                s_u32SlaveBuffAddr++;
             }
             else
             {
-                s_Event = SLAVE_GET_DATA;
+                s_eSlaveEvent = SLAVE_GET_DATA;
             }
-            g_u16RecvAddr = (uint8_t)UI2C_GET_DATA(UI2C0);
+            s_u16RecvAddr = (uint8_t)UI2C_GET_DATA(UI2C0);
         }
-        else if(s_Event == SLAVE_GET_DATA)
+        else if(s_eSlaveEvent == SLAVE_GET_DATA)
         {
-            g_au8RxData[g_u8DataLenS] = (uint8_t)UI2C_GET_DATA(UI2C0);
-            g_u8DataLenS++;
+            s_au8RxData[s_u8DataLenS] = (uint8_t)UI2C_GET_DATA(UI2C0);
+            s_u8DataLenS++;
 
-            if(g_u8DataLenS == 2)
+            if(s_u8DataLenS == 2)
             {
                 /* Address has been received; ACK has been returned*/
-                slave_buff_addr = (g_au8RxData[0] << 8) + g_au8RxData[1];
+                s_u32SlaveBuffAddr = (uint32_t)(s_au8RxData[0] << 8) + s_au8RxData[1];
             }
-            if(g_u8DataLenS == 3)
+            if(s_u8DataLenS == 3)
             {
-                g_au8SlvData[slave_buff_addr] = g_au8RxData[2];
-                g_u8DataLenS = 0;
+                s_au8SlvData[s_u32SlaveBuffAddr] = s_au8RxData[2];
+                s_u8DataLenS = 0;
             }
         }
 
@@ -129,8 +137,8 @@ void UI2C_SLV_Toggle_Wakeup(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_NACKIF_Msk);
 
         /* Event process */
-        g_u8DataLenS = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8DataLenS = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -139,8 +147,8 @@ void UI2C_SLV_Toggle_Wakeup(uint32_t u32Status)
         /* Clear STOP INT Flag */
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STORIF_Msk);
 
-        g_u8DataLenS = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8DataLenS = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -153,11 +161,11 @@ void UI2C_SLV_Address_Wakeup(uint32_t u32Status)
 {
     if((UI2C0->WKSTS & UI2C_WKSTS_WKF_Msk) == UI2C_WKSTS_WKF_Msk)
     {
-        g_u32WKfromAddr = 1;
-        g_u8SlvI2CWK = 1;
+        s_u32WKfromAddr = 1;
+        s_u8SlvI2CWK = 1;
 
         /* */
-        while((UI2C0->PROTSTS & UI2C_PROTSTS_WKAKDONE_Msk) == 0) {};
+        while((UI2C0->PROTSTS & UI2C_PROTSTS_WKAKDONE_Msk) == 0) {}
 
         /* Clear WK flag */
         UI2C_CLR_WAKEUP_FLAG(UI2C0);
@@ -172,8 +180,8 @@ void UI2C_SLV_Address_Wakeup(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STARIF_Msk);
 
         /* Event process */
-        g_u8DataLenS = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8DataLenS = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -183,37 +191,37 @@ void UI2C_SLV_Address_Wakeup(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_ACKIF_Msk);
 
         /* Event process */
-        if(s_Event == SLAVE_ADDRESS_ACK)
+        if(s_eSlaveEvent == SLAVE_ADDRESS_ACK)
         {
-            g_u8DataLenS = 0;
+            s_u8DataLenS = 0;
 
             if((UI2C0->PROTSTS & UI2C_PROTSTS_SLAREAD_Msk) == UI2C_PROTSTS_SLAREAD_Msk)
             {
                 /* Own SLA+R has been receive; ACK has been return */
-                s_Event = SLAVE_SEND_DATA;
-                UI2C_SET_DATA(UI2C0, g_au8SlvData[slave_buff_addr]);
-                slave_buff_addr++;
+                s_eSlaveEvent = SLAVE_SEND_DATA;
+                UI2C_SET_DATA(UI2C0, s_au8SlvData[s_u32SlaveBuffAddr]);
+                s_u32SlaveBuffAddr++;
             }
             else
             {
-                s_Event = SLAVE_GET_DATA;
+                s_eSlaveEvent = SLAVE_GET_DATA;
             }
-            g_u16RecvAddr = (uint8_t)UI2C_GET_DATA(UI2C0);
+            s_u16RecvAddr = (uint8_t)UI2C_GET_DATA(UI2C0);
         }
-        else if(s_Event == SLAVE_GET_DATA)
+        else if(s_eSlaveEvent == SLAVE_GET_DATA)
         {
-            g_au8RxData[g_u8DataLenS] = (uint8_t)UI2C_GET_DATA(UI2C0);
-            g_u8DataLenS++;
+            s_au8RxData[s_u8DataLenS] = (uint8_t)UI2C_GET_DATA(UI2C0);
+            s_u8DataLenS++;
 
-            if(g_u8DataLenS == 2)
+            if(s_u8DataLenS == 2)
             {
                 /* Address has been received; ACK has been returned*/
-                slave_buff_addr = (g_au8RxData[0] << 8) + g_au8RxData[1];
+                s_u32SlaveBuffAddr = (uint32_t)(s_au8RxData[0] << 8) + s_au8RxData[1];
             }
-            if(g_u8DataLenS == 3)
+            if(s_u8DataLenS == 3)
             {
-                g_au8SlvData[slave_buff_addr] = g_au8RxData[2];
-                g_u8DataLenS = 0;
+                s_au8SlvData[s_u32SlaveBuffAddr] = s_au8RxData[2];
+                s_u8DataLenS = 0;
             }
         }
 
@@ -225,8 +233,8 @@ void UI2C_SLV_Address_Wakeup(uint32_t u32Status)
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_NACKIF_Msk);
 
         /* Event process */
-        g_u8DataLenS = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8DataLenS = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -235,8 +243,8 @@ void UI2C_SLV_Address_Wakeup(uint32_t u32Status)
         /* Clear STOP INT Flag */
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_STORIF_Msk);
 
-        g_u8DataLenS = 0;
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_u8DataLenS = 0;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_AA));
     }
@@ -375,7 +383,7 @@ int main(void)
     printf("[T] I/O Toggle Wake-up Mode\n");
     printf("[A] Address Match Wake-up Mode\n");
     printf("Select: ");
-    u8Ch =  getchar();
+    u8Ch =  (uint8_t)getchar();
 
     if((u8Ch == 'T') || (u8Ch == 't'))
     {
@@ -383,7 +391,7 @@ int main(void)
 
         /* Enable UI2C0 toggle mode wake-up */
         UI2C_EnableWakeup(UI2C0, UI2C_DATA_TOGGLE_WK);
-        s_Event = SLAVE_ADDRESS_ACK;
+        s_eSlaveEvent = SLAVE_ADDRESS_ACK;
 
         /* I2C function to Slave receive/transmit data */
         s_UI2C0HandlerFn = UI2C_SLV_Toggle_Wakeup;
@@ -396,7 +404,7 @@ int main(void)
         /* Enable UI2C0 address match mode wake-up */
         UI2C_EnableWakeup(UI2C0, UI2C_ADDR_MATCH_WK);
 
-        s_Event = SLAVE_GET_DATA;
+        s_eSlaveEvent = SLAVE_GET_DATA;
 
         /* UI2C0 function to Slave receive/transmit data */
         s_UI2C0HandlerFn = UI2C_SLV_Address_Wakeup;
@@ -410,7 +418,7 @@ int main(void)
 
     for(u32i = 0; u32i < 0x100; u32i++)
     {
-        g_au8SlvData[u32i] = 0;
+        s_au8SlvData[u32i] = 0;
     }
 
     /* Enable power wake-up interrupt */
@@ -428,10 +436,10 @@ int main(void)
     /* Enter to Power-down mode */
     PowerDownFunction();
 
-    while(g_u8SlvPWRDNWK == 0);
-    while(g_u8SlvI2CWK == 0);
+    while(s_u8SlvPWRDNWK == 0);
+    while(s_u8SlvI2CWK == 0);
 
-    if(g_u32WKfromAddr)
+    if(s_u32WKfromAddr)
         printf("UI2C0 [A]ddress match Wake-up from Deep Sleep\n");
     else
         printf("UI2C0 [T]oggle Wake-up from Deep Sleep\n");

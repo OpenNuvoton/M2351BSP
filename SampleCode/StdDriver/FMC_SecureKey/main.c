@@ -16,8 +16,11 @@
 #define KPMAX_VAL      3               /* KPMAX setting on setup security key (1~15) */
 #define KEMAX_VAL      7               /* KEMAX setting on setup security key (1~31) */
 
-uint32_t  good_key[3] = { 0xe29c0f71, 0x8af051ce, 0xae1f8392 };      /* Assumed correct key in this demo program. */
-uint32_t  bad_key[3] =  { 0x73422111, 0xac45663a, 0xf46ac321 };      /* Assumed wrong key in this demo program. */
+static uint32_t  s_au32GoodKey[3] = { 0xe29c0f71, 0x8af051ce, 0xae1f8392 };      /* Assumed correct key in this demo program. */
+static uint32_t  s_au32BadKey[3] =  { 0x73422111, 0xac45663a, 0xf46ac321 };      /* Assumed wrong key in this demo program. */
+
+void SYS_Init(void);
+void dump_key_status(void);
 
 void SYS_Init(void)
 {
@@ -118,7 +121,7 @@ int32_t main(void)
     FMC_Open();                        /* Enable FMC ISP function */
 
     /* Setup a new key */
-    if(FMC_SetSPKey(good_key, KPMAX_VAL, KEMAX_VAL, 0, 0) < 0)
+    if(FMC_SetSPKey(s_au32GoodKey, KPMAX_VAL, KEMAX_VAL, 0, 0) < 0)
     {
         printf("Failed to setup key!\n");   /* error message */
         while(1);                      /* Failed to setup security key. Program aborted. */
@@ -127,15 +130,15 @@ int32_t main(void)
     printf("The security key status after key setup:\n");
     dump_key_status();                 /* Dump FMC security key status. */
 
-    FMC_CompareSPKey(bad_key);         /* Enter a wrong key for key comparison. */
+    FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
     printf("The security key status after enter a wrong key:\n");
     dump_key_status();                 /* Dump FMC security key status. */
 
-    FMC_CompareSPKey(bad_key);         /* Enter a wrong key for key comparison. */
+    FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
     printf("The security key status after enter a wrong key second time:\n");
     dump_key_status();                 /* Dump FMC security key status. */
 
-    FMC_CompareSPKey(good_key);        /* Enter the right key for key comparison. */
+    FMC_CompareSPKey(s_au32GoodKey);        /* Enter the right key for key comparison. */
     printf("The security key status after enter a good key.\n");
     dump_key_status();                 /* Dump FMC security key status. */
 

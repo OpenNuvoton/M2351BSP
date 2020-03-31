@@ -42,3 +42,4 @@ void GetDataFlashInfo(uint32_t *addr, uint32_t *size);
 #endif
 
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+

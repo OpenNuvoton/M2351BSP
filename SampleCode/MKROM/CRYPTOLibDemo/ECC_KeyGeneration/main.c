@@ -13,10 +13,13 @@
 #define ECC_CURVE_TYPE      CURVE_P_256
 #define ECC_KEY_SIZE        256     /* Select ECC P-256 curve, 256-bits key length */
 
-char d[]  = "380a67fcfc01ca7073da7c2c54296a61327f77262a7d4674c3d8e29a63e3fa20"; /* private key */
-char Qx[] = "755b3819f05a3e9f32d4d599062834aac5220f75955378414a8f63716a152ce2"; /* expected answer: public key 1 */
-char Qy[] = "91c413f1915ed7b47473fd797647ba3d83e8224377909af5b30c530eaad79fd7"; /* expected answer: public key 2 */
-char key1[68], key2[68];                /* temporary buffer used to keep output public keys */
+static char d[]  = "380a67fcfc01ca7073da7c2c54296a61327f77262a7d4674c3d8e29a63e3fa20"; /* private key */
+static char Qx[] = "755b3819f05a3e9f32d4d599062834aac5220f75955378414a8f63716a152ce2"; /* expected answer: public key 1 */
+static char Qy[] = "91c413f1915ed7b47473fd797647ba3d83e8224377909af5b30c530eaad79fd7"; /* expected answer: public key 2 */
+static char key1[68], key2[68];                /* temporary buffer used to keep output public keys */
+
+void SYS_Init(void);
+void UART_Init(void);
 
 void SYS_Init(void)
 {

@@ -16,11 +16,13 @@
 extern uint32_t g_apromSize;
 #define APROM_BLOCK_NUM         ((g_apromSize/TRANSFER_SIZE)-1)
 
-uint32_t command_Count = 0;
+static uint32_t s_u32CommandCount = 0;
 
-uint8_t manifest_state = MANIFEST_COMPLETE;
-dfu_status_struct dfu_status;
-s_prog_struct prog_struct __attribute__((aligned(4))) = {{0}, 0, 0, APP_LOADED_ADDR};
+static uint8_t s_u8ManifestState = MANIFEST_COMPLETE;
+static dfu_status_struct dfu_status;
+static s_prog_struct prog_struct __attribute__((aligned(4))) = {{0}, 0, 0, APP_LOADED_ADDR};
+
+void USBD_IRQHandler(void);
 
 void USBD_IRQHandler(void)
 {
@@ -158,8 +160,8 @@ void DFU_ClassRequest(void)
     uint32_t wValue, wLength;
     USBD_GetSetupPacket(buf);
 
-    wValue  = buf[3] << 8 | buf[2];
-    wLength = buf[7] << 8 | buf[6];
+    wValue  = (uint32_t)(buf[3] << 8 | buf[2]);
+    wLength = (uint32_t)(buf[7] << 8 | buf[6]);
 
     if(buf[0] & 0x80)    /* request data transfer direction */
     {
@@ -169,36 +171,36 @@ void DFU_ClassRequest(void)
             {
                 if(dfu_status.bState == STATE_dfuDNLOAD_SYNC)
                 {
-                    command_Count++;
-                    if(command_Count == 5)
+                    s_u32CommandCount++;
+                    if(s_u32CommandCount == 5)
                     {
                         dfu_status.bState = STATE_dfuDNLOAD_IDLE;
 
-                        WriteData(prog_struct.block_num * TRANSFER_SIZE, (prog_struct.block_num * TRANSFER_SIZE) + prog_struct.data_len, (uint32_t *)prog_struct.buf);
+                        WriteData(prog_struct.block_num * TRANSFER_SIZE, (prog_struct.block_num * TRANSFER_SIZE) + prog_struct.data_len, (uint32_t *)(uint32_t)prog_struct.buf);
 //                         if(WriteData( prog_struct.block_num*TRANSFER_SIZE, (prog_struct.block_num*TRANSFER_SIZE)+prog_struct.data_len, prog_struct.buf) !=0)
 //                            dfu_status.bStatus = STATUS_errWRITE;
 
-                        command_Count = 0;
+                        s_u32CommandCount = 0;
                     }
                 }
 
                 if(dfu_status.bState == STATE_dfuDNLOAD_IDLE)
                 {
-                    command_Count++;
-                    if(command_Count == 5)
+                    s_u32CommandCount++;
+                    if(s_u32CommandCount == 5)
                     {
                         dfu_status.bState = STATE_dfuMANIFEST_SYNC;
-                        command_Count = 0;
+                        s_u32CommandCount = 0;
                     }
                 }
 
                 if(dfu_status.bState == STATE_dfuMANIFEST_SYNC)
                 {
-                    command_Count++;
-                    if(command_Count == 5)
+                    s_u32CommandCount++;
+                    if(s_u32CommandCount == 5)
                     {
                         dfu_status.bState = STATE_dfuIDLE;
-                        command_Count = 0;
+                        s_u32CommandCount = 0;
                     }
                 }
 
@@ -238,7 +240,7 @@ void DFU_ClassRequest(void)
                             break;
                         }
 
-                        ReadData(wValue * TRANSFER_SIZE, (wValue * TRANSFER_SIZE) + wLength, (uint32_t *)prog_struct.buf);
+                        ReadData(wValue * TRANSFER_SIZE, (wValue * TRANSFER_SIZE) + wLength, (uint32_t *)(uint32_t)prog_struct.buf);
                         USBD_PrepareCtrlIn((uint8_t *)prog_struct.buf, wLength);
                     }
 
@@ -292,14 +294,14 @@ void DFU_ClassRequest(void)
                         if(wLength > 0)
                         {
                             /* update the global length and block number */
-                            prog_struct.block_num = wValue;
-                            prog_struct.data_len = wLength;
+                            prog_struct.block_num = (uint16_t)wValue;
+                            prog_struct.data_len = (uint16_t)wLength;
                             dfu_status.bState = STATE_dfuDNLOAD_SYNC;
 
                         }
                         else
                         {
-                            manifest_state = MANIFEST_IN_PROGRESS;
+                            s_u8ManifestState = MANIFEST_IN_PROGRESS;
                             dfu_status.bState = STATE_dfuMANIFEST_SYNC;
 
                         }

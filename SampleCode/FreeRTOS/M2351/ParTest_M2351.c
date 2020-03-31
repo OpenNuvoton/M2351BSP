@@ -150,6 +150,7 @@ void vParTestInitialise( void )
 
 void vParTestSetLED( unsigned long ulLED, signed portBASE_TYPE xValue )
 {
+    (void)ulLED;
     if( xValue == pdTRUE )
     {
         /* Turn the LED on. */			
@@ -165,6 +166,7 @@ void vParTestSetLED( unsigned long ulLED, signed portBASE_TYPE xValue )
 
 void vParTestToggleLED( unsigned long ulLED )
 {
+    (void)ulLED;
     PA11 ^= 1;
 }
 /*-----------------------------------------------------------*/

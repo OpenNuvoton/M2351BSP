@@ -114,6 +114,8 @@ typedef struct __attribute__((__packed__)) {
 /* 4 can support up to 32 port hubs                */
 /* Note!! If modeifed to 4, "uint16_t sc_bitmap"   */
 /*        MUST be changed as "uint32_t sc_bitmap"  */
+#pragma pack(push)
+#pragma pack(1)
 typedef struct hub_dev_t {
     IFACE_T    *iface;                 /*!< Interface device of this hub          \hideinitializer */
     UTR_T      *utr;                   /*!< Interrupt in UTR of this hub          \hideinitializer */
@@ -125,7 +127,7 @@ typedef struct hub_dev_t {
     int        (*port_reset)(struct hub_dev_t *hub, int port);/*!< Port reset function                   \hideinitializer */
     UDEV_T     *children;              /*!< Child device list.                    \hideinitializer */
 } HUB_DEV_T;
-
+#pragma pack(pop)
 
 /// @endcond
 

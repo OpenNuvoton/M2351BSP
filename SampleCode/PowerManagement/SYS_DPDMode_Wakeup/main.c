@@ -11,7 +11,16 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-
+void PowerDownFunction(void);
+void WakeUpPinFunction(uint32_t u32PDMode, uint32_t u32EdgeType);
+void WakeUpTimerFunction(uint32_t u32PDMode, uint32_t u32Interval);
+void WakeUpRTCTickFunction(uint32_t u32PDMode);
+void WakeUpRTCAlarmFunction(uint32_t u32PDMode);
+void WakeUpRTCTamperFunction(uint32_t u32PDMode);
+void CheckPowerSource(void);
+void GpioPinSetting(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Function for System Entry to Power Down Mode                                                           */
@@ -43,9 +52,6 @@ void WakeUpPinFunction(uint32_t u32PDMode, uint32_t u32EdgeType)
 
     /* Enter to Power-down mode */
     PowerDownFunction();
-
-    /* Wait for Power-down mode wake-up reset happen */
-    while(1);
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -67,9 +73,6 @@ void WakeUpTimerFunction(uint32_t u32PDMode, uint32_t u32Interval)
 
     /* Enter to Power-down mode */
     PowerDownFunction();
-
-    /* Wait for Power-down mode wake-up reset happen */
-    while(1);
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -112,9 +115,6 @@ void WakeUpRTCTickFunction(uint32_t u32PDMode)
 
     /* Enter to Power-down mode */
     PowerDownFunction();
-
-    /* Wait for Power-down mode wake-up reset happen */
-    while(1);
 }
 
 
@@ -180,9 +180,6 @@ void  WakeUpRTCAlarmFunction(uint32_t u32PDMode)
 
     /* Enter to Power-down mode */
     PowerDownFunction();
-
-    /* Wait for Power-down mode wake-up reset happen */
-    while(1);
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -229,9 +226,6 @@ void  WakeUpRTCTamperFunction(uint32_t u32PDMode)
 
     /* Enter to Power-down mode */
     PowerDownFunction();
-
-    /* Wait for Power-down mode wake-up reset happen */
-    while(1);
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -367,7 +361,7 @@ void UART0_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint8_t u8Item;
+    int32_t i32Item;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -413,9 +407,9 @@ int32_t main(void)
     printf("|[5] DPD Wake-up by RTC Tamper0(PF.6).                           |\n");
     printf("|    Tamper pin detect voltage level is low.                     |\n");
     printf("+----------------------------------------------------------------+\n");
-    u8Item = getchar();
+    i32Item = getchar();
 
-    switch(u8Item)
+    switch(i32Item)
     {
         case '1':
             WakeUpPinFunction(CLK_PMUCTL_PDMSEL_DPD, CLK_DPDWKPIN_RISING);

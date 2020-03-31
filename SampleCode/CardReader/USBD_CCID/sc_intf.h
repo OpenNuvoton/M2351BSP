@@ -57,6 +57,7 @@ uint8_t Intf_GetSlotStatus(int32_t intf);
 uint8_t Intf_GetClockStatus(int32_t intf);
 uint8_t Intf_AbortTxRx(int32_t intf);
 
+extern uint8_t s_u8ChainParameter;
 
 #ifdef  __cplusplus
 }

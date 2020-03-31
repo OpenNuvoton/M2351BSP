@@ -16,13 +16,17 @@
 #define SIGNATURE       0x125ab234
 #define FLAG_ADDR       0x20001FFC
 
-
+int32_t pi(void);
+void Delay(uint32_t x);
+void SYS_PLL_Test(void);
+void SYS_Init(void);
+void UART0_Init(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Simple calculation test function                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 #define PI_NUM  256
-int32_t g_ai32f[PI_NUM + 1];
-uint32_t g_au32piTbl[19] =
+static int32_t s_ai32f[PI_NUM + 1];
+static uint32_t s_au32piTbl[19] =
 {
     3141,
     5926,
@@ -45,7 +49,7 @@ uint32_t g_au32piTbl[19] =
     6284
 };
 
-int32_t g_ai32piResult[19];
+static int32_t s_ai32piResult[19];
 
 int32_t pi(void)
 {
@@ -53,20 +57,20 @@ int32_t pi(void)
     int32_t a = 10000, b = 0, c = PI_NUM, d = 0, e = 0, g = 0;
 
     for(; b - c;)
-        g_ai32f[b++] = a / 5;
+        s_ai32f[b++] = a / 5;
 
     i = 0;
-    for(; d = 0, g = c * 2; c -= 14, g_ai32piResult[i++] = e + d / a, e = d % a)
+    for(; (void)(d = 0), g = c * 2; c -= 14, s_ai32piResult[i++] = e + d / a, e = d % a)
     {
         if(i == 19)
             break;
 
-        for(b = c; d += g_ai32f[b] * a, g_ai32f[b] = d % --g, d /= g--, --b; d *= b);
+        for(b = c; (void)(d += s_ai32f[b] * a), (void)(s_ai32f[b] = d % --g),(void)(d /= g--), --b; d *= b);
     }
     i32Err = 0;
     for(i = 0; i < 19; i++)
     {
-        if(g_au32piTbl[i] != g_ai32piResult[i])
+        if(s_au32piTbl[i] != (uint32_t)s_ai32piResult[i])
             i32Err = -1;
     }
 
@@ -75,7 +79,7 @@ int32_t pi(void)
 
 void Delay(uint32_t x)
 {
-    int32_t i;
+    uint32_t i;
 
     for(i = 0; i < x; i++)
     {
@@ -84,7 +88,7 @@ void Delay(uint32_t x)
     }
 }
 
-uint32_t g_au32PllSetting[] =
+static uint32_t s_au32PllSetting[] =
 {
     24000000,   /* PLL = 24MHz */
     32000000,   /* PLL = 32MHz */
@@ -97,7 +101,7 @@ uint32_t g_au32PllSetting[] =
 
 void SYS_PLL_Test(void)
 {
-    int32_t  u32Idx;
+    uint32_t  u32Idx;
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* PLL clock configuration test                                                                            */
@@ -105,10 +109,10 @@ void SYS_PLL_Test(void)
 
     printf("\n-------------------------[ Test PLL ]-----------------------------\n");
 
-    for(u32Idx = 0; u32Idx < sizeof(g_au32PllSetting) / sizeof(g_au32PllSetting[0]) ; u32Idx++)
+    for(u32Idx = 0; u32Idx < sizeof(s_au32PllSetting) / sizeof(s_au32PllSetting[0]) ; u32Idx++)
     {
         /* Select HCLK clock source from PLL */
-        CLK_SetCoreClock(g_au32PllSetting[u32Idx]);
+        CLK_SetCoreClock(s_au32PllSetting[u32Idx]);
 
         printf("  Change system clock to %d Hz ...................... ", SystemCoreClock);
 

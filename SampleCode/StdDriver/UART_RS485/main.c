@@ -20,10 +20,10 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-uint8_t g_u8SendDataGroup1[10] = {0};
-uint8_t g_u8SendDataGroup2[10] = {0};
-uint8_t g_u8SendDataGroup3[10] = {0};
-uint8_t g_u8SendDataGroup4[10] = {0};
+static uint8_t s_au8SendDataGroup1[10] = {0};
+static uint8_t s_au8SendDataGroup2[10] = {0};
+static uint8_t s_au8SendDataGroup3[10] = {0};
+static uint8_t s_au8SendDataGroup4[10] = {0};
 
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -36,7 +36,11 @@ void RS485_SendDataByte(uint8_t *pu8TxBuf, uint32_t u32WriteBytes);
 void RS485_9bitModeMaster(void);
 void RS485_FunctionTest(void);
 void RS485_HANDLE(void);
-
+void UART1_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void UART1_Init(void);
+void RS485_9bitModeSlave(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle UART Channel 1 interrupt event                                                            */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -51,7 +55,7 @@ void UART1_IRQHandler(void)
 void RS485_HANDLE(void)
 {
     volatile uint32_t u32Addr = 0;
-    volatile uint32_t u32IntSts = UART1->INTSTS;;
+    volatile uint32_t u32IntSts = UART1->INTSTS;
 
     if((u32IntSts & UART_INTSTS_RLSINT_Msk) && (u32IntSts & UART_INTSTS_RDAINT_Msk))    /* RLS INT & RDA INT */
     {
@@ -188,7 +192,7 @@ void RS485_SendDataByte(uint8_t *pu8TxBuf, uint32_t u32WriteBytes)
 /*---------------------------------------------------------------------------------------------------------*/
 void RS485_9bitModeMaster()
 {
-    int32_t i32;
+    uint8_t i;
 
     printf("\n");
     printf("+-----------------------------------------------------------+\n");
@@ -210,30 +214,30 @@ void RS485_9bitModeMaster()
     UART1->MODEM = (UART1->MODEM & (~UART_MODEM_RTSACTLV_Msk)) | UART_RTS_IS_HIGH_LEV_ACTIVE;
 
     /* Prepare Data to transmit */
-    for(i32 = 0; i32 < 10; i32++)
+    for(i = 0; i < 10; i++)
     {
-        g_u8SendDataGroup1[i32] = i32;
-        g_u8SendDataGroup2[i32] = i32 + 10;
-        g_u8SendDataGroup3[i32] = i32 + 20;
-        g_u8SendDataGroup4[i32] = i32 + 30;
+        s_au8SendDataGroup1[i] = i;
+        s_au8SendDataGroup2[i] = i + 10;
+        s_au8SendDataGroup3[i] = i + 20;
+        s_au8SendDataGroup4[i] = i + 30;
     }
 
     /* Send different address and data for test */
     printf("Send Address %x and data 0~9\n", MATCH_ADDRSS1);
     RS485_SendAddressByte(MATCH_ADDRSS1);
-    RS485_SendDataByte(g_u8SendDataGroup1, 10);
+    RS485_SendDataByte(s_au8SendDataGroup1, 10);
 
     printf("Send Address %x and data 10~19\n", UNMATCH_ADDRSS1);
     RS485_SendAddressByte(UNMATCH_ADDRSS1);
-    RS485_SendDataByte(g_u8SendDataGroup2, 10);
+    RS485_SendDataByte(s_au8SendDataGroup2, 10);
 
     printf("Send Address %x and data 20~29\n", MATCH_ADDRSS2);
     RS485_SendAddressByte(MATCH_ADDRSS2);
-    RS485_SendDataByte(g_u8SendDataGroup3, 10);
+    RS485_SendDataByte(s_au8SendDataGroup3, 10);
 
     printf("Send Address %x and data 30~39\n", UNMATCH_ADDRSS2);
     RS485_SendAddressByte(UNMATCH_ADDRSS2);
-    RS485_SendDataByte(g_u8SendDataGroup4, 10);
+    RS485_SendDataByte(s_au8SendDataGroup4, 10);
 
     printf("Transfer Done\n");
 }
@@ -243,7 +247,7 @@ void RS485_9bitModeMaster()
 /*---------------------------------------------------------------------------------------------------------*/
 void RS485_FunctionTest()
 {
-    uint32_t u32Item;
+    int32_t i32Item;
 
     printf("\n");
     printf("+-----------------------------------------------------------+\n");
@@ -261,7 +265,7 @@ void RS485_FunctionTest()
     printf("|  Please select Master or Slave test                       |\n");
     printf("|  [0] Master    [1] Slave                                  |\n");
     printf("+-----------------------------------------------------------+\n\n");
-    u32Item = getchar();
+    i32Item = getchar();
 
     /*
         The sample code is used to test RS485 9-bit mode and needs
@@ -289,7 +293,7 @@ void RS485_FunctionTest()
               If the ADDRESS is not match, set RXOFF bit to avoid data byte stored in FIFO.
     */
 
-    if(u32Item == '0')
+    if(i32Item == '0')
         RS485_9bitModeMaster();
     else
         RS485_9bitModeSlave();

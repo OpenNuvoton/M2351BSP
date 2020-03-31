@@ -13,6 +13,8 @@ extern "C"
 {
 #endif
 
+extern volatile uint32_t gNuBL2_32Key[8], gNuBL2_33Key[8];
+extern const uint32_t g_InitialFWinfo[];
 
 /* Function declaration */
 int32_t NuBL2_Init(void);

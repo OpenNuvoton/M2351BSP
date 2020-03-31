@@ -47,6 +47,11 @@
 #define USE_MY_HARDFAULT    1   /* Select to use default hard fault handler or not. 0: Default  1: User define */
 
 
+void SYS_Init(void);
+void UART0_Init(void);
+void ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)__attribute__((noreturn));
+void TMR1_IRQHandler(void);
+
 void SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/
@@ -115,6 +120,7 @@ void UART0_Init()
   */
 void ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
 {
+    (void)psp;
     uint32_t exception_num;
     uint32_t r0, r1, r2, r3, r12, pc, psr;
     uint32_t *stack;
@@ -207,7 +213,7 @@ void TMR1_IRQHandler(void)
 int32_t main(void)
 {
     void (*func)(void) = (void (*)(void))0x1000;
-    char ch;
+    int32_t i32Ch;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -228,9 +234,9 @@ int32_t main(void)
         printf("| [1] Test Thumb/ARM mode Hard Fault                 |\n");
         printf("| [2] Test Hard Fault in ISR                         |\n");
         printf("+----------------------------------------------------+\n");
-        ch = getchar();
+        i32Ch = getchar();
 
-        switch(ch)
+        switch(i32Ch)
         {
             case '0':
                 /* Write APROM will cause hard fault exception. (Memory access hard fault) */

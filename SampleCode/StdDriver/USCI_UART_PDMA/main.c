@@ -18,20 +18,30 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-int32_t g_i32UuartTestLength = 64;
-uint8_t g_au8SrcArray[64];
-uint8_t g_au8DestArray[64];
-volatile int32_t g_i32IntCnt;
-volatile int32_t g_i32IsTestOver;
-volatile uint32_t g_u32TwoChannelPdmaTest = 0;
+static uint32_t s_u32UuartTestLength = 64;
+static uint8_t s_au8SrcArray[64];
+static uint8_t s_au8DestArray[64];
+static volatile int32_t s_i32IntCnt;
+static volatile int32_t s_i32IsTestOver;
+static volatile uint32_t s_u32TwoChannelPdmaTest = 0;
 
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
-extern char GetChar(void);
-
+void ClearBuf(uint32_t u32Addr, uint32_t u32Length, uint8_t u8Pattern);
+void BuildSrcPattern(uint32_t u32Addr, uint32_t u32Length);
+void PDMA_UUART_TxTest(void);
+void PDMA_UUART_RxTest(void);
+void PDMA_Callback_0(void);
+void PDMA_Callback_1(void);
+void PDMA0_IRQHandler(void);
+void UART0_IRQHandler(void);
+void PDMA_UART(int32_t i32option);
+void SYS_Init(void);
+void UART0_Init(void);
+void USCI0_Init(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /* Clear buffer function                                                                                    */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -82,10 +92,10 @@ void PDMA_UUART_TxTest(void)
 {
     /* UUART Tx PDMA channel configuration */
     /* Set transfer width (8 bits) and transfer count */
-    PDMA_SetTransferCnt(PDMA0, UUART_TX_DMA_CH, PDMA_WIDTH_8, g_i32UuartTestLength);
+    PDMA_SetTransferCnt(PDMA0, UUART_TX_DMA_CH, PDMA_WIDTH_8, s_u32UuartTestLength);
 
     /* Set source/destination address and attributes */
-    PDMA_SetTransferAddr(PDMA0, UUART_TX_DMA_CH, (uint32_t)g_au8SrcArray, PDMA_SAR_INC, (uint32_t)&UUART0->TXDAT, PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, UUART_TX_DMA_CH, (uint32_t)s_au8SrcArray, PDMA_SAR_INC, (uint32_t)&UUART0->TXDAT, PDMA_DAR_FIX);
 
     /* Set request source; set basic mode. */
     PDMA_SetTransferMode(PDMA0, UUART_TX_DMA_CH, PDMA_USCI0_TX, FALSE, 0);
@@ -104,10 +114,10 @@ void PDMA_UUART_RxTest(void)
 {
     /* UUART Rx PDMA channel configuration */
     /* Set transfer width (8 bits) and transfer count */
-    PDMA_SetTransferCnt(PDMA0, UUART_RX_DMA_CH, PDMA_WIDTH_8, g_i32UuartTestLength);
+    PDMA_SetTransferCnt(PDMA0, UUART_RX_DMA_CH, PDMA_WIDTH_8, s_u32UuartTestLength);
 
     /* Set source/destination address and attributes */
-    PDMA_SetTransferAddr(PDMA0, UUART_RX_DMA_CH, (uint32_t)&UUART0->RXDAT, PDMA_SAR_FIX, (uint32_t)g_au8DestArray, PDMA_DAR_INC);
+    PDMA_SetTransferAddr(PDMA0, UUART_RX_DMA_CH, (uint32_t)&UUART0->RXDAT, PDMA_SAR_FIX, (uint32_t)s_au8DestArray, PDMA_DAR_INC);
 
     /* Set request source; set basic mode. */
     PDMA_SetTransferMode(PDMA0, UUART_RX_DMA_CH, PDMA_USCI0_RX, FALSE, 0);
@@ -124,10 +134,10 @@ void PDMA_UUART_RxTest(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void PDMA_Callback_0(void)
 {
-    printf("\tTransfer Done %d!\r", ++g_i32IntCnt);
+    printf("\tTransfer Done %d!\r", ++s_i32IntCnt);
 
     /* Use PDMA to do UART loopback test 10 times */
-    if(g_i32IntCnt < 10)
+    if(s_i32IntCnt < 10)
     {
         /* UUART Tx and Rx PDMA configuration */
         PDMA_UUART_TxTest();
@@ -139,27 +149,27 @@ void PDMA_Callback_0(void)
     else
     {
         /* Test is over */
-        g_i32IsTestOver = TRUE;
+        s_i32IsTestOver = TRUE;
     }
 }
 
 void PDMA_Callback_1(void)
 {
-    int32_t i32Idx;
+    uint32_t u32Idx;
     uint8_t u8InChar = 0xFF;
 
-    printf("\tTransfer Done %d!\t", ++g_i32IntCnt);
+    printf("\tTransfer Done %d!\t", ++s_i32IntCnt);
 
     /* Show UART Rx data */
-    for(i32Idx = 0; i32Idx < g_i32UuartTestLength; i32Idx++)
+    for(u32Idx = 0; u32Idx < s_u32UuartTestLength; u32Idx++)
     {
-        u8InChar = inpb(((uint32_t)g_au8DestArray + i32Idx));
+        u8InChar = inpb(((uint32_t)s_au8DestArray + u32Idx));
         printf(" 0x%x(%c),", u8InChar, u8InChar);
     }
     printf("\n");
 
     /* Use PDMA to do UART Rx test 10 times */
-    if(g_i32IntCnt < 10)
+    if(s_i32IntCnt < 10)
     {
         /* UUART Rx PDMA configuration */
         PDMA_UUART_RxTest();
@@ -170,7 +180,7 @@ void PDMA_Callback_1(void)
     else
     {
         /* Test is over */
-        g_i32IsTestOver = TRUE;
+        s_i32IsTestOver = TRUE;
     }
 }
 
@@ -181,7 +191,7 @@ void PDMA0_IRQHandler(void)
 
     if(status & PDMA_INTSTS_ABTIF_Msk)  /* Target Abort */
     {
-        g_i32IsTestOver = 2;
+        s_i32IsTestOver = 2;
         PDMA0->ABTSTS = PDMA0->ABTSTS;
     }
     else if(status & PDMA_INTSTS_TDIF_Msk) /* Transfer Done */
@@ -206,11 +216,11 @@ void PDMA0_IRQHandler(void)
             UUART0->PDMACTL &= ~UUART_PDMACTL_RXPDMAEN_Msk;
 
             /* Handle PDMA transfer done interrupt event */
-            if(g_u32TwoChannelPdmaTest == 1)
+            if(s_u32TwoChannelPdmaTest == 1)
             {
                 PDMA_Callback_0();
             }
-            else if(g_u32TwoChannelPdmaTest == 0)
+            else if(s_u32TwoChannelPdmaTest == 0)
             {
                 PDMA_Callback_1();
             }
@@ -240,8 +250,8 @@ void UART0_IRQHandler(void)
 void PDMA_UART(int32_t i32option)
 {
     /* Source data initiation */
-    BuildSrcPattern((uint32_t)g_au8SrcArray, g_i32UuartTestLength);
-    ClearBuf((uint32_t)g_au8DestArray, g_i32UuartTestLength, 0xFF);
+    BuildSrcPattern((uint32_t)s_au8SrcArray, s_u32UuartTestLength);
+    ClearBuf((uint32_t)s_au8DestArray, s_u32UuartTestLength, 0xFF);
 
     /* Reset PDMA module */
     SYS_ResetModule(PDMA0_RST);
@@ -252,22 +262,22 @@ void PDMA_UART(int32_t i32option)
         printf("  This sample code will use PDMA0 to do USCI0 loopback test 10 times.\n");
         printf("  Please connect USCI0_DAT0(PE.3) <--> USCI0_DAT1(PE.4) before testing.\n");
         printf("  After connecting PE.3 <--> PE.4, press any key to start transfer.\n");
-        g_u32TwoChannelPdmaTest = 1;
+        s_u32TwoChannelPdmaTest = 1;
         getchar();
     }
     else
     {
-        g_i32UuartTestLength = 2;      /* Test Length */
+        s_u32UuartTestLength = 2;      /* Test Length */
         printf("  [Using ONE PDMA channel].\n");
         printf("  This sample code will use PDMA0 to do USCI0 Rx test 10 times.\n");
         printf("  Please connect USCI0_DAT0(PE.3) <--> USCI0_DAT1(PE.4) before testing.\n");
         printf("  After connecting PE.3 <--> PE.4, press any key to start transfer.\n");
-        g_u32TwoChannelPdmaTest = 0;
+        s_u32TwoChannelPdmaTest = 0;
         getchar();
-        printf("  Please input %d bytes to trigger PDMA one time.(Ex: Press 'a''b')\n", g_i32UuartTestLength);
+        printf("  Please input %d bytes to trigger PDMA one time.(Ex: Press 'a''b')\n", s_u32UuartTestLength);
     }
 
-    if(g_u32TwoChannelPdmaTest == 1)
+    if(s_u32TwoChannelPdmaTest == 1)
     {
         /* Enable PDMA channel */
         PDMA_Open(PDMA0, (1 << UUART_RX_DMA_CH) | (1 << UUART_TX_DMA_CH));
@@ -293,18 +303,18 @@ void PDMA_UART(int32_t i32option)
     }
 
     /* Enable PDMA Transfer Done Interrupt */
-    g_i32IntCnt = 0;
-    g_i32IsTestOver = FALSE;
+    s_i32IntCnt = 0;
+    s_i32IsTestOver = FALSE;
     NVIC_EnableIRQ(PDMA0_IRQn);
 
     /* Enable UART0 RDA interrupt */
-    if(g_u32TwoChannelPdmaTest == 0)
+    if(s_u32TwoChannelPdmaTest == 0)
     {
         UART_EnableInt(UART0, UART_INTEN_RDAIEN_Msk);
     }
 
     /* Enable UUART Tx and Rx PDMA function */
-    if(g_u32TwoChannelPdmaTest == 1)
+    if(s_u32TwoChannelPdmaTest == 1)
         UUART0->PDMACTL |= (UUART_PDMACTL_PDMAEN_Msk | UUART_PDMACTL_TXPDMAEN_Msk | UUART_PDMACTL_RXPDMAEN_Msk);
     else
         UUART0->PDMACTL &= ~UUART_PDMACTL_TXPDMAEN_Msk;
@@ -312,10 +322,10 @@ void PDMA_UART(int32_t i32option)
     UUART0->PDMACTL |= (UUART_PDMACTL_PDMAEN_Msk | UUART_PDMACTL_RXPDMAEN_Msk);
 
     /* Wait for PDMA operation finish */
-    while(g_i32IsTestOver == FALSE);
+    while(s_i32IsTestOver == FALSE);
 
     /* Check PDMA status */
-    if(g_i32IsTestOver == 2)
+    if(s_i32IsTestOver == 2)
         printf("target abort...\n");
 
     /* Disable UUART Tx and Rx PDMA function */
@@ -455,9 +465,9 @@ int32_t main(void)
         printf("| [1] Using TWO PDMA channel to test. < TX1(CH1)-->RX1(CH0) >            |\n");
         printf("| [2] Using ONE PDMA channel to test. < TX1-->RX1(CH0) >                 |\n");
         printf("+------------------------------------------------------------------------+\n");
-        u8Item = getchar();
+        u8Item = (uint8_t)getchar();
 
-        g_i32IsTestOver = FALSE;
+        s_i32IsTestOver = FALSE;
         if((u8Item == '1') || (u8Item == '2'))
         {
             PDMA_UART(u8Item);

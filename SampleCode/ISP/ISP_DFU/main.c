@@ -20,6 +20,11 @@
 
 uint32_t g_apromSize;
 
+void ProcessHardFault(void);
+void SH_Return(void);
+uint32_t GetApromSize(void);
+void SYS_Init(void);
+
 void ProcessHardFault(void) {}
 void SH_Return(void) {}
 

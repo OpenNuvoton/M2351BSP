@@ -10,13 +10,16 @@
 #include "NuMicro.h"
 
 
-const uint16_t g_au16Sine[] = {2047, 2251, 2453, 2651, 2844, 3028, 3202, 3365, 3515, 3650, 3769, 3871, 3954,
+static const uint16_t s_au16Sine[] = {2047, 2251, 2453, 2651, 2844, 3028, 3202, 3365, 3515, 3650, 3769, 3871, 3954,
                          4019, 4064, 4088, 4095, 4076, 4040, 3984, 3908, 3813, 3701, 3573, 3429, 3272,
                          3102, 2921, 2732, 2536, 2335, 2132, 1927, 1724, 1523, 1328, 1141,  962,  794,
                          639,  497,  371,  262,  171,   99,   45,   12,    0,    7,   35,   84,  151,
                          238,  343,  465,  602,  754,  919, 1095, 1281, 1475, 1674, 1876
                         };
-const uint32_t g_u32ArraySize = sizeof(g_au16Sine) / sizeof(uint16_t);
+static const uint32_t s_u32ArraySize = sizeof(s_au16Sine) / sizeof(uint16_t);
+
+void SYS_Init(void);
+
 
 void SYS_Init(void)
 {
@@ -102,10 +105,10 @@ int32_t main(void)
     PDMA_Open(PDMA0, 0x1);
 
     /* Set transfer data width, and transfer count */
-    PDMA_SetTransferCnt(PDMA0, 0, PDMA_WIDTH_16, g_u32ArraySize);
+    PDMA_SetTransferCnt(PDMA0, 0, PDMA_WIDTH_16, s_u32ArraySize);
 
     /* transfer width is one word(32 bit) */
-    PDMA_SetTransferAddr(PDMA0, 0, (uint32_t)&g_au16Sine[0], PDMA_SAR_INC, (uint32_t)&DAC0->DAT, PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, 0, (uint32_t)&s_au16Sine[0], PDMA_SAR_INC, (uint32_t)&DAC0->DAT, PDMA_DAR_FIX);
 
     /* Select channel 0 request source from DAC */
     PDMA_SetTransferMode(PDMA0, 0, PDMA_DAC0_TX, FALSE, 0);
@@ -135,7 +138,7 @@ int32_t main(void)
         if(PDMA_GET_TD_STS(PDMA0) == 0x1)
         {
             /* Re-Set transfer count and basic operation mode */
-            PDMA_SetTransferCnt(PDMA0, 0, PDMA_WIDTH_16, g_u32ArraySize);
+            PDMA_SetTransferCnt(PDMA0, 0, PDMA_WIDTH_16, s_u32ArraySize);
             PDMA_SetTransferMode(PDMA0, 0, PDMA_DAC0_TX, FALSE, 0);
 
             /* Clear PDMA channel 0 transfer done flag */

@@ -10,12 +10,18 @@
 #include <string.h>
 #include "targetdev.h"
 #include "hid_transfer.h"
+#include "fmc_user.h"
 
 // For M2351 Ver. C API
-volatile ISP_INFO_T     g_ISPInfo = {0};
-volatile BL_USBD_INFO_T g_USBDInfo = {0};
+static volatile ISP_INFO_T     s_ISPInfo = {0};
+static volatile BL_USBD_INFO_T s_USBDInfo;
 
 #define TRIM_INIT           (SYS_BASE+0x10C)
+
+void ProcessHardFault(void);
+void SH_Return(void);
+void SYS_Init(void);
+void USBD_IRQHandler(void);
 
 void ProcessHardFault(void) {}
 void SH_Return(void) {}
@@ -69,10 +75,10 @@ int32_t main(void)
     volatile ISP_INFO_T      *pISPInfo;
     volatile BL_USBD_INFO_T  *pUSBDInfo;
 
-    pISPInfo = &g_ISPInfo;
-    pUSBDInfo = &g_USBDInfo;
-    memset((void *)&g_ISPInfo, 0x0, sizeof(ISP_INFO_T));
-    memset((void *)&g_USBDInfo, 0x0, sizeof(BL_USBD_INFO_T));
+    pISPInfo = &s_ISPInfo;
+    pUSBDInfo = &s_USBDInfo;
+    memset((void *)(uint32_t)&s_ISPInfo, 0x0, sizeof(ISP_INFO_T));
+    memset((void *)(uint32_t)&s_USBDInfo, 0x0, sizeof(BL_USBD_INFO_T));
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -92,10 +98,10 @@ int32_t main(void)
 
     while(DetectPin == 0)
     {
-        BL_USBDOpen(&gsInfo, NULL, NULL, (uint32_t *)pUSBDInfo);
+        BL_USBDOpen(&gsInfo, NULL, NULL, (uint32_t *)(uint32_t)pUSBDInfo);
         /* Endpoint configuration */
         HID_Init();
-        BL_USBDInstallEPHandler(EP3, EP3_Handler, (uint32_t *)pISPInfo->pfnUSBDEP);
+        BL_USBDInstallEPHandler(EP3, (void *)EP3_Handler, (uint32_t *)(uint32_t)pISPInfo->pfnUSBDEP);
         NVIC_EnableIRQ(USBD_IRQn);
         BL_USBDStart();
 
@@ -154,7 +160,7 @@ _APROM:
 
 void USBD_IRQHandler(void)
 {
-    BL_ProcessUSBDInterrupt((uint32_t *)g_ISPInfo.pfnUSBDEP, (uint32_t *)&g_ISPInfo, (uint32_t *)&g_USBDInfo);
+    BL_ProcessUSBDInterrupt((uint32_t *)(uint32_t)s_ISPInfo.pfnUSBDEP, (uint32_t *)(uint32_t)&s_ISPInfo, (uint32_t *)(uint32_t)&s_USBDInfo);
 }
 
 /*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/

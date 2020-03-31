@@ -110,7 +110,7 @@
 #include "queue.h"
 
 /* Demo includes. */
-#include "ParTest.h"
+#include "partest.h"
 
 /* Priorities at which the tasks are created. */
 #define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
@@ -137,14 +137,14 @@ functionality. */
 /*
  * The tasks as described in the comments at the top of this file.
  */
-static void prvQueueReceiveTask( void *pvParameters );
-static void prvQueueSendTask( void *pvParameters );
+static void prvQueueReceiveTask( void *pvParameters )__attribute__((noreturn));
+static void prvQueueSendTask( void *pvParameters )__attribute__((noreturn));
 
 /*
  * Called by main() to create the simply blinky style application if
  * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is set to 1.
  */
-void main_blinky( void );
+void main_blinky( void )__attribute__((noreturn));
 
 /*
  * The hardware only has a single LED.  Simply toggle it.
@@ -195,7 +195,7 @@ TickType_t xNextWakeTime;
 const unsigned long ulValueToSend = 100UL;
 
 	/* Check the task parameter is as expected. */
-	configASSERT( ( ( unsigned long ) pvParameters ) == mainQUEUE_SEND_PARAMETER );
+	configASSERT( ( ( unsigned long ) pvParameters ) == mainQUEUE_SEND_PARAMETER )
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
@@ -223,7 +223,7 @@ static void prvQueueReceiveTask( void *pvParameters )
 unsigned long ulReceivedValue;
 
 	/* Check the task parameter is as expected. */
-	configASSERT( ( ( unsigned long ) pvParameters ) == mainQUEUE_RECEIVE_PARAMETER );
+	configASSERT( ( ( unsigned long ) pvParameters ) == mainQUEUE_RECEIVE_PARAMETER )
 
 	for( ;; )
 	{

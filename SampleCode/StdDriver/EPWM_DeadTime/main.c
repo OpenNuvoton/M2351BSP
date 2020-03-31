@@ -18,6 +18,11 @@
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 
+
+void EPWM0_P0_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
+
 /**
  * @brief       EPWM0 IRQ Handler
  *

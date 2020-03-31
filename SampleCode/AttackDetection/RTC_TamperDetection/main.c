@@ -8,12 +8,15 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+void UART_Init(void);
+void SYS_Init(void);
+void TAMPER_IRQHandler(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile int32_t g_u32IsTamper = FALSE;
-volatile uint32_t g_u32Spare_Data = 0;
+static volatile int32_t s_i32IsTamper = FALSE;
+static volatile uint32_t s_u32Spare_Data = 0;
 
 
 /**
@@ -59,12 +62,12 @@ void TAMPER_IRQHandler(void)
                (uint32_t)((u32TAMPTIME & RTC_TAMPTIME_SEC_Msk) >> RTC_TAMPTIME_SEC_Pos));
 
         RTC_CLEAR_TAMPER_INT_FLAG(RTC, u32FlagStatus);
-        g_u32IsTamper = TRUE;
+        s_i32IsTamper = TRUE;
 
         /* Check spare register data */
         RTC_WaitAccessEnable();
-        g_u32Spare_Data = RTC_READ_SPARE_REGISTER(RTC, 0);
-        printf(" SPARE_REGISTER[%d] = 0x%x.\n\n", 0, g_u32Spare_Data);
+        s_u32Spare_Data = RTC_READ_SPARE_REGISTER(RTC, 0);
+        printf(" SPARE_REGISTER[%d] = 0x%x.\n\n", 0, s_u32Spare_Data);
     }
 }
 
@@ -141,7 +144,7 @@ void UART_Init(void)
 int main(void)
 {
     S_RTC_TIME_DATA_T sInitTime, sGetTime;
-    char u8Option;
+    int32_t i32Option;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -183,18 +186,18 @@ int main(void)
 
     /* Check spare register data */
     RTC_WaitAccessEnable();
-    g_u32Spare_Data = RTC_READ_SPARE_REGISTER(RTC, 0);
-    printf("# SPARE_REGISTER[%d] = 0x%x.\n\n", 0, g_u32Spare_Data);
+    s_u32Spare_Data = RTC_READ_SPARE_REGISTER(RTC, 0);
+    printf("# SPARE_REGISTER[%d] = 0x%x.\n\n", 0, s_u32Spare_Data);
 
     printf("\nSelect:\n");
     printf("    [0] Static tamper detection\n");
     printf("    [1] Dynamic tamper detection\n");
 
-    u8Option = getchar();
+    i32Option = getchar();
     printf("\n");
-    printf("Select item [%c]\n", u8Option);
+    printf("Select item [%c]\n", i32Option);
 
-    if(u8Option == '0')
+    if(i32Option == '0')
     {
         printf("# Please connect TAMPER2/3(PF.8/9) pins to High first.\n");
         printf("# Press any key to start test:\n\n");
@@ -208,13 +211,13 @@ int main(void)
         RTC_StaticTamperEnable(RTC_TAMPER2_SELECT | RTC_TAMPER3_SELECT, RTC_TAMPER_HIGH_LEVEL_DETECT,
                                RTC_TAMPER_DEBOUNCE_ENABLE);
 
-        g_u32IsTamper = FALSE;
+        s_i32IsTamper = FALSE;
 
         /* Enable RTC Tamper Interrupt */
         RTC_EnableInt(RTC_INTEN_TAMP2IEN_Msk | RTC_INTEN_TAMP3IEN_Msk);
         NVIC_EnableIRQ(TAMPER_IRQn);
     }
-    else if(u8Option == '1')
+    else if(i32Option == '1')
     {
         printf("# Please connect (tamper0 & tamper1) and (tamper2 & tamper3) and (tamper4 & tamper5) first.\n");
         printf("                    (PF.6 to PF.7)          (PF.8 to PF.9)         (PF.10 to PF.11)\n");
@@ -229,7 +232,7 @@ int main(void)
         RTC_DynamicTamperEnable(RTC_PAIR0_SELECT | RTC_PAIR1_SELECT | RTC_PAIR2_SELECT, RTC_TAMPER_DEBOUNCE_ENABLE, 0, 0);
         RTC_DynamicTamperConfig(RTC_2POW10_CLK, 1, 0, REF_RANDOM_PATTERN);
 
-        g_u32IsTamper = FALSE;
+        s_i32IsTamper = FALSE;
 
         /* Enable RTC Tamper Interrupt */
         RTC_EnableInt(RTC_INTEN_TAMP1IEN_Msk | RTC_INTEN_TAMP3IEN_Msk | RTC_INTEN_TAMP5IEN_Msk);
@@ -238,8 +241,8 @@ int main(void)
 
     while(1)
     {
-        while(g_u32IsTamper == FALSE) {}
-        g_u32IsTamper = FALSE;
+        while(s_i32IsTamper == FALSE) {}
+        s_i32IsTamper = FALSE;
     }
 }
 

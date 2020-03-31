@@ -17,8 +17,10 @@ void UART0_Init(void);
 extern uint32_t __Enter_SPD(void);
 
 
-volatile uint32_t g_u32RTCTickINT=0;
+static volatile uint32_t s_u32RTCTickINT=0;
 
+void PowerDownFunction(void);
+void RTC_IRQHandler(void);
 
 void PowerDownFunction(void)
 {
@@ -58,7 +60,6 @@ void PowerDownFunction(void)
 
 }
 
-volatile uint32_t g_u32RTCTickINT;
 
 /**
  * @brief       IRQ Handler for RTC Interrupt
@@ -77,7 +78,7 @@ void RTC_IRQHandler(void)
         while((RTC_GET_TICK_INT_FLAG(RTC) == 1));
     }
 
-    g_u32RTCTickINT = 1;
+    s_u32RTCTickINT = 1;
     GPIO_TOGGLE(PA10);
     
 }
@@ -225,7 +226,7 @@ int main( void )
         printf("# Get RTC current date/time: %d/%02d/%02d %02d:%02d:%02d.\n",
                sReadRTC.u32Year, sReadRTC.u32Month, sReadRTC.u32Day, sReadRTC.u32Hour, sReadRTC.u32Minute, sReadRTC.u32Second);         
       
-        g_u32RTCTickINT = 0;        
+        s_u32RTCTickINT = 0;        
         
         /* Enter to SPD Power-down mode */
         printf("Enter to SPD ... ");   
@@ -233,7 +234,7 @@ int main( void )
         PowerDownFunction();
        
         /* Wait RTC interrupt */
-        while(g_u32RTCTickINT==0);       
+        while(s_u32RTCTickINT==0);       
         
         /* Check wake-up from SPD by RTC flag */
         if(CLK->PMUSTS&CLK_PMUSTS_RTCWK_Msk)

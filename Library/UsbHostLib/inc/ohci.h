@@ -29,6 +29,8 @@ struct udev_t;
 /*----------------------------------------------------------------------------------------*/
 /*   Endpoint descriptor                                                                  */
 /*----------------------------------------------------------------------------------------*/
+#pragma pack(push)
+#pragma pack(1)
 typedef struct ed_t {
     /* OHCI spec. Endpoint descriptor  */
     uint32_t    Info;
@@ -40,27 +42,28 @@ typedef struct ed_t {
     uint16_t    next_sf;          /* for isochronous transfer, recording the next SF      */
     struct ed_t * next;           /* point to the next ED in remove list                  */
 } ED_T;
+#pragma pack(pop)
 
 #define ED_CTRL_FA_Pos            0         /* Info[6:0]   - Function address             */
 #define ED_CTRL_EN_Pos            7         /* Info[10:7]  - Endpoint number              */
 #define ED_CTRL_DIR_Pos           11        /* Info[12:11] - Direction                    */
 #define ED_CTRL_MPS_Pos           16        /* Info[26:16] - Maximum packet size          */
 
-#define ED_FUNC_ADDR_Msk          (0x7f)
-#define ED_EP_ADDR_Msk            (0xf<<7)
-#define ED_DIR_Msk                (0x3<<11)
-#define ED_SPEED_Msk              (1<<13)
-#define ED_MAX_PK_SIZE_Msk        (0x7ff<<16)
+#define ED_FUNC_ADDR_Msk          (0x7ful)
+#define ED_EP_ADDR_Msk            (0xful<<7)
+#define ED_DIR_Msk                (0x3ul<<11)
+#define ED_SPEED_Msk              (1ul<<13)
+#define ED_MAX_PK_SIZE_Msk        (0x7fful<<16)
 
-#define ED_DIR_BY_TD              (0<<ED_CTRL_DIR_Pos)
-#define ED_DIR_OUT                (1<<ED_CTRL_DIR_Pos)
-#define ED_DIR_IN                 (2<<ED_CTRL_DIR_Pos)
-#define ED_SPEED_FULL             (0<<13)   /* Info[13] - 0: is full speed device         */
-#define ED_SPEED_LOW              (1<<13)   /* Info[13] - 1: is low speed device          */
-#define ED_SKIP                   (1<<14)   /* Info[14] - 1: HC skip this ED              */
-#define ED_FORMAT_GENERAL         (0<<15)   /* Info[15] - 0: is a general TD              */
-#define ED_FORMAT_ISO             (1<<15)   /* Info[15] - 1: is an isochronous TD         */
-#define ED_HEADP_HALT             (1<<0)    /* HeadP[0] - 1: Halt; 0: Not                 */
+#define ED_DIR_BY_TD              (0ul<<ED_CTRL_DIR_Pos)
+#define ED_DIR_OUT                (1ul<<ED_CTRL_DIR_Pos)
+#define ED_DIR_IN                 (2ul<<ED_CTRL_DIR_Pos)
+#define ED_SPEED_FULL             (0ul<<13)   /* Info[13] - 0: is full speed device         */
+#define ED_SPEED_LOW              (1ul<<13)   /* Info[13] - 1: is low speed device          */
+#define ED_SKIP                   (1ul<<14)   /* Info[14] - 1: HC skip this ED              */
+#define ED_FORMAT_GENERAL         (0ul<<15)   /* Info[15] - 0: is a general TD              */
+#define ED_FORMAT_ISO             (1ul<<15)   /* Info[15] - 1: is an isochronous TD         */
+#define ED_HEADP_HALT             (1ul<<0)    /* HeadP[0] - 1: Halt; 0: Not                 */
 
 
 /*----------------------------------------------------------------------------------------*/

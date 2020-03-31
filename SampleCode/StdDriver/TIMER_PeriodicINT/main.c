@@ -12,8 +12,14 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global Interface Variables Declarations                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_au32TMRINTCount[4] = {0};
+static volatile uint32_t s_au32TMRINTCount[4] = {0};
 
+void TMR0_IRQHandler(void);
+void TMR1_IRQHandler(void);
+void TMR2_IRQHandler(void);
+void TMR3_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       Timer0 IRQ
@@ -31,7 +37,7 @@ void TMR0_IRQHandler(void)
         /* Clear Timer0 time-out interrupt flag */
         TIMER_ClearIntFlag(TIMER0);
 
-        g_au32TMRINTCount[0]++;
+        s_au32TMRINTCount[0]++;
     }
 }
 
@@ -51,7 +57,7 @@ void TMR1_IRQHandler(void)
         /* Clear Timer1 time-out interrupt flag */
         TIMER_ClearIntFlag(TIMER1);
 
-        g_au32TMRINTCount[1]++;
+        s_au32TMRINTCount[1]++;
     }
 }
 
@@ -71,7 +77,7 @@ void TMR2_IRQHandler(void)
         /* Clear Timer2 time-out interrupt flag */
         TIMER_ClearIntFlag(TIMER2);
 
-        g_au32TMRINTCount[2]++;
+        s_au32TMRINTCount[2]++;
     }
 }
 
@@ -91,7 +97,7 @@ void TMR3_IRQHandler(void)
         /* Clear Timer3 time-out interrupt flag */
         TIMER_ClearIntFlag(TIMER3);
 
-        g_au32TMRINTCount[3]++;
+        s_au32TMRINTCount[3]++;
     }
 }
 
@@ -229,8 +235,8 @@ int main(void)
     NVIC_EnableIRQ(TMR3_IRQn);
 
     /* Clear Timer0 ~ Timer3 interrupt counts to 0 */
-    g_au32TMRINTCount[0] = g_au32TMRINTCount[1] = g_au32TMRINTCount[2] = g_au32TMRINTCount[3] = 0;
-    u32InitCount = g_au32TMRINTCount[0];
+    s_au32TMRINTCount[0] = s_au32TMRINTCount[1] = s_au32TMRINTCount[2] = s_au32TMRINTCount[3] = 0;
+    u32InitCount = s_au32TMRINTCount[0];
 
     /* Start Timer0 ~ Timer3 counting */
     TIMER_Start(TIMER0);
@@ -242,15 +248,15 @@ int main(void)
     printf("# Timer interrupt counts :\n");
     while(u32InitCount < 20)
     {
-        if(g_au32TMRINTCount[0] != u32InitCount)
+        if(s_au32TMRINTCount[0] != u32InitCount)
         {
-            au32Counts[0] = g_au32TMRINTCount[0];
-            au32Counts[1] = g_au32TMRINTCount[1];
-            au32Counts[2] = g_au32TMRINTCount[2];
-            au32Counts[3] = g_au32TMRINTCount[3];
+            au32Counts[0] = s_au32TMRINTCount[0];
+            au32Counts[1] = s_au32TMRINTCount[1];
+            au32Counts[2] = s_au32TMRINTCount[2];
+            au32Counts[3] = s_au32TMRINTCount[3];
             printf("    TMR0:%3d    TMR1:%3d    TMR2:%3d    TMR3:%3d\n",
                    au32Counts[0], au32Counts[1], au32Counts[2], au32Counts[3]);
-            u32InitCount = g_au32TMRINTCount[0];
+            u32InitCount = s_au32TMRINTCount[0];
 
             if((au32Counts[1] > (au32Counts[0] * 2 + 1)) || (au32Counts[1] < (au32Counts[0] * 2 - 1)) ||
                     (au32Counts[2] > (au32Counts[0] * 4 + 1)) || (au32Counts[2] < (au32Counts[0] * 4 - 1)) ||

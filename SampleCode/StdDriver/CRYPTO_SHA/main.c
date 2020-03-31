@@ -11,19 +11,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include "NuMicro.h"
-
+#include "vector_parser.h"
 
 extern void OpenTestVector(void);
 extern int  GetNextPattern(void);
 
-extern uint8_t *g_au8ShaData;
-extern uint8_t g_au8ShaDigest[64];
-extern int32_t g_i32DataLen;
 
 /* 160 bit length for SHA1 (20 bytes) */
 static int32_t  g_i32DigestLength = 20;
 
 static volatile int g_SHA_done;
+
+void CRPT_IRQHandler(void);
+int  do_compare(uint8_t *output, uint8_t *expect, int cmp_len);
+int32_t RunSHA(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
 
 
 void CRPT_IRQHandler()
@@ -40,7 +43,7 @@ int  do_compare(uint8_t *output, uint8_t *expect, int cmp_len)
 {
     int   i;
 
-    if(memcmp(expect, output, cmp_len))
+    if(memcmp(expect, output, (uint32_t)cmp_len))
     {
         printf("\nMismatch!! - %d\n", cmp_len);
         for(i = 0; i < cmp_len; i++)
@@ -57,7 +60,7 @@ int32_t RunSHA()
 
     SHA_Open(CRPT, SHA_MODE_SHA1, SHA_IN_SWAP, 0);
 
-    SHA_SetDMATransfer(CRPT, (uint32_t)&g_au8ShaData[0], g_i32DataLen / 8);
+    SHA_SetDMATransfer(CRPT, (uint32_t)&g_au8ShaData[0], (uint32_t)(g_i32DataLen / 8));
 
     printf("Key len= %d bits\n", g_i32DataLen);
 

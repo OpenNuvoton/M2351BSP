@@ -30,13 +30,38 @@ extern __NONSECURE_ENTRY int8_t OTA_TaskProcess(void);
 extern __NONSECURE_ENTRY uint8_t OTA_SysTickProcess(uint32_t u32Ticks);
 extern __NONSECURE_ENTRY void OTA_WiFiProcess(void);
 extern __NONSECURE_ENTRY void OTA_SDH_Process(void);
-extern __NONSECURE_ENTRY int32_t OTA_GetBLxFwVer(uint32_t * pu32FwVer, uint8_t u8Mode);
+extern __NONSECURE_ENTRY int32_t OTA_GetBLxFwVer(uint32_t * pu32FwVer, int32_t i32Mode);
 extern __NONSECURE_ENTRY int32_t OTA_ForceUpdate(void);
 
 /* typedef for NonSecure callback functions */
 typedef __NONSECURE_CALL int32_t (*NonSecure_funcptr)(uint32_t);
 typedef int32_t (*Secure_funcptr)(uint32_t);
-volatile ISP_INFO_T     g_ISPInfo = {0};
+static volatile ISP_INFO_T     s_ISPInfo = {0};
+
+__NONSECURE_ENTRY void ShowCountersInNuBL32(uint32_t *in)__attribute((noreturn));
+__NONSECURE_ENTRY void WdtResetCnt(void);
+__NONSECURE_ENTRY void BL32_OTA_Start(void);
+__NONSECURE_ENTRY int32_t BL32_GetBL33FwVer(uint32_t * pu32FwVer);
+__NONSECURE_ENTRY int32_t Secure_func(void);
+__NONSECURE_ENTRY int32_t Secure_LED_On(uint32_t u32Num);
+__NONSECURE_ENTRY int32_t Secure_LED_Off(uint32_t u32Num);
+__NONSECURE_ENTRY int32_t Secure_LED_On_callback(NonSecure_funcptr *callback);
+__NONSECURE_ENTRY int32_t Secure_LED_Off_callback(NonSecure_funcptr *callback);
+int32_t LED_On(void);
+int32_t LED_Off(void);
+void SysTick_Handler(void);
+void UART3_IRQHandler(void);
+void GPA_IRQHandler(void);
+void Nonsecure_Init(void);
+void SYS_Init(void);
+void UART_Init(void);
+void UART3_Init(void);
+void GPIO_init(void);
+
+#if (OTA_UPGRADE_FROM_SD)
+void SDH0_IRQHandler(void);
+void SD_Init(void);
+#endif
 
 /*----------------------------------------------------------------------------
   Secure function for NonSecure callbacks exported to NonSecure application
@@ -109,8 +134,9 @@ int32_t Secure_func(void)
 }
 
 __NONSECURE_ENTRY
-int32_t Secure_LED_On(uint32_t num)
+int32_t Secure_LED_On(uint32_t u32Num)
 {
+    (void)u32Num;
     printf("Secure LED On call by Non-secure\n");
     PA10 = 0;
     PB0 = 0;
@@ -118,8 +144,9 @@ int32_t Secure_LED_On(uint32_t num)
 }
 
 __NONSECURE_ENTRY
-int32_t Secure_LED_Off(uint32_t num)
+int32_t Secure_LED_Off(uint32_t u32Num)
 {
+    (void)u32Num;
     printf("Secure LED Off call by Non-secure\n");
     PA10 = 1;
     PB0 = 1;
@@ -131,8 +158,8 @@ int32_t Secure_LED_Off(uint32_t num)
   NonSecure callable function for NonSecure callback
  *----------------------------------------------------------------------------*/
 
-NonSecure_funcptr pfNonSecure_LED_On = (NonSecure_funcptr)NULL;
-NonSecure_funcptr pfNonSecure_LED_Off = (NonSecure_funcptr)NULL;
+static NonSecure_funcptr pfNonSecure_LED_On = (NonSecure_funcptr)NULL;
+static NonSecure_funcptr pfNonSecure_LED_Off = (NonSecure_funcptr)NULL;
 
 __NONSECURE_ENTRY
 int32_t Secure_LED_On_callback(NonSecure_funcptr *callback)
@@ -414,7 +441,6 @@ void GPIO_init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    uint32_t    count = 0;
     uint32_t    u32FwVer = 0;
 
     /* Unlock protected registers */
@@ -426,7 +452,7 @@ int main(void)
     /* Init UART for printf */
     UART_Init();
 
-    printf("\n\n[HCLK %d Hz] (%s, %s)\n", SystemCoreClock, __DATE__, __TIME__);
+    printf("\n\n[HCLK %d Hz]\n", SystemCoreClock);
     printf("+--------------------------------+\n");
     printf("|    M2351 NuBL32 Sample Code    |\n");
     printf("+--------------------------------+\n\n");
@@ -437,8 +463,8 @@ int main(void)
     CLK_SysTickDelay(200000);
 
 {
-    extern const FW_INFO_T g_InitialFWinfo;
-    uint32_t cfg = g_InitialFWinfo.mData.u32AuthCFGs;
+    extern const FW_INFO_T g_FWinfoInitial;
+    uint32_t cfg = g_FWinfoInitial.mData.u32AuthCFGs;
     printf("\n[AuthCFG: 0x%08x]\n", cfg);
 }
 
@@ -472,7 +498,7 @@ int main(void)
 
     printf("OTA and WIfi init...\n");
     /* init OTA */
-    OTA_Init(__HSI, (ISP_INFO_T *)&g_ISPInfo);
+    OTA_Init(__HSI, (ISP_INFO_T *)(uint32_t)&s_ISPInfo);
 
     UART3_Init();
 

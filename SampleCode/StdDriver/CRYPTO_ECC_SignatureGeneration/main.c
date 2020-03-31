@@ -11,15 +11,19 @@
 #include "NuMicro.h"
 
 
-char g_SHA_msg[] = "608079423f12421de616b7493ebe551cf4d65b92";      /* SHA-1 hash                                    */
-char gD[] = "e14f37b3d1374ff8b03f41b9b3fdd2f0ebccf275d660d7f3";    /* private key                                   */
-char gK[] = "cb0abc7043a10783684556fb12c4154d57bc31a289685f25";    /* random integer k form [1, n-1]                */
-char gR[] = "6994d962bdd0d793ffddf855ec5bf2f91a9698b46258a63e";    /* Expected answer: R of (R,S) digital signature */
-char gS[] = "02ba6465a234903744ab02bc8521405b73cf5fc00e1a9f41";    /* Expected answer: S of (R,S) digital signature */
+static char g_SHA_msg[] = "608079423f12421de616b7493ebe551cf4d65b92";     /* SHA-1 hash                                    */
+static char gD[] = "e14f37b3d1374ff8b03f41b9b3fdd2f0ebccf275d660d7f3";    /* private key                                   */
+static char gK[] = "cb0abc7043a10783684556fb12c4154d57bc31a289685f25";    /* random integer k form [1, n-1]                */
+static char gR[] = "6994d962bdd0d793ffddf855ec5bf2f91a9698b46258a63e";    /* Expected answer: R of (R,S) digital signature */
+static char gS[] = "02ba6465a234903744ab02bc8521405b73cf5fc00e1a9f41";    /* Expected answer: S of (R,S) digital signature */
 
-char gR1[168], gS1[168]; /* temporary buffer used to keep digital signature (R,S) pair */
+static char gR1[168], gS1[168]; /* temporary buffer used to keep digital signature (R,S) pair */
 
 
+void CRPT_IRQHandler(void);
+void  dump_buff_hex(uint8_t *pucBuff, int nBytes);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
 
 void CRPT_IRQHandler()
 {

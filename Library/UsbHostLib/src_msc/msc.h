@@ -37,6 +37,8 @@
 
 
 /* Command Block Wrapper */
+#pragma pack(push)
+#pragma pack(1)
 struct bulk_cb_wrap
 {
     uint32_t  Signature;                 /* 0x43425355 = "USBC"           */
@@ -47,6 +49,7 @@ struct bulk_cb_wrap
     uint8_t   Length;                    /* length of the CDB             */
     uint8_t   CDB[16];                   /* max command                   */
 };
+#pragma pack(pop)
 
 #define MSC_CB_WRAP_LEN           31
 #define MSC_CB_SIGN               0x43425355
@@ -54,6 +57,8 @@ struct bulk_cb_wrap
 #define MSC_FLAG_OUT              0
 
 /* Command Status Wrapper */
+#pragma pack(push)
+#pragma pack(1)
 struct bulk_cs_wrap
 {
     uint32_t  Signature;                 /* 0x53425355 = "USBS"           */
@@ -61,6 +66,7 @@ struct bulk_cs_wrap
     uint32_t  Residue;                   /* amount not transferred        */
     uint8_t   Status;                    /* see below                     */
 };
+#pragma pack(pop)
 
 #define MSC_CS_WRAP_LEN           13
 #define MSC_CS_SIGN               0x53425355   /* "USBS"                  */
@@ -82,6 +88,8 @@ struct bulk_cs_wrap
 
 #define SCSI_BUFF_LEN             36
 
+#pragma pack(push)
+#pragma pack(1)
 typedef struct msc_t
 {
     IFACE_T     *iface;
@@ -101,7 +109,7 @@ typedef struct msc_t
     FATFS       fatfs_vol;               /* FATFS volumn                                  */
     struct msc_t  *next;                 /* point to next MSC device                      */
 }  MSC_T;
-
+#pragma pack(pop)
 
 extern int  run_scsi_command(MSC_T *msc, uint8_t *buff, uint32_t data_len, int bIsDataIn, int timeout_ticks);
 

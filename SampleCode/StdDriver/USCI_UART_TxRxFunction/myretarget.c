@@ -70,6 +70,7 @@ int ferror(FILE *stream);
 char GetChar(void);
 void SendChar_ToUART(int ch);
 void SendChar(int ch);
+int _read (int fd, char *ptr, int len);
 
 #if defined(DEBUG_ENABLE_SEMIHOST)
 #ifndef __GNUC__
@@ -88,7 +89,7 @@ static volatile int32_t g_ICE_Conneced = 1;
 
 uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
 {
-    uint32_t *sp;
+    uint32_t *sp = 0;
     uint32_t inst;
 
     /* Check the used stack */
@@ -112,20 +113,23 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
     
     }
 #endif    
-        
-    /* Get the instruction caused the hardfault */
-    inst = M16(sp[6]);
-    
-    
-    if(inst == 0xBEAB)
+
+    if (sp != 0)
     {
-        /* 
-            If the instruction is 0xBEAB, it means it is caused by BKPT without ICE connected.
-            We still return for output/input message to UART.
-        */
-        g_ICE_Conneced = 0; // Set a flag for ICE offline
-        sp[6] += 2; // return to next instruction
-        return lr;  // Keep lr in R0
+        /* Get the instruction caused the hardfault */
+        inst = M16(sp[6]);
+
+
+        if(inst == 0xBEAB)
+        {
+            /*
+                If the instruction is 0xBEAB, it means it is caused by BKPT without ICE connected.
+                We still return for output/input message to UART.
+            */
+            g_ICE_Conneced = 0; // Set a flag for ICE offline
+            sp[6] += 2; // return to next instruction
+            return lr;  // Keep lr in R0
+        }
     }
     
     /* It is casued by hardfault (Not semihost). Just process the hard fault here. */
@@ -162,6 +166,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
 
 int32_t SH_Return(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0)
 {
+    (void)n32In_R1;
     if(g_ICE_Conneced)
     {
         if(pn32Out_R0)
@@ -178,6 +183,8 @@ int32_t SH_Return(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0)
 #else // defined(DEBUG_ENABLE_SEMIHOST)
 
 int32_t SH_Return(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0);
+uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp);
+int _write (int fd, char *ptr, int len);
 
 #if defined( __ICCARM__ )
 __WEAK
@@ -186,7 +193,7 @@ __attribute__((weak))
 #endif
 uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
 {
-    uint32_t *sp;
+    uint32_t *sp = 0;
     /* It is casued by hardfault. Just process the hard fault */
     /* TODO: Implement your hardfault handle code here */
     
@@ -237,6 +244,9 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
 
 int32_t SH_Return(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0)
 {
+    (void)n32In_R0;
+    (void)n32In_R1;
+    (void)pn32Out_R0;
     return 0;
 }
 
@@ -493,6 +503,7 @@ void _ttywrch(int ch)
 
 int fputc(int ch, FILE *stream)
 {
+    (void)stream;
     SendChar(ch);
     return ch;
 }
@@ -504,6 +515,7 @@ int _write (int fd, char *ptr, int len)
 {
     int i = len;
 
+    (void)fd;
     while(i--) {
         while(DEBUG_PORT->BUFSTS & UUART_BUFSTS_TXFULL_Msk);
 
@@ -519,9 +531,11 @@ int _write (int fd, char *ptr, int len)
 
 int _read (int fd, char *ptr, int len)
 {
+    (void)fd;
+    (void)len;
 
     while((DEBUG_PORT->BUFSTS & UUART_BUFSTS_RXEMPTY_Msk) != 0);
-    *ptr = DEBUG_PORT->RXDAT;
+    *ptr = (char)DEBUG_PORT->RXDAT;
     return 1;
 
 
@@ -561,6 +575,7 @@ int fgetc(FILE *stream)
 
 int ferror(FILE *stream)
 {
+    (void)stream;
     return EOF;
 }
 #endif
@@ -582,7 +597,7 @@ label:
 # else
 void _sys_exit(int return_code)
 {
-
+    (void)return_code;
     /* Check if link with ICE */
     if(SH_DoCommand(0x18, 0x20026, NULL) == 0)
     {

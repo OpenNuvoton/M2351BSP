@@ -12,14 +12,17 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint32_t g_u32AdcCmp0IntFlag;
-volatile uint32_t g_u32AdcCmp1IntFlag;
+static volatile uint32_t s_u32AdcCmp0IntFlag;
+static volatile uint32_t s_u32AdcCmp1IntFlag;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void);
 void EADC_FunctionTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void EADC3_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -143,12 +146,12 @@ void EADC_FunctionTest()
     EADC_ENABLE_CMP_INT(EADC, 1);
 
     /* Reset the EADC interrupt indicator and trigger sample module 0 to start A/D conversion */
-    g_u32AdcCmp0IntFlag = 0;
-    g_u32AdcCmp1IntFlag = 0;
+    s_u32AdcCmp0IntFlag = 0;
+    s_u32AdcCmp1IntFlag = 0;
     EADC_START_CONV(EADC, BIT0);
 
     /* Wait EADC compare interrupt */
-    while((g_u32AdcCmp0IntFlag == 0) && (g_u32AdcCmp1IntFlag == 0));
+    while((s_u32AdcCmp0IntFlag == 0) && (s_u32AdcCmp1IntFlag == 0));
 
     /* Disable the sample module 0 interrupt */
     EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, BIT0);
@@ -160,7 +163,7 @@ void EADC_FunctionTest()
     EADC_DISABLE_CMP0(EADC);
     EADC_DISABLE_CMP1(EADC);
 
-    if(g_u32AdcCmp0IntFlag == 1)
+    if(s_u32AdcCmp0IntFlag == 1)
     {
         printf("Comparator 0 interrupt occurs.\nThe conversion result of channel 2 is less than 0x800\n");
     }
@@ -178,14 +181,14 @@ void EADC3_IRQHandler(void)
 {
     if(EADC_GET_INT_FLAG(EADC, EADC_STATUS2_ADCMPF0_Msk))
     {
-        g_u32AdcCmp0IntFlag = 1;
+        s_u32AdcCmp0IntFlag = 1;
         /* Clear the A/D compare flag 0 */
         EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADCMPF0_Msk);
     }
 
     if(EADC_GET_INT_FLAG(EADC, EADC_STATUS2_ADCMPF1_Msk))
     {
-        g_u32AdcCmp1IntFlag = 1;
+        s_u32AdcCmp1IntFlag = 1;
         /* Clear the A/D compare flag 1 */
         EADC_CLR_INT_FLAG(EADC, EADC_STATUS2_ADCMPF1_Msk);
     }

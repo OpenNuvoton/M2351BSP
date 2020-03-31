@@ -93,7 +93,7 @@ void vParTestInitialise( void )
 {
  
     /* LED IO PA11*/
-    PA_NS->MODE = (PA_NS->MODE & (~(3ul << 114*2))) | GPIO_MODE_OUTPUT << 11*2;
+    PA_NS->MODE = (PA_NS->MODE & (~(3ul << 11*2))) | GPIO_MODE_OUTPUT << 11*2;
 
     
     printf("\b\b\b\b\b\b\n\nFreeRTOS ...\n");
@@ -103,6 +103,7 @@ void vParTestInitialise( void )
 
 void vParTestSetLED( unsigned long ulLED, signed portBASE_TYPE xValue )
 {
+    (void)ulLED;
     if( xValue == pdTRUE )
     {
         /* Turn the LED on. */			
@@ -118,6 +119,7 @@ void vParTestSetLED( unsigned long ulLED, signed portBASE_TYPE xValue )
 
 void vParTestToggleLED( unsigned long ulLED )
 {
+    (void)ulLED;
     PA11_NS ^= 1;
 }
 /*-----------------------------------------------------------*/

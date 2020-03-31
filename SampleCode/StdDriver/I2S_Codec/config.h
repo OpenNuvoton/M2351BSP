@@ -13,4 +13,6 @@
 #define BUFF_LEN        32
 #define BUFF_HALF_LEN   (BUFF_LEN/2)
 
+extern uint32_t volatile g_u32BuffPos;
+
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/

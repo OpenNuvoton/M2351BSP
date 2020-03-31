@@ -11,6 +11,10 @@
 #include "NuMicro.h"
 #include "partition_M2351.h"
 
+__NONSECURE_ENTRY uint32_t GetSystemCoreClock(void);
+void Nonsecure_Init(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /*----------------------------------------------------------------------------
   Secure function for NonSecure callbacks exported to NonSecure application

@@ -16,17 +16,17 @@
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
 uint8_t volatile g_u8SdInitFlag = 0;
-extern int32_t g_TotalSectors;
+extern uint32_t g_u32TotalSectors;
 
-extern uint32_t g_u8R3Flag;
 extern uint8_t volatile g_u8SDDataReadyFlag;
 
+void SDH0_IRQHandler(void);
+void SYS_Init(void);
 /*--------------------------------------------------------------------------*/
 
 void SDH0_IRQHandler(void)
 {
     unsigned int volatile isr;
-    unsigned int volatile ier;
 
     // FMI data abort interrupt
     if(SDH0->GINTSTS & SDH_GINTSTS_DTAIF_Msk)
@@ -72,7 +72,7 @@ void SDH0_IRQHandler(void)
             else
             {
                 g_u8SdInitFlag = 1;
-                g_TotalSectors = SD0.totalSectorN;
+                g_u32TotalSectors = SD0.totalSectorN;
             }
         }
         SDH0->INTSTS = SDH_INTSTS_CDIF_Msk;

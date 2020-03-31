@@ -13,16 +13,17 @@
 #include "vendor_lbk.h"
 
 
-uint8_t volatile g_u8EP3Ready = 0;      // EP3 for interrupt-out
-uint8_t volatile g_u8EP5Ready = 0;      // EP5 for isochronous-out
-uint8_t volatile g_u8EP7Ready = 0;      // EP7 for bulk-out
+static uint8_t volatile s_u8EP3Ready = 0;      // EP3 for interrupt-out
+static uint8_t volatile s_u8EP5Ready = 0;      // EP5 for isochronous-out
+static uint8_t volatile s_u8EP7Ready = 0;      // EP7 for bulk-out
 
 
-volatile uint8_t  g_Ctrl_Buff[64];
-volatile uint8_t  g_Int_Buff[64];
-volatile uint8_t  g_Bulk_Buff[64];
-volatile uint8_t  g_Iso_Buff[256];
+static volatile uint8_t  s_au8CtrlBuff[64];
+static volatile uint8_t  s_au8IntBuff[64];
+static volatile uint8_t  s_au8BulkBuff[64];
+static volatile uint8_t  s_au8IsoBuff[256];
 
+void USBD_IRQHandler(void);
 
 void USBD_IRQHandler(void)
 {
@@ -125,7 +126,7 @@ void USBD_IRQHandler(void)
             USBD_CLR_INT_FLAG(USBD_INTSTS_EP3);
 
             /* Interrupt-out data packet is ready */
-            g_u8EP3Ready = 1;
+            s_u8EP3Ready = 1;
         }
 
         if(u32IntSts & USBD_INTSTS_EP4)
@@ -141,7 +142,7 @@ void USBD_IRQHandler(void)
             /* Clear event flag */
             USBD_CLR_INT_FLAG(USBD_INTSTS_EP5);
 
-            g_u8EP5Ready = 1;
+            s_u8EP5Ready = 1;
         }
 
         if(u32IntSts & USBD_INTSTS_EP6)
@@ -156,7 +157,7 @@ void USBD_IRQHandler(void)
             USBD_CLR_INT_FLAG(USBD_INTSTS_EP7);
 
             /* Bulk-out data packet is ready */
-            g_u8EP7Ready = 1;
+            s_u8EP7Ready = 1;
         }
     }
 }
@@ -169,10 +170,10 @@ void USBD_IRQHandler(void)
   */
 void VendorLBK_Init(void)
 {
-    memset((void *)g_Ctrl_Buff, 0, sizeof(g_Ctrl_Buff));
-    memset((void *)g_Int_Buff, 0, sizeof(g_Int_Buff));
-    memset((void *)g_Bulk_Buff, 0, sizeof(g_Bulk_Buff));
-    memset((void *)g_Iso_Buff, 0, sizeof(g_Iso_Buff));
+    memset((void *)(uint32_t)s_au8CtrlBuff, 0, sizeof(s_au8CtrlBuff));
+    memset((void *)(uint32_t)s_au8IntBuff, 0, sizeof(s_au8IntBuff));
+    memset((void *)(uint32_t)s_au8BulkBuff, 0, sizeof(s_au8BulkBuff));
+    memset((void *)(uint32_t)s_au8IsoBuff, 0, sizeof(s_au8IsoBuff));
 
     /* Init setup packet buffer */
     /* Buffer range for setup packet -> [0 ~ 0x7] */
@@ -241,11 +242,11 @@ void VendorLBK_Init(void)
 void VendorLBK_ClassRequest(void)
 {
     uint8_t   buf[8];
-    uint8_t   data_len;
+    uint32_t   u32DataLen;
 
     USBD_GetSetupPacket(buf);
 
-    data_len = (buf[7] << 8) | buf[6];
+    u32DataLen = (uint32_t)(buf[7] << 8) | buf[6];
 
     if(buf[0] & 0x80)    /* request data transfer direction */
     {
@@ -253,11 +254,11 @@ void VendorLBK_ClassRequest(void)
         switch(buf[1])
         {
             case REQ_GET_DATA:
-                if(data_len > 64)
-                    data_len = 64;
+                if(u32DataLen > 64)
+                    u32DataLen = 64;
                 //USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0)), (uint8_t *)&SendBuffer, g_SendLen);
                 /* Data stage */
-                USBD_PrepareCtrlIn((uint8_t *)g_Ctrl_Buff, data_len);
+                USBD_PrepareCtrlIn((uint8_t *)(uint32_t)s_au8CtrlBuff, u32DataLen);
                 /* Status stage */
                 USBD_PrepareCtrlOut(0, 0);
                 break;
@@ -274,11 +275,11 @@ void VendorLBK_ClassRequest(void)
         switch(buf[1])
         {
             case REQ_SET_DATA:
-                USBD_PrepareCtrlOut((uint8_t *)g_Ctrl_Buff, buf[6]);
+                USBD_PrepareCtrlOut((uint8_t *)(uint32_t)s_au8CtrlBuff, buf[6]);
 
                 /* Request Type = INPUT */
                 USBD_SET_DATA1(EP1);
-                USBD_SET_PAYLOAD_LEN(EP1, data_len);
+                USBD_SET_PAYLOAD_LEN(EP1, u32DataLen);
                 /* Status stage */
                 USBD_PrepareCtrlIn(0, 0);
                 break;
@@ -294,27 +295,27 @@ void VendorLBK_ClassRequest(void)
 
 void VendorLBK_ProcessData(void)
 {
-    int  i, data_len;
+    uint32_t  i, u32DataLen;
 
     /*
      * Process interrupt-out
      */
-    if(g_u8EP3Ready)
+    if(s_u8EP3Ready)
     {
-        g_u8EP3Ready = 0;
-        data_len = USBD_GET_PAYLOAD_LEN(EP3);
-        if(data_len > EP3_MAX_PKT_SIZE)
+        s_u8EP3Ready = 0;
+        u32DataLen = USBD_GET_PAYLOAD_LEN(EP3);
+        if(u32DataLen > EP3_MAX_PKT_SIZE)
         {
             printf("Error! EP3 data overrun!\n");
-            data_len = EP3_MAX_PKT_SIZE;
+            u32DataLen = EP3_MAX_PKT_SIZE;
         }
 
-        /* Read interrupt-out packet from USBD SRAM to g_Int_Buff[] */
-        for(i = 0; i < data_len; i++)
-            g_Int_Buff[i] = inpb(USBD_BUF_BASE + EP3_BUF_BASE + i);
+        /* Read interrupt-out packet from USBD SRAM to s_au8IntBuff[] */
+        for(i = 0; i < u32DataLen; i++)
+            s_au8IntBuff[i] = inpb(USBD_BUF_BASE + EP3_BUF_BASE + i);
 
-        /* Write g_Int_Buff[] to USBD SRAM as next interrupt-in packet */
-        USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + EP2_BUF_BASE), (uint8_t *)g_Int_Buff, data_len);
+        /* Write s_au8IntBuff[] to USBD SRAM as next interrupt-in packet */
+        USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + EP2_BUF_BASE), (uint8_t *)(uint32_t)s_au8IntBuff, u32DataLen);
 
         USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
     }
@@ -322,22 +323,22 @@ void VendorLBK_ProcessData(void)
     /*
      * Process isochronous-out
      */
-    if(g_u8EP5Ready)
+    if(s_u8EP5Ready)
     {
-        g_u8EP5Ready = 0;
-        data_len = USBD_GET_PAYLOAD_LEN(EP5);
-        if(data_len > EP5_MAX_PKT_SIZE)
+        s_u8EP5Ready = 0;
+        u32DataLen = USBD_GET_PAYLOAD_LEN(EP5);
+        if(u32DataLen > EP5_MAX_PKT_SIZE)
         {
             printf("Error! EP5 data overrun!\n");
-            data_len = EP5_MAX_PKT_SIZE;
+            u32DataLen = EP5_MAX_PKT_SIZE;
         }
 
-        /* Read isochronous-out packet from USBD SRAM to g_Iso_Buff[] */
-        for(i = 0; i < data_len; i++)
-            g_Iso_Buff[i] = inpb(USBD_BUF_BASE + EP5_BUF_BASE + i);
+        /* Read isochronous-out packet from USBD SRAM to s_au8IsoBuff[] */
+        for(i = 0; i < u32DataLen; i++)
+            s_au8IsoBuff[i] = inpb(USBD_BUF_BASE + EP5_BUF_BASE + i);
 
-        /* Write g_Iso_Buff[] to USBD SRAM as next isochronous-in packet */
-        USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + EP4_BUF_BASE), (uint8_t *)g_Iso_Buff, data_len);
+        /* Write s_au8IsoBuff[] to USBD SRAM as next isochronous-in packet */
+        USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + EP4_BUF_BASE), (uint8_t *)(uint32_t)s_au8IsoBuff, u32DataLen);
 
         USBD_SET_PAYLOAD_LEN(EP5, EP5_MAX_PKT_SIZE);
     }
@@ -345,24 +346,24 @@ void VendorLBK_ProcessData(void)
     /*
      * Process bulk-out
      */
-    if(g_u8EP7Ready)
+    if(s_u8EP7Ready)
     {
-        g_u8EP7Ready = 0;
-        data_len = USBD_GET_PAYLOAD_LEN(EP7);
-        if(data_len > EP7_MAX_PKT_SIZE)
+        s_u8EP7Ready = 0;
+        u32DataLen = USBD_GET_PAYLOAD_LEN(EP7);
+        if(u32DataLen > EP7_MAX_PKT_SIZE)
         {
             printf("Error! EP7 data overrun!\n");
-            data_len = EP7_MAX_PKT_SIZE;
+            u32DataLen = EP7_MAX_PKT_SIZE;
         }
 
-        /* Read bulk-out packet from USBD SRAM to g_Bulk_Buff[] */
-        for(i = 0; i < data_len; i++)
-            g_Bulk_Buff[i] = inpb(USBD_BUF_BASE + EP7_BUF_BASE + i);
+        /* Read bulk-out packet from USBD SRAM to s_au8BulkBuff[] */
+        for(i = 0; i < u32DataLen; i++)
+            s_au8BulkBuff[i] = inpb(USBD_BUF_BASE + EP7_BUF_BASE + i);
 
-        /* Write g_Bulk_Buff[] to USBD SRAM as next bulk-in packet */
-        USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + EP6_BUF_BASE), (uint8_t *)g_Bulk_Buff, data_len);
+        /* Write s_au8BulkBuff[] to USBD SRAM as next bulk-in packet */
+        USBD_MemCopy((uint8_t *)(USBD_BUF_BASE + EP6_BUF_BASE), (uint8_t *)(uint32_t)s_au8BulkBuff, u32DataLen);
 
-        USBD_SET_PAYLOAD_LEN(EP6, data_len);
+        USBD_SET_PAYLOAD_LEN(EP6, u32DataLen);
 
         USBD_SET_PAYLOAD_LEN(EP7, EP7_MAX_PKT_SIZE);
     }

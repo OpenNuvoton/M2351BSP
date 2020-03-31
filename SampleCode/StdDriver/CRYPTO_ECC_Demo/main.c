@@ -16,16 +16,22 @@
 #define PRNG_KEY_SIZE       PRNG_KEY_SIZE_256
 #define CURVE_P_SIZE        CURVE_P_192
 
-char d[168];                         /* private key */
-char Qx[168], Qy[168];               /* temporary buffer used to keep output public keys */
-char k[168];                         /* random integer k form [1, n-1]                */
-char msg[] = "This is a message. It could be encypted.";
-char R[168], S[168];                 /* temporary buffer used to keep digital signature (R,S) pair */
+static char d[168];                         /* private key */
+static char Qx[168], Qy[168];               /* temporary buffer used to keep output public keys */
+static char k[168];                         /* random integer k form [1, n-1]                */
+static char msg[] = "This is a message. It could be encypted.";
+static char R[168], S[168];                 /* temporary buffer used to keep digital signature (R,S) pair */
 
 
 
 
 #define ENDIAN(x)   ((((x)>>24)&0xff) | (((x)>>8)&0xff00) | (((x)<<8)&0xff0000) | ((x)<<24))
+
+uint8_t Byte2Char(uint8_t c);
+void CRPT_IRQHandler(void);
+void  dump_buff_hex(uint8_t *pucBuff, int nBytes);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
 
 uint8_t Byte2Char(uint8_t c)
 {
@@ -126,8 +132,8 @@ void DEBUG_PORT_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    int32_t i, j, nbits, m, err;
-    uint32_t time;
+    int32_t j, m, err;
+    uint32_t time, i, u32NBits;
     BL_RNG_T rng;
     uint8_t au8r[KEY_LENGTH / 8];
 
@@ -146,7 +152,7 @@ int32_t main(void)
     NVIC_EnableIRQ(CRPT_IRQn);
     ECC_ENABLE_INT(CRPT);
 
-    nbits = KEY_LENGTH;
+    u32NBits = KEY_LENGTH;
 
     /* Initial TRNG */
     BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
@@ -155,9 +161,9 @@ int32_t main(void)
     {
 
         /* Generate random number for private key */
-        BL_Random(&rng, au8r, nbits / 8);
+        BL_Random(&rng, au8r, u32NBits / 8);
 
-        for(i = 0, j = 0; i < nbits / 8; i++)
+        for(i = 0, j = 0; i < u32NBits / 8; i++)
         {
             d[j++] = Byte2Char(au8r[i] & 0xf);
             d[j++] = Byte2Char(au8r[i] >> 4);
@@ -204,9 +210,9 @@ int32_t main(void)
         printf("//-------------------------------------------------------------------------//\n");
 
         /* Generate random number k */
-        BL_Random(&rng, au8r, nbits / 8);
+        BL_Random(&rng, au8r, u32NBits / 8);
 
-        for(i = 0, j = 0; i < nbits / 8; i++)
+        for(i = 0, j = 0; i < u32NBits / 8; i++)
         {
             k[j++] = Byte2Char(au8r[i] & 0xf);
             k[j++] = Byte2Char(au8r[i] >> 4);

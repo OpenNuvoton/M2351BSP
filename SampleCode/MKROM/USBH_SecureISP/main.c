@@ -17,21 +17,31 @@
 #define CLK_PLLCTL_192MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 16) | CLK_PLLCTL_NO_1)
 
 
-HID_DEV_T   *g_hid_list[CONFIG_HID_MAX_DEV];
-uint8_t     g_buff_pool[1024] __attribute__((aligned(32)));
+static HID_DEV_T   *s_hid_list[CONFIG_HID_MAX_DEV];
+static uint8_t     s_au8BuffPool[1024] __attribute__((aligned(32)));
 
 extern int32_t Process_USBHCommand(HID_DEV_T *hdev);
 
-volatile uint32_t  g_tick_cnt;
+static volatile uint32_t  s_u32TickCnt;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void  dump_buff_hex(uint8_t *pucBuff, int nBytes);
+int  is_a_new_hid_device(HID_DEV_T *hdev);
+void update_hid_device_list(HID_DEV_T *hdev);
+int  init_hid_device(HID_DEV_T *hdev);
+void SYS_Init(void);
+uint32_t CLK_GetUSBFreq(void);
+
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -41,10 +51,10 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_tick_cnt;
+    return s_u32TickCnt;
 }
 
-void delay_us(int usec)
+void delay_us(uint32_t u32USec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -54,7 +64,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32USec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS) {}
@@ -84,8 +94,8 @@ int  is_a_new_hid_device(HID_DEV_T *hdev)
     int    i;
     for(i = 0; i < CONFIG_HID_MAX_DEV; i++)
     {
-        if((g_hid_list[i] != NULL) && (g_hid_list[i] == hdev) &&
-                (g_hid_list[i]->uid == hdev->uid))
+        if((s_hid_list[i] != NULL) && (s_hid_list[i] == hdev) &&
+                (s_hid_list[i]->uid == hdev->uid))
             return 0;
     }
     return 1;
@@ -94,10 +104,10 @@ int  is_a_new_hid_device(HID_DEV_T *hdev)
 void update_hid_device_list(HID_DEV_T *hdev)
 {
     int  i = 0;
-    memset(g_hid_list, 0, sizeof(g_hid_list));
+    memset(s_hid_list, 0, sizeof(s_hid_list));
     while((i < CONFIG_HID_MAX_DEV) && (hdev != NULL))
     {
-        g_hid_list[i++] = hdev;
+        s_hid_list[i++] = hdev;
         hdev = hdev->next;
     }
 }
@@ -105,9 +115,9 @@ void update_hid_device_list(HID_DEV_T *hdev)
 int  init_hid_device(HID_DEV_T *hdev)
 {
     uint8_t   *data_buff;
-    int       i, ret;
+    int       ret;
 
-    data_buff = (uint8_t *)((uint32_t)g_buff_pool);
+    data_buff = (uint8_t *)((uint32_t)s_au8BuffPool);
 
     printf("\n\n==================================\n");
     printf("  Init HID device : 0x%x\n", (int)hdev);
@@ -198,7 +208,6 @@ uint32_t CLK_GetUSBFreq(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main()
 {
-    int          i, ret;
     HID_DEV_T    *hdev, *hdev_list;
 
     /* Unlock protected registers */
@@ -226,7 +235,7 @@ int main()
     usbh_hid_init();
     usbh_memory_used();
 
-    memset(g_hid_list, 0, sizeof(g_hid_list));
+    memset(s_hid_list, 0, sizeof(s_hid_list));
 
     while(1)
     {
@@ -251,8 +260,6 @@ int main()
             usbh_memory_used();
         }
     }
-
-    while(1) {}
 }
 
 /*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/

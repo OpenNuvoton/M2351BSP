@@ -13,7 +13,9 @@
 
 #define PLL_CLOCK       64000000
 
-uint32_t    page_buff[FMC_FLASH_PAGE_SIZE / 4];
+static uint32_t    s_au32PageBuff[FMC_FLASH_PAGE_SIZE / 4];
+
+void SYS_Init(void);
 
 void SYS_Init(void)
 {
@@ -65,6 +67,7 @@ void SYS_Init(void)
 int32_t main(void)
 {
     uint32_t i, u32Addr, u32Maddr;
+    int32_t i32RetVal;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -109,12 +112,12 @@ int32_t main(void)
         {
             /* Prepare test pattern */
             for(i = 0; i < FMC_MULTI_WORD_PROG_LEN; i += 4)
-                page_buff[i / 4] = u32Maddr + i;
+                s_au32PageBuff[i / 4] = u32Maddr + i;
 
-            i = FMC_WriteMultiple(u32Maddr, page_buff, FMC_MULTI_WORD_PROG_LEN);
-            if(i <= 0)
+            i32RetVal = FMC_WriteMultiple(u32Maddr, s_au32PageBuff, FMC_MULTI_WORD_PROG_LEN);
+            if(i32RetVal <= 0)
             {
-                printf("FMC_WriteMultiple failed: %d\n", i);
+                printf("FMC_WriteMultiple failed: %d\n", i32RetVal);
                 goto err_out;
             }
             printf("programmed length = %d\n", i);
@@ -125,13 +128,13 @@ int32_t main(void)
         printf("    Verify...");
 
         for(i = 0; i < FMC_FLASH_PAGE_SIZE; i += 4)
-            page_buff[i / 4] = u32Addr + i;
+            s_au32PageBuff[i / 4] = u32Addr + i;
 
         for(i = 0; i < FMC_FLASH_PAGE_SIZE; i += 4)
         {
-            if(FMC_Read(u32Addr + i) != page_buff[i / 4])
+            if(FMC_Read(u32Addr + i) != s_au32PageBuff[i / 4])
             {
-                printf("\n[FAILED] Data mismatch at address 0x%x, expect: 0x%x, read: 0x%x!\n", u32Addr + i, page_buff[i / 4], FMC_Read(u32Addr + i));
+                printf("\n[FAILED] Data mismatch at address 0x%x, expect: 0x%x, read: 0x%x!\n", u32Addr + i, s_au32PageBuff[i / 4], FMC_Read(u32Addr + i));
                 goto err_out;
             }
         }

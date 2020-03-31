@@ -10,6 +10,11 @@
 #include "NuMicro.h"
 
 
+void EINT0_IRQHandler(void);
+void EINT1_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
+
 /**
  * @brief       External INT0 IRQ
  *

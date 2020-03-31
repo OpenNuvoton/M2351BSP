@@ -19,18 +19,26 @@
    So the command defined below starting with 0xA0 */
 
 // Select File
-const uint8_t g_au8SelectMF[] = {0xA0, 0xA4, 0x00, 0x00, 0x02, 0x3F, 0x00};
-const uint8_t g_au8SelectDF_TELECOM[] = {0xA0, 0xA4, 0x00, 0x00, 0x02, 0x7F, 0x10};
-const uint8_t g_au8SelectEF_ADN[] = {0xA0, 0xA4, 0x00, 0x00, 0x02, 0x6F, 0x3A};
+static const uint8_t s_au8SelectMF[] = {0xA0, 0xA4, 0x00, 0x00, 0x02, 0x3F, 0x00};
+static const uint8_t s_au8SelectDF_TELECOM[] = {0xA0, 0xA4, 0x00, 0x00, 0x02, 0x7F, 0x10};
+static const uint8_t s_au8SelectEF_ADN[] = {0xA0, 0xA4, 0x00, 0x00, 0x02, 0x6F, 0x3A};
 //Get Response
-uint8_t g_au8GetResp[] = {0xA0, 0xC0, 0x00, 0x00, 0x00};
+static uint8_t s_au8GetResp[] = {0xA0, 0xC0, 0x00, 0x00, 0x00};
 //Read Record
-uint8_t g_au8ReadRec[] = {0xA0, 0xB2, 0x01, 0x04, 0x00};
+static uint8_t s_au8ReadRec[] = {0xA0, 0xB2, 0x01, 0x04, 0x00};
 //Verify CHV, CHV = Card Holder Verification information
-uint8_t g_au8VerifyCHV[] = {0xA0, 0x20, 0x00, 0x01, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static uint8_t s_au8VerifyCHV[] = {0xA0, 0x20, 0x00, 0x01, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-uint8_t g_au8Buf[300];
-uint32_t g_u32Len;
+static uint8_t s_au8Buf[300];
+static uint32_t s_u32Len;
+
+void SC0_IRQHandler(void);
+void GetPIN(void);
+int UnlockSIM(uint32_t u32RetryCnt);
+void SYS_Init(void);
+void UART_Init(void);
+void ReadPhoneBook(uint32_t cnt);
+
 
 /**
   * @brief  The interrupt services routine of smartcard port 0
@@ -61,8 +69,7 @@ void SC0_IRQHandler(void)
   */
 void GetPIN(void)
 {
-    int i = 0;
-    char c = 0;
+    int i = 0, c = 0;
 
     printf("Please input PIN number:");
     while(i < 8)
@@ -70,7 +77,7 @@ void GetPIN(void)
         c = getchar();
         if(c >= 0x30 && c <= 0x39)      // Valid input characters (0~9)
         {
-            g_au8VerifyCHV[5 + i] = c;
+            s_au8VerifyCHV[5 + i] = (uint8_t)c;
             printf("%c", c);
             i++;
         }
@@ -99,7 +106,7 @@ void GetPIN(void)
     // Fill remaining digits with 0xFF
     for(; i < 8; i++)
     {
-        g_au8VerifyCHV[5 + i] = 0xFF;
+        s_au8VerifyCHV[5 + i] = 0xFF;
     }
 
     printf("\n");
@@ -120,12 +127,12 @@ int UnlockSIM(uint32_t u32RetryCnt)
     {
         GetPIN(); // Ask user input PIN
 
-        if(SCLIB_StartTransmission(SC_INTF, g_au8VerifyCHV, 13, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+        if(SCLIB_StartTransmission(SC_INTF, s_au8VerifyCHV, 13, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
         {
             printf("Command Verify CHV failed\n");
             break;
         }
-        if(g_au8Buf[0] == 0x90 || g_au8Buf[1] == 0x00)
+        if(s_au8Buf[0] == 0x90 || s_au8Buf[1] == 0x00)
         {
             printf("Pass\n");
             return 0;
@@ -149,7 +156,7 @@ int UnlockSIM(uint32_t u32RetryCnt)
   */
 void ReadPhoneBook(uint32_t cnt)
 {
-    int i, j, k;
+    uint32_t i, j, k;
 
     /*
         EF_ADN structure looks like below:
@@ -164,34 +171,34 @@ void ReadPhoneBook(uint32_t cnt)
     */
     for(i = 1; i < cnt + 1; i++)
     {
-        g_au8ReadRec[2] = (uint8_t)i;
-        if(SCLIB_StartTransmission(SC_INTF, g_au8ReadRec, 5, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+        s_au8ReadRec[2] = (uint8_t)i;
+        if(SCLIB_StartTransmission(SC_INTF, s_au8ReadRec, 5, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
         {
             printf("Command Read Record failed\n");
             break;
         }
-        if(g_au8Buf[0] == 0xFF) // This is an empty entry
+        if(s_au8Buf[0] == 0xFF) // This is an empty entry
             continue;
         printf("\n======== %d ========", i);
         printf("\nName: ");
-        for(j = 0; g_au8Buf[j] != 0xFF; j++)
+        for(j = 0; s_au8Buf[j] != 0xFF; j++)
         {
-            printf("%c", g_au8Buf[j]);
+            printf("%c", s_au8Buf[j]);
         }
-        while(g_au8Buf[j] == 0xFF)   // Skip reset of the Alpha Identifier bytes
+        while(s_au8Buf[j] == 0xFF)   // Skip reset of the Alpha Identifier bytes
             j++;
 
         printf("\nNumber: ");
         j += 2; // Skip Length of BCD and TNO/NPI
         for(k = 0; k < 10; k++)
         {
-            if((g_au8Buf[j + k] & 0xf) != 0xF)
-                printf("%c", (g_au8Buf[j + k] & 0xf) + 0x30);
+            if((s_au8Buf[j + k] & 0xf) != 0xF)
+                printf("%c", (s_au8Buf[j + k] & 0xf) + 0x30);
             else
                 break;
 
-            if((g_au8Buf[j + k] >> 4) != 0xF)
-                printf("%c", (g_au8Buf[j + k] >> 4) + 0x30);
+            if((s_au8Buf[j + k] >> 4) != 0xF)
+                printf("%c", (s_au8Buf[j + k] >> 4) + 0x30);
             else
                 break;
         }
@@ -337,19 +344,19 @@ int main(void)
     }
 
     // Select master file.
-    if(SCLIB_StartTransmission(SC_INTF, (uint8_t *)g_au8SelectMF, 7, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+    if(SCLIB_StartTransmission(SC_INTF, (uint8_t *)(uint32_t)s_au8SelectMF, 7, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
     {
         printf("Command Select MF failed\n");
         goto exit;
     }
 
     // If there is no error during transmission, check the response from card
-    if(g_u32Len == 2 && g_au8Buf[0] == 0x9F)
+    if(s_u32Len == 2 && s_au8Buf[0] == 0x9F)
     {
         // Everything goes fine, SIM card response 0x9F following by the response data length
-        g_au8GetResp[4] = g_au8Buf[1]; // response data length
+        s_au8GetResp[4] = s_au8Buf[1]; // response data length
         // Issue "get response" command to get the response from SIM card
-        if(SCLIB_StartTransmission(SC_INTF, g_au8GetResp, 5, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+        if(SCLIB_StartTransmission(SC_INTF, s_au8GetResp, 5, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
         {
             printf("Command Get response failed\n");
             goto exit;
@@ -362,7 +369,7 @@ int main(void)
     }
 
     // Response ends with 0x9000 means command success
-    if(g_au8Buf[g_u32Len - 2] != 0x90 || g_au8Buf[g_u32Len - 1] != 0x00)
+    if(s_au8Buf[s_u32Len - 2] != 0x90 || s_au8Buf[s_u32Len - 1] != 0x00)
     {
         printf("Cannot select MF\n");
         goto exit;
@@ -394,43 +401,43 @@ int main(void)
     */
 
     // Read byte 19 listed in above table to check if SIM is locked
-    if(g_au8Buf[18] & 0x80)
+    if(s_au8Buf[18] & 0x80)
     {
-        if((u32Retry = (g_au8Buf[18] & 0xF)) == 0)   //=> Blocked!!
+        if((u32Retry = (s_au8Buf[18] & 0xF)) == 0)   //=> Blocked!!
         {
             printf("SIM locked, and unlock retry count exceed\n");
             goto exit;
         }
     }
     // Some SIM cards has file protect by CHV1, but CHV1 disabled.
-    if(g_au8Buf[13] & 0x80)
+    if(s_au8Buf[13] & 0x80)
     {
         printf("CHV1 disabled\n");
         u32CHV1Disabled = 1;
     }
 
     // Select Dedicated File DFTELECOM which contains service related information
-    if(SCLIB_StartTransmission(SC_INTF, (uint8_t *)g_au8SelectDF_TELECOM, 7, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+    if(SCLIB_StartTransmission(SC_INTF, (uint8_t *)(uint32_t)s_au8SelectDF_TELECOM, 7, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
     {
         printf("Command Select DF failed\n");
         goto exit;
     }
-    // Don't care about the response of g_au8SelectDF_TELECOM command here as long as there's no error.
+    // Don't care about the response of s_au8SelectDF_TELECOM command here as long as there's no error.
 
 
     /* Select Elementary File ADN, where ADN stands for "Abbreviated dialling numbers",
        this is the file used to store phone book */
-    if(SCLIB_StartTransmission(SC_INTF, (uint8_t *)g_au8SelectEF_ADN, 7, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+    if(SCLIB_StartTransmission(SC_INTF, (uint8_t *)(uint32_t)s_au8SelectEF_ADN, 7, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
     {
         printf("Command Select EF failed\n");
         goto exit;
     }
 
-    if(g_u32Len == 2 && g_au8Buf[0] == 0x9F)     // response data length
+    if(s_u32Len == 2 && s_au8Buf[0] == 0x9F)     // response data length
     {
         // Everything goes fine, SIM card response 0x9F following by the response data length
-        g_au8GetResp[4] = g_au8Buf[1];
-        if(SCLIB_StartTransmission(SC_INTF, g_au8GetResp, 5, g_au8Buf, &g_u32Len) != SCLIB_SUCCESS)
+        s_au8GetResp[4] = s_au8Buf[1];
+        if(SCLIB_StartTransmission(SC_INTF, s_au8GetResp, 5, s_au8Buf, &s_u32Len) != SCLIB_SUCCESS)
         {
             printf("Command Get response failed\n");
             goto exit;
@@ -460,11 +467,11 @@ int main(void)
         15      Length of a record
     */
 
-    g_au8ReadRec[4] = g_au8Buf[14]; // Phone book record length
-    u32Cnt = ((g_au8Buf[2] << 8) + g_au8Buf[3]) / g_au8Buf[14];   // Phone book record number
+    s_au8ReadRec[4] = s_au8Buf[14]; // Phone book record length
+    u32Cnt = (uint32_t)((s_au8Buf[2] << 8) + s_au8Buf[3]) / s_au8Buf[14];   // Phone book record number
 
     // Read or update EF_ADN can be protected by CHV1, so check if CHV1 is enabled
-    if(((g_au8Buf[8] & 0x10) == 0x10) && (u32CHV1Disabled == 0))    //Protect by CHV1 ?
+    if(((s_au8Buf[8] & 0x10) == 0x10) && (u32CHV1Disabled == 0))    //Protect by CHV1 ?
     {
         if(UnlockSIM(u32Retry) < 0)
         {

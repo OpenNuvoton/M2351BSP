@@ -13,6 +13,7 @@
 
 extern volatile uint8_t u8I2cDataReady;
 extern uint8_t au8I2cRcvBuf[];
+extern uint32_t u32Pclk1;
 
 /*-------------------------------------------------------------*/
 void I2C_Init(void);

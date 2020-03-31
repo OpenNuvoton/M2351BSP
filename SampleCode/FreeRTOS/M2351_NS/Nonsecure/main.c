@@ -25,7 +25,7 @@
 #include "semphr.h"
 
 /* Demo application include. */
-#include "ParTest.h"
+#include "partest.h"
 #include "QueueSet.h"
 
 /* Set mainCREATE_SIMPLE_BLINKY_DEMO_ONLY to one to run the simple blinky demo,
@@ -52,7 +52,10 @@ extern void main_full( void );
  * CMSIS clock configuration function.
  */
 extern void SystemCoreClockUpdate( void );
-
+void vApplicationMallocFailedHook( void )__attribute__((noreturn));
+void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )__attribute__((noreturn));
+void vApplicationIdleHook( void );
+void vApplicationTickHook( void );
 /*-----------------------------------------------------------*/
 
 int main( void )

@@ -23,10 +23,10 @@ void USCI_SPI_Init(void);
 void UsciSpiLoopTest_WithPDMA(void);
 
 /* Global variable declaration */
-uint16_t g_au16MasterToSlaveTestPattern[TEST_COUNT];
-uint16_t g_au16SlaveToMasterTestPattern[TEST_COUNT];
-uint16_t g_au16MasterRxBuffer[TEST_COUNT];
-uint16_t g_au16SlaveRxBuffer[TEST_COUNT];
+static uint16_t s_au16MasterToSlaveTestPattern[TEST_COUNT];
+static uint16_t s_au16SlaveToMasterTestPattern[TEST_COUNT];
+static uint16_t s_au16MasterRxBuffer[TEST_COUNT];
+static uint16_t s_au16SlaveRxBuffer[TEST_COUNT];
 
 int main(void)
 {
@@ -160,7 +160,7 @@ void USCI_SPI_Init(void)
 
 void UsciSpiLoopTest_WithPDMA(void)
 {
-    uint32_t u32DataCount, u32TestCycle;
+    uint16_t u16DataCount, u32TestCycle;
     uint32_t u32RegValue, u32Abort;
     int32_t i32Err;
 
@@ -171,10 +171,10 @@ void UsciSpiLoopTest_WithPDMA(void)
     printf("\nUSCI_SPI0/1 Loop test with PDMA ");
 
     /* Source data initiation */
-    for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
+    for(u16DataCount = 0; u16DataCount < TEST_COUNT; u16DataCount++)
     {
-        g_au16MasterToSlaveTestPattern[u32DataCount] = 0x5500 | (u32DataCount + 1);
-        g_au16SlaveToMasterTestPattern[u32DataCount] = 0xAA00 | (u32DataCount + 1);
+        s_au16MasterToSlaveTestPattern[u16DataCount] = 0x5500 | (u16DataCount + 1);
+        s_au16SlaveToMasterTestPattern[u16DataCount] = 0xAA00 | (u16DataCount + 1);
     }
 
     /* Reset PDMA module */
@@ -189,7 +189,7 @@ void UsciSpiLoopTest_WithPDMA(void)
       -----------------------------------------------------------------------
         Word length = 16 bits
         Transfer Count = TEST_COUNT
-        Source = g_au16MasterToSlaveTestPattern
+        Source = s_au16MasterToSlaveTestPattern
         Source Address = Increasing
         Destination = USCI_SPI0->TX
         Destination Address = Fixed
@@ -198,7 +198,7 @@ void UsciSpiLoopTest_WithPDMA(void)
     /* Set transfer width (16 bits) and transfer count */
     PDMA_SetTransferCnt(PDMA0, USPI_MASTER_TX_DMA_CH, PDMA_WIDTH_16, TEST_COUNT);
     /* Set source/destination address and attributes */
-    PDMA_SetTransferAddr(PDMA0, USPI_MASTER_TX_DMA_CH, (uint32_t)g_au16MasterToSlaveTestPattern, PDMA_SAR_INC, (uint32_t)&UspiMaster->TXDAT, PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, USPI_MASTER_TX_DMA_CH, (uint32_t)s_au16MasterToSlaveTestPattern, PDMA_SAR_INC, (uint32_t)&UspiMaster->TXDAT, PDMA_DAR_FIX);
     /* Set request source; set basic mode. */
     PDMA_SetTransferMode(PDMA0, USPI_MASTER_TX_DMA_CH, PDMA_USCI0_TX, FALSE, 0);
     /* Single request type. USCI_SPI only support PDMA single request type. */
@@ -213,14 +213,14 @@ void UsciSpiLoopTest_WithPDMA(void)
         Transfer Count = TEST_COUNT
         Source = USCI_SPI0->RX
         Source Address = Fixed
-        Destination = g_au16MasterRxBuffer
+        Destination = s_au16MasterRxBuffer
         Destination Address = Increasing
         Burst Type = Single Transfer
     =========================================================================*/
     /* Set transfer width (16 bits) and transfer count */
     PDMA_SetTransferCnt(PDMA0, USPI_MASTER_RX_DMA_CH, PDMA_WIDTH_16, TEST_COUNT);
     /* Set source/destination address and attributes */
-    PDMA_SetTransferAddr(PDMA0, USPI_MASTER_RX_DMA_CH, (uint32_t)&UspiMaster->RXDAT, PDMA_SAR_FIX, (uint32_t)g_au16MasterRxBuffer, PDMA_DAR_INC);
+    PDMA_SetTransferAddr(PDMA0, USPI_MASTER_RX_DMA_CH, (uint32_t)&UspiMaster->RXDAT, PDMA_SAR_FIX, (uint32_t)s_au16MasterRxBuffer, PDMA_DAR_INC);
     /* Set request source; set basic mode. */
     PDMA_SetTransferMode(PDMA0, USPI_MASTER_RX_DMA_CH, PDMA_USCI0_RX, FALSE, 0);
     /* Single request type. USCI_SPI only support PDMA single request type. */
@@ -235,14 +235,14 @@ void UsciSpiLoopTest_WithPDMA(void)
         Transfer Count = TEST_COUNT
         Source = USCI_SPI1->RX
         Source Address = Fixed
-        Destination = g_au16SlaveRxBuffer
+        Destination = s_au16SlaveRxBuffer
         Destination Address = Increasing
         Burst Type = Single Transfer
     =========================================================================*/
     /* Set transfer width (16 bits) and transfer count */
     PDMA_SetTransferCnt(PDMA0, USPI_SLAVE_RX_DMA_CH, PDMA_WIDTH_16, TEST_COUNT);
     /* Set source/destination address and attributes */
-    PDMA_SetTransferAddr(PDMA0, USPI_SLAVE_RX_DMA_CH, (uint32_t)&UspiSlave->RXDAT, PDMA_SAR_FIX, (uint32_t)g_au16SlaveRxBuffer, PDMA_DAR_INC);
+    PDMA_SetTransferAddr(PDMA0, USPI_SLAVE_RX_DMA_CH, (uint32_t)&UspiSlave->RXDAT, PDMA_SAR_FIX, (uint32_t)s_au16SlaveRxBuffer, PDMA_DAR_INC);
     /* Set request source; set basic mode. */
     PDMA_SetTransferMode(PDMA0, USPI_SLAVE_RX_DMA_CH, PDMA_USCI1_RX, FALSE, 0);
     /* Single request type. USCI_SPI only support PDMA single request type. */
@@ -255,7 +255,7 @@ void UsciSpiLoopTest_WithPDMA(void)
       -----------------------------------------------------------------------
         Word length = 16 bits
         Transfer Count = TEST_COUNT
-        Source = g_au16SlaveToMasterTestPattern
+        Source = s_au16SlaveToMasterTestPattern
         Source Address = Increasing
         Destination = USCI_SPI1->TX
         Destination Address = Fixed
@@ -264,7 +264,7 @@ void UsciSpiLoopTest_WithPDMA(void)
     /* Set transfer width (16 bits) and transfer count */
     PDMA_SetTransferCnt(PDMA0, USPI_SLAVE_TX_DMA_CH, PDMA_WIDTH_16, TEST_COUNT);
     /* Set source/destination address and attributes */
-    PDMA_SetTransferAddr(PDMA0, USPI_SLAVE_TX_DMA_CH, (uint32_t)g_au16SlaveToMasterTestPattern, PDMA_SAR_INC, (uint32_t)&UspiSlave->TXDAT, PDMA_DAR_FIX);
+    PDMA_SetTransferAddr(PDMA0, USPI_SLAVE_TX_DMA_CH, (uint32_t)s_au16SlaveToMasterTestPattern, PDMA_SAR_INC, (uint32_t)&UspiSlave->TXDAT, PDMA_DAR_FIX);
     /* Set request source; set basic mode. */
     PDMA_SetTransferMode(PDMA0, USPI_SLAVE_TX_DMA_CH, PDMA_USCI1_TX, FALSE, 0);
     /* Single request type. USCI_SPI only support PDMA single request type. */
@@ -301,14 +301,14 @@ void UsciSpiLoopTest_WithPDMA(void)
                     USPI_DISABLE_TX_PDMA(UspiMaster);
                     USPI_DISABLE_RX_PDMA(UspiMaster);
                     /* Check the transfer data */
-                    for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
+                    for(u16DataCount = 0; u16DataCount < TEST_COUNT; u16DataCount++)
                     {
-                        if(g_au16MasterToSlaveTestPattern[u32DataCount] != g_au16SlaveRxBuffer[u32DataCount])
+                        if(s_au16MasterToSlaveTestPattern[u16DataCount] != s_au16SlaveRxBuffer[u16DataCount])
                         {
                             i32Err = 1;
                             break;
                         }
-                        if(g_au16SlaveToMasterTestPattern[u32DataCount] != g_au16MasterRxBuffer[u32DataCount])
+                        if(s_au16SlaveToMasterTestPattern[u16DataCount] != s_au16MasterRxBuffer[u16DataCount])
                         {
                             i32Err = 1;
                             break;
@@ -319,10 +319,10 @@ void UsciSpiLoopTest_WithPDMA(void)
                         break;
 
                     /* Source data initiation */
-                    for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
+                    for(u16DataCount = 0; u16DataCount < TEST_COUNT; u16DataCount++)
                     {
-                        g_au16MasterToSlaveTestPattern[u32DataCount]++;
-                        g_au16SlaveToMasterTestPattern[u32DataCount]++;
+                        s_au16MasterToSlaveTestPattern[u16DataCount]++;
+                        s_au16SlaveToMasterTestPattern[u16DataCount]++;
                     }
                     /* Re-trigger */
                     /* Slave PDMA TX channel configuration */

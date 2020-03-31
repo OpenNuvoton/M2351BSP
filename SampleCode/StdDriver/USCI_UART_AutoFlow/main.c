@@ -16,8 +16,8 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile int32_t g_i32Pointer = 0;
-uint8_t g_u8RecData[RXBUFSIZE] = {0};
+static volatile int32_t s_i32Pointer = 0;
+static uint8_t s_au8RecData[RXBUFSIZE] = {0};
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
@@ -25,6 +25,10 @@ uint8_t g_u8RecData[RXBUFSIZE] = {0};
 void USCI_AutoFlow_FunctionTest(void);
 void USCI_AutoFlow_FunctionTxTest(void);
 void USCI_AutoFlow_FunctionRxTest(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void USCI0_Init(void);
+void USCI0_IRQHandler(void);
 
 
 void SYS_Init(void)
@@ -177,7 +181,7 @@ void USCI_AutoFlow_FunctionTest(void)
     printf("|  Please select Master or Slave test                       |\n");
     printf("|  [0] Master    [1] Slave                                  |\n");
     printf("+-----------------------------------------------------------+\n");
-    u8Item = getchar();
+    u8Item = (uint8_t)getchar();
 
     if(u8Item == '0')
         USCI_AutoFlow_FunctionTxTest();
@@ -226,12 +230,12 @@ void USCI_AutoFlow_FunctionRxTest(void)
     printf("\n Starting to receive data...\n");
 
     /* Wait for receive 1k bytes data */
-    while(g_i32Pointer < RXBUFSIZE);
+    while(s_i32Pointer < RXBUFSIZE);
 
     /* Compare Data */
     for(u32Idx = 0; u32Idx < RXBUFSIZE; u32Idx++)
     {
-        if(g_u8RecData[u32Idx] != (u32Idx & 0xFF))
+        if(s_au8RecData[u32Idx] != (u32Idx & 0xFF))
         {
             printf("Compare Data Failed\n");
             while(1);
@@ -258,8 +262,8 @@ void USCI0_IRQHandler(void)
     {
         /* Handle received data */
         UUART_CLR_PROT_INT_FLAG(UUART0, UUART_PROTSTS_RXENDIF_Msk);
-        u8InChar = UUART_READ(UUART0);
-        g_u8RecData[g_i32Pointer++] = u8InChar;
+        u8InChar = (uint8_t)UUART_READ(UUART0);
+        s_au8RecData[s_i32Pointer++] = u8InChar;
     }
     else if(u32BufSts & UUART_BUFSTS_RXOVIF_Msk)      /* Receive buffer over-run error interrupt */
     {

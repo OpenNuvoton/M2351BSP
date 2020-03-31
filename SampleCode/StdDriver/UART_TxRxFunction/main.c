@@ -17,12 +17,12 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-uint8_t g_u8RecData[RXBUFSIZE]  = {0};
+static uint8_t s_u8RecData[RXBUFSIZE]  = {0};
 
-volatile uint32_t g_u32comRbytes = 0;
-volatile uint32_t g_u32comRhead  = 0;
-volatile uint32_t g_u32comRtail  = 0;
-volatile int32_t g_i32Wait       = TRUE;
+static volatile uint32_t s_u32comRbytes = 0;
+static volatile uint32_t s_u32comRhead  = 0;
+static volatile uint32_t s_u32comRtail  = 0;
+static volatile int32_t s_i32Wait       = TRUE;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
@@ -30,6 +30,10 @@ volatile int32_t g_i32Wait       = TRUE;
 int32_t main(void);
 void UART_TEST_HANDLE(void);
 void UART_FunctionTest(void);
+
+void SYS_Init(void);
+void UART0_Init(void);
+void UART0_IRQHandler(void);
 
 
 void SYS_Init(void)
@@ -166,22 +170,22 @@ void UART_TEST_HANDLE(void)
             }             
             
             /* Get the character from UART Buffer */
-            u8InChar = UART_READ(UART0);
+            u8InChar = (uint8_t)UART_READ(UART0);
 
             printf("%c ", u8InChar);
 
             if(u8InChar == '0')
             {
-                g_i32Wait = FALSE;
+                s_i32Wait = FALSE;
             }
 
             /* Check if buffer full */
-            if(g_u32comRbytes < RXBUFSIZE)
+            if(s_u32comRbytes < RXBUFSIZE)
             {
                 /* Enqueue the character */
-                g_u8RecData[g_u32comRtail] = u8InChar;
-                g_u32comRtail = (g_u32comRtail == (RXBUFSIZE - 1)) ? 0 : (g_u32comRtail + 1);
-                g_u32comRbytes++;
+                s_u8RecData[s_u32comRtail] = u8InChar;
+                s_u32comRtail = (s_u32comRtail == (RXBUFSIZE - 1)) ? 0 : (s_u32comRtail + 1);
+                s_u32comRbytes++;
             }               
             
             printf("\nTransmission Test:");                
@@ -191,15 +195,15 @@ void UART_TEST_HANDLE(void)
     /* Transmit Holding Register Empty Interrupt Handle */    
     if(u32IntSts & UART_INTSTS_THREINT_Msk)     
     {
-        uint16_t u16Tmp;
-        u16Tmp = g_u32comRtail;
-        if(g_u32comRhead != u16Tmp)
+        uint32_t u32Tmp;
+        u32Tmp = s_u32comRtail;
+        if(s_u32comRhead != u32Tmp)
         {
-            u8InChar = g_u8RecData[g_u32comRhead];
+            u8InChar = s_u8RecData[s_u32comRhead];
             while(UART_IS_TX_FULL(UART0));      /* Wait Tx is not full to transmit data */
             UART_WRITE(UART0, u8InChar);
-            g_u32comRhead = (g_u32comRhead == (RXBUFSIZE - 1)) ? 0 : (g_u32comRhead + 1);
-            g_u32comRbytes--;
+            s_u32comRhead = (s_u32comRhead == (RXBUFSIZE - 1)) ? 0 : (s_u32comRhead + 1);
+            s_u32comRbytes--;
         }
     }  
     
@@ -233,11 +237,11 @@ void UART_FunctionTest(void)
 
     /* Enable UART RDA, THRE, RLS and Buffer Error interrupt */
     UART_EnableInt(UART0, (UART_INTEN_RDAIEN_Msk | UART_INTEN_THREIEN_Msk | UART_INTEN_RLSIEN_Msk | UART_INTEN_BUFERRIEN_Msk));
-    while(g_i32Wait);
+    while(s_i32Wait);
 
     /* Disable UART RDA, THRE, RLS and Buffer Error interrupt */
     UART_DisableInt(UART0, (UART_INTEN_RDAIEN_Msk | UART_INTEN_THREIEN_Msk | UART_INTEN_RLSIEN_Msk | UART_INTEN_BUFERRIEN_Msk));
-    g_i32Wait = TRUE;
+    s_i32Wait = TRUE;
 
 }
 

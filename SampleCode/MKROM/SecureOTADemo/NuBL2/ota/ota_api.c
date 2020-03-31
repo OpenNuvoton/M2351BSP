@@ -24,7 +24,7 @@
 /*---------------------------------------------------------------------------------------------------------*/
 
 #if (OTA_UPGRADE_FROM_SD)
-extern volatile uint32_t g_u8R3Flag;
+extern uint8_t g_u8R3Flag;
 extern uint8_t volatile g_u8SDDataReadyFlag;
 char g_au8NuBL32FileName[] = "NuBL32Fw.bin";
 char g_au8NuBL33FileName[] = "NuBL33Fw.bin";
@@ -37,6 +37,13 @@ extern volatile uint8_t g_u8ResetFlag;
 extern volatile uint8_t g_u8DisconnFlag;
 extern uint8_t g_au8SendBuf[BUF_SIZE];
 extern volatile uint32_t g_u32SendbytesLen;
+
+void OTA_SysValueInit(uint32_t u32HSI);
+unsigned long get_fattime (void);
+
+#if (OTA_UPGRADE_FROM_SD)
+void SDH0_IRQHandler(void);
+#endif
 
 /* Init NuBL2 global variables for library */
 /**
@@ -180,7 +187,7 @@ uint32_t OTA_API_GetFlashPageSize()
   */
 uint8_t OTA_API_EraseFlash(uint32_t u32FlashAddr)
 {
-    uint32_t u8Status;
+    uint8_t u8Status;
 
 //    SYS_UnlockReg();
 //    FMC_Open();
@@ -248,8 +255,7 @@ unsigned long get_fattime (void)
   */
 void SDH_Process(void)
 {
-    unsigned int volatile isr;
-    unsigned int volatile ier;
+    uint32_t volatile u32Isr;
 
     // FMI data abort interrupt
     if (SDH0->GINTSTS & SDH_GINTSTS_DTAIF_Msk)
@@ -259,25 +265,25 @@ void SDH_Process(void)
     }
 
     //----- SD interrupt status
-    isr = SDH0->INTSTS;
-    if (isr & SDH_INTSTS_BLKDIF_Msk)
+    u32Isr = SDH0->INTSTS;
+    if (u32Isr & SDH_INTSTS_BLKDIF_Msk)
     {
         // block down
         g_u8SDDataReadyFlag = TRUE;
         SDH0->INTSTS = SDH_INTSTS_BLKDIF_Msk;
     }
 
-    if (isr & SDH_INTSTS_CDIF_Msk)   // port 0 card detect
+    if (u32Isr & SDH_INTSTS_CDIF_Msk)   // port 0 card detect
     {
         //----- SD interrupt status
         // it is work to delay 50 times for SD_CLK = 200KHz
         {
             int volatile i;         // delay 30 fail, 50 OK
             for (i=0; i<0x500; i++);  // delay to make sure got updated value from REG_SDISR.
-            isr = SDH0->INTSTS;
+            u32Isr = SDH0->INTSTS;
         }
 
-        if (isr & SDH_INTSTS_CDSTS_Msk)
+        if (u32Isr & SDH_INTSTS_CDSTS_Msk)
         {
             printf("\n***** card remove !\n");
             SD0.IsCardInsert = FALSE;   // SDISR_CD_Card = 1 means card remove for GPIO mode
@@ -294,14 +300,14 @@ void SDH_Process(void)
     }
 
     // CRC error interrupt
-    if (isr & SDH_INTSTS_CRCIF_Msk)
+    if (u32Isr & SDH_INTSTS_CRCIF_Msk)
     {
-        if (!(isr & SDH_INTSTS_CRC16_Msk))
+        if (!(u32Isr & SDH_INTSTS_CRC16_Msk))
         {
             //printf("***** ISR sdioIntHandler(): CRC_16 error !\n");
             // handle CRC error
         }
-        else if (!(isr & SDH_INTSTS_CRC7_Msk))
+        else if (!(u32Isr & SDH_INTSTS_CRC7_Msk))
         {
             if (!g_u8R3Flag)
             {
@@ -312,14 +318,14 @@ void SDH_Process(void)
         SDH0->INTSTS = SDH_INTSTS_CRCIF_Msk;      // clear interrupt flag
     }
 
-    if (isr & SDH_INTSTS_DITOIF_Msk)
+    if (u32Isr & SDH_INTSTS_DITOIF_Msk)
     {
         printf("***** ISR: data in timeout !\n");
         SDH0->INTSTS |= SDH_INTSTS_DITOIF_Msk;
     }
 
     // Response in timeout interrupt
-    if (isr & SDH_INTSTS_RTOIF_Msk)
+    if (u32Isr & SDH_INTSTS_RTOIF_Msk)
     {
         printf("***** ISR: response in timeout !\n");
         SDH0->INTSTS |= SDH_INTSTS_RTOIF_Msk;
@@ -347,7 +353,7 @@ void SDH0_IRQHandler(void)
 int8_t OTA_API_SDInit(void)
 {
     TCHAR  sd_path[] = { '0', ':', 0 };    /* SD drive started from 0 */
-    int8_t i8Ret;
+    FRESULT eFresult;
 
     /* select multi-function pins */
     SYS->GPE_MFPL &= ~(SYS_GPE_MFPL_PE2MFP_Msk | SYS_GPE_MFPL_PE3MFP_Msk | SYS_GPE_MFPL_PE4MFP_Msk | SYS_GPE_MFPL_PE5MFP_Msk |
@@ -372,9 +378,9 @@ int8_t OTA_API_SDInit(void)
     /* Configure FATFS */
     SDH_Open_Disk(SDH0, CardDetect_From_GPIO);
     /* set default path */
-    i8Ret = f_chdrive(sd_path);
+    eFresult = f_chdrive(sd_path);
 
-    return i8Ret;
+    return (int8_t)eFresult;
 }
 
 /**
@@ -386,7 +392,7 @@ int8_t OTA_API_SDInit(void)
   */
 uint8_t OTA_API_SDFwPackWriteOpen(uint8_t u8NuBLxSel)
 {
-    FRESULT res;
+    FRESULT eFresult;
     char *ptr;
 
     /* Get file name of firmware package */
@@ -399,27 +405,27 @@ uint8_t OTA_API_SDFwPackWriteOpen(uint8_t u8NuBLxSel)
 
     FwPackOpen:
     /* New a file */
-    res = f_open(&g_FileObject, ptr, FA_CREATE_NEW);
-    if(res != FR_OK)
+    eFresult = f_open(&g_FileObject, ptr, FA_CREATE_NEW);
+    if(eFresult != FR_OK)
     {
-        if(res == FR_EXIST)
+        if(eFresult == FR_EXIST)
         {
             f_unlink(ptr);
             goto FwPackOpen;
         }
         else
         {
-            printf("new NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, res);
+            printf("new NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, eFresult);
         }
     }
 
     /* Open file for writing */
-    res = f_open(&g_FileObject, ptr, FA_WRITE);
-    if(res != FR_OK)
+    eFresult = f_open(&g_FileObject, ptr, FA_WRITE);
+    if(eFresult != FR_OK)
     {
-        printf("open NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, res);
+        printf("open NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, eFresult);
     }
-    return res;
+    return (uint8_t)eFresult;
 }
 
 /**
@@ -432,23 +438,23 @@ uint8_t OTA_API_SDFwPackWriteOpen(uint8_t u8NuBLxSel)
   */
 uint8_t OTA_API_SDWrite(uint8_t * pu8Buffer, uint32_t u32BufferLen)
 {
-    FRESULT res;
-    uint16_t u16ByteWrite;
+    FRESULT eFresult;
+    uint32_t u32ByteWrite;
 
     /* Write data */
-    res = f_write(&g_FileObject, pu8Buffer, u32BufferLen, (UINT *)&u16ByteWrite);
-    if(res != FR_OK)
+    eFresult = f_write(&g_FileObject, pu8Buffer, u32BufferLen, (UINT *)&u32ByteWrite);
+    if(eFresult != FR_OK)
     {
-        printf("Write data error!(0x%x)\n", res);
+        printf("Write data error!(0x%x)\n", eFresult);
     }
     /* Check writed data lentgh */
-    if (u32BufferLen != u16ByteWrite)
+    if (u32BufferLen != u32ByteWrite)
     {
         /* Write data length does not match. */
-        res = FR_DISK_ERR;
-        printf("Write legth error!(0x%x)\n", res);
+        eFresult = FR_DISK_ERR;
+        printf("Write legth error!(0x%x)\n", eFresult);
     }
-    return res;
+    return (uint8_t)eFresult;
 }
 
 /**
@@ -460,7 +466,7 @@ uint8_t OTA_API_SDWrite(uint8_t * pu8Buffer, uint32_t u32BufferLen)
   */
 uint8_t OTA_API_SDClose(uint8_t u8NuBLxSel)
 {
-    FRESULT res;
+    FRESULT eFresult;
     char *ptr;
 
     /* Get file name of firmware package */
@@ -472,13 +478,13 @@ uint8_t OTA_API_SDClose(uint8_t u8NuBLxSel)
         return FR_INVALID_PARAMETER;
 
     /* Close firmware package */
-    res = f_close(&g_FileObject);
-    if(res != FR_OK)
+    eFresult = f_close(&g_FileObject);
+    if(eFresult != FR_OK)
     {
-        printf("Close NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, res);
+        printf("Close NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, eFresult);
     }
 
-    return res;
+    return (uint8_t)eFresult;
 }
 
 /**
@@ -490,7 +496,7 @@ uint8_t OTA_API_SDClose(uint8_t u8NuBLxSel)
   */
 uint8_t OTA_API_SDFwPackReadOpen(uint8_t u8NuBLxSel)
 {
-    FRESULT res;
+    FRESULT eFresult;
     char *ptr;
 
     /* Get file name of firmware package */
@@ -502,12 +508,12 @@ uint8_t OTA_API_SDFwPackReadOpen(uint8_t u8NuBLxSel)
         return FR_INVALID_PARAMETER;
 
     /* Open existed firmware package file */
-    res = f_open(&g_FileObject, ptr, FA_OPEN_EXISTING | FA_READ);
-    if(res != FR_OK)
+    eFresult = f_open(&g_FileObject, ptr, FA_OPEN_EXISTING | FA_READ);
+    if(eFresult != FR_OK)
     {
-        printf("open NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, res);
+        printf("open NuBL3%d FW package error!(0x%x)\n",((u8NuBLxSel&BIT0)==0)?2:3, eFresult);
     }
-    return res;
+    return (uint8_t)eFresult;
 }
 
 /**
@@ -521,16 +527,16 @@ uint8_t OTA_API_SDFwPackReadOpen(uint8_t u8NuBLxSel)
   */
 uint8_t OTA_API_SDRead(uint8_t *pu8Buffer, uint32_t u32BufferLen, uint32_t *pu32ReadLen)
 {
-    FRESULT res;
+    FRESULT eFresult;
 
     /* Read data */
-    res = f_read(&g_FileObject, pu8Buffer, u32BufferLen, pu32ReadLen);
-    if(res != FR_OK)
+    eFresult = f_read(&g_FileObject, pu8Buffer, u32BufferLen, pu32ReadLen);
+    if(eFresult != FR_OK)
     {
-        printf("Read data error!(0x%x)\n", res);
+        printf("Read data error!(0x%x)\n", eFresult);
     }
 
-    return res;
+    return (uint8_t)eFresult;
 }
 
 #endif

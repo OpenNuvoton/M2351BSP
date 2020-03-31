@@ -13,12 +13,26 @@
 
 #define NAU8822     0
 
-uint32_t g_au32PcmRxBuff[2][BUFF_LEN] = {0};
-uint32_t g_au32PcmTxBuff[2][BUFF_LEN] = {0};
-DMA_DESC_T DMA_TXDESC[2], DMA_RXDESC[2];
+static uint32_t s_au32PcmRxBuff[2][BUFF_LEN] = {{0}};
+static uint32_t s_au32PcmTxBuff[2][BUFF_LEN] = {{0}};
+static DMA_DESC_T DMA_TXDESC[2], DMA_RXDESC[2];
 
-volatile uint8_t u8TxIdx = 0, u8RxIdx = 0;
-volatile uint8_t u8CopyData = 0;
+static volatile uint8_t s_u8TxIdx = 0, s_u8RxIdx = 0;
+static volatile uint8_t s_u8CopyData = 0;
+
+void PDMA0_IRQHandler(void);
+void SYS_Init(void);
+void I2C2_Init(void);
+
+#if NAU8822
+void I2C_WriteNAU8822(uint8_t u8Addr, uint16_t u16Data);
+void NAU8822_Setup(void);
+#else
+uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len);
+uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat);
+void NAU88L25_Reset(void);
+void NAU88L25_Setup(void);
+#endif
 
 void PDMA0_IRQHandler(void)
 {
@@ -31,14 +45,14 @@ void PDMA0_IRQHandler(void)
         if(PDMA_GET_TD_STS(PDMA0) & 0x4)              /* channel 2 done */
         {
             /* Copy RX data to TX buffer */
-            u8CopyData = 1;
-            u8RxIdx ^= 1;
+            s_u8CopyData = 1;
+            s_u8RxIdx ^= 1;
             PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
         }
 
         if(PDMA_GET_TD_STS(PDMA0) & 0x2)              /* channel 1 done */
         {
-            u8TxIdx ^= 1;
+            s_u8TxIdx ^= 1;
             PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF1_Msk);
         }
     }
@@ -106,6 +120,7 @@ void NAU8822_Setup()
 
 uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len)
 {
+    (void)u32Len;
     /* Send START */
     I2C_START(I2C2);
     I2C_WAIT_READY(I2C2);
@@ -311,24 +326,24 @@ void PDMA_Init(void)
 {
     /* Tx description */
     DMA_TXDESC[0].ctl = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    DMA_TXDESC[0].src = (uint32_t)&g_au32PcmTxBuff[0];
+    DMA_TXDESC[0].src = (uint32_t)&s_au32PcmTxBuff[0];
     DMA_TXDESC[0].dest = (uint32_t)&I2S0->TXFIFO;
     DMA_TXDESC[0].offset = (uint32_t)&DMA_TXDESC[1] - (PDMA0->SCATBA);
 
     DMA_TXDESC[1].ctl = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_INC | PDMA_DAR_FIX | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
-    DMA_TXDESC[1].src = (uint32_t)&g_au32PcmTxBuff[1];
+    DMA_TXDESC[1].src = (uint32_t)&s_au32PcmTxBuff[1];
     DMA_TXDESC[1].dest = (uint32_t)&I2S0->TXFIFO;
     DMA_TXDESC[1].offset = (uint32_t)&DMA_TXDESC[0] - (PDMA0->SCATBA);   //link to first description
 
     /* Rx description */
     DMA_RXDESC[0].ctl = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
     DMA_RXDESC[0].src = (uint32_t)&I2S0->RXFIFO;
-    DMA_RXDESC[0].dest = (uint32_t)&g_au32PcmRxBuff[0];
+    DMA_RXDESC[0].dest = (uint32_t)&s_au32PcmRxBuff[0];
     DMA_RXDESC[0].offset = (uint32_t)&DMA_RXDESC[1] - (PDMA0->SCATBA);
 
     DMA_RXDESC[1].ctl = ((BUFF_LEN - 1) << PDMA_DSCT_CTL_TXCNT_Pos) | PDMA_WIDTH_32 | PDMA_SAR_FIX | PDMA_DAR_INC | PDMA_REQ_SINGLE | PDMA_OP_SCATTER;
     DMA_RXDESC[1].src = (uint32_t)&I2S0->RXFIFO;
-    DMA_RXDESC[1].dest = (uint32_t)&g_au32PcmRxBuff[1];
+    DMA_RXDESC[1].dest = (uint32_t)&s_au32PcmRxBuff[1];
     DMA_RXDESC[1].offset = (uint32_t)&DMA_RXDESC[0] - (PDMA0->SCATBA);   //link to first description
 
     /* Open PDMA channel 1 for I2S TX and channel 2 for I2S RX */
@@ -418,9 +433,9 @@ int32_t main(void)
 
     while(1)
     {
-        if(u8CopyData)
+        if(s_u8CopyData)
         {
-            memcpy(&g_au32PcmTxBuff[u8TxIdx ^ 1], &g_au32PcmRxBuff[u8RxIdx], BUFF_LEN * 4);
+            memcpy(&s_au32PcmTxBuff[s_u8TxIdx ^ 1], &s_au32PcmRxBuff[s_u8RxIdx], BUFF_LEN * 4);
         }
     }
 }

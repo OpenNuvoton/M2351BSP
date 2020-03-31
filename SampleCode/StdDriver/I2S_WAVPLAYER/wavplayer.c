@@ -25,15 +25,15 @@
  * format.
  */
 
-FIL    wavFileObject;
-size_t ReturnSize;
+static FIL    wavFileObject;
+static size_t ReturnSize;
 
-signed int aPCMBuffer[2][PCM_BUFFER_SIZE];
-volatile uint8_t g_u8PCMBuffer_Full[2] = {0, 0};
-volatile uint8_t g_u8PCMBuffer_Playing = 0;
-uint32_t aWavHeader[11];
+signed int aiPCMBuffer[2][PCM_BUFFER_SIZE];
+volatile uint8_t s_au8PCMBufferFull[2] = {0, 0};
+volatile uint8_t s_u8PCMBufferPlaying = 0;
+static uint32_t s_au32WavHeader[11];
 
-extern uint8_t bAudioPlaying;
+
 
 void WAVPlayer(void)
 {
@@ -49,9 +49,9 @@ void WAVPlayer(void)
     }
 
     // read sampling rate from WAV header
-    memset(aWavHeader, 0, sizeof(aWavHeader));
-    f_read(&wavFileObject, aWavHeader, 44, &ReturnSize);
-    u32WavSamplingRate = aWavHeader[6];
+    memset(s_au32WavHeader, 0, sizeof(s_au32WavHeader));
+    f_read(&wavFileObject, s_au32WavHeader, 44, &ReturnSize);
+    u32WavSamplingRate = s_au32WavHeader[6];
 
     /* Configure NAU88L25 to specific sample rate */
     NAU88L25_ConfigSampleRate(u32WavSamplingRate);
@@ -63,7 +63,7 @@ void WAVPlayer(void)
 
     while(1)
     {
-        if((g_u8PCMBuffer_Full[0] == 1) && (g_u8PCMBuffer_Full[1] == 1))          //all buffers are full, wait
+        if((s_au8PCMBufferFull[0] == 1) && (s_au8PCMBufferFull[1] == 1))          //all buffers are full, wait
         {
             if(!bAudioPlaying)
             {
@@ -73,18 +73,18 @@ void WAVPlayer(void)
                 printf("Start Playing ...\n");
             }
 
-            while((g_u8PCMBuffer_Full[0] == 1) && (g_u8PCMBuffer_Full[1] == 1));
+            while((s_au8PCMBufferFull[0] == 1) && (s_au8PCMBufferFull[1] == 1));
             //printf(".");
         }
 
-        res = f_read(&wavFileObject, &aPCMBuffer[u8PCMBufferTargetIdx][0], PCM_BUFFER_SIZE * 4, &ReturnSize);
+        res = f_read(&wavFileObject, &aiPCMBuffer[u8PCMBufferTargetIdx][0], PCM_BUFFER_SIZE * 4, &ReturnSize);
         if(f_eof(&wavFileObject))   break;
-        g_u8PCMBuffer_Full[u8PCMBufferTargetIdx] = 1;
+        s_au8PCMBufferFull[u8PCMBufferTargetIdx] = 1;
 
         if(bAudioPlaying)
         {
-            if(g_u8PCMBuffer_Full[u8PCMBufferTargetIdx ^ 1] == 1)
-                while(g_u8PCMBuffer_Full[u8PCMBufferTargetIdx ^ 1]);
+            if(s_au8PCMBufferFull[u8PCMBufferTargetIdx ^ 1] == 1)
+                while(s_au8PCMBufferFull[u8PCMBufferTargetIdx ^ 1]);
         }
 
         u8PCMBufferTargetIdx ^= 1;

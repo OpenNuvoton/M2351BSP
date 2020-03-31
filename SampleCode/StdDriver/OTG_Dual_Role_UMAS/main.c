@@ -17,7 +17,16 @@
 
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
-uint8_t g_u8IsBdevice = 0, g_u8IsAdevice = 0;
+static uint8_t s_u8IsBdevice = 0, s_u8IsAdevice = 0;
+
+void USBOTG_IRQHandler(void);
+void  dump_buff_hex(uint8_t *pu8Buff, int i8Bytes);
+int xatoi(TCHAR **str, long *res);
+void put_dump(const unsigned char* buff, unsigned long addr, int cnt);
+void put_rc(FRESULT rc);
+void get_line(char *buff, int len);
+void SYS_Init(void);
+void USBH_Process(void);
 
 /* OTG interrupt handler */
 void USBOTG_IRQHandler(void)
@@ -32,7 +41,7 @@ void USBOTG_IRQHandler(void)
         printf("[ID changed]\n");
         /* Check ID status */
         if(OTG_GET_STATUS(OTG_STATUS_IDSTS_Msk))
-            g_u8IsAdevice = 0;
+            s_u8IsAdevice = 0;
 
         /* Clear ID status changed interrupt flag */
         OTG_CLR_INT_FLAG(OTG_INTSTS_IDCHGIF_Msk);
@@ -43,7 +52,7 @@ void USBOTG_IRQHandler(void)
         printf("[B session valid (OTG_STATUS: 0x%x)]\n", OTG->STATUS);
         /* Check ID status */
         if(OTG_GET_STATUS(OTG_STATUS_IDSTS_Msk) == 0)
-            g_u8IsBdevice = 0;
+            s_u8IsBdevice = 0;
 
         /* Clear B-device session valid state change interrupt flag */
         OTG_CLR_INT_FLAG(OTG_INTSTS_BVLDCHGIF_Msk);
@@ -57,39 +66,43 @@ void USBOTG_IRQHandler(void)
 #define BUFF_SIZE       (2048)
 
 static UINT g_u8Len = BUFF_SIZE;
-DWORD       g_u32AccSize;
-WORD        g_u16AccFiles, g_u16AccDirs;
-FILINFO     Finfo;
+static DWORD       s_u32AccSize;
+static WORD        s_u16AccFiles, s_u16AccDirs;
+static FILINFO     Finfo;
 static FIL  file1, file2;                   /* File objects                               */
 
-char        g_achLine[256];                      /* Console input buffer                       */
+static char        s_achLine[256];                      /* Console input buffer                       */
 #if _USE_LFN
 char        g_achLfname[512];                    /* Console input buffer                       */
 #endif
 
 #ifdef __ICCARM__
 #pragma data_alignment=32
-BYTE g_u8BuffPool1[BUFF_SIZE];         /* Working buffer 1                           */
-BYTE g_u8BuffPool2[BUFF_SIZE];         /* Working buffer 2                           */
+BYTE s_au8BuffPool1[BUFF_SIZE];         /* Working buffer 1                           */
+BYTE s_au8BuffPool2[BUFF_SIZE];         /* Working buffer 2                           */
 #else
-BYTE g_u8BuffPool1[BUFF_SIZE] __attribute__((aligned(32)));    /* Working buffer 1                           */
-BYTE g_u8BuffPool2[BUFF_SIZE] __attribute__((aligned(32)));    /* Working buffer 2                           */
+static BYTE s_au8BuffPool1[BUFF_SIZE] __attribute__((aligned(32)));    /* Working buffer 1                           */
+static BYTE s_au8BuffPool2[BUFF_SIZE] __attribute__((aligned(32)));    /* Working buffer 2                           */
 #endif
 
-BYTE  *Buff1;
-BYTE  *Buff2;
+static BYTE  *s_pu8Buff1;
+static BYTE  *s_pu8Buff2;
 
-volatile uint32_t  g_u32TickCnt;
+static volatile uint32_t  s_u32TickCnt;
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void delay_us(uint32_t u32USec);
 
 void SysTick_Handler(void)
 {
-    g_u32TickCnt++;
+    s_u32TickCnt++;
 }
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_u32TickCnt = 0;
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    s_u32TickCnt = 0;
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -99,14 +112,14 @@ void enable_sys_tick(int ticks_per_second)
 
 uint32_t get_ticks()
 {
-    return g_u32TickCnt;
+    return s_u32TickCnt;
 }
 
 
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(int usec)
+void delay_us(uint32_t u32USec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -116,7 +129,7 @@ void delay_us(int usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = usec;
+    TIMER0->CMP = u32USec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);
@@ -168,7 +181,7 @@ int xatoi(          /* 0:Failed, 1:Successful */
     long *res       /* Pointer to a variable to store the value */
 )
 {
-    unsigned long val;
+    long val;
     unsigned char r, s = 0;
     TCHAR c;
 
@@ -261,7 +274,7 @@ static FRESULT scan_files(char* path)
 {
     DIR dirs;
     FRESULT res;
-    BYTE i;
+    uint32_t i;
     char *fn;
 
     if((res = f_opendir(&dirs, path)) == FR_OK)
@@ -277,7 +290,7 @@ static FRESULT scan_files(char* path)
 #endif
             if(Finfo.fattrib & AM_DIR)
             {
-                g_u16AccDirs++;
+                s_u16AccDirs++;
                 *(path + i) = '/';
                 strcpy(path + i + 1, fn);
                 res = scan_files(path);
@@ -287,8 +300,8 @@ static FRESULT scan_files(char* path)
             else
             {
                 /*              printf("%s/%s\n", path, fn); */
-                g_u16AccFiles++;
-                g_u32AccSize += Finfo.fsize;
+                s_u16AccFiles++;
+                s_u32AccSize += Finfo.fsize;
             }
         }
     }
@@ -318,7 +331,7 @@ void put_rc(FRESULT rc)
 
 void get_line(char *buff, int len)
 {
-    TCHAR c;
+    int32_t c;
     int idx = 0;
 
     for(;;)
@@ -327,7 +340,7 @@ void get_line(char *buff, int len)
         putchar(c);
         if(c == '\r') break;
         if((c == '\b') && idx) idx--;
-        if((c >= ' ') && (idx < len - 1)) buff[idx++] = c;
+        if((c >= ' ') && (idx < len - 1)) buff[idx++] = (char)c;
     }
     buff[idx] = 0;
     putchar('\n');
@@ -418,7 +431,7 @@ void SYS_Init(void)
 void USBH_Process()
 {
     char        *ptr, *ptr2;
-    long        p1, p2, p3;
+    unsigned long        p1, p2, p3;
     BYTE        *buf;
     FATFS       *fs;              /* Pointer to file system object */
     FRESULT     res;
@@ -436,7 +449,7 @@ void USBH_Process()
     for(;;)
     {
 
-        if(!g_u8IsAdevice)
+        if(!s_u8IsAdevice)
         {
             printf("break-A (OTG_STATUS: 0x%x)\n", OTG->STATUS);
             return;
@@ -445,9 +458,9 @@ void USBH_Process()
         usbh_pooling_hubs();
 
         printf(_T(">"));
-        ptr = g_achLine;
+        ptr = s_achLine;
 
-        get_line(ptr, sizeof(g_achLine));
+        get_line(ptr, sizeof(s_achLine));
 
         switch(*ptr++)
         {
@@ -463,8 +476,8 @@ void USBH_Process()
                 break;
 
             case 'd' :     /* d [<lba>] - Dump sector */
-                if(!xatoi(&ptr, &p2)) p2 = sect;
-                res = (FRESULT)disk_read(3, Buff1, p2, 1);
+                if(!xatoi(&ptr, (long *)&p2)) p2 = sect;
+                res = (FRESULT)disk_read(3, s_pu8Buff1, p2, 1);
                 if(res)
                 {
                     printf("rc=%d\n", (WORD)res);
@@ -472,7 +485,7 @@ void USBH_Process()
                 }
                 sect = p2 + 1;
                 printf("Sector:%d\n", (INT)p2);
-                for(buf = (unsigned char*)Buff1, ofs = 0; ofs < 0x200; buf += 16, ofs += 16)
+                for(buf = (unsigned char*)s_pu8Buff1, ofs = 0; ofs < 0x200; buf += 16, ofs += 16)
                     put_dump(buf, ofs, 16);
                 break;
 
@@ -480,55 +493,55 @@ void USBH_Process()
                 switch(*ptr++)
                 {
                     case 'd' :  /* bd <addr> - Dump R/W buffer */
-                        if(!xatoi(&ptr, &p1)) break;
-                        for(ptr = (char*)&Buff1[p1], ofs = p1, cnt = 32; cnt; cnt--, ptr += 16, ofs += 16)
+                        if(!xatoi(&ptr, (long *)&p1)) break;
+                        for(ptr = (char*)&s_pu8Buff1[p1], ofs = p1, cnt = 32; cnt; cnt--, ptr += 16, ofs += 16)
                             put_dump((BYTE*)ptr, ofs, 16);
                         break;
 
                     case 'e' :  /* be <addr> [<data>] ... - Edit R/W buffer */
-                        if(!xatoi(&ptr, &p1)) break;
-                        if(xatoi(&ptr, &p2))
+                        if(!xatoi(&ptr, (long *)&p1)) break;
+                        if(xatoi(&ptr, (long *)&p2))
                         {
                             do
                             {
-                                Buff1[p1++] = (BYTE)p2;
+                                s_pu8Buff1[p1++] = (BYTE)p2;
                             }
-                            while(xatoi(&ptr, &p2));
+                            while(xatoi(&ptr, (long *)&p2));
                             break;
                         }
                         for(;;)
                         {
-                            printf("%04X %02X-", (WORD)p1, Buff1[p1]);
-                            get_line(g_achLine, sizeof(g_achLine));
-                            ptr = g_achLine;
+                            printf("%04X %02X-", (WORD)p1, s_pu8Buff1[p1]);
+                            get_line(s_achLine, sizeof(s_achLine));
+                            ptr = s_achLine;
                             if(*ptr == '.') break;
                             if(*ptr < ' ')
                             {
                                 p1++;
                                 continue;
                             }
-                            if(xatoi(&ptr, &p2))
-                                Buff1[p1++] = (BYTE)p2;
+                            if(xatoi(&ptr, (long *)&p2))
+                                s_pu8Buff1[p1++] = (BYTE)p2;
                             else
                                 printf("???\n");
                         }
                         break;
 
                     case 'r' :  /* br <sector> [<n>] - Read disk into R/W buffer */
-                        if(!xatoi(&ptr, &p2)) break;
-                        if(!xatoi(&ptr, &p3)) p3 = 1;
-                        printf("rc=%d\n", disk_read(0, Buff1, p2, p3));
+                        if(!xatoi(&ptr, (long *)&p2)) break;
+                        if(!xatoi(&ptr, (long *)&p3)) p3 = 1;
+                        printf("rc=%d\n", disk_read(0, s_pu8Buff1, p2, p3));
                         break;
 
                     case 'w' :  /* bw <sector> [<n>] - Write R/W buffer into disk */
-                        if(!xatoi(&ptr, &p2)) break;
-                        if(!xatoi(&ptr, &p3)) p3 = 1;
-                        printf("rc=%d\n", disk_write(0, Buff1, p2, p3));
+                        if(!xatoi(&ptr, (long *)&p2)) break;
+                        if(!xatoi(&ptr, (long *)&p3)) p3 = 1;
+                        printf("rc=%d\n", disk_write(0, s_pu8Buff1, p2, p3));
                         break;
 
                     case 'f' :  /* bf <n> - Fill working buffer */
-                        if(!xatoi(&ptr, &p1)) break;
-                        memset(Buff1, (int)p1, BUFF_SIZE);
+                        if(!xatoi(&ptr, (long *)&p1)) break;
+                        memset(s_pu8Buff1, (int)p1, BUFF_SIZE);
                         break;
 
                 }
@@ -552,7 +565,7 @@ void USBH_Process()
                                fs->n_rootdir, (INT)fs->fsize, (INT)(fs->n_fatent - 2),
                                (INT)fs->fatbase, (INT)fs->dirbase, (INT)fs->database
                               );
-                        g_u32AccSize = g_u16AccFiles = g_u16AccDirs = 0;
+                        s_u32AccSize = s_u16AccFiles = s_u16AccDirs = 0;
 #if _USE_LFN
                         Finfo.lfname = g_achLfname;
                         Finfo.lfsize = sizeof(g_achLfname);
@@ -565,7 +578,7 @@ void USBH_Process()
                         }
                         printf("\r%d files, %d bytes.\n%d folders.\n"
                                "%d KB total disk space.\n%d KB available.\n",
-                               g_u16AccFiles, (INT)g_u32AccSize, g_u16AccDirs,
+                               s_u16AccFiles, (INT)s_u32AccSize, s_u16AccDirs,
                                (INT)((fs->n_fatent - 2) * (fs->csize / 2)), (INT)(p2 * (fs->csize / 2))
                               );
                         break;
@@ -614,7 +627,7 @@ void USBH_Process()
 
 
                     case 'o' :  /* fo <mode> <file> - Open a file */
-                        if(!xatoi(&ptr, &p1)) break;
+                        if(!xatoi(&ptr, (long *)&p1)) break;
                         while(*ptr == ' ') ptr++;
                         put_rc(f_open(&file1, ptr, (BYTE)p1));
                         break;
@@ -624,7 +637,7 @@ void USBH_Process()
                         break;
 
                     case 'e' :  /* fe - Seek file pointer */
-                        if(!xatoi(&ptr, &p1)) break;
+                        if(!xatoi(&ptr, (long *)&p1)) break;
                         res = f_lseek(&file1, p1);
                         put_rc(res);
                         if(res == FR_OK)
@@ -632,7 +645,7 @@ void USBH_Process()
                         break;
 
                     case 'd' :  /* fd <len> - read and dump file from current fp */
-                        if(!xatoi(&ptr, &p1)) break;
+                        if(!xatoi(&ptr, (long *)&p1)) break;
                         ofs = file1.fptr;
                         while(p1)
                         {
@@ -646,20 +659,20 @@ void USBH_Process()
                                 cnt = p1;
                                 p1 = 0;
                             }
-                            res = f_read(&file1, Buff1, cnt, &cnt);
+                            res = f_read(&file1, s_pu8Buff1, cnt, &cnt);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
                                 break;
                             }
                             if(!cnt) break;
-                            put_dump(Buff1, ofs, cnt);
+                            put_dump(s_pu8Buff1, ofs, (int)cnt);
                             ofs += 16;
                         }
                         break;
 
                     case 'r' :  /* fr <len> - read file */
-                        if(!xatoi(&ptr, &p1)) break;
+                        if(!xatoi(&ptr, (long *)&p1)) break;
                         p2 = 0;
                         t0 = get_ticks();
                         while(p1)
@@ -674,7 +687,7 @@ void USBH_Process()
                                 cnt = p1;
                                 p1 = 0;
                             }
-                            res = f_read(&file1, Buff1, cnt, &s2);
+                            res = f_read(&file1, s_pu8Buff1, cnt, &s2);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
@@ -689,8 +702,8 @@ void USBH_Process()
                         break;
 
                     case 'w' :  /* fw <len> <val> - write file */
-                        if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2)) break;
-                        memset(Buff1, (BYTE)p2, g_u8Len);
+                        if(!xatoi(&ptr, (long *)&p1) || !xatoi(&ptr, (long *)&p2)) break;
+                        memset(s_pu8Buff1, (BYTE)p2, g_u8Len);
                         p2 = 0;
                         t0 = get_ticks();
                         while(p1)
@@ -705,7 +718,7 @@ void USBH_Process()
                                 cnt = p1;
                                 p1 = 0;
                             }
-                            res = f_write(&file1, Buff1, cnt, &s2);
+                            res = f_write(&file1, s_pu8Buff1, cnt, &s2);
                             if(res != FR_OK)
                             {
                                 put_rc(res);
@@ -743,15 +756,15 @@ void USBH_Process()
                         break;
 
                     case 'a' :  /* fa <atrr> <mask> <name> - Change file/dir attribute */
-                        if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2)) break;
+                        if(!xatoi(&ptr, (long *)&p1) || !xatoi(&ptr, (long *)&p2)) break;
                         while(*ptr == ' ') ptr++;
-                        put_rc(f_chmod(ptr, p1, p2));
+                        put_rc(f_chmod(ptr, (BYTE)p1, (BYTE)p2));
                         break;
 
                     case 't' :  /* ft <year> <month> <day> <hour> <min> <sec> <name> - Change time stamp */
-                        if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2) || !xatoi(&ptr, &p3)) break;
+                        if(!xatoi(&ptr, (long *)&p1) || !xatoi(&ptr, (long *)&p2) || !xatoi(&ptr, (long *)&p3)) break;
                         Finfo.fdate = (WORD)(((p1 - 1980) << 9) | ((p2 & 15) << 5) | (p3 & 31));
-                        if(!xatoi(&ptr, &p1) || !xatoi(&ptr, &p2) || !xatoi(&ptr, &p3)) break;
+                        if(!xatoi(&ptr, (long *)&p1) || !xatoi(&ptr, (long *)&p2) || !xatoi(&ptr, (long *)&p3)) break;
                         Finfo.ftime = (WORD)(((p1 & 31) << 11) | ((p1 & 63) << 5) | ((p1 >> 1) & 31));
                         put_rc(f_utime(ptr, &Finfo));
                         break;
@@ -783,9 +796,9 @@ void USBH_Process()
                         p1 = 0;
                         for(;;)
                         {
-                            res = f_read(&file1, Buff1, BUFF_SIZE, &s1);
+                            res = f_read(&file1, s_pu8Buff1, BUFF_SIZE, &s1);
                             if(res || s1 == 0) break;    /* error or eof */
-                            res = f_write(&file2, Buff1, s1, &s2);
+                            res = f_write(&file2, s_pu8Buff1, s1, &s2);
                             p1 += s2;
                             if(res || s2 < s1) break;    /* error or disk full */
                         }
@@ -821,14 +834,14 @@ void USBH_Process()
                         p1 = 0;
                         for(;;)
                         {
-                            res = f_read(&file1, Buff1, BUFF_SIZE, &s1);
+                            res = f_read(&file1, s_pu8Buff1, BUFF_SIZE, &s1);
                             if(res || s1 == 0)
                             {
                                 printf("\nRead file %s terminated. (%d)\n", ptr, res);
                                 break;     /* error or eof */
                             }
 
-                            res = f_read(&file2, Buff2, BUFF_SIZE, &s2);
+                            res = f_read(&file2, s_pu8Buff2, BUFF_SIZE, &s2);
                             if(res || s2 == 0)
                             {
                                 printf("\nRead file %s terminated. (%d)\n", ptr2, res);
@@ -838,7 +851,7 @@ void USBH_Process()
                             p1 += s2;
                             if(res || s2 < s1) break;    /* error or disk full */
 
-                            if(memcmp(Buff1, Buff2, s1) != 0)
+                            if(memcmp(s_pu8Buff1, s_pu8Buff2, s1) != 0)
                             {
                                 printf("Compare failed!!\n");
                                 break;
@@ -870,13 +883,13 @@ void USBH_Process()
                     case 'm' :  /* fm <partition rule> <sect/clust> - Create file system */
                         if(!xatoi(&ptr, &p2) || !xatoi(&ptr, &p3)) break;
                         printf("The memory card will be formatted. Are you sure? (Y/n)=");
-                        get_line(ptr, sizeof(g_achLine));
+                        get_line(ptr, sizeof(s_achLine));
                         if(*ptr == 'Y')
                             put_rc(f_mkfs(0, (BYTE)p2, (WORD)p3));
                         break;
 #endif
                     case 'z' :  /* fz [<rw size>] - Change R/W length for fr/fw/fx command */
-                        if(xatoi(&ptr, &p1) && p1 >= 1 && (size_t)p1 <= BUFF_SIZE)
+                        if(xatoi(&ptr, (long *)&p1) && p1 >= 1 && (size_t)p1 <= BUFF_SIZE)
                             g_u8Len = p1;
                         printf("g_u8Len=%d\n", g_u8Len);
                         break;
@@ -946,8 +959,8 @@ int32_t main(void)
     NVIC_EnableIRQ(USBOTG_IRQn);
     delay_us(1000);
 
-    Buff1 = (BYTE *)((uint32_t)&g_u8BuffPool1[0]);
-    Buff2 = (BYTE *)((uint32_t)&g_u8BuffPool2[0]);
+    s_pu8Buff1 = (BYTE *)((uint32_t)&s_au8BuffPool1[0]);
+    s_pu8Buff2 = (BYTE *)((uint32_t)&s_au8BuffPool2[0]);
 
     usbh_core_init();
     usbh_umas_init();
@@ -959,7 +972,7 @@ int32_t main(void)
         {
             if(OTG_GET_STATUS(OTG_STATUS_VBUSVLD_Msk))   /* plug-in */
             {
-                g_u8IsBdevice = 1;
+                s_u8IsBdevice = 1;
                 USBD_Open(&gsInfo, MSC_ClassRequest, NULL);
                 USBD_SetConfigCallback(MSC_SetConfig);
                 MSC_Init();
@@ -998,7 +1011,7 @@ int32_t main(void)
         }
         else     /* A-device */
         {
-            g_u8IsAdevice = 1;
+            s_u8IsAdevice = 1;
             printf("A-device (OTG_STATUS: 0x%x)\n", OTG->STATUS);
             /* Clear ID status changed interrupt flag */
             OTG_CLR_INT_FLAG(OTG_INTSTS_IDCHGIF_Msk);

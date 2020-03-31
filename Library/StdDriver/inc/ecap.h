@@ -258,8 +258,8 @@ extern "C"
     (ecap)->CTL0 |= ECAP_CTL0_CMPCLREN_Msk; \
   else \
     (ecap)->CTL0 &= ~ECAP_CTL0_CMPCLREN_Msk; \
-  (ecap)->CTL1 = ((ecap)->CTL1 &~0xF00) | ((u32Event) & 0xF00); \
-  }while(0);
+  (ecap)->CTL1 = ((ecap)->CTL1 &~0xF00ul) | ((u32Event) & 0xF00); \
+  }while(0)
 
 /**
   * @brief This macro is used to enable compare function

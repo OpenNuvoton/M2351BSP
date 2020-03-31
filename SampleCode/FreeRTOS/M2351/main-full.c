@@ -128,7 +128,7 @@
 #include "blocktim.h"
 #include "countsem.h"
 #include "recmutex.h"
-#include "ParTest.h"
+#include "partest.h"
 #include "dynamic.h"
 #include "QueueOverwrite.h"
 #include "QueueSet.h"
@@ -186,13 +186,13 @@ static void prvFlashTimerCallback( TimerHandle_t xTimer );
  * The task that toggles an LED each time the semaphore 'given' by the tick
  * hook function (which is defined in main.c) is 'taken' in the task.
  */
-static void prvSemaphoreTakeTask( void *pvParameters );
+static void prvSemaphoreTakeTask( void *pvParameters )__attribute__((noreturn));
 
 /*
  * Called by main() to create the comprehensive test/demo application if
  * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is not set to 1.
  */
-void main_full( void );
+void main_full( void )__attribute__((noreturn));
 
 /*-----------------------------------------------------------*/
 
@@ -205,7 +205,7 @@ volatile unsigned long ulRegTest1LoopCounter = 0UL, ulRegTest2LoopCounter = 0UL;
 /* The semaphore that is given by the tick hook function (defined in main.c)
 and taken by the task implemented by the prvSemaphoreTakeTask() function.  The
 task toggles LED mainSEMAPHORE_LED each time the semaphore is taken. */
-SemaphoreHandle_t xLEDSemaphore = NULL;
+static SemaphoreHandle_t xLEDSemaphore = NULL;
 /*-----------------------------------------------------------*/
 
 void main_full( void )
@@ -219,6 +219,7 @@ for the additional required for the stack overflow checking to work (if
 configured). */
 const size_t xRegTestStackSize = 25U;
 
+    (void)prvCheckTimerCallback;
 	/* Create the standard demo tasks */
 
 	vCreateBlockTimeTasks();
@@ -231,7 +232,7 @@ const size_t xRegTestStackSize = 25U;
     
 	/* Create that is given from the tick hook function, and the task that
 	toggles an LED each time the semaphore is given. */
-	vSemaphoreCreateBinary( xLEDSemaphore );
+	vSemaphoreCreateBinary( xLEDSemaphore )
 	xTaskCreate( 	prvSemaphoreTakeTask, 		/* Function that implements the task. */
 					"Sem", 						/* Text name of the task. */
 					configMINIMAL_STACK_SIZE, 	/* Stack allocated to the task (in words). */
@@ -343,18 +344,18 @@ unsigned long ulErrorFound = pdFALSE;
 	}
 
 	/* Check that the register test 1 task is still running. */
-	if( ulLastRegTest1Value == ulRegTest1LoopCounter )
+    if( ulLastRegTest1Value == ulRegTest1LoopCounter )
 	{
 		ulErrorFound |= ( 0x01UL << 4UL );
 	}
-	ulLastRegTest1Value = ulRegTest1LoopCounter;
+    ulLastRegTest1Value = ulRegTest1LoopCounter;
 
 	/* Check that the register test 2 task is still running. */
-	if( ulLastRegTest2Value == ulRegTest2LoopCounter )
+    if( ulLastRegTest2Value == ulRegTest2LoopCounter )
 	{
 		ulErrorFound |= ( 0x01UL << 5UL );
 	}
-	ulLastRegTest2Value = ulRegTest2LoopCounter;
+    ulLastRegTest2Value = ulRegTest2LoopCounter;
 
 	if( xAreQueueSetTasksStillRunning() != pdPASS )
 	{
@@ -392,7 +393,8 @@ unsigned long ulErrorFound = pdFALSE;
 
 static void prvSemaphoreTakeTask( void *pvParameters )
 {
-	configASSERT( xLEDSemaphore );
+    (void)pvParameters;
+	configASSERT( xLEDSemaphore )
 
 	for( ;; )
 	{
@@ -411,7 +413,7 @@ unsigned long ulLED;
 	/* This callback function is assigned to three separate software timers.
 	Each timer toggles a different LED.  Obtain the number of the LED that
 	this timer is toggling. */
-	ulLED = ( unsigned long ) pvTimerGetTimerID( xTimer );
+    ulLED = ( unsigned long ) (pvTimerGetTimerID( xTimer ));
 
 	/* Toggle the LED. */
 	vParTestToggleLED( ulLED );

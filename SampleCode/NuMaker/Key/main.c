@@ -9,10 +9,12 @@
 #include <stdio.h>
 #include "M2351.h"
 
-#define LED_INIT()  {PA->MODE = (PA->MODE &(~(0xf << 10*2))) | (0x5 << 10 * 2);}
+#define LED_INIT()  (PA->MODE = (PA->MODE &(~(0xful << 10*2))) | (0x5ul << 10 * 2))
 #define LED_YELLOW  PA10
 #define LED_RED     PA11
 
+void SYS_Init(void);
+void UART0_Init(void);
 
 void SYS_Init(void)
 {

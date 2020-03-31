@@ -16,6 +16,10 @@
 
 static volatile int  g_PRNG_done;
 
+void CRPT_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+
 void CRPT_IRQHandler()
 {
     if(PRNG_GET_INT_FLAG(CRPT))

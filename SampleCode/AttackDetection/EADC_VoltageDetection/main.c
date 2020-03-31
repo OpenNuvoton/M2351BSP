@@ -16,13 +16,16 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define global variables and constants                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
-volatile uint8_t g_u8ADF;
+static volatile uint8_t s_u8ADF;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Define functions prototype                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 uint32_t GetAVDDCodeByADC(void);
 uint32_t GetAVDDVoltage(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void EADC0_IRQHandler(void);
 
 
 void SYS_Init(void)
@@ -140,7 +143,7 @@ uint32_t GetAVDDCodeByADC(void)
     EADC_ENABLE_SAMPLE_MODULE_INT(EADC, 0, BIT16);//Enable sample module 16 interrupt.
     NVIC_EnableIRQ(EADC0_IRQn);
 
-    g_u8ADF = 0;
+    s_u8ADF = 0;
     u32Sum = 0;
 
     /* sample times are according to ADC_SAMPLE_COUNT definition */
@@ -154,8 +157,8 @@ uint32_t GetAVDDCodeByADC(void)
 
         u32Data = 0;
         /* Wait conversion done */
-        while(g_u8ADF == 0);
-        g_u8ADF = 0;
+        while(s_u8ADF == 0);
+        s_u8ADF = 0;
         /* Get the conversion result */
         u32Data = EADC_GET_CONV_DATA(EADC, 16);
         /* Sum each conversion data */
@@ -186,7 +189,7 @@ void EADC0_IRQHandler(void)
 
     /* Check ADC conversion finish */
     if(u32Flag & EADC_STATUS2_ADIF0_Msk)
-        g_u8ADF = 1;
+        s_u8ADF = 1;
 
     /* Clear conversion finish flag */
     EADC_CLR_INT_FLAG(EADC, u32Flag);

@@ -11,7 +11,7 @@
 
 /*----------------------------------------------------------------------------*/
 /*!<USB Device Descriptor */
-uint8_t gu8DeviceDescriptor[] =
+static uint8_t s_au8DeviceDescriptor[] =
 {
     18,   /* bLength */
     0x01,   /* bDescriptorType */
@@ -37,7 +37,7 @@ uint8_t gu8DeviceDescriptor[] =
 
 #define u8_usbConfigDescriptorDFU_LENGTH      (18 + (9 * 1))
 /*!<USB Configure Descriptor */
-uint8_t gu8ConfigDescriptor[] =
+static uint8_t s_au8ConfigDescriptor[] =
 {
     0x09,   /* bLength: Configuation Descriptor size */
     0x02,   /* bDescriptorType: Configuration */
@@ -74,7 +74,7 @@ uint8_t gu8ConfigDescriptor[] =
 };
 
 /*!<USB Language String Descriptor */
-uint8_t gu8StringLang[4] =
+static uint8_t s_au8StringLang[4] =
 {
     4,              /* bLength */
     DESC_STRING,    /* bDescriptorType */
@@ -82,7 +82,7 @@ uint8_t gu8StringLang[4] =
 };
 
 /*!<USB Vendor String Descriptor */
-uint8_t gu8VendorStringDesc[] =
+static uint8_t s_au8VendorStringDesc[] =
 {
     16,
     DESC_STRING,
@@ -90,33 +90,33 @@ uint8_t gu8VendorStringDesc[] =
 };
 
 /*!<USB Product String Descriptor */
-uint8_t gu8ProductStringDesc[] =
+static uint8_t s_au8ProductStringDesc[] =
 {
     14,
     DESC_STRING,
     'N', 0, 'u', 0, '_', 0, 'D', 0, 'F', 0, 'U', 0
 };
 
-uint8_t gu8StringSerial[] =
+static uint8_t s_au8StringSerial[] =
 {
     4,             // bLength
     DESC_STRING,   // bDescriptorType
     '1', 0
 };
 
-uint8_t *gpu8UsbString[4] =
+static uint8_t *s_apu8UsbString[4] =
 {
-    gu8StringLang,
-    gu8VendorStringDesc,
-    gu8ProductStringDesc,
-    gu8StringSerial
+    s_au8StringLang,
+    s_au8VendorStringDesc,
+    s_au8ProductStringDesc,
+    s_au8StringSerial
 };
 
 const S_USBD_INFO_T gsInfo =
 {
-    (uint8_t *)gu8DeviceDescriptor,
-    (uint8_t *)gu8ConfigDescriptor,
-    (uint8_t **)gpu8UsbString,
+    (uint8_t *)s_au8DeviceDescriptor,
+    (uint8_t *)s_au8ConfigDescriptor,
+    (uint8_t **)s_apu8UsbString,
     NULL,
     NULL,
     NULL,

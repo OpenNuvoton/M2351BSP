@@ -68,7 +68,7 @@ DRESULT disk_read
 
     //printf("disk_read - drv:%d, sec:%d, cnt:%d, buff:0x%x\n", pdrv, sector, count, (uint32_t)buff);
 
-    ret = usbh_umas_read(pdrv, sector, count, buff);
+    ret = usbh_umas_read(pdrv, sector, (int)count, buff);
     if(ret == UMAS_OK)
         return RES_OK;
 
@@ -100,7 +100,7 @@ DRESULT disk_write
 
     //printf("disk_write - drv:%d, sec:%d, cnt:%d, buff:0x%x\n", pdrv, sector, count, (uint32_t)buff);
 
-    ret = usbh_umas_write(pdrv, sector, count, (uint8_t *)buff);
+    ret = usbh_umas_write(pdrv, sector, (int)count, (uint8_t *)(uint32_t)buff);
 
     if(ret == UMAS_OK)
         return RES_OK;

@@ -23,6 +23,9 @@ void SYS_Init(void);
 void UART0_Init(void);
 void Boot_Init(uint32_t u32BootBase);
 char GetChar(void);
+__NONSECURE_ENTRY
+uint32_t GetSystemCoreClock(void);
+void HardFault_Handler(void)__attribute__((noreturn));
 
 /*----------------------------------------------------------------------------
   Secure functions exported to NonSecure application

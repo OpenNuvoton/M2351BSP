@@ -15,6 +15,9 @@
 
 extern int Init_Thread(void);  //Add this line
 
+void CLKFAIL_IRQHandler(void);
+void SYS_Init(void);
+void UART0_Init(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Clock Fail Detector IRQ Handler                                                                        */
@@ -170,9 +173,6 @@ __NO_RETURN static void MyThread3(void *argument)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    int32_t i;
-    char ch;
-
     /* Unlock protected registers */
     SYS_UnlockReg();
 

@@ -12,9 +12,20 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-STR_CANMSG_T rrMsg;
+static STR_CANMSG_T rrMsg;
 
 void CAN_ShowMsg(STR_CANMSG_T* Msg);
+void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR);
+void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR);
+void CAN0_IRQHandler(void);
+void SYS_Init(void);
+void DEBUG_PORT_Init(void);
+void CAN_Init(CAN_T  *tCAN);
+void CAN_STOP(CAN_T  *tCAN);
+void Note_Configure(void);
+void SelectCANSpeed(CAN_T  *tCAN);
+void Test_NormalMode_Rx(CAN_T *tCAN);
+
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                            */
@@ -91,7 +102,7 @@ void CAN0_IRQHandler(void)
 
         CAN_MsgInterrupt(CAN0, u8IIDRstatus);
 
-        CAN_CLR_INT_PENDING_BIT(CAN0, ((CAN0->IIDR) - 1));     /* Clear Interrupt Pending */
+        CAN_CLR_INT_PENDING_BIT(CAN0, (uint8_t)((CAN0->IIDR) - 1));     /* Clear Interrupt Pending */
 
     }
     else if(CAN0->WU_STATUS == 1)
@@ -228,8 +239,8 @@ void Note_Configure()
 
 void SelectCANSpeed(CAN_T  *tCAN)
 {
-    uint32_t unItem;
-    int32_t i32Err = 0;
+    int32_t i32Item;
+    uint32_t u32BaudRate = 0;
 
     printf("Please select CAN speed you desired\n");
     printf("[0] 1000Kbps\n");
@@ -239,22 +250,22 @@ void SelectCANSpeed(CAN_T  *tCAN)
     printf("[4]  100Kbps\n");
     printf("[5]   50Kbps\n");
 
-    unItem = getchar();
-    printf("%c\n", unItem) ;
-    if(unItem == '1')
-        i32Err = CAN_Open(tCAN,  500000, CAN_NORMAL_MODE);
-    else if(unItem == '2')
-        i32Err = CAN_Open(tCAN,  250000, CAN_NORMAL_MODE);
-    else if(unItem == '3')
-        i32Err = CAN_Open(tCAN,  125000, CAN_NORMAL_MODE);
-    else if(unItem == '4')
-        i32Err = CAN_Open(tCAN,  100000, CAN_NORMAL_MODE);
-    else if(unItem == '5')
-        i32Err = CAN_Open(tCAN,   50000, CAN_NORMAL_MODE);
+    i32Item = getchar();
+    printf("%c\n", i32Item) ;
+    if(i32Item == '1')
+        u32BaudRate = CAN_Open(tCAN,  500000, CAN_NORMAL_MODE);
+    else if(i32Item == '2')
+        u32BaudRate = CAN_Open(tCAN,  250000, CAN_NORMAL_MODE);
+    else if(i32Item == '3')
+        u32BaudRate = CAN_Open(tCAN,  125000, CAN_NORMAL_MODE);
+    else if(i32Item == '4')
+        u32BaudRate = CAN_Open(tCAN,  100000, CAN_NORMAL_MODE);
+    else if(i32Item == '5')
+        u32BaudRate = CAN_Open(tCAN,   50000, CAN_NORMAL_MODE);
     else
-        i32Err = CAN_Open(tCAN, 1000000, CAN_NORMAL_MODE);
+        u32BaudRate = CAN_Open(tCAN, 1000000, CAN_NORMAL_MODE);
 
-    if(i32Err < 0)
+    if(u32BaudRate > 1000000)
         printf("Set CAN bit rate is fail\n");
 }
 

@@ -12,8 +12,13 @@
 
 #define TEST_COUNT  64
 
-uint32_t g_au32SourceData[TEST_COUNT];
-uint32_t g_au32DestinationData[TEST_COUNT];
+static uint32_t s_au32SourceData[TEST_COUNT];
+static uint32_t s_au32DestinationData[TEST_COUNT];
+
+
+void SYS_Init(void);
+void SPI_Init(void);
+
 
 void SYS_Init(void)
 {
@@ -125,8 +130,8 @@ int main(void)
         /* set the source data and clear the destination buffer */
         for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
         {
-            g_au32SourceData[u32DataCount] = u32DataCount;
-            g_au32DestinationData[u32DataCount] = 0;
+            s_au32SourceData[u32DataCount] = u32DataCount;
+            s_au32DestinationData[u32DataCount] = 0;
         }
 
         u32DataCount = 0;
@@ -139,11 +144,11 @@ int main(void)
         while(1)
         {
             /* Write to TX register */
-            SPI_WRITE_TX(SPI0, g_au32SourceData[u32DataCount]);
+            SPI_WRITE_TX(SPI0, s_au32SourceData[u32DataCount]);
             /* Check SPI0 busy status */
             while(SPI_IS_BUSY(SPI0));
             /* Read received data */
-            g_au32DestinationData[u32DataCount] = SPI_READ_RX(SPI0);
+            s_au32DestinationData[u32DataCount] = SPI_READ_RX(SPI0);
             u32DataCount++;
             if(u32DataCount >= TEST_COUNT)
                 break;
@@ -152,7 +157,7 @@ int main(void)
         /*  Check the received data */
         for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
         {
-            if(g_au32DestinationData[u32DataCount] != g_au32SourceData[u32DataCount])
+            if(s_au32DestinationData[u32DataCount] != s_au32SourceData[u32DataCount])
                 u32Err = 1;
         }
 

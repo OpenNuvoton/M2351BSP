@@ -20,8 +20,11 @@ void USCI_UART_DataWakeUp(void);
 void USCI_UART_CTSWakeUp(void);
 void USCI_UART_PowerDown_TestItem(void);
 void USCI_UART_PowerDownWakeUpTest(void);
-
-
+void PowerDownFunction(void);
+void SYS_Init(void);
+void UART0_Init(void);
+void USCI0_Init(void);
+void USCI0_IRQHandler(void);
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Function for System Entry to Power Down Mode                                                           */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -228,7 +231,7 @@ void USCI_UART_PowerDown_TestItem(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void USCI_UART_PowerDownWakeUpTest(void)
 {
-    uint32_t u32Item;
+    int32_t i32Item;
 
     printf("Due to PLL clock stable too slow.\n");
     printf("Before demo USCI UART wake-up, this demo code will switch HCLK from PLL to HIRC.\n");
@@ -252,9 +255,9 @@ void USCI_UART_PowerDownWakeUpTest(void)
     NVIC_EnableIRQ(USCI0_IRQn);
 
     USCI_UART_PowerDown_TestItem();
-    u32Item = getchar();
-    printf("%c\n\n", u32Item);
-    switch(u32Item)
+    i32Item = getchar();
+    printf("%c\n\n", i32Item);
+    switch(i32Item)
     {
         case '1':
             USCI_UART_CTSWakeUp();

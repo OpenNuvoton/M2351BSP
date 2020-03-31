@@ -38,12 +38,20 @@ static volatile uint32_t  db_length;             /* dual bank program remaining 
 static volatile uint32_t  db_addr;               /* dual bank program current flash address  */
 
 
-volatile uint32_t  g_tick_cnt;                   /* timer ticks - 100 ticks per second       */
+static volatile uint32_t  s_u32TickCnt;                   /* timer ticks - 100 ticks per second       */
+
+
+void SysTick_Handler(void);
+void enable_sys_tick(int ticks_per_second);
+void SYS_Init(void);
+uint32_t  func_crc32(uint32_t u32Start, uint32_t u32Len);
+void start_timer0(void);
+uint32_t  get_timer0_counter(void);
 
 
 void SysTick_Handler(void)
 {
-    g_tick_cnt++;                                /* increase timer tick                      */
+    s_u32TickCnt++;                                /* increase timer tick                      */
 
     if(db_state == DB_STATE_DONE)                /* Background program is in idle state      */
     {
@@ -81,7 +89,7 @@ void SysTick_Handler(void)
             break;
 
         case DB_STATE_ERASE:
-            //printf("Erase 0x%x [%d]\n", db_addr, g_tick_cnt);
+            //printf("Erase 0x%x [%d]\n", db_addr, s_u32TickCnt);
             FMC->ISPCMD = FMC_ISPCMD_PAGE_ERASE; /* ISP page erase command                   */
             FMC->ISPADDR = db_addr;              /* page address                             */
             FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;  /* trigger ISP page erase and no wait       */
@@ -91,7 +99,7 @@ void SysTick_Handler(void)
 
         case DB_STATE_PROGRAM:
             if((db_addr & ~FMC_PAGE_ADDR_MASK) == 0)
-                printf("Erase done [%d]\n", g_tick_cnt);
+                printf("Erase done [%d]\n", s_u32TickCnt);
 
             FMC->ISPCMD = FMC_ISPCMD_PROGRAM;    /* ISP word program command                 */
             FMC->ISPADDR = db_addr;              /* word program address                     */
@@ -115,9 +123,9 @@ void SysTick_Handler(void)
 
 void enable_sys_tick(int ticks_per_second)
 {
-    g_tick_cnt = 0;
+    s_u32TickCnt = 0;
     SystemCoreClock = PLL_CLOCK;         /* HCLK is 64 MHz */
-    if(SysTick_Config(SystemCoreClock / ticks_per_second))
+    if(SysTick_Config(SystemCoreClock / (uint32_t)ticks_per_second))
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
@@ -220,7 +228,6 @@ static const uint32_t crc32_tab[] =
 };
 
 #define CRC_SEED    0xFFFFFFFF
-uint32_t g_u32ApCrc = 0;
 
 
 uint32_t  func_crc32(uint32_t u32Start, uint32_t u32Len)
@@ -306,7 +313,7 @@ int32_t main(void)
     u32t = get_timer0_counter();
 
     /* TIMER0->CNT is the elapsed us */
-    printf("\nTime elapsed without program bank1: %d.%d seconds. Ticks: %d\n\n", u32t / 1000000, u32t / 1000, g_tick_cnt);
+    printf("\nTime elapsed without program bank1: %d.%d seconds. Ticks: %d\n\n", u32t / 1000000, u32t / 1000, s_u32TickCnt);
 
     db_addr = APROM_BANK1_BASE;        /* Dual bank background program address           */
     db_length = DB_PROG_LEN;           /* Dual bank background length                 */
@@ -323,7 +330,7 @@ int32_t main(void)
     u32t = get_timer0_counter();
 
     /* TIMER0->CNT is the elapsed us */
-    printf("\nTime elapsed with program bank1: %d.%d seconds. Ticks: %d\n\n", u32t / 1000000, u32t / 1000, g_tick_cnt);
+    printf("\nTime elapsed with program bank1: %d.%d seconds. Ticks: %d\n\n", u32t / 1000000, u32t / 1000, s_u32TickCnt);
 
     while(db_state != DB_STATE_DONE) ;
 

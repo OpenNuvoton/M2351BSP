@@ -207,6 +207,8 @@ typedef struct
   * @details    Global USBD data for SecureISP USB
   * @note       This data is internal use in SecureISP operation
   */
+#pragma pack(push)
+#pragma pack(1)
 typedef struct
 {
     uint8_t             g_usbd_SetupPacket[8];  
@@ -232,7 +234,7 @@ typedef struct
     uint32_t            g_u32EpStallLock;              
 
 } BL_USBD_INFO_T;
-
+#pragma pack(pop)
 
 /*@}*/ /* end of group MKROM_EXPORTED_STRUCTS */
 

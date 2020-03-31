@@ -15,8 +15,8 @@
 extern uint32_t GetSystemCoreClock(void);
 
 
-volatile uint32_t g_au32FlashData[FMC_FLASH_PAGE_SIZE / 4] = {0}; /* Initial 2048 byte data */
-volatile uint32_t g_au32GetData[FMC_FLASH_PAGE_SIZE / 4] = {0};
+static volatile uint32_t s_au32FlashData[FMC_FLASH_PAGE_SIZE / 4] = {0}; /* Initial 2048 byte data */
+static volatile uint32_t s_au32GetData[FMC_FLASH_PAGE_SIZE / 4] = {0};
 
 /*----------------------------------------------------------------------------
   Main function
@@ -113,11 +113,11 @@ int main(void)
     printf("\n*** Perform flash Read/Write/Multi-Read/Multi-Write API ***\n");
     for(i = 0; i < (FMC_FLASH_PAGE_SIZE / 4); i++)
     {
-        g_au32FlashData[i] = 0xA5A50000UL + i;
+        s_au32FlashData[i] = 0xA5A50000UL + i;
     }
     /* BL_FlashMultiWrite first 1024 bytes */
     printf("Multi-Write [0x%08x] 1024 bytes ... ", u32Addr);
-    if(BL_FlashMultiWrite(u32Addr, (uint32_t *)g_au32FlashData, (FMC_FLASH_PAGE_SIZE / 2)) == 0)
+    if(BL_FlashMultiWrite(u32Addr, (uint32_t *)(uint32_t)s_au32FlashData, (FMC_FLASH_PAGE_SIZE / 2)) == 0)
     {
         printf("Ok.\n");
     }
@@ -130,9 +130,9 @@ int main(void)
     printf("Single Write [0x%08x] 1024 bytes ... ", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2)));
     for(i = 0; i < ((FMC_FLASH_PAGE_SIZE / 4) / 2); i++)
     {
-        if(BL_FlashWrite(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4), g_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]) != 0)
+        if(BL_FlashWrite(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4), s_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]) != 0)
         {
-            printf("Fail! (0x%0x: 0x%08x)\n\n", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4)), (uint32_t)(g_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]));
+            printf("Fail! (0x%0x: 0x%08x)\n\n", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4)), (uint32_t)(s_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]));
             while(1) {}
         }
     }
@@ -141,7 +141,7 @@ int main(void)
     
     /* BL_FlashMultiRead one page data */
     printf("Multi-Read [0x%08x] one page ... ", u32Addr);
-    if(BL_FlashMultiRead(u32Addr, (uint32_t *)g_au32GetData, FMC_FLASH_PAGE_SIZE) == 0)
+    if(BL_FlashMultiRead(u32Addr, (uint32_t *)(uint32_t)s_au32GetData, FMC_FLASH_PAGE_SIZE) == 0)
     {
         printf("Ok.\n");
     }
@@ -160,10 +160,10 @@ int main(void)
             printf("Fail! (0x%08x: 0x%08x)\n", (u32Addr + (i * 4)), BL_FlashRead(u32Addr + (i * 4)));
             while(1) {}
         }
-        data_tmp = g_au32FlashData[i];
-        if(data_tmp != g_au32GetData[i])
+        data_tmp = s_au32FlashData[i];
+        if(data_tmp != s_au32GetData[i])
         {
-            printf("Fail! (0x%08x. W:0x%08x, R:0x%08x)\n", (u32Addr + (i * 4)), data_tmp, g_au32GetData[i]);
+            printf("Fail! (0x%08x. W:0x%08x, R:0x%08x)\n", (u32Addr + (i * 4)), data_tmp, s_au32GetData[i]);
             while(1) {}
         }
     }

@@ -13,8 +13,11 @@
 /* Global Interface Variables Declarations                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
 extern int IsDebugFifoEmpty(void);
-volatile uint8_t g_u8IsRTCAlarmINT = 0;
+static volatile uint8_t s_u8IsRTCAlarmINT = 0;
 
+void RTC_IRQHandler(void);
+void SYS_Init(void);
+void UART_Init(void);
 
 /**
  * @brief       IRQ Handler for RTC Interrupt
@@ -33,7 +36,7 @@ void RTC_IRQHandler(void)
         /* Clear RTC alarm interrupt flag */
         RTC_CLEAR_ALARM_INT_FLAG(RTC);
 
-        g_u8IsRTCAlarmINT++;
+        s_u8IsRTCAlarmINT++;
     }
     
     if(RTC_GET_TICK_INT_FLAG(RTC) == 1)
@@ -156,7 +159,7 @@ int main(void)
     printf("# Set RTC alarm date/time:   2017/03/15 23:59:55.\n");
     printf("# Wait system waken-up by RTC alarm interrupt event.\n");
 
-    g_u8IsRTCAlarmINT = 0;
+    s_u8IsRTCAlarmINT = 0;
 
     /* System enter to Power-down */
     /* To program PWRCTL register, it needs to disable register protection first. */
@@ -166,7 +169,7 @@ int main(void)
     while(IsDebugFifoEmpty() == 0) {}
     CLK_PowerDown();
 
-    while(g_u8IsRTCAlarmINT == 0) {}
+    while(s_u8IsRTCAlarmINT == 0) {}
 
     /* Read current RTC date/time */
     RTC_GetDateAndTime(&sReadRTC);
@@ -181,7 +184,7 @@ int main(void)
     RTC_SetAlarmDate(2017, 03, 16);
     RTC_SetAlarmTime(0, 0, 5, RTC_CLOCK_24, 0);
 
-    g_u8IsRTCAlarmINT = 0;
+    s_u8IsRTCAlarmINT = 0;
 
     /* System enter to Power-down */
     /* To program PWRCTL register, it needs to disable register protection first. */
@@ -191,7 +194,7 @@ int main(void)
     while(IsDebugFifoEmpty() == 0) {}
     CLK_PowerDown();
 
-    while(g_u8IsRTCAlarmINT == 0);
+    while(s_u8IsRTCAlarmINT == 0) {}
 
     /* Read current RTC date/time */
     RTC_GetDateAndTime(&sReadRTC);
