@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>DEBUG_PORT=UART0_NS</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\NuBL32;..\..\..\..\..\Library\CMSIS\Include;..\..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\..\..\..\Library\StdDriver\inc</IncludePath>
+              <IncludePath>..\..\NuBL33;..\..\..\..\..\Library\CMSIS\Include;..\..\..\..\..\Library\Device\Nuvoton\M2351\Include;..\..\..\..\..\Library\StdDriver\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

@@ -8,10 +8,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "NuMicro.h"
+#include "NuBL32.h"
 
-#pragma clang diagnostic ignored "-Wunused-const-variable"
-
-static const uint32_t g_InitialFWinfo[] =
+const uint32_t g_InitialFWinfo[] =
 {
     /* public key - 64-bytes (256-bits + 256-bits) */
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
