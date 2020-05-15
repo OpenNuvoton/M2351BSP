@@ -6,7 +6,8 @@
  * @brief    M2351 Series Flash Memory Controller(FMC) driver header file
  *
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
  *
  ******************************************************************************/
 #ifndef __FMC_H__
@@ -490,5 +491,5 @@ extern int32_t FMC_WriteMultipleA(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t
 
 #endif /* __FMC_H__ */
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/
 

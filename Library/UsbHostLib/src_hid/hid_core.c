@@ -4,7 +4,8 @@
  * @brief    M2351 USB Host HID driver.
  *
  * @note
- * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2019-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -777,6 +778,6 @@ void  usbh_hid_regitser_keyboard_callback(HID_KEYBOARD_FUNC *func)
 }
 
 
-/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019-2020 Nuvoton Technology Corp. ***/
 
 

@@ -4,7 +4,8 @@
  * @brief    M2351 MCU USB Host CDC library core
  *
  * @note
- * Copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2018-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -451,6 +452,6 @@ int32_t usbh_cdc_send_data(CDC_DEV_T *cdev, uint8_t *buff, int buff_len)
 /*@}*/ /* end of group Component_Library */
 
 
-/*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2018-2020 Nuvoton Technology Corp. ***/
 
 

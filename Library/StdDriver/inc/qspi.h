@@ -3,7 +3,8 @@
  * @version  V3.00
  * @brief    M2351 series QSPI driver header file
  *
- * @copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * @copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #ifndef __QSPI_H__
 #define __QSPI_H__
@@ -363,4 +364,4 @@ uint32_t QSPI_GetStatus(QSPI_T *qspi, uint32_t u32Mask);
 
 #endif /* __QSPI_H__ */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/

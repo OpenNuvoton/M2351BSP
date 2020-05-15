@@ -4,7 +4,8 @@
  * @brief    M2351 Series ACMP Driver Header File
  *
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
  *
  ******************************************************************************/
 #ifndef __ACMP_H__
@@ -384,4 +385,4 @@ void ACMP_Close(ACMP_T *acmp, uint32_t u32ChNum);
 
 #endif /* __ACMP_H__ */
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/

@@ -4,7 +4,8 @@
  * @brief    M2351 MCU USB Host Audio Class driver
  *
  * @note     Support mono and stereo audio input and output.
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -274,5 +275,5 @@ UAC_DEV_T * usbh_uac_get_device_list(void)
 
 /*@}*/ /* end of group LIBRARY */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/
 

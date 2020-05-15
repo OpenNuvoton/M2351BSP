@@ -3,7 +3,8 @@
  * @version  V3.00
  * @brief    M2351 series USBD driver header file
  *
- * @copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * @copyright (C) 2018-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef __USBD_H__
 #define __USBD_H__
@@ -731,4 +732,4 @@ void USBD_LockEpStall(uint32_t u32EpBitmap);
 
 #endif /* __USBD_H__ */
 
-/*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2018-2020 Nuvoton Technology Corp. ***/

@@ -4,7 +4,8 @@
  * @brief    M2351 MCU USB Host CDC driver
  *
  * @note
- * Copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2018-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -283,5 +284,5 @@ CDC_DEV_T * usbh_cdc_get_device_list(void)
 }
 
 
-/*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2018-2020 Nuvoton Technology Corp. ***/
 

@@ -4,7 +4,8 @@
  * @brief    M2351 series Clock Controller (CLK) driver source file
  *
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
  *****************************************************************************/
 #include "NuMicro.h"
 /** @addtogroup Standard_Driver Standard Driver
@@ -1233,4 +1234,4 @@ uint32_t CLK_GetModuleClockDivider(uint32_t u32ModuleIdx)
 
 /*@}*/ /* end of group Standard_Driver */
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/

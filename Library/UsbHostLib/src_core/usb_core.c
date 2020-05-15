@@ -4,7 +4,8 @@
  * @brief   USB Host library core.
  *
  * @note
- * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2019-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -1242,4 +1243,4 @@ void usbh_dump_ep_info(EP_INFO_T *ep)
 /// @endcond HIDDEN_SYMBOLS
 
 
-/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019-2020 Nuvoton Technology Corp. ***/

@@ -119,6 +119,6 @@ extern int  run_scsi_command(MSC_T *msc, uint8_t *buff, uint32_t data_len, int b
 
 #endif  /* _USBH_MSC_H_ */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/
 
 

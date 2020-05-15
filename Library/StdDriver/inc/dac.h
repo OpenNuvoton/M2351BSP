@@ -4,7 +4,8 @@
  * @brief    M2351 series DAC driver header file
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #ifndef __DAC_H__
 #define __DAC_H__
@@ -253,4 +254,4 @@ uint32_t DAC_SetDelayTime(DAC_T *dac, uint32_t u32Delay);
 
 #endif /* __DAC_H__ */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/

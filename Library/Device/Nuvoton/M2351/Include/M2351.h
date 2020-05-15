@@ -4,7 +4,8 @@
  * @brief    Peripheral Access Layer Header File
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  *
  ******************************************************************************/
 
@@ -24,7 +25,7 @@
   *
   * <b>Copyright Notice</b>
   *
-  * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
+  * Copyright (C) 2019-2020 Nuvoton Technology Corp. All rights reserved.
   */
 
 
@@ -1007,5 +1008,5 @@ extern void SystemInit(void);
 #endif  /* __M2351_H__ */
 
 
-/* Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved. */
+/* Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved. */
 

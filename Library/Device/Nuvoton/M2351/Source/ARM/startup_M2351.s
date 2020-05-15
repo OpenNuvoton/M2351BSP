@@ -1,12 +1,13 @@
 ;/**************************************************************************//**
-; * @file     startup_TC8234.s
+; * @file     startup_M2351.s
 ; * @version  V2.00
 ; * $Revision: 9 $
 ; * $Date: 16/08/27 12:33p $ 
 ; * @brief   Startup Source File
 ; *
 ; * @note
-; * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+; * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
 ; *
 ; ******************************************************************************/
 		

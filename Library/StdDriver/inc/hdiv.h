@@ -6,7 +6,8 @@
  * @brief    M0564 series Hardware Divider(HDIV) driver header file
  *
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
  *
  ******************************************************************************/
 #ifndef __HDIV_H__
@@ -84,6 +85,6 @@ static __INLINE int16_t HDIV_Mod(int32_t x, int16_t y)
 
 #endif //__HDIV_H__
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/
 
 

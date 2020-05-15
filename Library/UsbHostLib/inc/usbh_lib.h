@@ -4,7 +4,8 @@
  * @brief    USB Host library exported header file.
  *
  * @note
- * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2019-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef  _USBH_LIB_H_
 #define  _USBH_LIB_H_
@@ -246,7 +247,7 @@ extern uint32_t  usbh_memory_used(void);
 
 #endif  /* _USBH_LIB_H_ */
 
-/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2019-2020 Nuvoton Technology Corp. ***/
 
 
 

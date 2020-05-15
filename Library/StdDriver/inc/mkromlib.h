@@ -3,7 +3,8 @@
  * @version  V2.00
  * @brief    MaskROM library header file
  *
- * @copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * @copyright (C) 2018-2020 Nuvoton Technology Corp. All rights reserved.
  *****************************************************************************/
 #ifndef __MKROM_LIB_H__
 #define __MKROM_LIB_H__
@@ -1133,4 +1134,4 @@ int32_t BL_USBDStart(void);
 
 #endif  /* __MKROM_LIB_H__ */
 
-/*** (C) COPYRIGHT 2018 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2018-2020 Nuvoton Technology Corp. ***/

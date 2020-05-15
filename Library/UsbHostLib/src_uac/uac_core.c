@@ -4,7 +4,8 @@
  * @brief    M2351 MCU USB Host Audio Class driver
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -1044,5 +1045,5 @@ int usbh_uac_open(UAC_DEV_T *uac)
 
 /*@}*/ /* end of group LIBRARY */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/
 

@@ -572,5 +572,5 @@ typedef struct __attribute__((__packed__)) ac_ft3_t
 
 #endif /* __INCLUDED_UAC_H__ */
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/
 

@@ -3,7 +3,8 @@
  * @version  V3.00
  * @brief    M2351 series USCI_SPI driver header file
  *
- * @copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * @copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #ifndef __USCI_SPI_H__
 #define __USCI_SPI_H__
@@ -402,4 +403,4 @@ void USPI_DisableWakeup(USPI_T *uspi);
 
 #endif /* __USCI_SPI_H__ */
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/

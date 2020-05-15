@@ -4,7 +4,8 @@
  * @brief    Lightweight USB mass storage class transfer layer
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 
 #include <stdio.h>
@@ -115,6 +116,6 @@ int  run_scsi_command(MSC_T *msc, uint8_t *buff, uint32_t data_len, int bIsDataI
     return do_scsi_command(msc, buff, data_len, bIsDataIn, timeout_ticks);
 }
 
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/
 
 

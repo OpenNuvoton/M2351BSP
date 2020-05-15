@@ -4,7 +4,8 @@
  * @brief    Smartcard library header File
  *
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
  *****************************************************************************/
 #ifndef __SCLIB_H__
 #define __SCLIB_H__
@@ -264,4 +265,4 @@ uint32_t SCLIB_CheckErrorEvent(uint32_t num);
 
 /*@}*/ /* end of group LIBRARY */
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/

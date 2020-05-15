@@ -6,7 +6,8 @@
  * @brief    M2351 Series Flash Memory Controller(FMC) driver source file
  *
  * @note
- * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
  *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
@@ -1051,6 +1052,6 @@ int32_t FMC_Write_OTP(uint32_t u32OtpNum, uint32_t u32LowWord, uint32_t u32HighW
 
 /*@}*/ /* end of group Standard_Driver */
 
-/*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
+/*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/
 
 
