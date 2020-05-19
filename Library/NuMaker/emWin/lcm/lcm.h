@@ -1,6 +1,5 @@
 /****************************************************************
  *                                                             *
- * SPDX-License-Identifier: Apache-2.0						   *
  * Copyright (c) Nuvoton Technology Corp. All rights reserved. *
  *                                                             *
  ****************************************************************/
