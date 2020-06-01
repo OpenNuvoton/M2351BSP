@@ -27,8 +27,6 @@ extern void SCU_IRQHandler(void)__attribute__((noreturn));
 extern void *__Vectors;                   /* see startup file */
 
 
-#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
-
 /*----------------------------------------------------------------------------
   Clock Variable definitions
  *----------------------------------------------------------------------------*/
@@ -250,10 +248,13 @@ void NSC_Init(void)
     u32Base = (uint32_t)__section_begin("NSC");
     u32Limit = (uint32_t)__section_end("NSC");
 #elif defined(__ARMCC_VERSION)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
     extern uint32_t Image$$NSC_ROM$$XO$$Base[];
     extern uint32_t Image$$NSC_ROM$$XO$$Limit[];
     u32Base = (uint32_t)Image$$NSC_ROM$$XO$$Base;
     u32Limit = (uint32_t)Image$$NSC_ROM$$XO$$Limit;
+#pragma clang diagnostic pop
 #else
     extern uint32_t __start_NSC[];
     extern uint32_t __end_NSC[];
