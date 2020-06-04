@@ -149,11 +149,11 @@ typedef struct
 uint32_t SDCARD_Open(void);
 void SDCARD_Close(void);
 uint32_t SDCARD_GetVersion(void);
-uint32_t MMC_Command_Exec(uint8_t cmd_loc, uint32_t argument, uint8_t *pchar, uint32_t* response);
+uint32_t MMC_Command_Exec(uint8_t u8Cmd, uint32_t u32Arg, uint8_t *pu8Char, uint32_t* pu32Response);
 uint32_t GetLogicSector(void);
 uint32_t SDCARD_GetCardSize(uint32_t* pu32TotSecCnt);
-void SpiRead(uint32_t addr, uint32_t size, uint8_t* buffer);
-void SpiWrite(uint32_t addr, uint32_t size, uint8_t* buffer);
+void SpiRead(uint32_t u32Addr, uint32_t u32Size, uint8_t* pu8Buffer);
+void SpiWrite(uint32_t u32Addr, uint32_t u32Size, uint8_t* pu8Buffer);
 
 /*@}*/ /* end of group M2351_SDCARD_EXPORTED_FUNCTIONS */
 

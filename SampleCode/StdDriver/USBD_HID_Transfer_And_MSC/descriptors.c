@@ -39,7 +39,11 @@ static uint8_t s_au8DeviceDescriptor[] =
 {
     LEN_DEVICE,     /* bLength */
     DESC_DEVICE,    /* bDescriptorType */
+#ifdef SUPPORT_LPM
+    0x01, 0x02,     /* bcdUSB >= 0x0201 to support LPM */
+#else
     0x10, 0x01,     /* bcdUSB */
+#endif
     0x00,           /* bDeviceClass */
     0x00,           /* bDeviceSubClass */
     0x00,           /* bDeviceProtocol */
@@ -53,7 +57,7 @@ static uint8_t s_au8DeviceDescriptor[] =
     0x00, 0x00,     /* bcdDevice */
     0x01,           /* iManufacture */
     0x02,           /* iProduct */
-    0x02,           /* iSerialNumber */
+    0x03,           /* iSerialNumber -  is required for BOT device */
     0x01            /* bNumConfigurations */
 };
 
@@ -166,6 +170,14 @@ static uint8_t s_au8ProductStringDesc[] =
     'U', 0, 'S', 0, 'B', 0, ' ', 0, 'D', 0, 'e', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0
 };
 
+static uint8_t s_au8StringSerial[] =
+{
+    26,             // bLength
+    DESC_STRING,    // bDescriptorType
+    'A', 0, '0', 0, '0', 0, '0', 0, '0', 0, '8', 0, '0', 0, '4', 0, '0', 0, '1', 0, '1', 0, '5', 0
+
+};
+
 /*!<USB BOS Descriptor */
 static uint8_t s_au8BOSDescriptor[] =
 {
@@ -177,10 +189,18 @@ static uint8_t s_au8BOSDescriptor[] =
     0x01,           /* bNumDeviceCaps */
 
     /* Device Capability */
-    0x7,            /* bLength */
+    LEN_BOSCAP,     /* bLength */
     DESC_CAPABILITY,/* bDescriptorType */
-    CAP_USB20_EXT,  /* bDevCapabilityType */
-    0x02, 0x00, 0x00, 0x00  /* bmAttributes */
+    CAP_USB20_EXT,  /* bDevCapabilityType, 0x02 is USB 2.0 Extension */
+    0x06, 0x04, 0x00, 0x00  /* bmAttributes, 32 bits */
+                            /* bit 0 : Reserved. Must 0. */
+                            /* bit 1 : 1 to support LPM. */
+                            /* bit 2 : 1 to support BSL & Alternat HIRD. */
+                            /* bit 3 : 1 to recommend Baseline BESL. */
+                            /* bit 4 : 1 to recommand Deep BESL. */
+                            /* bit 11:8 : Recommend Baseline BESL value. Ignore by bit3 is zero. */
+                            /* bit 15:12 : Recommend Deep BESL value. Ignore by bit4 is zero. */
+                            /* bit 31:16 : Reserved. Must 0. */
 };
 
 static uint8_t *s_apu8UsbString[4] =
@@ -188,7 +208,7 @@ static uint8_t *s_apu8UsbString[4] =
     s_au8StringLang,
     s_au8VendorStringDesc,
     s_au8ProductStringDesc,
-    NULL,
+    s_au8StringSerial,
 };
 
 static uint8_t *s_apu8UsbHidReport[3] =

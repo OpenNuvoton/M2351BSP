@@ -19,7 +19,8 @@
 
 void SYS_Init(void);
 void UART0_Init(void);
-
+void PowerDown(void);
+int IsDebugFifoEmpty(void);
 
 void SYS_Init(void)
 {
@@ -94,12 +95,37 @@ void UART0_Init(void)
     UART_Open(UART0, 115200);
 }
 
+void PowerDown(void)
+{
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    printf("Enter power down ...\n");
+    while(!IsDebugFifoEmpty());
+
+    /* Wakeup Enable */
+    USBD_ENABLE_INT(USBD_INTEN_WKEN_Msk);
+
+    CLK_PowerDown();
+
+    /* Clear PWR_DOWN_EN if it is not clear by itself */
+    if(CLK->PWRCTL & CLK_PWRCTL_PDEN_Msk)
+        CLK->PWRCTL ^= CLK_PWRCTL_PDEN_Msk;
+
+    printf("device wakeup!\n");
+
+    /* Lock protected registers */
+    SYS_LockReg();
+}
+
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+#if CRYSTAL_LESS
     uint32_t u32TrimInit;
+#endif
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -115,10 +141,10 @@ int32_t main(void)
     printf("|     NuMicro USB HID Transfer and MassStorage Sample Code     |\n");
     printf("+--------------------------------------------------------------+\n");
 
-    USBD_Open(&gsInfo, HID_ClassRequest, NULL);
+    USBD_Open(&gsInfo, HID_MSC_ClassRequest, NULL);
 
     /* Endpoint configuration */
-    HID_Init();
+    HID_MSC_Init();
     USBD_Start();
 
     NVIC_EnableIRQ(USBD_IRQn);
@@ -165,6 +191,10 @@ int32_t main(void)
             USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
         }
 #endif
+
+        /* Enter power down when USB suspend */
+        if(g_u8Suspend)
+            PowerDown();
 
         MSC_ProcessCmd();
     }

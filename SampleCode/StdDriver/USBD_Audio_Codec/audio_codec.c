@@ -9,16 +9,12 @@
 #include "NuMicro.h"
 #include "usbd_audio.h"
 
-
-uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat);
-uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len);
-
 #if NAU8822
 
 /**************************************/
 /* NAU8822 Setting                    */
 /**************************************/
-__IO uint32_t g_u32EndFlag0 = 0;
+static __IO uint32_t g_u32EndFlag0 = 0;
 static volatile uint8_t g_u8IsI2CIdle = TRUE;
 
 void RecoveryFromArbLost(void)
@@ -189,19 +185,19 @@ void AdjustCodecPll(RESAMPLE_STATE_T r)
             s = 2;
             break;
         case E_RS_NONE:
-        default:
             s = 0;
+            break;
     }
 
     if((g_usbd_SampleRate % 8) == 0)
     {
         for(i = 0; i < 3; i++)
-            ATOM_I2C_WriteNAU8822(37 + i, tb0[s][i]);
+            ATOM_I2C_WriteNAU8822((uint8_t)(37 + i), tb0[s][i]);
     }
     else
     {
         for(i = 0; i < 3; i++)
-            ATOM_I2C_WriteNAU8822(37 + i, tb1[s][i]);
+            ATOM_I2C_WriteNAU8822((uint8_t)(37 + i), tb1[s][i]);
     }
 }
 

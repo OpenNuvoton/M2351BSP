@@ -11,13 +11,12 @@
 #include "NuMicro.h"
 #include "massstorage.h"
 
-#pragma clang diagnostic ignored "-Wdate-time"
-
 #if 0
 #define DBG_PRINTF      printf
 #else
 #define DBG_PRINTF(...)
 #endif
+
 /*--------------------------------------------------------------------------*/
 /* Global variables for Control Pipe */
 static uint32_t s_u32TotalSectors = 0;
@@ -25,6 +24,7 @@ static uint32_t s_u32TotalSectors = 0;
 static uint8_t volatile s_u8EP2Ready = 0;
 static uint8_t volatile s_u8EP3Ready = 0;
 static uint8_t volatile s_u8Remove = 0;
+uint8_t volatile g_u8Suspend = 0;
 
 /* USB flow control variables */
 static uint8_t s_u8BulkState;
@@ -41,6 +41,7 @@ static uint32_t s_u32BytesInStorageBuf;
 
 static uint32_t s_u32BulkBuf0, s_u32BulkBuf1;
 static uint32_t volatile s_u32OutToggle = 0, s_u32OutSkip = 0;
+static uint32_t volatile s_u32CbwStall = 0;
 
 /* CBW/CSW variables */
 static struct CBW s_sCBW;
@@ -95,7 +96,6 @@ static uint8_t s_au8ModePage_1C[8] =
 };
 
 void USBD_IRQHandler(void);
-void MSC_ReadCapacity16(void);
 
 void USBD_IRQHandler(void)
 {
@@ -140,10 +140,14 @@ void USBD_IRQHandler(void)
             USBD_ENABLE_USB();
             USBD_SwReset();
             s_u32OutToggle = s_u32OutSkip = 0;
+            g_u8Suspend = 0;
             DBG_PRINTF("Bus reset\n");
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
+            /* Enter power down to wait USB attached */
+            g_u8Suspend = 1;
+
             /* Enable USB but disable PHY */
             USBD_DISABLE_PHY();
             DBG_PRINTF("Suspend\n");
@@ -152,6 +156,7 @@ void USBD_IRQHandler(void)
         {
             /* Enable USB and enable PHY */
             USBD_ENABLE_USB();
+            g_u8Suspend = 0;
             DBG_PRINTF("Resume\n");
         }
     }
@@ -267,7 +272,7 @@ void EP2_Handler(void)
 void EP3_Handler(void)
 {
     /* Bulk OUT */
-    if(s_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk))
+    if((s_u32OutToggle == (USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk)) && !s_u32CbwStall)
     {
         s_u32OutSkip = 1;
         USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
@@ -277,16 +282,14 @@ void EP3_Handler(void)
         s_u8EP3Ready = 1;
         s_u32OutToggle = USBD->EPSTS0 & USBD_EPSTS0_EPSTS3_Msk;
         s_u32OutSkip = 0;
+
+        s_u32CbwStall = 0;
     }
 }
 
 
 void MSC_Init(void)
 {
-    int32_t i;
-    uint8_t *pu8;
-    char *pSerial = __TIME__;
-
     /* Init setup packet buffer */
     /* Buffer range for setup packet -> [0 ~ 0x7] */
     USBD->STBUFSEG = SETUP_BUF_BASE;
@@ -323,23 +326,6 @@ void MSC_Init(void)
     s_sCSW.dCSWSignature = CSW_SIGNATURE;
     s_u32TotalSectors = DATA_FLASH_STORAGE_SIZE / UDC_SECTOR_SIZE;
     memset((void *)STORAGE_DATA_BUF, 0, STORAGE_BUFFER_SIZE);
-
-    /*
-       Generate Mass-Storage Device serial number
-       To compliant USB-IF MSC test, we must enable serial string descriptor.
-       However, window may fail to recognize the devices if PID/VID and serial number are all the same
-       when plug them to Windows at the sample time.
-       Therefore, we must generate different serial number for each device to avoid conflict
-       when plug more than 2 MassStorage devices to Windows at the same time.
-
-       NOTE: We use compiler predefine macro "__TIME__" to generate different number for serial
-       at each build but each device here for a demo.
-       User must change it to make sure all serial number is different between each device.
-     */
-    pu8 = (uint8_t *)gsInfo.gu8StringDesc[3];
-    for(i = 0; i < 8; i++)
-        pu8[pu8[0] - 16 + i * 2] = pSerial[i];
-
 }
 
 void MSC_ClassRequest(void)
@@ -366,14 +352,18 @@ void MSC_ClassRequest(void)
                     USBD_PrepareCtrlOut(0, 0);
                 }
                 else
+                {
                     USBD_SET_EP_STALL(EP1); // Stall when wrong parameter
-
+                }
+                s_u32OutToggle = 0;
+                USBD_SET_DATA0(EP2);
                 break;
             }
             default:
             {
                 /* Setup error, stall the device */
-                USBD_SetStall(0);
+                USBD_SetStall(EP0);
+                USBD_SetStall(EP1);
                 DBG_PRINTF("Unknown MSC req(0x%x). stall ctrl pipe\n", au8Buf[1]);
                 break;
             }
@@ -389,6 +379,8 @@ void MSC_ClassRequest(void)
                 /* Check interface number with cfg descriptor and check wValue = 0, wLength = 0 */
                 if((au8Buf[4] == gsInfo.gu8ConfigDesc[LEN_CONFIG + 2]) && (au8Buf[2] + au8Buf[3] + au8Buf[6] + au8Buf[7] == 0))
                 {
+                    USBD_SET_DATA1(EP0);
+                    USBD_SET_PAYLOAD_LEN(EP0, 0);
 
                     s_u32Length = 0; // Reset all read/write data transfer
                     USBD_LockEpStall(0);
@@ -396,34 +388,34 @@ void MSC_ClassRequest(void)
                     /* Clear ready */
                     USBD->EP[EP2].CFGP |= USBD_CFGP_CLRRDY_Msk;
                     USBD->EP[EP3].CFGP |= USBD_CFGP_CLRRDY_Msk;
+                    USBD_SET_DATA0(EP2);
 
                     /* Prepare to receive the CBW */
-
                     s_u8EP3Ready = 0;
                     s_u8BulkState = BULK_CBW;
 
                     USBD_SET_DATA1(EP3);
                     USBD_SET_EP_BUF_ADDR(EP3, s_u32BulkBuf0);
-                    USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
+                    USBD_SET_PAYLOAD_LEN(EP3, 31);
 
+                    /* Status stage */
+                    USBD_SET_DATA1(EP0);
+                    USBD_SET_PAYLOAD_LEN(EP0, 0);
                 }
                 else
                 {
                     /* Stall when wrong parameter */
-                    USBD_SET_EP_STALL(EP1);
+                    USBD_SetStall(EP0);
+                    USBD_SetStall(EP1);
                 }
-
-                /* Status stage */
-                USBD_SET_DATA1(EP0);
-                USBD_SET_PAYLOAD_LEN(EP0, 0);
-
                 break;
             }
             default:
             {
                 // Stall
                 /* Setup error, stall the device */
-                USBD_SetStall(0);
+                USBD_SetStall(EP0);
+                USBD_SetStall(EP1);
                 DBG_PRINTF("Unknown MSC req (0x%x). stall ctrl pipe\n", au8Buf[1]);
                 break;
             }
@@ -608,7 +600,6 @@ void MSC_ReadTrig(void)
 
         s_u32Length -= s_u32Size;
         s_u32BytesInStorageBuf -= s_u32Size;
-
     }
     else
         USBD_SET_PAYLOAD_LEN(EP2, 0);
@@ -675,7 +666,7 @@ void MSC_ModeSense10(void)
 
             u8NumHead = 2;
             u8NumSector = 64;
-            u16NumCyl = (uint16_t)s_u32TotalSectors / 128;
+            u16NumCyl = (uint16_t)(s_u32TotalSectors / 128);
 
             *((uint8_t *)(MassCMD_BUF + 12)) = u8NumHead;
             *((uint8_t *)(MassCMD_BUF + 13)) = u8NumSector;
@@ -711,7 +702,7 @@ void MSC_ModeSense10(void)
 
             u8NumHead = 2;
             u8NumSector = 64;
-            u16NumCyl = (uint16_t)s_u32TotalSectors / 128;
+            u16NumCyl = (uint16_t)(s_u32TotalSectors / 128);
 
             *((uint8_t *)(MassCMD_BUF + 24)) = u8NumHead;
             *((uint8_t *)(MassCMD_BUF + 25)) = u8NumSector;
@@ -810,8 +801,10 @@ void MSC_ProcessCmd(void)
                 USBD_SET_EP_STALL(EP2);
                 USBD_SET_EP_STALL(EP3);
                 USBD_LockEpStall((1 << EP2) | (1 << EP3));
-                return;
 
+                s_u32CbwStall = 1;
+                s_u8BulkState = BULK_CBW;
+                return;
             }
 
             /* Get the CBW */
@@ -848,6 +841,7 @@ void MSC_ProcessCmd(void)
                         if(s_sCBW.bmCBWFlags == 0)     /* Ho > Dn (Case 9) */
                         {
                             s_u8Prevent = 1;
+                            s_u32CbwStall = 1;
                             USBD_SET_EP_STALL(EP3);
                             s_sCSW.bCSWStatus = 0x1;
                             s_sCSW.dCSWDataResidue = u32Hcount;
@@ -909,6 +903,7 @@ void MSC_ProcessCmd(void)
                         s_sCSW.dCSWDataResidue = 0;
                         s_u8BulkState = BULK_IN;
                         MSC_AckCmd();
+                        USBD_SET_DATA0(EP2);
                         return;
                     }
                 }
@@ -974,6 +969,11 @@ void MSC_ProcessCmd(void)
                         USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
                         s_u8BulkState = BULK_OUT;
                     }
+                    else
+                    {
+                        s_u8BulkState = BULK_IN;
+                        MSC_AckCmd();
+                    }
                     return;
                 }
                 case UFI_MODE_SENSE_6:
@@ -1018,8 +1018,17 @@ void MSC_ProcessCmd(void)
                 }
                 case UFI_INQUIRY:
                 {
-
-                    if((u32Hcount > 0) && (u32Hcount <= 36))
+                    if(u32Hcount > 36 || u32Hcount == 0)
+                    {
+                        s_u8Prevent = 1;
+                        s_sCSW.dCSWDataResidue = u32Hcount;
+                        s_sCSW.bCSWStatus = 0x1;
+                        USBD_SET_EP_STALL(EP2);
+                        s_u8BulkState = BULK_IN;
+                        MSC_AckCmd();
+                        USBD_SET_DATA0(EP2);
+                    }
+                    else
                     {
                         /* Bulk IN buffer */
                         USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1), (uint8_t *)s_au8InquiryID, u32Hcount);
@@ -1027,18 +1036,8 @@ void MSC_ProcessCmd(void)
                         s_u8BulkState = BULK_IN;
                         s_sCSW.bCSWStatus = 0;
                         s_sCSW.dCSWDataResidue = 0;
-                        return;
                     }
-                    else
-                    {
-                        USBD_SET_EP_STALL(EP2);
-                        s_u8Prevent = 1;
-                        s_sCSW.bCSWStatus = 0x01;
-                        s_sCSW.dCSWDataResidue = 0;
-                        s_u8BulkState = BULK_IN;
-                        MSC_AckCmd();
-                        return;
-                    }
+                    return;
                 }
                 case UFI_READ_12:
                 case UFI_READ_10:
@@ -1046,7 +1045,6 @@ void MSC_ProcessCmd(void)
                     /* Check if it is a new transfer */
                     if(s_u32Length == 0)
                     {
-
                         u32Dcount = (get_be32(&s_sCBW.au8Data[4]) >> 8) * 512;
                         if(s_sCBW.bmCBWFlags == 0x80)      /* IN */
                         {
@@ -1081,6 +1079,7 @@ void MSC_ProcessCmd(void)
                         else   /* Ho <> Di (Case 10) */
                         {
                             s_u8Prevent = 1;
+                            s_u32CbwStall = 1;
                             USBD_SET_EP_STALL(EP3);
                             s_sCSW.bCSWStatus = 0x01;
                             s_sCSW.dCSWDataResidue = u32Hcount;
@@ -1185,7 +1184,7 @@ void MSC_ProcessCmd(void)
                     }
                     return;
                 }
-                case UFI_READ_16:
+                case UFI_READ_CAPACITY_16:
                 {
                     USBD_SET_EP_STALL(EP2);
                     s_u8Prevent = 1;
@@ -1288,7 +1287,7 @@ void MSC_AckCmd(void)
             {
                 if (s_sCBW.dCBWDataTransferLength < STORAGE_BUFFER_SIZE)
                     s_sCSW.dCSWDataResidue = 0;
-                else	
+                else
                     s_sCSW.dCSWDataResidue = s_sCBW.dCBWDataTransferLength - STORAGE_BUFFER_SIZE;
 
                 s_sCSW.bCSWStatus = 0;
@@ -1303,7 +1302,7 @@ void MSC_AckCmd(void)
             }
             default:
             {
-                /* Unsupported commmand. Return command fail status */
+                /* Unsupported command. Return command fail status */
                 s_sCSW.dCSWDataResidue = s_sCBW.dCBWDataTransferLength;
                 s_sCSW.bCSWStatus = 0x01;
                 break;
@@ -1357,9 +1356,7 @@ void MSC_SetConfig(void)
 
     s_u8BulkState = BULK_CBW;
 
-
     DBG_PRINTF("Set config\n");
-
 }
 
 void DataFlashRead(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer)

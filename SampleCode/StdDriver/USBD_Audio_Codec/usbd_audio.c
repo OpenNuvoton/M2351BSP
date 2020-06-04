@@ -48,13 +48,11 @@ uint32_t volatile g_u32BuffLen = 0, g_u32RxBuffLen = 0;
 #ifdef __ICCARM__
 #pragma data_alignment=4
 uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN] = {0};
-uint32_t s_au32PcmPlayBuffLen[PDMA_TXBUFFER_CNT] = {0};
 
-uint8_t s_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] = {0};
+uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] = {0};
 uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT] = {0};
 #else
 uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN] __attribute__((aligned(4))) = {{0}};
-static uint32_t s_au32PcmPlayBuffLen[PDMA_TXBUFFER_CNT] __attribute__((aligned(4))) = {0};
 
 uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN] __attribute__((aligned(4))) = {{0}};
 uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT] __attribute__((aligned(4))) = {0};
@@ -63,8 +61,6 @@ uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT] __attribute__((aligned(4))) = {0};
 static volatile uint32_t s_u32BufPlayIdx = 0;
 static volatile uint32_t s_u32PlayBufPos = 0;
 static volatile uint32_t s_u32BufRecIdx = 0;
-
-
 
 void USBD_IRQHandler(void);
 void TMR0_IRQHandler(void);
@@ -734,7 +730,6 @@ void UAC_GetPlayData(uint8_t *pu8Src, uint32_t u32Samples)
     /* Ring buffer check */
     if((s_u32PlayBufPos + u32len) > g_u32BuffLen)
     {
-        s_au32PcmPlayBuffLen[s_u32BufPlayIdx] = s_u32PlayBufPos;
         s_u32PlayBufPos = 0;
         s_u32BufPlayIdx ++;
 

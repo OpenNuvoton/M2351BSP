@@ -80,6 +80,9 @@
 
 
 /*-------------------------------------------------------------*/
+extern uint8_t volatile g_u8Suspend;
+
+/*-------------------------------------------------------------*/
 void PTR_Init(void);
 void PTR_ClassRequest(void);
 void PTR_Data_Receive(void);

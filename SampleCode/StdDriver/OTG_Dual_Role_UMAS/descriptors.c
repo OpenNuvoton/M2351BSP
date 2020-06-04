@@ -11,16 +11,15 @@
 
 /*----------------------------------------------------------------------------*/
 /*!<USB Device Descriptor */
-#ifdef __ICCARM__
-#pragma data_alignment=4
-uint8_t s_au8DeviceDescriptor[] =
-#else
-static uint8_t s_au8DeviceDescriptor[] __attribute__((aligned(4))) =
-#endif
+static uint8_t s_au8DeviceDescriptor[] =
 {
     LEN_DEVICE,         /* bLength */
     DESC_DEVICE,        /* bDescriptorType */
+#ifdef SUPPORT_LPM
+    0x01, 0x02,         /* bcdUSB >= 0x0201 to support LPM */
+#else
     0x10, 0x01,         /* bcdUSB */
+#endif
     0x00,               /* bDeviceClass */
     0x00,               /* bDeviceSubClass */
     0x00,               /* bDeviceProtocol */
@@ -39,12 +38,7 @@ static uint8_t s_au8DeviceDescriptor[] __attribute__((aligned(4))) =
 };
 
 /*!<USB Configure Descriptor */
-#ifdef __ICCARM__
-#pragma data_alignment=4
-uint8_t s_au8ConfigDescriptor[] =
-#else
-static uint8_t s_au8ConfigDescriptor[] __attribute__((aligned(4))) =
-#endif
+static uint8_t s_au8ConfigDescriptor[] =
 {
     LEN_CONFIG,                                         // bLength
     DESC_CONFIG,                                        // bDescriptorType
@@ -84,12 +78,7 @@ static uint8_t s_au8ConfigDescriptor[] __attribute__((aligned(4))) =
 };
 
 /*!<USB Language String Descriptor */
-#ifdef __ICCARM__
-#pragma data_alignment=4
-uint8_t s_au8StringLang[4] =
-#else
-static uint8_t s_au8StringLang[4] __attribute__((aligned(4))) =
-#endif
+static uint8_t s_au8StringLang[4] =
 {
     4,              /* bLength */
     DESC_STRING,    /* bDescriptorType */
@@ -97,12 +86,7 @@ static uint8_t s_au8StringLang[4] __attribute__((aligned(4))) =
 };
 
 /*!<USB Vendor String Descriptor */
-#ifdef __ICCARM__
-#pragma data_alignment=4
-uint8_t s_au8VendorStringDesc[] =
-#else
-static uint8_t s_au8VendorStringDesc[] __attribute__((aligned(4))) =
-#endif
+static uint8_t s_au8VendorStringDesc[] =
 {
     16,
     DESC_STRING,
@@ -110,24 +94,14 @@ static uint8_t s_au8VendorStringDesc[] __attribute__((aligned(4))) =
 };
 
 /*!<USB Product String Descriptor */
-#ifdef __ICCARM__
-#pragma data_alignment=4
-uint8_t s_au8ProductStringDesc[] =
-#else
-static uint8_t s_au8ProductStringDesc[] __attribute__((aligned(4))) =
-#endif
+static uint8_t s_au8ProductStringDesc[] =
 {
     22,             /* bLength          */
     DESC_STRING,    /* bDescriptorType  */
     'U', 0, 'S', 0, 'B', 0, ' ', 0, 'D', 0, 'e', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0
 };
 
-#ifdef __ICCARM__
-#pragma data_alignment=4
-uint8_t s_au8StringSerial[] =
-#else
-static uint8_t s_au8StringSerial[] __attribute__((aligned(4))) =
-#endif
+static uint8_t s_au8StringSerial[] =
 {
     26,             // bLength
     DESC_STRING,    // bDescriptorType
@@ -135,6 +109,30 @@ static uint8_t s_au8StringSerial[] __attribute__((aligned(4))) =
 
 };
 
+/*!<USB BOS Descriptor */
+static uint8_t s_au8BOSDescriptor[] =
+{
+    LEN_BOS,        /* bLength */
+    DESC_BOS,       /* bDescriptorType */
+    /* wTotalLength */
+    0x0C & 0x00FF,
+    (0x0C & 0xFF00) >> 8,
+    0x01,           /* bNumDeviceCaps */
+
+    /* Device Capability */
+    LEN_BOSCAP,     /* bLength */
+    DESC_CAPABILITY,/* bDescriptorType */
+    CAP_USB20_EXT,  /* bDevCapabilityType, 0x02 is USB 2.0 Extension */
+    0x06, 0x04, 0x00, 0x00  /* bmAttributes, 32 bits */
+                            /* bit 0 : Reserved. Must 0. */
+                            /* bit 1 : 1 to support LPM. */
+                            /* bit 2 : 1 to support BSL & Alternat HIRD. */
+                            /* bit 3 : 1 to recommend Baseline BESL. */
+                            /* bit 4 : 1 to recommand Deep BESL. */
+                            /* bit 11:8 : Recommend Baseline BESL value. Ignore by bit3 is zero. */
+                            /* bit 15:12 : Recommend Deep BESL value. Ignore by bit4 is zero. */
+                            /* bit 31:16 : Reserved. Must 0. */
+};
 
 static uint8_t *s_apu8UsbString[4] =
 {
@@ -150,7 +148,11 @@ const S_USBD_INFO_T gsInfo =
     (uint8_t *)s_au8ConfigDescriptor,
     (uint8_t **)s_apu8UsbString,
     NULL,
+#ifdef SUPPORT_LPM
+    (uint8_t *)s_au8BOSDescriptor,
+#else
     NULL,
+#endif
     NULL,
     NULL
 };

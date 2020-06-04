@@ -1,9 +1,7 @@
 /******************************************************************************
  * @file     sc_intf.h
  * @version  V2.00
- * $Revision: 1 $
- * $Date: 16/06/16 6:17p $
- * @brief    M451 USBD CCID smartcard interface control header
+ * @brief    USBD CCID smartcard interface control header
  *
  * @note
  * Copyright (C) 2014~2015 Nuvoton Technology Corp. All rights reserved.

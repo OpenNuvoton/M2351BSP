@@ -5,8 +5,8 @@
  * @note
  * Copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
-#ifndef __USBD_HID_H__
-#define __USBD_HID_H__
+#ifndef __USBD_HID_MSC_H__
+#define __USBD_HID_MSC_H__
 
 /* Define the vendor id and product id */
 #define USBD_VID        0x0416
@@ -70,8 +70,8 @@
 /*-------------------------------------------------------------*/
 
 /*-------------------------------------------------------------*/
-void HID_Init(void);
-void HID_ClassRequest(void);
+void HID_MSC_Init(void);
+void HID_MSC_ClassRequest(void);
 
 void EP2_Handler(void);
 void EP3_Handler(void);
@@ -81,6 +81,6 @@ void HID_GetOutReport(uint8_t *pu8EpBuf, uint32_t u32Size);
 void EP4_Handler(void);
 void EP5_Handler(void);
 
-#endif  /* __USBD_HID_H_ */
+#endif  /* __USBD_HID_MSC_H__ */
 
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/

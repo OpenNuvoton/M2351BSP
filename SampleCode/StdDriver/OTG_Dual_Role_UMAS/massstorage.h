@@ -58,9 +58,9 @@
 #define UFI_PREVENT_ALLOW_MEDIUM_REMOVAL        0x1E
 #define UFI_READ_FORMAT_CAPACITY                0x23
 #define UFI_READ_CAPACITY                       0x25
+#define UFI_READ_CAPACITY_16                    0x9E
 #define UFI_READ_10                             0x28
 #define UFI_READ_12                             0xA8
-#define UFI_READ_16                             0x9E
 #define UFI_WRITE_10                            0x2A
 #define UFI_WRITE_12                            0xAA
 #define UFI_VERIFY_10                           0x2F
@@ -74,10 +74,10 @@
 #define BULK_CSW  0x04
 #define BULK_NORMAL 0xFF
 
-static __INLINE uint32_t get_be32(uint8_t *buf)
+static __INLINE uint32_t get_be32(uint8_t *pu8Buf)
 {
-    return ((uint32_t) buf[0] << 24) | ((uint32_t) buf[1] << 16) |
-           ((uint32_t) buf[2] << 8) | ((uint32_t) buf[3]);
+    return ((uint32_t) (pu8Buf[0] << 24)) | ((uint32_t) (pu8Buf[1] << 16)) |
+           ((uint32_t) (pu8Buf[2] << 8)) | ((uint32_t) (pu8Buf[3]));
 }
 
 
@@ -90,8 +90,10 @@ static __INLINE uint32_t get_be32(uint8_t *buf)
 */
 
 /*!<USB Mass Storage Class - Command Block Wrapper Structure */
+#if defined(__ARMCC_VERSION)
 #pragma pack(push)
 #pragma pack(1)
+#endif
 struct CBW
 {
     uint32_t  dCBWSignature;
@@ -104,11 +106,15 @@ struct CBW
     uint8_t   u8LUN;
     uint8_t   au8Data[14];
 };
+#if defined(__ARMCC_VERSION)
 #pragma pack(pop)
+#endif
 
 /*!<USB Mass Storage Class - Command Status Wrapper Structure */
+#if defined(__ARMCC_VERSION)
 #pragma pack(push)
 #pragma pack(1)
+#endif
 struct CSW
 {
     uint32_t  dCSWSignature;
@@ -116,38 +122,41 @@ struct CSW
     uint32_t  dCSWDataResidue;
     uint8_t   bCSWStatus;
 };
+#if defined(__ARMCC_VERSION)
 #pragma pack(pop)
+#endif
 
 /*-------------------------------------------------------------*/
-#define DATA_FLASH_STORAGE_SIZE    (30*1024)  /* Configure the DATA FLASH storage size */
+#define DATA_FLASH_STORAGE_SIZE    (30*1024)   /* Configure the DATA FLASH storage size */
 #define MASS_BUFFER_SIZE    256                /* Mass Storage command buffer size */
-#define STORAGE_BUFFER_SIZE 512               /* Data transfer buffer size in 512 bytes alignment */
-#define UDC_SECTOR_SIZE   512               /* logic sector size */
+#define STORAGE_BUFFER_SIZE 512                /* Data transfer buffer size in 512 bytes alignment */
+#define UDC_SECTOR_SIZE   512                  /* logic sector size */
 
-extern uint32_t MassBlock[];
-extern uint32_t Storage_Block[];
+extern uint32_t g_au32MassBlock[];
+extern uint32_t g_au32StorageBlock[];
 
-#define MassCMD_BUF        ((uint32_t)&MassBlock[0])
-#define STORAGE_DATA_BUF   ((uint32_t)&Storage_Block[0])
-
-/*-------------------------------------------------------------*/
+#define MassCMD_BUF        ((uint32_t)&g_au32MassBlock[0])
+#define STORAGE_DATA_BUF   ((uint32_t)&g_au32StorageBlock[0])
 
 /*-------------------------------------------------------------*/
-void DataFlashWrite(uint32_t addr, uint32_t size, uint32_t buffer);
-void DataFlashRead(uint32_t addr, uint32_t size, uint32_t buffer);
+
+/*-------------------------------------------------------------*/
+void DataFlashWrite(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer);
+void DataFlashRead(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer);
 void MSC_Init(void);
 void MSC_RequestSense(void);
 void MSC_ReadFormatCapacity(void);
 void MSC_Read(void);
 void MSC_ReadCapacity(void);
+void MSC_ReadCapacity16(void);
 void MSC_Write(void);
 void MSC_ModeSense10(void);
 void MSC_ReadTrig(void);
 void MSC_ClassRequest(void);
 void MSC_SetConfig(void);
 
-void MSC_ReadMedia(uint32_t addr, uint32_t size, uint8_t *buffer);
-void MSC_WriteMedia(uint32_t addr, uint32_t size, uint8_t *buffer);
+void MSC_ReadMedia(uint32_t u32Addr, uint32_t u32Size, uint8_t *pu8Buffer);
+void MSC_WriteMedia(uint32_t u32Addr, uint32_t u32Size, uint8_t *pu8Buffer);
 
 /*-------------------------------------------------------------*/
 void MSC_AckCmd(void);
@@ -156,4 +165,5 @@ void EP2_Handler(void);
 void EP3_Handler(void);
 
 #endif  /* __USBD_MASS_H_ */
+
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/

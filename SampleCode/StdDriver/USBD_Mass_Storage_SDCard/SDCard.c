@@ -27,7 +27,7 @@ static SPI_T    *g_pSPI = SPI1;
 
 
 /// @cond HIDDEN_SYMBOLS
-static int8_t s_i8IsInitialized = 0, SDtype = 0;
+static int8_t s_i8IsInitialized = 0, s_i8SDType = 0;
 static uint32_t s_u32LogicSector = 0;
 
 // Command table for MMC.  This table contains all commands available in SPI
@@ -72,7 +72,7 @@ static COMMAND __I s_CommandList[] =
   @{
 */
 
-void SD_Delay(uint32_t count);
+void SD_Delay(uint32_t u32Count);
 void MMC_FLASH_Init(void);
 
 /**
@@ -80,10 +80,10 @@ void MMC_FLASH_Init(void);
   * @param[in] count loop count.
   * @return none
   */
-void SD_Delay(uint32_t count)
+void SD_Delay(uint32_t u32Count)
 {
-    uint32_t volatile loop;
-    for(loop = 0; loop < count; loop++);
+    uint32_t volatile u32Loop;
+    for(u32Loop = 0; u32Loop < u32Count; u32Loop++);
 }
 /*---------------------------------------------------------------------------------------------------------*/
 /* SD CARD Protocol                                                                                        */
@@ -138,34 +138,34 @@ static uint32_t SingleWrite(uint32_t u32Data)
 
 /**
   * @brief This function is used to Send SDCARD CMD and Receive Response
-  * @param[in] nCmd Set command register
-  * @param[in] nArg Set command argument
-  * @param[out] *pchar Get register and data
-  * @param[out] *response Get response
+  * @param[in] u8Cmd Set command register
+  * @param[in] u32Arg Set command argument
+  * @param[out] *pu8Char Get register and data
+  * @param[out] *pu32Response Get response
   * @retval TRUE get response
   * @retval FALSE 1.SD Card busy, 2.Card moved, 3.Timeout
   */
-uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t *response)
+uint32_t MMC_Command_Exec(uint8_t u8Cmd, uint32_t u32Arg, uint8_t *pu8Char, uint32_t *pu32Response)
 {
-    uint8_t loopguard;
+    uint8_t u8Loopguard;
     COMMAND current_command;                // Local space for the command table
-    UINT32  long_arg;                       // Local space for argument
-    static uint32_t current_blklen = 512;
-    uint32_t old_blklen = 512;
-    uint32_t counter = 0;                    // Byte counter for multi-byte fields;
-    UINT16 card_response;                       // Variable for storing card response;
-    uint8_t data_resp;                      // Variable for storing data response;
+    UINT32 long_arg;                        // Local space for argument
+    static uint32_t u32Current_Blklen = 512;
+    uint32_t u32Old_Blklen = 512;
+    uint32_t u32Counter = 0;                // Byte counter for multi-byte fields;
+    UINT16 card_response;                   // Variable for storing card response;
+    uint8_t u8Data_Resp;                    // Variable for storing data response;
     UINT16 dummy_CRC;                       // Dummy variable for storing CRC field;
     int32_t i32Count;
 
     card_response.i = 0;
 
-    current_command = s_CommandList[nCmd];// Retrieve desired command table entry
+    current_command = s_CommandList[u8Cmd];// Retrieve desired command table entry
     // from code space;
     if(current_command.command_byte & 0x80)
     {
         // Detect ACMD
-        if(MMC_Command_Exec(APP_CMD, EMPTY, EMPTY, response) == FALSE) //Send APP_CMD
+        if(MMC_Command_Exec(APP_CMD, EMPTY, EMPTY, pu32Response) == FALSE) //Send APP_CMD
             return FALSE;
     }
 
@@ -177,7 +177,7 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
 
     SD_Delay(200);
 
-    long_arg.l = nArg;                  // Make argument byte addressable;
+    long_arg.l = u32Arg;                  // Make argument byte addressable;
     // If current command changes block
     // length, update block length variable
     // to keep track;
@@ -187,7 +187,7 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
     // set;
     if(current_command.command_byte == 16)
     {
-        current_blklen = nArg;
+        u32Current_Blklen = u32Arg;
     }
     // Command byte = 9 or 10 means that a
     // 16-byte register value is being read
@@ -196,8 +196,8 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
     // end of the transfer;
     if((current_command.command_byte == 9) || (current_command.command_byte == 10))
     {
-        old_blklen = current_blklen;     // Command is a GET_CSD or GET_CID,
-        current_blklen = 16;             // set block length to 16-bytes;
+        u32Old_Blklen = u32Current_Blklen;     // Command is a GET_CSD or GET_CID,
+        u32Current_Blklen = 16;             // set block length to 16-bytes;
     }
     // If an argument is required, transmit
     // one, otherwise transmit 4 bytes of
@@ -216,11 +216,11 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
     }
     else
     {
-        counter = 0;
-        while(counter <= 3)
+        u32Counter = 0;
+        while(u32Counter <= 3)
         {
             SingleWrite(0x00);
-            counter++;
+            u32Counter++;
         }
         SingleWrite(/*current_command.CRC*/current_command.CRC_SD);
     }
@@ -232,98 +232,98 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
     if(current_command.response == R1)
     {
         // Read the R1 response from the card;
-        loopguard = 0;
+        u8Loopguard = 0;
         do
         {
             card_response.b[0] = (uint8_t)SingleWrite(0xFF);
-            if(!++loopguard) break;
+            if(!++u8Loopguard) break;
         }
         while((card_response.b[0] & BUSY_BIT));
-        DBG_PRINTF("R1:0x%x, counter:%d\n", card_response.b[0], loopguard);
+        DBG_PRINTF("R1:0x%x, counter:%d\n", card_response.b[0], u8Loopguard);
 
-        if(!loopguard)
+        if(!u8Loopguard)
         {
             BACK_FROM_ERROR;
         }
 
 //      while((SingleWrite(0xFF)&0xFF) == 0x00);
-        *response = card_response.b[0];
+        *pu32Response = card_response.b[0];
     }
     else if(current_command.response == R1b)   // Read the R1b response;
     {
-        loopguard = 0;
+        u8Loopguard = 0;
         do
         {
             card_response.b[0] =  (uint8_t)SingleWrite(0xFF);
-            if(!++loopguard) break;
+            if(!++u8Loopguard) break;
         }
         while((card_response.b[0] & BUSY_BIT));
         while((SingleWrite(0xFF) & 0xFF) == 0x00);
     }
     else if(current_command.response == R2)
     {
-        loopguard = 0;
+        u8Loopguard = 0;
         do
         {
             card_response.b[0] = (uint8_t)SingleWrite(0xFF);
-            if(!++loopguard) break;
+            if(!++u8Loopguard) break;
         }
         while((card_response.b[0] & BUSY_BIT));
         card_response.b[1] = (uint8_t)SingleWrite(0xFF);
-        DBG_PRINTF("R2:0x%x, counter:%d\n", card_response.i, loopguard);
-        if(!loopguard)
+        DBG_PRINTF("R2:0x%x, counter:%d\n", card_response.i, u8Loopguard);
+        if(!u8Loopguard)
         {
             BACK_FROM_ERROR;
         }
-        *response = card_response.i;
+        *pu32Response = card_response.i;
     }
     else if(current_command.response == R3)
     {
         // Read R3 response;
-        loopguard = 0;
+        u8Loopguard = 0;
         do
         {
             card_response.b[0] = (uint8_t)SingleWrite(0xFF);
-            if(!++loopguard) break;
+            if(!++u8Loopguard) break;
         }
         while((card_response.b[0] & BUSY_BIT));
-        DBG_PRINTF("R3:0x%x, counter:%d\n", card_response.b[0], loopguard);
-        if(!loopguard)
+        DBG_PRINTF("R3:0x%x, counter:%d\n", card_response.b[0], u8Loopguard);
+        if(!u8Loopguard)
         {
             BACK_FROM_ERROR;
         }
-        counter = 0;
-        while(counter <= 3)              // Read next three bytes and store them
+        u32Counter = 0;
+        while(u32Counter <= 3)              // Read next three bytes and store them
         {
             // in local memory;  These bytes make up
-            counter++;                    // the Operating Conditions Register
-            *pchar++ = (uint8_t)SingleWrite(0xFF);
+            u32Counter++;                    // the Operating Conditions Register
+            *pu8Char++ = (uint8_t)SingleWrite(0xFF);
         }
-        *response = card_response.b[0];
+        *pu32Response = card_response.b[0];
     }
     else
     {
         // Read R7 response;
-        loopguard = 0;
+        u8Loopguard = 0;
         do
         {
             card_response.b[0] = (uint8_t)SingleWrite(0xFF);
-            if(!++loopguard) break;
+            if(!++u8Loopguard) break;
         }
         while((card_response.b[0] & BUSY_BIT));
-        DBG_PRINTF("R7:0x%x, counter:%d\n", card_response.b[0], loopguard);
-        if(!loopguard)
+        DBG_PRINTF("R7:0x%x, counter:%d\n", card_response.b[0], u8Loopguard);
+        if(!u8Loopguard)
         {
             BACK_FROM_ERROR;
         }
-        counter = 0;
-        while(counter <= 3)              // Read next three bytes and store them
+        u32Counter = 0;
+        while(u32Counter <= 3)              // Read next three bytes and store them
         {
             // in local memory;  These bytes make up
-            counter++;                    // the Operating Conditions Register
-            *pchar++ = (uint8_t)SingleWrite(0xFF);
+            u32Counter++;                    // the Operating Conditions Register
+            *pu8Char++ = (uint8_t)SingleWrite(0xFF);
         }
-        *response = card_response.b[0];
+        *pu32Response = card_response.b[0];
     }
 
 
@@ -333,30 +333,30 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
         // determines what type, if any, data
         // operations need to occur;
         case RDB:                         // Read data from the MMC;
-            loopguard = 0;
+            u8Loopguard = 0;
 
             while((SingleWrite(0xFF) & 0xFF) != START_SBR)
             {
-                if(!++loopguard)
+                if(!++u8Loopguard)
                 {
                     BACK_FROM_ERROR;
                 }
                 SD_Delay(119);
             }
-            counter = 0;                    // Reset byte counter;
-            // Read <current_blklen> bytes;
-            if(pchar)
+            u32Counter = 0;                    // Reset byte counter;
+            // Read <u32Current_Blklen> bytes;
+            if(pu8Char)
             {
-                for(counter = 0; counter < current_blklen; counter++)
+                for(u32Counter = 0; u32Counter < u32Current_Blklen; u32Counter++)
                 {
                     SPI_WRITE_TX(g_pSPI, 0xFF);
                     while(SPI_IS_BUSY(g_pSPI));
-                    *(pchar + counter) = (uint8_t)SPI_READ_RX(g_pSPI);
+                    *(pu8Char + u32Counter) = (uint8_t)SPI_READ_RX(g_pSPI);
                 }
             }
             else
             {
-                for(; counter < current_blklen; counter++)
+                for(; u32Counter < u32Current_Blklen; u32Counter++)
                 {
                     SPI_WRITE_TX(g_pSPI, 0xFF);
                     while(SPI_IS_BUSY(g_pSPI));
@@ -368,29 +368,29 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
             // must be read anyway;
             break;
         case RD:                         // Read data from the MMC;
-            loopguard = 0;
+            u8Loopguard = 0;
 
             while((SingleWrite(0xFF) & 0xFF) != START_SBR)
             {
-                if(!++loopguard)
+                if(!++u8Loopguard)
                 {
                     BACK_FROM_ERROR;
                 }
             }
-            counter = 0;                    // Reset byte counter;
-            // Read <current_blklen> bytes;
-            if(pchar)
+            u32Counter = 0;                    // Reset byte counter;
+            // Read <u32Current_Blklen> bytes;
+            if(pu8Char)
             {
-                for(counter = 0; counter < current_blklen; counter++)
+                for(u32Counter = 0; u32Counter < u32Current_Blklen; u32Counter++)
                 {
                     SPI_WRITE_TX(g_pSPI, 0xFF);
                     while(SPI_IS_BUSY(g_pSPI));
-                    *(pchar + counter) = (uint8_t)SPI_READ_RX(g_pSPI);
+                    *(pu8Char + u32Counter) = (uint8_t)SPI_READ_RX(g_pSPI);
                 }
             }
             else
             {
-                for(counter = 0; counter < current_blklen; counter++)
+                for(u32Counter = 0; u32Counter < u32Current_Blklen; u32Counter++)
                 {
                     SPI_WRITE_TX(g_pSPI, 0xFF);
                     while(SPI_IS_BUSY(g_pSPI));
@@ -406,26 +406,26 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
             SingleWrite(0xFF);
             SingleWrite(START_SBW);
 
-            for(counter = 0; counter < current_blklen; counter++)
+            for(u32Counter = 0; u32Counter < u32Current_Blklen; u32Counter++)
             {
-                SPI_WRITE_TX(g_pSPI, *(pchar + counter));
-                dummy_CRC.i = GenerateCRC(*(pchar + counter), 0x1021, dummy_CRC.i);
+                SPI_WRITE_TX(g_pSPI, *(pu8Char + u32Counter));
+                dummy_CRC.i = GenerateCRC(*(pu8Char + u32Counter), 0x1021, dummy_CRC.i);
                 while(SPI_IS_BUSY(g_pSPI));
             }
             SingleWrite(dummy_CRC.b[1]);
             SingleWrite(dummy_CRC.b[0]);
 
-            loopguard = 0;
+            u8Loopguard = 0;
             do                            // Read Data Response from card;
             {
-                data_resp = (uint8_t)SingleWrite(0xFF);
-                if(!++loopguard) break;
+                u8Data_Resp = (uint8_t)SingleWrite(0xFF);
+                if(!++u8Loopguard) break;
             }
-            while((data_resp & DATA_RESP_MASK) != 0x01);     // When bit 0 of the MMC response
+            while((u8Data_Resp & DATA_RESP_MASK) != 0x01);     // When bit 0 of the MMC response
             // is clear, a valid data response
             // has been received;
 
-            if(!loopguard)
+            if(!u8Loopguard)
             {
                 BACK_FROM_ERROR;
             }
@@ -441,7 +441,7 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
 
     if((current_command.command_byte == 9) || (current_command.command_byte == 10))
     {
-        current_blklen = old_blklen;
+        u32Current_Blklen = u32Old_Blklen;
     }
     return TRUE;
 }
@@ -452,13 +452,13 @@ uint32_t MMC_Command_Exec(uint8_t nCmd, uint32_t nArg, uint8_t *pchar, uint32_t 
   */
 void MMC_FLASH_Init(void)
 {
-    uint32_t response;
-    uint16_t loopguard;
+    uint32_t u32Response;
+    uint16_t u16Loopguard;
     uint32_t i;
-    uint8_t counter = 0;
-    uint8_t pchar[16];              // Data pointer for storing MMC
-    uint32_t c_size, bl_len;
-    uint8_t c_mult;
+    uint8_t u8Counter = 0;
+    uint8_t pu8Char[16];              // Data pointer for storing MMC
+    uint32_t u32C_Size, u32Bl_Len;
+    uint8_t u8C_Mult;
 
 
     s_i8IsInitialized = 0;
@@ -470,7 +470,7 @@ void MMC_FLASH_Init(void)
     //--------------------------------------------------------
     //  Send 74 SD clcok in SD mode for Toshiba SD Card
     //--------------------------------------------------------
-    for(counter = 0; counter < 10; counter++)
+    for(u8Counter = 0; u8Counter < 10; u8Counter++)
     {
         SingleWrite(0xFF);
     }
@@ -478,108 +478,108 @@ void MMC_FLASH_Init(void)
 
     PH10 = 0;//SPI_SET_SS_LOW(g_pSPI);// CS = 0
 
-    while(MMC_Command_Exec(GO_IDLE_STATE, EMPTY, EMPTY, &response) == FALSE)
+    while(MMC_Command_Exec(GO_IDLE_STATE, EMPTY, EMPTY, &u32Response) == FALSE)
         SD_Delay(1000);
-    if(response != 0x01)
+    if(u32Response != 0x01)
         return;
 
-    if(MMC_Command_Exec(SEND_IF_COND, 0x15A, pchar, &response) && response == 1)
+    if(MMC_Command_Exec(SEND_IF_COND, 0x15A, pu8Char, &u32Response) && u32Response == 1)
     {
         /* SDC ver 2.00 */
-        if(pchar[2] == 0x01 && pchar[3] == 0x5A)
+        if(pu8Char[2] == 0x01 && pu8Char[3] == 0x5A)
         {
             /* The card can work at VDD range of 2.7-3.6V */
-            loopguard = 0;
+            u16Loopguard = 0;
             do
             {
-                MMC_Command_Exec(SD_SEND_OP_COND, 0x40000000, EMPTY, &response); //Enable HCS(OCR[30])
-                if(!++loopguard) break;
+                MMC_Command_Exec(SD_SEND_OP_COND, 0x40000000, EMPTY, &u32Response); //Enable HCS(OCR[30])
+                if(!++u16Loopguard) break;
                 SD_Delay(0x100);
             }
-            while(response != 0);
-            if(!loopguard)
+            while(u32Response != 0);
+            if(!u16Loopguard)
                 return;
 
-            MMC_Command_Exec(READ_OCR, EMPTY, pchar, &response);
-            SDtype = (pchar[0] & 0x40) ? SDv2 | SDBlock : SDv2;
+            MMC_Command_Exec(READ_OCR, EMPTY, pu8Char, &u32Response);
+            s_i8SDType = (pu8Char[0] & 0x40) ? SDv2 | SDBlock : SDv2;
         }
     }
     else
     {
         /* SDv1 or MMCv3 */
-        MMC_Command_Exec(SD_SEND_OP_COND, 0x00, EMPTY, &response);
-        if(response <= 1)
+        MMC_Command_Exec(SD_SEND_OP_COND, 0x00, EMPTY, &u32Response);
+        if(u32Response <= 1)
         {
-            loopguard = 0;
+            u16Loopguard = 0;
             do
             {
-                MMC_Command_Exec(SD_SEND_OP_COND, 0x00, EMPTY, &response);
-                if(!++loopguard) break;
+                MMC_Command_Exec(SD_SEND_OP_COND, 0x00, EMPTY, &u32Response);
+                if(!++u16Loopguard) break;
                 SD_Delay(50);
             }
-            while(response != 0);
-            if(!loopguard)
+            while(u32Response != 0);
+            if(!u16Loopguard)
                 return;
-            SDtype = SDv1;  /* SDv1 */
+            s_i8SDType = SDv1;  /* SDv1 */
         }
         else
         {
-            loopguard = 0;
+            u16Loopguard = 0;
             do
             {
-                MMC_Command_Exec(SEND_OP_COND, 0x00, EMPTY, &response);
-                if(!++loopguard) break;
+                MMC_Command_Exec(SEND_OP_COND, 0x00, EMPTY, &u32Response);
+                if(!++u16Loopguard) break;
                 SD_Delay(50);
             }
-            while(response != 0);
-            if(!loopguard)
+            while(u32Response != 0);
+            if(!u16Loopguard)
                 return;
-            SDtype = MMCv3; /* MMCv3 */
+            s_i8SDType = MMCv3; /* MMCv3 */
         }
-        MMC_Command_Exec(SET_BLOCKLEN, (uint32_t)PHYSICAL_BLOCK_SIZE, EMPTY, &response);
+        MMC_Command_Exec(SET_BLOCKLEN, (uint32_t)PHYSICAL_BLOCK_SIZE, EMPTY, &u32Response);
     }
-    if(MMC_Command_Exec(SEND_CSD, EMPTY, pchar, &response) == FALSE)
+    if(MMC_Command_Exec(SEND_CSD, EMPTY, pu8Char, &u32Response) == FALSE)
         return;
 
-    if(response == 0)
+    if(u32Response == 0)
     {
         DBG_PRINTF("Change speed:");
         for(i = 0; i < 16; i++)
         {
-            DBG_PRINTF("0x%X ", pchar[i]);
+            DBG_PRINTF("0x%X ", pu8Char[i]);
         }
 
     }
     else
     {
-        DBG_PRINTF("CARD STATUS 0x%X:\n", response);
+        DBG_PRINTF("CARD STATUS 0x%X:\n", u32Response);
         for(i = 0; i < 16; i++)
         {
-            DBG_PRINTF("0x%X ", pchar[i]);
+            DBG_PRINTF("0x%X ", pu8Char[i]);
         }
         s_u32LogicSector = 0;
         return;
     }
 
-    if(SDtype & SDBlock) // Determine the number of MMC sectors;
+    if(s_i8SDType & SDBlock) // Determine the number of MMC sectors;
     {
-        bl_len = 1 << (pchar[5] & 0x0f) ;
-        c_size = ((pchar[7] & 0x3Fu) << 16) | ((uint32_t)pchar[8] << 8) | (pchar[9]);
-        s_u32LogicSector = c_size * ((512 * 1024) / bl_len);
+        u32Bl_Len = 1 << (pu8Char[5] & 0x0f) ;
+        u32C_Size = ((pu8Char[7] & 0x3Fu) << 16) | ((uint32_t)pu8Char[8] << 8) | (pu8Char[9]);
+        s_u32LogicSector = u32C_Size * ((512 * 1024) / u32Bl_Len);
     }
     else
     {
-        bl_len = 1 << (pchar[5] & 0x0f) ;
-        c_size = ((pchar[6] & 0x03u) << 10) | ((uint32_t)pchar[7] << 2) | ((pchar[8] & 0xc0u) >> 6);
-        c_mult = (uint8_t)(((pchar[9] & 0x03u) << 1) | ((pchar[10] & 0x80u) >> 7));
-        s_u32LogicSector = (c_size + 1) * (1 << (c_mult + 2)) * (bl_len / 512);
+        u32Bl_Len = 1 << (pu8Char[5] & 0x0f) ;
+        u32C_Size = ((pu8Char[6] & 0x03u) << 10) | ((uint32_t)pu8Char[7] << 2) | ((pu8Char[8] & 0xc0u) >> 6);
+        u8C_Mult = (uint8_t)(((pu8Char[9] & 0x03u) << 1) | ((pu8Char[10] & 0x80u) >> 7));
+        s_u32LogicSector = (u32C_Size + 1) * (1 << (u8C_Mult + 2)) * (u32Bl_Len / 512);
     }
     DBG_PRINTF("\nLogicSector:%d, PHYSICAL_SIZE:%dMB\n", s_u32LogicSector, (s_u32LogicSector / 2 / 1024));
 
-    loopguard = 0;
-    while((MMC_Command_Exec(READ_SINGLE_BLOCK, 0, 0, &response) == FALSE))
+    u16Loopguard = 0;
+    while((MMC_Command_Exec(READ_SINGLE_BLOCK, 0, 0, &u32Response) == FALSE))
     {
-        if(!++loopguard) break;
+        if(!++u16Loopguard) break;
     }
     s_i8IsInitialized = 1;
 }
@@ -656,68 +656,68 @@ uint32_t GetLogicSector(void)
 
 /**
   * @brief This function is used to Get data from SD card
-  * @param[in] addr Set start address for LBA
-  * @param[in] size Set data size (byte)
-  * @param[in] buffer Set buffer pointer
+  * @param[in] u32Addr Set start address for LBA
+  * @param[in] u32Size Set data size (byte)
+  * @param[in] pu8Buffer Set buffer pointer
   * @return none
   */
-void SpiRead(uint32_t addr, uint32_t size, uint8_t* buffer)
+void SpiRead(uint32_t u32Addr, uint32_t u32Size, uint8_t* pu8Buffer)
 {
     /* This is low level read function of USB Mass Storage */
-    uint32_t response;
-    if(SDtype & SDBlock)
+    uint32_t u32Response;
+    if(s_i8SDType & SDBlock)
     {
-        while(size >= PHYSICAL_BLOCK_SIZE)
+        while(u32Size >= PHYSICAL_BLOCK_SIZE)
         {
-            MMC_Command_Exec(READ_SINGLE_BLOCK, addr, buffer, &response);
-            addr   ++;
-            buffer += PHYSICAL_BLOCK_SIZE;
-            size  -= PHYSICAL_BLOCK_SIZE;
+            MMC_Command_Exec(READ_SINGLE_BLOCK, u32Addr, pu8Buffer, &u32Response);
+            u32Addr   ++;
+            pu8Buffer += PHYSICAL_BLOCK_SIZE;
+            u32Size  -= PHYSICAL_BLOCK_SIZE;
         }
 
     }
     else
     {
-        addr *= PHYSICAL_BLOCK_SIZE;
-        while(size >= PHYSICAL_BLOCK_SIZE)
+        u32Addr *= PHYSICAL_BLOCK_SIZE;
+        while(u32Size >= PHYSICAL_BLOCK_SIZE)
         {
-            MMC_Command_Exec(READ_SINGLE_BLOCK, addr, buffer, &response);
-            addr   += PHYSICAL_BLOCK_SIZE;
-            buffer += PHYSICAL_BLOCK_SIZE;
-            size  -= PHYSICAL_BLOCK_SIZE;
+            MMC_Command_Exec(READ_SINGLE_BLOCK, u32Addr, pu8Buffer, &u32Response);
+            u32Addr   += PHYSICAL_BLOCK_SIZE;
+            pu8Buffer += PHYSICAL_BLOCK_SIZE;
+            u32Size  -= PHYSICAL_BLOCK_SIZE;
         }
     }
 }
 
 /**
   * @brief This function is used to store data into SD card
-  * @param[in] addr Set start address for LBA
-  * @param[in] size Set data size (byte)
-  * @param[in] buffer Set buffer pointer
+  * @param[in] u32Addr Set start address for LBA
+  * @param[in] u32Size Set data size (byte)
+  * @param[in] pu8Buffer Set buffer pointer
   * @return none
   */
-void SpiWrite(uint32_t addr, uint32_t size, uint8_t* buffer)
+void SpiWrite(uint32_t u32Addr, uint32_t u32Size, uint8_t* pu8Buffer)
 {
-    uint32_t response;
-    if(SDtype & SDBlock)
+    uint32_t u32Response;
+    if(s_i8SDType & SDBlock)
     {
-        while(size >= PHYSICAL_BLOCK_SIZE)
+        while(u32Size >= PHYSICAL_BLOCK_SIZE)
         {
-            MMC_Command_Exec(WRITE_BLOCK, addr, buffer, &response);
-            addr   ++;
-            buffer += PHYSICAL_BLOCK_SIZE;
-            size  -= PHYSICAL_BLOCK_SIZE;
+            MMC_Command_Exec(WRITE_BLOCK, u32Addr, pu8Buffer, &u32Response);
+            u32Addr   ++;
+            pu8Buffer += PHYSICAL_BLOCK_SIZE;
+            u32Size  -= PHYSICAL_BLOCK_SIZE;
         }
     }
     else
     {
-        addr *= PHYSICAL_BLOCK_SIZE;
-        while(size >= PHYSICAL_BLOCK_SIZE)
+        u32Addr *= PHYSICAL_BLOCK_SIZE;
+        while(u32Size >= PHYSICAL_BLOCK_SIZE)
         {
-            MMC_Command_Exec(WRITE_BLOCK, addr, buffer, &response);
-            addr   += (PHYSICAL_BLOCK_SIZE);
-            buffer += PHYSICAL_BLOCK_SIZE;
-            size  -= PHYSICAL_BLOCK_SIZE;
+            MMC_Command_Exec(WRITE_BLOCK, u32Addr, pu8Buffer, &u32Response);
+            u32Addr   += (PHYSICAL_BLOCK_SIZE);
+            pu8Buffer += PHYSICAL_BLOCK_SIZE;
+            u32Size  -= PHYSICAL_BLOCK_SIZE;
         }
     }
 }

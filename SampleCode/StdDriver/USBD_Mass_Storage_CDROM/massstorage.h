@@ -79,15 +79,15 @@
 #define BULK_CSW  0x04
 #define BULK_NORMAL 0xFF
 
-static __INLINE uint32_t get_be32(uint8_t *buf)
+static __INLINE uint32_t get_be32(uint8_t *pu8Buf)
 {
-    return ((uint32_t) (buf[0] << 24)) | ((uint32_t) (buf[1] << 16)) |
-           ((uint32_t) (buf[2] << 8)) | ((uint32_t) buf[3]);
+    return ((uint32_t) (pu8Buf[0] << 24)) | ((uint32_t) (pu8Buf[1] << 16)) |
+           ((uint32_t) (pu8Buf[2] << 8)) | ((uint32_t) pu8Buf[3]);
 }
 
-static __INLINE uint16_t get_be16(uint8_t * buf)
+static __INLINE uint16_t get_be16(uint8_t * pu8Buf)
 {
-    return (((uint16_t) (buf[0] << 8)) | ((uint16_t) buf[1]));
+    return (((uint16_t) (pu8Buf[0] << 8)) | ((uint16_t) pu8Buf[1]));
 }
 
 /******************************************************************************/
@@ -97,9 +97,12 @@ static __INLINE uint16_t get_be16(uint8_t * buf)
   M2351 USBD Mass Specific Struct
   @{
 */
+
+/*!<USB Mass Storage Class - Command Block Wrapper Structure */
+#if defined(__ARMCC_VERSION)
 #pragma pack(push)
 #pragma pack(1)
-/*!<USB Mass Storage Class - Command Block Wrapper Structure */
+#endif
 struct CBW
 {
     uint32_t  dCBWSignature;
@@ -112,11 +115,15 @@ struct CBW
     uint8_t   u8LUN;
     uint8_t   au8Data[14];
 };
+#if defined(__ARMCC_VERSION)
 #pragma pack(pop)
+#endif
 
+/*!<USB Mass Storage Class - Command Status Wrapper Structure */
+#if defined(__ARMCC_VERSION)
 #pragma pack(push)
 #pragma pack(1)
-/*!<USB Mass Storage Class - Command Status Wrapper Structure */
+#endif
 struct CSW
 {
     uint32_t  dCSWSignature;
@@ -124,10 +131,11 @@ struct CSW
     uint32_t  dCSWDataResidue;
     uint8_t   bCSWStatus;
 };
+#if defined(__ARMCC_VERSION)
 #pragma pack(pop)
+#endif
+
 /*-------------------------------------------------------------*/
-
-
 /* MSC Disk Image Definitions */
 #define MSC_ImageSize   0x0000B000
 
@@ -147,10 +155,9 @@ extern uint32_t g_au32StorageBlock[];
 #define STORAGE_DATA_BUF   ((uint32_t)&g_au32StorageBlock[0])
 
 /*-------------------------------------------------------------*/
+extern uint8_t volatile g_u8Suspend;
 
 /*-------------------------------------------------------------*/
-void DataFlashWrite(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer);
-void DataFlashRead(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer);
 void MSC_Init(void);
 void MSC_RequestSense(void);
 void MSC_ReadFormatCapacity(void);
@@ -160,6 +167,9 @@ void MSC_Write(void);
 void MSC_ModeSense10(void);
 void MSC_ReadTrig(void);
 void MSC_ClassRequest(void);
+void MSC_ReadTOC(void);
+void MSC_GetConfiguration(uint32_t u32Len, uint8_t *pu8Buff);
+void MSC_GetEventStatusNotification(void);
 
 void MSC_ReadMedia(uint32_t u32Addr, uint32_t u32Size, uint8_t *pu8Buffer);
 void MSC_WriteMedia(uint32_t u32Addr, uint32_t u32Size, uint8_t *pu8Buffer);

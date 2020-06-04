@@ -59,6 +59,7 @@
 
 /*-------------------------------------------------------------*/
 extern uint8_t volatile g_u8EP2Ready;
+extern uint8_t volatile g_u8Suspend;
 
 /*-------------------------------------------------------------*/
 void HID_Init(void);

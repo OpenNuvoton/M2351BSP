@@ -11,6 +11,8 @@
 #include "micro_printer_and_hid_transfer.h"
 
 static uint32_t volatile s_u32OutToggle = 0;
+uint8_t volatile g_u8Suspend = 0;
+static uint8_t s_u8Idle = 0, s_u8Protocol = 0;
 
 void USBD_IRQHandler(void);
 
@@ -57,9 +59,13 @@ void USBD_IRQHandler(void)
             USBD_ENABLE_USB();
             USBD_SwReset();
             s_u32OutToggle = 0;
+            g_u8Suspend = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
+            /* Enter power down to wait USB attached */
+            g_u8Suspend = 1;
+
             /* Enable USB but disable PHY */
             USBD_DISABLE_PHY();
         }
@@ -67,6 +73,7 @@ void USBD_IRQHandler(void)
         {
             /* Enable USB and enable PHY */
             USBD_ENABLE_USB();
+            g_u8Suspend = 0;
         }
     }
 
@@ -269,10 +276,29 @@ void PTR_ClassRequest(void)
                 USBD_PrepareCtrlOut(0, 0);
                 break;
             }
+            case GET_IDLE:
+            {
+                USBD_SET_PAYLOAD_LEN(EP1, au8Buf[6]);
+                /* Data stage */
+                USBD_PrepareCtrlIn(&s_u8Idle, au8Buf[6]);
+                /* Status stage */
+                USBD_PrepareCtrlOut(0, 0);
+                break;
+            }
+            case GET_PROTOCOL:
+            {
+                USBD_SET_PAYLOAD_LEN(EP1, au8Buf[6]);
+                /* Data stage */
+                USBD_PrepareCtrlIn(&s_u8Protocol, au8Buf[6]);
+                /* Status stage */
+                USBD_PrepareCtrlOut(0, 0);
+                break;
+            }
             default:
             {
                 /* Setup error, stall the device */
-                USBD_SetStall(0);
+                USBD_SetStall(EP0);
+                USBD_SetStall(EP1);
                 break;
             }
         }
@@ -294,20 +320,26 @@ void PTR_ClassRequest(void)
             }
             case SET_IDLE:
             {
+                s_u8Idle = au8Buf[3];
                 /* Status stage */
                 USBD_SET_DATA1(EP0);
                 USBD_SET_PAYLOAD_LEN(EP0, 0);
                 break;
             }
             case SET_PROTOCOL:
-//            {
-//                break;
-//            }
+            {
+                s_u8Protocol = au8Buf[2];
+                /* Status stage */
+                USBD_SET_DATA1(EP0);
+                USBD_SET_PAYLOAD_LEN(EP0, 0);
+                break;
+            }
             default:
             {
                 // Stall
                 /* Setup error, stall the device */
-                USBD_SetStall(0);
+                USBD_SetStall(EP0);
+                USBD_SetStall(EP1);
                 break;
             }
         }
@@ -320,8 +352,8 @@ void PTR_Data_Receive(void)
     uint8_t *pu8Buf = (uint8_t *)(USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP3));
     uint32_t u32Size = USBD_GET_PAYLOAD_LEN(EP3);
 
-	  (void)pu8Buf;
-	  (void)u32Size;
+    (void)pu8Buf;
+    (void)u32Size;
     /* trigger next OUT data */
     USBD_SET_PAYLOAD_LEN(EP3, EP3_MAX_PKT_SIZE);
 }
@@ -356,6 +388,7 @@ static CMD_T s_Cmd;
 static uint8_t  g_au8PageBuff[PAGE_SIZE] = {0};    /* Page buffer to upload/download through HID report */
 static uint32_t g_u32BytesInPageBuf = 0;          /* The bytes of data in g_au8PageBuff */
 static uint8_t  g_au8TestPages[TEST_PAGES * PAGE_SIZE] = {0};    /* Test pages to upload/download through HID report */
+static int32_t s_i32CmdTestCnt = 0;
 
 int32_t HID_CmdEraseSectors(CMD_T *pCmd);
 int32_t HID_CmdReadPages(CMD_T *pCmd);
@@ -433,7 +466,6 @@ int32_t HID_CmdWritePages(CMD_T *pCmd)
 }
 
 
-static int32_t s_i32CmdTestCnt = 0;
 int32_t HID_CmdTest(CMD_T *pCmd)
 {
     int32_t i;
@@ -534,7 +566,7 @@ void HID_GetOutReport(uint8_t *pu8EpBuf, uint32_t u32Size)
     uint32_t u32Pages;
     uint32_t u32PageCnt;
 
-	  (void)u32Size;
+    (void)u32Size;
     /* Get command information */
     u8Cmd        = s_Cmd.u8Cmd;
     u32StartPage = s_Cmd.u32Arg1;

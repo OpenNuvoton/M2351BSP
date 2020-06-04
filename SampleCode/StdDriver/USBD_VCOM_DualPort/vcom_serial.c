@@ -12,6 +12,7 @@
 #include "vcom_serial.h"
 
 static uint32_t volatile s_u32OutToggle0 = 0, s_u32OutToggle1 = 0;
+uint8_t volatile g_u8Suspend = 0;
 
 void USBD_IRQHandler(void);
 
@@ -58,9 +59,13 @@ void USBD_IRQHandler(void)
             USBD_ENABLE_USB();
             USBD_SwReset();
             s_u32OutToggle0 = s_u32OutToggle1 = 0;
+            g_u8Suspend = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
+            /* Enter power down to wait USB attached */
+            g_u8Suspend = 1;
+
             /* Enable USB but disable PHY */
             USBD_DISABLE_PHY();
         }
@@ -68,6 +73,7 @@ void USBD_IRQHandler(void)
         {
             /* Enable USB and enable PHY */
             USBD_ENABLE_USB();
+            g_u8Suspend = 0;
         }
     }
 

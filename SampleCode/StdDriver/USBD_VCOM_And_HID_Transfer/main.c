@@ -59,7 +59,10 @@ volatile int8_t g_i8BulkOutReady = 0;
 void SYS_Init(void);
 void UART0_Init(void);
 void UART0_IRQHandler(void);
+void PowerDown(void);
+int IsDebugFifoEmpty(void);
 /*--------------------------------------------------------------------------*/
+
 void SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/
@@ -207,7 +210,7 @@ void VCOM_TransferData(void)
 {
     uint32_t i, u32Len;
 
-    /* Check whether USB is ready for next packet or not*/
+    /* Check whether USB is ready for next packet or not */
     if(g_u32TxSize == 0)
     {
         /* Check whether we have new COM Rx data to send to USB or not */
@@ -284,12 +287,37 @@ void VCOM_TransferData(void)
     }
 }
 
+void PowerDown(void)
+{
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    printf("Enter power down ...\n");
+    while(!IsDebugFifoEmpty());
+
+    /* Wakeup Enable */
+    USBD_ENABLE_INT(USBD_INTEN_WKEN_Msk);
+
+    CLK_PowerDown();
+
+    /* Clear PWR_DOWN_EN if it is not clear by itself */
+    if(CLK->PWRCTL & CLK_PWRCTL_PDEN_Msk)
+        CLK->PWRCTL ^= CLK_PWRCTL_PDEN_Msk;
+
+    printf("device wakeup!\n");
+
+    /* Lock protected registers */
+    SYS_LockReg();
+}
+
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+#if CRYSTAL_LESS
     uint32_t u32TrimInit;
+#endif
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -357,6 +385,10 @@ int32_t main(void)
             USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
         }
 #endif
+
+        /* Enter power down when USB suspend */
+        if(g_u8Suspend)
+            PowerDown();
 
         VCOM_TransferData();
     }

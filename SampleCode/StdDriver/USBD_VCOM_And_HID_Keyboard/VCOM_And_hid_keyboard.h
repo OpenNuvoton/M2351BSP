@@ -90,6 +90,7 @@ typedef struct
 } STR_VCOM_LINE_CODING;
 #pragma pack(pop)
 
+
 /*-------------------------------------------------------------*/
 extern volatile int8_t g_i8BulkOutReady;
 extern STR_VCOM_LINE_CODING g_LineCoding;
@@ -104,7 +105,7 @@ extern uint8_t *g_pu8RxBuf;
 extern uint32_t g_u32RxSize;
 extern uint32_t g_u32TxSize;
 
-/*-------------------------------------------------------------*/
+extern uint8_t volatile g_u8Suspend;
 
 /*-------------------------------------------------------------*/
 void HID_Init(void);

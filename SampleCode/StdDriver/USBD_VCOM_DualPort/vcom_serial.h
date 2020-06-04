@@ -79,6 +79,7 @@ typedef struct
 } STR_VCOM_LINE_CODING;
 #pragma pack(pop)
 
+
 /*-------------------------------------------------------------*/
 extern volatile int8_t g_i8BulkOutReady0;
 extern STR_VCOM_LINE_CODING g_LineCoding0;
@@ -105,6 +106,9 @@ extern volatile uint16_t g_u16ComTtail1;
 extern uint8_t *g_pu8RxBuf1;
 extern uint32_t g_u32RxSize1;
 extern uint32_t g_u32TxSize1;
+
+extern uint8_t volatile g_u8Suspend;
+
 /*-------------------------------------------------------------*/
 void VCOM_Init(void);
 void VCOM_ClassRequest(void);

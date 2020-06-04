@@ -16,6 +16,8 @@
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
 void SYS_Init(void);
+void PowerDown(void);
+int IsDebugFifoEmpty(void);
 
 void SYS_Init(void)
 {
@@ -84,13 +86,37 @@ void SYS_Init(void)
     GPIO_SetMode(PH, BIT10, GPIO_MODE_OUTPUT);
 }
 
+void PowerDown(void)
+{
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    printf("Enter power down ...\n");
+    while(!IsDebugFifoEmpty());
+
+    /* Wakeup Enable */
+    USBD_ENABLE_INT(USBD_INTEN_WKEN_Msk);
+
+    CLK_PowerDown();
+
+    /* Clear PWR_DOWN_EN if it is not clear by itself */
+    if(CLK->PWRCTL & CLK_PWRCTL_PDEN_Msk)
+        CLK->PWRCTL ^= CLK_PWRCTL_PDEN_Msk;
+
+    printf("device wakeup!\n");
+
+    /* Lock protected registers */
+    SYS_LockReg();
+}
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Main Function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+#if CRYSTAL_LESS
     uint32_t u32TrimInit;
+#endif
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -161,6 +187,10 @@ int32_t main(void)
             USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
         }
 #endif
+
+        /* Enter power down when USB suspend */
+        if(g_u8Suspend)
+            PowerDown();
 
         MSC_ProcessCmd();
     }

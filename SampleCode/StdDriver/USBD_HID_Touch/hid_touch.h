@@ -58,6 +58,9 @@
 
 
 /*-------------------------------------------------------------*/
+extern uint8_t volatile g_u8Suspend;
+
+/*-------------------------------------------------------------*/
 void HID_Init(void);
 void HID_ClassRequest(void);
 void EP2_Handler(void);

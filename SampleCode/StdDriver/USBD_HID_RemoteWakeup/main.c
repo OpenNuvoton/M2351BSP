@@ -16,11 +16,14 @@
 
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
+static uint8_t volatile s_u8RemouteWakeup = 0;
+
 void SYS_Init(void);
 void UART0_Init(void);
 void GPIO_Init(void);
 void GPA_IRQHandler(void);
-	
+void PowerDown(void);
+int IsDebugFifoEmpty(void);
 
 void SYS_Init(void)
 {
@@ -110,6 +113,44 @@ void GPIO_Init(void)
 void GPA_IRQHandler(void)
 {
     PA->INTSRC = 0x3f;
+    s_u8RemouteWakeup = 1;
+}
+
+void PowerDown(void)
+{
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    printf("Enter power down ...\n");
+    while(!IsDebugFifoEmpty());
+
+    /* Wakeup Enable */
+    USBD_ENABLE_INT(USBD_INTEN_WKEN_Msk);
+
+    CLK_PowerDown();
+
+    /* Clear PWR_DOWN_EN if it is not clear by itself */
+    if(CLK->PWRCTL & CLK_PWRCTL_PDEN_Msk)
+        CLK->PWRCTL ^= CLK_PWRCTL_PDEN_Msk;
+
+    /* Note HOST to resume USB tree if it is suspended and remote wakeup enabled */
+    if(g_USBD_u8RemoteWakeupEn && s_u8RemouteWakeup)
+    {
+        /* Enable PHY before sending Resume('K') state */
+        USBD->ATTR |= USBD_ATTR_PHYEN_Msk;
+
+        /* Keep remote wakeup for 1 ms */
+        USBD->ATTR |= USBD_ATTR_RWAKEUP_Msk;
+        CLK_SysTickDelay(1000); /* Delay 1ms */
+        USBD->ATTR ^= USBD_ATTR_RWAKEUP_Msk;
+        s_u8RemouteWakeup = 0;
+        printf("Remote Wakeup!!\n");
+    }
+
+    printf("device wakeup!\n");
+
+    /* Lock protected registers */
+    SYS_LockReg();
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -117,7 +158,9 @@ void GPA_IRQHandler(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+#if CRYSTAL_LESS
     uint32_t u32TrimInit;
+#endif
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -189,6 +232,15 @@ int32_t main(void)
             USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
         }
 #endif
+
+        /* Enter power down when USB suspend */
+        if(g_u8Suspend)
+        {
+            PowerDown();
+
+            /* Waiting for key release */
+            while((GPIO_GET_IN_DATA(PA) & 0x3F) != 0x3F);
+        }
 
         HID_UpdateMouseData();
     }

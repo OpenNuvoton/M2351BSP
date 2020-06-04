@@ -318,14 +318,6 @@ int32_t main(void)
         printf("GC Mode receive data OK. Any key to continue.\n");
         getchar();
     }
-
-    s_I2C0HandlerFn = NULL;
-
-    /* Close I2C0 */
-    I2C0_Close();
-
-    while(1);
-
 }
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
 

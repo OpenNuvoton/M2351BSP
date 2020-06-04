@@ -21,61 +21,61 @@
 static uint32_t s_u32Tag = (uint32_t) - 1;
 static uint32_t s_au32SectorBuf[FLASH_PAGE_SIZE / 4];
 
-void DataFlashRead(uint32_t addr, uint32_t size, uint32_t buffer)
+void DataFlashRead(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer)
 {
     /* This is low level read function of USB Mass Storage */
-    uint32_t alignAddr, offset, *pu32;
+    uint32_t u32AlignAddr, u32Offset, *pu32;
     uint32_t i;
 
     /* Modify the address to MASS_STORAGE_OFFSET */
-    addr += MASS_STORAGE_OFFSET;
+    u32Addr += MASS_STORAGE_OFFSET;
 
     /* Get address base on page size alignment */
-    alignAddr = addr & (uint32_t)(~(FLASH_PAGE_SIZE - 1));
+    u32AlignAddr = u32Addr & (uint32_t)(~(FLASH_PAGE_SIZE - 1));
 
     /* Get the sector offset*/
-    offset = (addr & (FLASH_PAGE_SIZE - 1));
+    u32Offset = (u32Addr & (FLASH_PAGE_SIZE - 1));
 
-    pu32 = (uint32_t *)buffer;
+    pu32 = (uint32_t *)u32Buffer;
 
-    for(i = 0; i < size / 4; i++)
+    for(i = 0; i < u32Size / 4; i++)
     {
         /* Read from cache */
-        if(((alignAddr + i * 4) >= s_u32Tag) && ((alignAddr + i * 4) < s_u32Tag + FLASH_PAGE_SIZE))
+        if(((u32AlignAddr + i * 4) >= s_u32Tag) && ((u32AlignAddr + i * 4) < s_u32Tag + FLASH_PAGE_SIZE))
         {
-            offset = (addr + i * 4 - s_u32Tag) / 4;
-            pu32[i] = s_au32SectorBuf[offset];
+            u32Offset = (u32Addr + i * 4 - s_u32Tag) / 4;
+            pu32[i] = s_au32SectorBuf[u32Offset];
         }
         else
         {
             /* Read from flash */
-            pu32[i] = M32(addr + i * 4);
+            pu32[i] = M32(u32Addr + i * 4);
         }
     }
 }
 
-void DataFlashWrite(uint32_t addr, uint32_t size, uint32_t buffer)
+void DataFlashWrite(uint32_t u32Addr, uint32_t u32Size, uint32_t u32Buffer)
 {
     /* This is low level write function of USB Mass Storage */
-    uint32_t len, i, offset;
+    uint32_t u32Len, i, u32Offset;
     uint32_t *pu32;
-    uint32_t alignAddr;
+    uint32_t u32AlignAddr;
 
     /* Modify the address to MASS_STORAGE_OFFSET */
-    addr += MASS_STORAGE_OFFSET;
+    u32Addr += MASS_STORAGE_OFFSET;
 
-    len = size;
+    u32Len = u32Size;
 
     do
     {
         /* Get address base on page size alignment */
-        alignAddr = addr & (uint32_t)(~(FLASH_PAGE_SIZE - 1));
+        u32AlignAddr = u32Addr & (uint32_t)(~(FLASH_PAGE_SIZE - 1));
 
         /* Get the sector offset*/
-        offset = (addr & (FLASH_PAGE_SIZE - 1));
+        u32Offset = (u32Addr & (FLASH_PAGE_SIZE - 1));
 
         /* check cache buffer */
-        if(s_u32Tag != alignAddr)
+        if(s_u32Tag != u32AlignAddr)
         {
             if(s_u32Tag != (uint32_t) - 1)
             {
@@ -91,27 +91,27 @@ void DataFlashWrite(uint32_t addr, uint32_t size, uint32_t buffer)
             /* Load data to cache buffer */
             for(i = 0; i < FLASH_PAGE_SIZE / 4; i++)
             {
-                s_au32SectorBuf[i] = FMC_Read(alignAddr + i * 4);
+                s_au32SectorBuf[i] = FMC_Read(u32AlignAddr + i * 4);
             }
-            s_u32Tag = alignAddr;
+            s_u32Tag = u32AlignAddr;
         }
 
         /* Source buffer */
-        pu32 = (uint32_t *)buffer;
+        pu32 = (uint32_t *)u32Buffer;
         /* Get the update length */
-        len = FLASH_PAGE_SIZE - offset;
-        if(size < len)
-            len = size;
+        u32Len = FLASH_PAGE_SIZE - u32Offset;
+        if(u32Size < u32Len)
+            u32Len = u32Size;
         /* Update the destination buffer */
-        for(i = 0; i < len / 4; i++)
+        for(i = 0; i < u32Len / 4; i++)
         {
-            s_au32SectorBuf[offset / 4 + i] = pu32[i];
+            s_au32SectorBuf[u32Offset / 4 + i] = pu32[i];
         }
 
-        size -= len;
-        addr += len;
-        buffer += len;
+        u32Size -= u32Len;
+        u32Addr += u32Len;
+        u32Buffer += u32Len;
     }
-    while(size > 0);
+    while(u32Size > 0);
 }
 

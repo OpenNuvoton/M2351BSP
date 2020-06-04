@@ -1,9 +1,7 @@
 /******************************************************************************
  * @file     ccid.h
- * @brief    M451 series CCID driver header file
+ * @brief    CCID driver header file
  * @version  V1.00
- * $Revision: 1 $
- * $Date: 16/06/16 6:17p $
  *
  * @note
  * Copyright (C) 2014~2015 Nuvoton Technology Corp. All rights reserved.

@@ -30,8 +30,6 @@ struct udev_t;
 /*----------------------------------------------------------------------------------------*/
 /*   Endpoint descriptor                                                                  */
 /*----------------------------------------------------------------------------------------*/
-#pragma pack(push)
-#pragma pack(1)
 typedef struct ed_t {
     /* OHCI spec. Endpoint descriptor  */
     uint32_t    Info;
@@ -43,7 +41,6 @@ typedef struct ed_t {
     uint16_t    next_sf;          /* for isochronous transfer, recording the next SF      */
     struct ed_t * next;           /* point to the next ED in remove list                  */
 } ED_T;
-#pragma pack(pop)
 
 #define ED_CTRL_FA_Pos            0         /* Info[6:0]   - Function address             */
 #define ED_CTRL_EN_Pos            7         /* Info[10:7]  - Endpoint number              */

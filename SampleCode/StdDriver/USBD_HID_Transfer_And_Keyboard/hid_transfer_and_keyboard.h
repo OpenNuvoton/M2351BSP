@@ -66,7 +66,9 @@
 
 #define LEN_CONFIG_AND_SUBORDINATE      (LEN_CONFIG+LEN_INTERFACE*2+LEN_HID*2+LEN_ENDPOINT*3)
 
+
 /*-------------------------------------------------------------*/
+extern uint8_t volatile g_u8Suspend;
 
 /*-------------------------------------------------------------*/
 void HID_Init(void);

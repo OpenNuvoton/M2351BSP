@@ -16,7 +16,6 @@
 
 void SYS_Init(void);
 
-
 void SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/
@@ -83,7 +82,9 @@ void SYS_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
+#if CRYSTAL_LESS
     uint32_t u32TrimInit;
+#endif
 
     /* Unlock protected registers */
     SYS_UnlockReg();

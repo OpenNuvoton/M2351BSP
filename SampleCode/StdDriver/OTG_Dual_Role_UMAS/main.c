@@ -17,7 +17,7 @@
 
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
 
-static uint8_t s_u8IsBdevice = 0, s_u8IsAdevice = 0;
+static uint8_t s_u8IsAdevice = 0;
 
 void USBOTG_IRQHandler(void);
 void  dump_buff_hex(uint8_t *pu8Buff, int i8Bytes);
@@ -52,7 +52,7 @@ void USBOTG_IRQHandler(void)
         printf("[B session valid (OTG_STATUS: 0x%x)]\n", OTG->STATUS);
         /* Check ID status */
         if(OTG_GET_STATUS(OTG_STATUS_IDSTS_Msk) == 0)
-            s_u8IsBdevice = 0;
+            s_u8IsAdevice = 1;
 
         /* Clear B-device session valid state change interrupt flag */
         OTG_CLR_INT_FLAG(OTG_INTSTS_BVLDCHGIF_Msk);
@@ -972,7 +972,6 @@ int32_t main(void)
         {
             if(OTG_GET_STATUS(OTG_STATUS_VBUSVLD_Msk))   /* plug-in */
             {
-                s_u8IsBdevice = 1;
                 USBD_Open(&gsInfo, MSC_ClassRequest, NULL);
                 USBD_SetConfigCallback(MSC_SetConfig);
                 MSC_Init();

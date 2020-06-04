@@ -21,7 +21,7 @@ int32_t main(void);
 void EADC_FunctionTest(void);
 void SYS_Init(void);
 void UART0_Init(void);
-//void EADC0_IRQHandler(void);
+void EADC0_IRQHandler(void);
 
 void SYS_Init(void)
 {

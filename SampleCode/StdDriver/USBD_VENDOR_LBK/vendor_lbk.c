@@ -23,6 +23,8 @@ static volatile uint8_t  s_au8IntBuff[64];
 static volatile uint8_t  s_au8BulkBuff[64];
 static volatile uint8_t  s_au8IsoBuff[256];
 
+uint8_t volatile g_u8Suspend = 0;
+
 void USBD_IRQHandler(void);
 
 void USBD_IRQHandler(void)
@@ -59,9 +61,13 @@ void USBD_IRQHandler(void)
             /* Bus reset */
             USBD_ENABLE_USB();
             USBD_SwReset();
+            g_u8Suspend = 0;
         }
         if(u32State & USBD_STATE_SUSPEND)
         {
+            /* Enter power down to wait USB attached */
+            g_u8Suspend = 1;
+
             /* Enable USB but disable PHY */
             USBD_DISABLE_PHY();
         }
@@ -69,6 +75,7 @@ void USBD_IRQHandler(void)
         {
             /* Enable USB and enable PHY */
             USBD_ENABLE_USB();
+            g_u8Suspend = 0;
         }
     }
 
@@ -246,7 +253,7 @@ void VendorLBK_ClassRequest(void)
 
     USBD_GetSetupPacket(buf);
 
-    u32DataLen = (uint32_t)(buf[7] << 8) | buf[6];
+    u32DataLen = (uint32_t)((buf[7] << 8) | buf[6]);
 
     if(buf[0] & 0x80)    /* request data transfer direction */
     {

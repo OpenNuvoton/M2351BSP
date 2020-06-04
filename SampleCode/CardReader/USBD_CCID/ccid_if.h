@@ -1,9 +1,7 @@
 /******************************************************************************
  * @file     ccid_if.h
  * @version  V2.00
- * $Revision: 1 $
- * $Date: 16/06/16 6:17p $
- * @brief    M451 USBD CCID interface header
+ * @brief    USBD CCID interface header
  *
  * @note
  * Copyright (C) 2014~2015 Nuvoton Technology Corp. All rights reserved.

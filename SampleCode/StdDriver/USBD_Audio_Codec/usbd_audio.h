@@ -108,17 +108,18 @@ typedef enum
 } RESAMPLE_STATE_T;
 
 
-extern uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN];
-extern uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN];
-extern uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT];
-extern volatile uint8_t g_u8PDMARxIdx;
-extern volatile uint8_t g_u8PDMATxIdx;
 /*-------------------------------------------------------------*/
 extern uint32_t volatile g_u32BuffLen, g_u32RxBuffLen;
 extern uint32_t g_usbd_UsbAudioState;
 extern volatile uint8_t g_u8AudioPlaying;
 extern volatile uint8_t g_u8TxDataCntInBuffer;
 extern uint32_t volatile g_usbd_SampleRate;
+
+extern uint32_t g_au32PcmPlayBuff[PDMA_TXBUFFER_CNT][BUFF_LEN];
+extern uint8_t g_au8PcmRecBuff[PDMA_RXBUFFER_CNT][BUFF_LEN];
+extern uint8_t g_au8PcmRxBufFull[PDMA_RXBUFFER_CNT];
+extern volatile uint8_t g_u8PDMATxIdx;
+extern volatile uint8_t g_u8PDMARxIdx;
 
 void UAC_DeviceEnable(uint32_t u32IsPlay);
 void UAC_DeviceDisable(uint32_t u32IsPlay);
@@ -139,10 +140,14 @@ void AdjustCodecPll(RESAMPLE_STATE_T r);
 #if NAU8822
 void NAU8822_Setup(void);
 void NAU8822_ConfigSampleRate(uint32_t u32SampleRate);
+void I2C_WriteNAU8822(uint8_t u8Addr, uint16_t u16Data);
+void RecoveryFromArbLost(void);
 #else
 void NAU88L25_Reset(void);
 void NAU88L25_Setup(void);
 void NAU88L25_ConfigSampleRate(uint32_t u32SampleRate);
+uint8_t I2C_WriteNAU88L25(uint16_t u16Addr, uint16_t u16Dat);
+uint8_t I2C_WriteMultiByteforNAU88L25(uint8_t u8ChipAddr, uint16_t u16SubAddr, const uint8_t *p, uint32_t u32Len);
 #endif
 
 typedef struct dma_desc_t

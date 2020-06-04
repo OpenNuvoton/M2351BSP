@@ -311,18 +311,14 @@ typedef struct
 /*----------------------------------------------------------------------------------*/
 /*  USB device                                                                      */
 /*----------------------------------------------------------------------------------*/
-#pragma pack(push)
-#pragma pack(1)
+
 typedef enum
 {
     SPEED_LOW,
     SPEED_FULL,
     SPEED_HIGH
 } SPEED_E;
-#pragma pack(pop)
 
-#pragma pack(push)
-#pragma pack(1)
 typedef struct ep_info_t
 {
     uint8_t     bEndpointAddress;
@@ -332,10 +328,7 @@ typedef struct ep_info_t
     uint16_t    wMaxPacketSize;
     void        *hw_pipe;               /*!< point to the HC assocaied endpoint    \hideinitializer */
 }   EP_INFO_T;
-#pragma pack(pop)
 
-#pragma pack(push)
-#pragma pack(1)
 typedef struct udev_t
 {
     DESC_DEV_T    descriptor;           /*!< Device descriptor.                    \hideinitializer */
@@ -353,7 +346,6 @@ typedef struct udev_t
     struct iface_t  *iface_list;        /*!< Working interface list                \hideinitializer */
     struct udev_t *next;                /*!< link for global usb device list       \hideinitializer */
 } UDEV_T;
-#pragma pack(pop)
 
 typedef struct alt_iface_t
 {
@@ -361,8 +353,6 @@ typedef struct alt_iface_t
     EP_INFO_T     ep[MAX_EP_PER_IFACE]; /*!< endpoints of this alternative interface                */
 } ALT_IFACE_T;
 
-#pragma pack(push)
-#pragma pack(1)
 typedef struct iface_t
 {
     UDEV_T        *udev;                /*!< USB device                            \hideinitializer */
@@ -374,7 +364,7 @@ typedef struct iface_t
     void          *context;             /*!< Reference to device context           \hideinitializer */
     struct iface_t  *next;              /*!< Point to next interface of the same device. Started from UDEV_T->iface_list   \hideinitializer */
 } IFACE_T;
-#pragma pack(pop)
+
 
 /*----------------------------------------------------------------------------------*/
 /*  URB (USB Request Block)                                                         */
@@ -384,8 +374,6 @@ typedef struct iface_t
 
 typedef void (*FUNC_UTR_T)(struct utr_t *);
 
-#pragma pack(push)
-#pragma pack(1)
 typedef struct utr_t
 {
     UDEV_T      *udev;                /*!< point to associated USB device        \hideinitializer */
@@ -407,7 +395,7 @@ typedef struct utr_t
     FUNC_UTR_T  func;                 /*!< tansfer done call-back function       \hideinitializer */
     struct utr_t  *next;              /* point to the next UTR of the same endpoint. \hideinitializer */
 } UTR_T;
-#pragma pack(pop)
+
 
 /*----------------------------------------------------------------------------------*/
 /*  Global variables                                                                */
