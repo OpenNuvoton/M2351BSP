@@ -103,9 +103,6 @@ void SYS_Init(void)
     CLK_EnableModuleClock(UART0_MODULE);
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
 
-    /* Enable CRC module clock */
-    CLK_EnableModuleClock(CRC_MODULE);
-
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
     /*---------------------------------------------------------------------------------------------------------*/
@@ -142,13 +139,13 @@ void MPU_Test(void)
     /*
       Region 1 (Flash Memory Space)
       Start address = 0x0
-      Permission = Full access
       Shareablity = Non-shareable
       Size = 128KB
+      Permission = Full access
     */
 
     /* Select Region 1 */
-    MPU->RNR = 1;    
+    MPU->RNR = 1;
     /* Base address = Base address :OR: Attribute = Full access :OR: Shareablity = Non-shareable */
     MPU->RBAR = ((0x00000000 & MPU_RBAR_BASE_Msk) | MPU_RBAR_AP_PRI_RW_USER_RW | MPU_RBAR_SH_NON_SHAREABLE);
     /* Limit address = Limit address :OR: Attribute Index = 0 :OR: ENABLE */
@@ -157,8 +154,9 @@ void MPU_Test(void)
     /*
       Region 2 (SRAM Memory Space)
       Start address = 0x20000000
-      Permission = Full access
+      Shareablity = Non-shareable
       Size = 16KB
+      Permission = Full access
     */
 
     /* Select Region 2 */
@@ -171,8 +169,9 @@ void MPU_Test(void)
     /*
       Region 3 (Test Memory Space)
       Start address = 0x20004000
-      Permission = No write access
+      Shareablity = Non-shareable
       Size = 1KB
+      Permission = No write access
     */
 
     /* Select Region 3 */
@@ -181,23 +180,51 @@ void MPU_Test(void)
     MPU->RBAR = ((0x20004000 & MPU_RBAR_BASE_Msk) | MPU_RBAR_AP_PRI_RO_USER_RO | MPU_RBAR_SH_NON_SHAREABLE);
     /* Limit address = Limit address :OR: Attribute Index = 0 :OR: ENABLE */
     MPU->RLAR = ((0x200043FF & MPU_RLAR_LIMIT_Msk) | (0x0UL << MPU_RLAR_AttrIndx_Pos) | MPU_RLAR_EN_Msk);
-    
+
     /* Enable MPU */
     MPU->CTRL = MPU_CTRL_PRIVDEFENA_Msk | MPU_CTRL_ENABLE_Msk;
 
-    printf("\n Please Press '1' to read memory from region 1 (Flash Memory)\n");
+    printf("\n\n ==============================================\n");
+    printf(" Memory Region 1 (Flash Memory) configuration:\n");
+    printf(" ==============================================\n");
+    printf(" Start address : 0x00000000\n");
+    printf(" End address   : 0x0001FFFF\n");
+    printf(" Size          : 128 KB\n");
+    printf(" Memory Type   : Normal\n");
+    printf(" Permission    : Full access\n");
+    printf(" ----------------------------------------------\n");
+    printf(" Please Press '1' to read memory successfully from region 1 (Flash Memory).\n");
 
     while(i32TestItem != '1') i32TestItem = getchar();
 
-    ReadMemCore(0x00000000);
+    printf("\n Read value from 0x00000000 is 0x%08X.\n", ReadMemCore(0x00000000));
 
-    printf("\n Please Press '2' to read memory from region 2 (SRAM)\n");
+    printf("\n\n ==============================================\n");
+    printf(" Memory Region 2 (SRAM Memory) configuration:\n");
+    printf(" ==============================================\n");
+    printf(" Start address : 0x20000000\n");
+    printf(" End address   : 0x20003FFF\n");
+    printf(" Size          : 16 KB\n");
+    printf(" Memory Type   : Normal\n");
+    printf(" Permission    : Full access\n");
+    printf(" ----------------------------------------------\n");
+    printf(" Please Press '2' to read memory successfully from region 2 (SRAM Memory).\n");
 
     while(i32TestItem != '2') i32TestItem = getchar();
 
-    ReadMemCore(0x20000000);
+    printf("\n Read value from 0x20000000 is 0x%08X.\n", ReadMemCore(0x20000000));
 
-    printf("\n Please Press '3' to read memory from region 3 (Test Memory)\n");
+    printf("\n\n ==============================================\n");
+    printf(" Memory Region 3 (Test Memory) configuration:\n");
+    printf(" ==============================================\n");
+    printf(" Start address : 0x20004000\n");
+    printf(" End address   : 0x200043FF\n");
+    printf(" Size          : 1 KB\n");
+    printf(" Memory Type   : Normal\n");
+    printf(" Permission    : No write access\n");
+    printf(" ----------------------------------------------\n");
+    printf(" Please Press '3' to write memory to region 3 (Test Memory).\n");
+    printf(" (It should trigger a memory fault exception!)\n");
 
     while(i32TestItem != '3') i32TestItem = getchar();
 
