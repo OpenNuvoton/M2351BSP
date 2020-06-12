@@ -53,7 +53,7 @@ __heap_limit
                 EXPORT  __Vectors_Size
                 IMPORT  SCU_IRQHandler
                 IMPORT  SendChar_ToUART
-                IMPORT  g_InitialFWinfo
+                IMPORT  g_InitialFWInfo
                     
 __Vectors       DCD     __initial_sp               ;     Top of Stack
                 DCD     Reset_Handler              ;     Reset Handler
@@ -61,9 +61,9 @@ __Vectors       DCD     __initial_sp               ;     Top of Stack
                 DCD     HardFault_Handler          ;     Hard Fault Handler
                     ; The following four words data are NuBL2 Marker
                     DCD     0x4C42754E                            ; 0x10: signature for NuBL1 to find the valid FwInfo
-                    DCD     g_InitialFWinfo                       ; 0x14: FwInfo base address
+                    DCD     g_InitialFWInfo                       ; 0x14: FwInfo base address
                     DCD     0                                     ; Reserved
-                    DCD     (((~0x4C42754E)+g_InitialFWinfo+0))+1 ; 0x1C: checksum = ((~M32(0x10))+M32(0x14)+M32(0x18))+1
+                    DCD     (((~0x4C42754E)+g_InitialFWInfo+0))+1 ; 0x1C: checksum = ((~M32(0x10))+M32(0x14)+M32(0x18))+1
                 DCD     0                          ;     Reserved
                 DCD     0                          ;     Reserved
                 DCD     0                          ;     Reserved

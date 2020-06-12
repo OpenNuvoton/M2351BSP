@@ -1,8 +1,8 @@
 /**************************************************************************//**
  * @file     main.c
  * @version  V3.00
- * @brief    Demonstrate how to generate a boot image(NuBL2) and can be authenticated by Secure Botloader(NuBL1).
- *           After NuBL2 runs, NuBL2 will authenticate NuBL32 and NuBL33 then jumpt to execute in NuBL32.
+ * @brief    Demonstrate how to generate a boot image(NuBL2) and can be authenticated by Secure Bootloader(NuBL1).
+ *           After NuBL2 runs, NuBL2 will authenticate NuBL32 and NuBL33 then jump to execute in NuBL32.
  *
  * @copyright (C) 2018 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
@@ -15,7 +15,6 @@
 #define ENABLE_XOM0_REGION  (0) // Set 1 to configure VerifyNuBL3x.c code in XOM0 region, and cannot trace VerifyNuBL3x.c flow in ICE debug mode
 
 
-extern const uint32_t g_InitialFWinfo[]; // A global variable to store NuBL2 FWINFO address, declared in FwInfo.c
 static volatile FW_INFO_T  s_NuBL3xFwInfo; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
 
 void EnableXOM0(void);
@@ -95,7 +94,7 @@ static int32_t CheckBootingStatus(void)
     
     
     /* Show NuBL2 F/W info data */
-    pu32Info = (uint32_t *)(uint32_t)g_InitialFWinfo;
+    pu32Info = (uint32_t *)(uint32_t)g_InitialFWInfo;
     u32Size = sizeof(FW_INFO_T);
     
     printf("NuBL2 F/W info in 0x%08x.\nData are:\n", (uint32_t)pu32Info);

@@ -9,6 +9,6 @@
 #include <string.h>
 #include "NuMicro.h"
 
-extern const uint32_t g_InitialFWinfo[]; // A global variable to store NuBL32 FWINFO address, declared in FwInfo.c
+extern const uint32_t g_InitialFWInfo[]; // A global variable to store NuBL32 FWINFO address, declared in FwInfo.c
 
 /*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/

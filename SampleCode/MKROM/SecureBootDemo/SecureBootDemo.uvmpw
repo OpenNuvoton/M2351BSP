@@ -15,10 +15,12 @@
 
   <project>
     <PathAndName>.\NuBL32\Keil\NuBL32.uvprojx</PathAndName>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>
     <PathAndName>.\NuBL33\Keil\NuBL33.uvprojx</PathAndName>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
 </ProjectWorkspace>
