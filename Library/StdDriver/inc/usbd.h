@@ -28,6 +28,7 @@ extern "C"
 /** @addtogroup USBD_EXPORTED_STRUCTS USBD Exported Structs
   @{
 */
+
 typedef struct s_usbd_info
 {
     uint8_t *gu8DevDesc;            /*!< Pointer for USB Device Descriptor          */
@@ -45,11 +46,10 @@ extern const S_USBD_INFO_T gsInfo;
 /*@}*/ /* end of group USBD_EXPORTED_STRUCTS */
 
 
-
-
 /** @addtogroup USBD_EXPORTED_CONSTANTS USBD Exported Constants
   @{
 */
+
 #define USBD_BUF_BASE      (uint32_t)(((__PC() & NS_OFFSET) == NS_OFFSET)? (USBD_BASE+NS_OFFSET+0x100UL):(USBD_BASE+0x100UL))  /*!< USBD buffer base address */
 #define USBD_MAX_EP        12UL  /*!< Total EP number */
 
@@ -172,8 +172,8 @@ extern const S_USBD_INFO_T gsInfo;
 #define USBD_STATE_SUSPEND      USBD_ATTR_SUSPEND_Msk       /*!< USB Bus Suspend */
 #define USBD_STATE_RESUME       USBD_ATTR_RESUME_Msk        /*!< USB Bus Resume */
 #define USBD_STATE_TIMEOUT      USBD_ATTR_TOUT_Msk          /*!< USB Bus Timeout */
-#define USBD_STATE_L1SUSPEND    USBD_ATTR_L1SUSPEND_Msk     /*!< USB Bus L1SUSPEND  */
-#define USBD_STATE_L1RESUME     USBD_ATTR_L1RESUME_Msk      /*!< USB Bus L1RESUME   */
+#define USBD_STATE_L1SUSPEND    USBD_ATTR_L1SUSPEND_Msk     /*!< USB Bus L1SUSPEND */
+#define USBD_STATE_L1RESUME     USBD_ATTR_L1RESUME_Msk      /*!< USB Bus L1RESUME */
 
 #define USBD_CFGP_SSTALL        USBD_CFGP_SSTALL_Msk        /*!< Set Stall */
 #define USBD_CFG_CSTALL         USBD_CFG_CSTALL_Msk         /*!< Clear Stall */
@@ -182,7 +182,6 @@ extern const S_USBD_INFO_T gsInfo;
 #define USBD_CFG_EPMODE_OUT     (1UL << USBD_CFG_STATE_Pos)/*!< Out Endpoint */
 #define USBD_CFG_EPMODE_IN      (2UL << USBD_CFG_STATE_Pos)/*!< In Endpoint */
 #define USBD_CFG_TYPE_ISO       (1UL << USBD_CFG_ISOCH_Pos)/*!< Isochronous */
-
 
 /*@}*/ /* end of group USBD_EXPORTED_CONSTANTS */
 
@@ -203,7 +202,6 @@ extern const S_USBD_INFO_T gsInfo;
   */
 #define USBD_Maximum(a,b)        ((a)>(b) ? (a) : (b))
 
-
 /**
   * @brief      Compare two input numbers and return minimum one
   *
@@ -215,7 +213,6 @@ extern const S_USBD_INFO_T gsInfo;
   * @details    If a < b, then return a. Otherwise, return b.
   */
 #define USBD_Minimum(a,b)        ((a)<(b) ? (a) : (b))
-
 
 /**
   * @brief    Enable USB
@@ -522,6 +519,7 @@ extern const S_USBD_INFO_T gsInfo;
   * @return      None
   *
   * @details     Clear USB endpoint stall state for the specified endpoint ID. Endpoint will respond ACK/NAK token.
+  *
   */
 #define USBD_CLR_EP_STALL(ep)        (((__PC() & NS_OFFSET) == NS_OFFSET)? (*((__IO uint32_t *) ((uint32_t)&USBD_NS->EP[0].CFGP + (uint32_t)((ep) << 4))) &= ~USBD_CFGP_SSTALL_Msk):(*((__IO uint32_t *) ((uint32_t)&USBD->EP[0].CFGP + (uint32_t)((ep) << 4))) &= ~USBD_CFGP_SSTALL_Msk))
 
@@ -563,7 +561,6 @@ __STATIC_INLINE void USBD_MemCopy(uint8_t dest[], uint8_t src[], uint32_t size)
     }
 }
 
-
 /**
   * @brief       Set USB endpoint stall state
   *
@@ -579,8 +576,8 @@ __STATIC_INLINE void USBD_SetStall(uint8_t epnum)
     uint32_t u32CfgAddr;
     uint32_t u32Cfg;
     uint32_t i;
-
     USBD_T *pUSBD;
+
     if((__PC() & NS_OFFSET) == NS_OFFSET)
     {
         pUSBD = USBD_NS;
@@ -620,8 +617,8 @@ __STATIC_INLINE void USBD_ClearStall(uint8_t epnum)
     uint32_t u32CfgAddr;
     uint32_t u32Cfg;
     uint32_t i;
-
     USBD_T *pUSBD;
+
     if((__PC() & NS_OFFSET) == NS_OFFSET)
     {
         pUSBD = USBD_NS;
@@ -663,8 +660,8 @@ __STATIC_INLINE uint32_t USBD_GetStall(uint8_t epnum)
     uint32_t u32CfgAddr = 0UL;
     uint32_t u32Cfg;
     uint32_t i;
-
     USBD_T *pUSBD;
+
     if((__PC() & NS_OFFSET) == NS_OFFSET)
     {
         pUSBD = USBD_NS;
@@ -689,27 +686,28 @@ __STATIC_INLINE uint32_t USBD_GetStall(uint8_t epnum)
     return ((*((__IO uint32_t *)(u32CfgAddr))) & USBD_CFGP_SSTALL);
 }
 
-extern volatile uint8_t g_USBD_u8RemoteWakeupEn;
 extern uint8_t g_USBD_au8SetupPacket[8];
-
+extern volatile uint8_t g_USBD_u8RemoteWakeupEn;
 
 typedef void (*VENDOR_REQ)(void);           /*!< Functional pointer type definition for Vendor class */
 typedef void (*CLASS_REQ)(void);            /*!< Functional pointer type declaration for USB class request callback handler */
 typedef void (*SET_INTERFACE_REQ)(uint32_t u32AltInterface);    /*!< Functional pointer type declaration for USB set interface request callback handler */
 typedef void (*SET_CONFIG_CB)(void);       /*!< Functional pointer type declaration for USB set configuration request callback handler */
 
-extern const S_USBD_INFO_T *g_USBD_sInfo;           /*!< A pointer for USB information structure */
-extern VENDOR_REQ g_USBD_pfnVendorRequest;          /*!< USB Vendor Request Functional Pointer */
-extern CLASS_REQ g_USBD_pfnClassRequest;            /*!< USB Class Request Functional Pointer */
-extern SET_INTERFACE_REQ g_USBD_pfnSetInterface;    /*!< USB Set Interface Functional Pointer */
-extern SET_CONFIG_CB g_USBD_pfnSetConfigCallback;   /*!< USB Set configuration callback function pointer */
-extern uint32_t g_USBD_u32EpStallLock;              /*!< Bit map flag to lock specified EP when SET_FEATURE */
+extern const S_USBD_INFO_T *g_USBD_sInfo;
+
+extern VENDOR_REQ g_USBD_pfnVendorRequest;
+extern CLASS_REQ g_USBD_pfnClassRequest;
+extern SET_INTERFACE_REQ g_USBD_pfnSetInterface;
+extern SET_CONFIG_CB g_USBD_pfnSetConfigCallback;
+extern uint32_t g_USBD_u32EpStallLock;
 
 /*--------------------------------------------------------------------*/
 void USBD_Open(const S_USBD_INFO_T *param, CLASS_REQ pfnClassReq, SET_INTERFACE_REQ pfnSetInterface);
 void USBD_Start(void);
 void USBD_GetSetupPacket(uint8_t *buf);
 void USBD_ProcessSetupPacket(void);
+void USBD_GetDescriptor(void);
 void USBD_StandardRequest(void);
 void USBD_PrepareCtrlIn(uint8_t pu8Buf[], uint32_t u32Size);
 void USBD_CtrlIn(void);
@@ -719,6 +717,7 @@ void USBD_SwReset(void);
 void USBD_SetVendorRequest(VENDOR_REQ pfnVendorReq);
 void USBD_SetConfigCallback(SET_CONFIG_CB pfnSetConfigCallback);
 void USBD_LockEpStall(uint32_t u32EpBitmap);
+
 
 /*@}*/ /* end of group USBD_EXPORTED_FUNCTIONS */
 

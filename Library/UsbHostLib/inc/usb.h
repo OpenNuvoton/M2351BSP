@@ -409,7 +409,7 @@ extern UDEV_T * g_udev_list;
 /*----------------------------------------------------------------------------------*/
 /*  USB stack exported functions                                                    */
 /*----------------------------------------------------------------------------------*/
-extern void delay_us(uint32_t u32USec);
+extern void delay_us(int usec);
 
 extern void dump_ohci_regs(void);
 extern void dump_ohci_ports(void);

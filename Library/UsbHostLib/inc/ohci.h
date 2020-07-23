@@ -30,7 +30,8 @@ struct udev_t;
 /*----------------------------------------------------------------------------------------*/
 /*   Endpoint descriptor                                                                  */
 /*----------------------------------------------------------------------------------------*/
-typedef struct ed_t {
+typedef struct ed_t
+{
     /* OHCI spec. Endpoint descriptor  */
     uint32_t    Info;
     uint32_t    TailP;
@@ -47,28 +48,29 @@ typedef struct ed_t {
 #define ED_CTRL_DIR_Pos           11        /* Info[12:11] - Direction                    */
 #define ED_CTRL_MPS_Pos           16        /* Info[26:16] - Maximum packet size          */
 
-#define ED_FUNC_ADDR_Msk          (0x7ful)
-#define ED_EP_ADDR_Msk            (0xful<<7)
-#define ED_DIR_Msk                (0x3ul<<11)
-#define ED_SPEED_Msk              (1ul<<13)
-#define ED_MAX_PK_SIZE_Msk        (0x7fful<<16)
+#define ED_FUNC_ADDR_Msk          (0x7f)
+#define ED_EP_ADDR_Msk            (0xf<<7)
+#define ED_DIR_Msk                (0x3<<11)
+#define ED_SPEED_Msk              (1<<13)
+#define ED_MAX_PK_SIZE_Msk        (0x7ff<<16)
 
-#define ED_DIR_BY_TD              (0ul<<ED_CTRL_DIR_Pos)
-#define ED_DIR_OUT                (1ul<<ED_CTRL_DIR_Pos)
-#define ED_DIR_IN                 (2ul<<ED_CTRL_DIR_Pos)
-#define ED_SPEED_FULL             (0ul<<13)   /* Info[13] - 0: is full speed device         */
-#define ED_SPEED_LOW              (1ul<<13)   /* Info[13] - 1: is low speed device          */
-#define ED_SKIP                   (1ul<<14)   /* Info[14] - 1: HC skip this ED              */
-#define ED_FORMAT_GENERAL         (0ul<<15)   /* Info[15] - 0: is a general TD              */
-#define ED_FORMAT_ISO             (1ul<<15)   /* Info[15] - 1: is an isochronous TD         */
-#define ED_HEADP_HALT             (1ul<<0)    /* HeadP[0] - 1: Halt; 0: Not                 */
+#define ED_DIR_BY_TD              (0<<ED_CTRL_DIR_Pos)
+#define ED_DIR_OUT                (1<<ED_CTRL_DIR_Pos)
+#define ED_DIR_IN                 (2<<ED_CTRL_DIR_Pos)
+#define ED_SPEED_FULL             (0<<13)   /* Info[13] - 0: is full speed device         */
+#define ED_SPEED_LOW              (1<<13)   /* Info[13] - 1: is low speed device          */
+#define ED_SKIP                   (1<<14)   /* Info[14] - 1: HC skip this ED              */
+#define ED_FORMAT_GENERAL         (0<<15)   /* Info[15] - 0: is a general TD              */
+#define ED_FORMAT_ISO             (1<<15)   /* Info[15] - 1: is an isochronous TD         */
+#define ED_HEADP_HALT             (1<<0)    /* HeadP[0] - 1: Halt; 0: Not                 */
 
 
 /*----------------------------------------------------------------------------------------*/
 /*   Transfer descriptor                                                                  */
 /*----------------------------------------------------------------------------------------*/
 /* general transfer descriptor  */
-typedef struct td_t {
+typedef struct td_t
+{
     uint32_t    Info;
     uint32_t    CBP;                        /* Current Buffer Pointer                     */
     uint32_t    NextTD;                     /* Next TD                                    */
@@ -84,7 +86,8 @@ typedef struct td_t {
 #define TD_ADDR_MASK              0xFFFFFFFC
 
 /* Completion codes */
-enum OCHI_CC_CODE {
+enum OCHI_CC_CODE
+{
     /* mapping of the OHCI CC status to error codes */
     CC_NOERROR,                             /* No  Error                                  */
     CC_CRC,                                 /* CRC Error                                  */
@@ -129,7 +132,8 @@ enum OCHI_CC_CODE {
  * structure defined in the OHCI spec. that the host controller is
  * told the base address of.  It must be 256-byte aligned.
  */
-typedef struct {
+typedef struct
+{
     uint32_t   int_table[32];               /* Interrupt ED table                         */
     uint16_t   frame_no;                    /* current frame number                       */
     uint16_t   pad1;                        /* set to 0 on each frame_no change           */

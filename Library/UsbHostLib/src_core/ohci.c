@@ -975,7 +975,10 @@ void td_done(TD_T *td)
         if((cc != CC_NOERROR) && (cc != CC_DATA_UNDERRUN))
         {
             USB_error("TD error, CC = 0x%x\n", cc);
-            utr->status = USBH_ERR_TRANSFER;
+            if (cc == CC_STALL)
+                utr->status = USBH_ERR_STALL;
+            else
+                utr->status = USBH_ERR_TRANSFER;
         }
 
         switch(info & TD_TYPE_Msk)
@@ -1203,8 +1206,8 @@ void dump_ohci_int_table()
     int    i;
     ED_T   *ed;
 
-//    for (i = 0; i < 32; i++)
-    for(i = 0; i < 1; i++)
+    for (i = 0; i < 32; i++)
+//    for(i = 0; i < 1; i++)
 
     {
         USB_debug("%02d: ", i);

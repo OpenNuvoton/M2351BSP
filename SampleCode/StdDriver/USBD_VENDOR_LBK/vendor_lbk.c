@@ -12,11 +12,9 @@
 #include "NuMicro.h"
 #include "vendor_lbk.h"
 
-
 static uint8_t volatile s_u8EP3Ready = 0;      // EP3 for interrupt-out
 static uint8_t volatile s_u8EP5Ready = 0;      // EP5 for isochronous-out
 static uint8_t volatile s_u8EP7Ready = 0;      // EP7 for bulk-out
-
 
 static volatile uint8_t  s_au8CtrlBuff[64];
 static volatile uint8_t  s_au8IntBuff[64];

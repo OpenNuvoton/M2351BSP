@@ -109,6 +109,7 @@ static uint8_t s_au8StringSerial[] =
 
 };
 
+#ifdef SUPPORT_LPM
 /*!<USB BOS Descriptor */
 static uint8_t s_au8BOSDescriptor[] =
 {
@@ -133,6 +134,7 @@ static uint8_t s_au8BOSDescriptor[] =
                             /* bit 15:12 : Recommend Deep BESL value. Ignore by bit4 is zero. */
                             /* bit 31:16 : Reserved. Must 0. */
 };
+#endif
 
 static uint8_t *s_apu8UsbString[4] =
 {

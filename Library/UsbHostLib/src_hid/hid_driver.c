@@ -156,7 +156,7 @@ static void  hid_disconnect(IFACE_T *iface)
             next_rp = rp->next;
             usbh_free_mem(rp, sizeof(RP_INFO_T));
             rp = next_rp;
-        };
+        }
     }
 
     /*

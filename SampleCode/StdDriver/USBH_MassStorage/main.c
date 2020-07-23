@@ -63,7 +63,6 @@ void SysTick_Handler(void);
 void enable_sys_tick(int ticks_per_second);
 void timer_init(void);
 uint32_t get_timer_value(void);
-void delay_us(uint32_t u32Usec);
 void  dump_buff_hex(uint8_t *pu8Buff, int i8Bytes);
 int xatoi(          /* 0:Failed, 1:Successful */
     TCHAR **str,    /* Pointer to pointer to the string */
@@ -118,7 +117,7 @@ uint32_t get_timer_value()
 /*
  *  This function is necessary for USB Host library.
  */
-void delay_us(uint32_t u32Usec)
+void delay_us(int usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -128,7 +127,7 @@ void delay_us(uint32_t u32Usec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = 0x3;   /* write 1 to clear for safty */
-    TIMER0->CMP = u32Usec;
+    TIMER0->CMP = usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS);

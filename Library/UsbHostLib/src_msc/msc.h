@@ -4,7 +4,7 @@
  * @brief    USB Host mass storage class header
  *
  * SPDX-License-Identifier: Apache-2.0
- * @copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
+ * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  *****************************************************************************/
 #ifndef _USBH_MSC_H_
 #define _USBH_MSC_H_

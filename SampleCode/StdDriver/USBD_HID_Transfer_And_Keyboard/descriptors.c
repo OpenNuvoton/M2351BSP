@@ -209,6 +209,7 @@ static uint8_t s_au8ProductStringDesc[] =
     'U', 0, 'S', 0, 'B', 0, ' ', 0, 'D', 0, 'e', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0
 };
 
+#ifdef SUPPORT_LPM
 /*!<USB BOS Descriptor */
 static uint8_t s_au8BOSDescriptor[] =
 {
@@ -233,6 +234,7 @@ static uint8_t s_au8BOSDescriptor[] =
                             /* bit 15:12 : Recommend Deep BESL value. Ignore by bit4 is zero. */
                             /* bit 31:16 : Reserved. Must 0. */
 };
+#endif
 
 static uint8_t *s_apu8UsbString[4] =
 {
@@ -269,7 +271,11 @@ const S_USBD_INFO_T gsInfo =
     (uint8_t *)s_au8ConfigDescriptor,
     (uint8_t **)s_apu8UsbString,
     (uint8_t **)s_apu8UsbHidReport,
+#ifdef SUPPORT_LPM
     (uint8_t *)s_au8BOSDescriptor,
+#else
+    NULL,
+#endif
     (uint32_t *)s_au32UsbHidReportLen,
     (uint32_t *)s_au32ConfigHidDescIdx
 };

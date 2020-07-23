@@ -272,11 +272,11 @@ void UsciSpiLoopTest_WithPDMA(void)
     /* Disable table interrupt */
     PDMA0->DSCT[USPI_SLAVE_TX_DMA_CH].CTL |= PDMA_DSCT_CTL_TBINTDIS_Msk;
 
-    /* Enable USCI_SPI slave DMA function */
-    (UspiSlave)->PDMACTL |= USPI_PDMACTL_RXPDMAEN_Msk | USPI_PDMACTL_TXPDMAEN_Msk | USPI_PDMACTL_PDMAEN_Msk;
+    /* Enable USCI_SPI slave PDMA function */
+    USPI_TRIGGER_TX_RX_PDMA(UspiSlave);
 
-    /* Enable USCI_SPI master DMA function */
-    (UspiMaster)->PDMACTL |= USPI_PDMACTL_RXPDMAEN_Msk | USPI_PDMACTL_TXPDMAEN_Msk | USPI_PDMACTL_PDMAEN_Msk;
+    /* Enable USCI_SPI master PDMA function */
+    USPI_TRIGGER_TX_RX_PDMA(UspiMaster);
 
     i32Err = 0;
     for(u32TestCycle = 0; u32TestCycle < 10000; u32TestCycle++)
@@ -298,8 +298,7 @@ void UsciSpiLoopTest_WithPDMA(void)
                     /* Clear the PDMA transfer done flags */
                     PDMA_CLR_TD_FLAG(PDMA0, (1 << USPI_MASTER_TX_DMA_CH) | (1 << USPI_MASTER_RX_DMA_CH) | (1 << USPI_SLAVE_TX_DMA_CH) | (1 << USPI_SLAVE_RX_DMA_CH));
                     /* Disable USCI_SPI master's PDMA transfer function */
-                    USPI_DISABLE_TX_PDMA(UspiMaster);
-                    USPI_DISABLE_RX_PDMA(UspiMaster);
+                    USPI_DISABLE_TX_RX_PDMA(UspiMaster);
                     /* Check the transfer data */
                     for(u16DataCount = 0; u16DataCount < TEST_COUNT; u16DataCount++)
                     {
@@ -349,13 +348,12 @@ void UsciSpiLoopTest_WithPDMA(void)
                     /* Set request source; set basic mode. */
                     PDMA_SetTransferMode(PDMA0, USPI_MASTER_RX_DMA_CH, PDMA_USCI0_RX, FALSE, 0);
 
-                    /* Enable master's DMA transfer function */
-                    USPI_TRIGGER_TX_PDMA(UspiMaster);
-                    USPI_TRIGGER_RX_PDMA(UspiMaster);
+                    /* Enable master's PDMA transfer function */
+                    USPI_TRIGGER_TX_RX_PDMA(UspiMaster);
                     break;
                 }
             }
-            /* Check the DMA transfer abort interrupt flag */
+            /* Check the PDMA transfer abort interrupt flag */
             if(u32RegValue & PDMA_INTSTS_ABTIF_Msk)
             {
                 /* Get the target abort flag */
@@ -365,7 +363,7 @@ void UsciSpiLoopTest_WithPDMA(void)
                 i32Err = 1;
                 break;
             }
-            /* Check the DMA time-out interrupt flag */
+            /* Check the PDMA time-out interrupt flag */
             if(u32RegValue & 0x00000300)
             {
                 /* Clear the time-out flag */

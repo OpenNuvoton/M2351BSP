@@ -63,7 +63,8 @@
 /*   Hub descriptor                                                         */
 /*--------------------------------------------------------------------------*/
 #ifdef __ICCARM__
-typedef struct {
+typedef struct
+{
     __packed uint8_t  bDescLength;
     __packed uint8_t  bDescriptorType;
     __packed uint8_t  bNbrPorts;
@@ -74,7 +75,8 @@ typedef struct {
     __packed uint8_t  PortPwrCtrlMask[16];
 }  DESC_HUB_T;
 #else
-typedef struct __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__))
+{
     uint8_t  bDescLength;
     uint8_t  bDescriptorType;
     uint8_t  bNbrPorts;
@@ -115,7 +117,8 @@ typedef struct __attribute__((__packed__)) {
 /* 4 can support up to 32 port hubs                */
 /* Note!! If modeifed to 4, "uint16_t sc_bitmap"   */
 /*        MUST be changed as "uint32_t sc_bitmap"  */
-typedef struct hub_dev_t {
+typedef struct hub_dev_t
+{
     IFACE_T    *iface;                 /*!< Interface device of this hub          \hideinitializer */
     UTR_T      *utr;                   /*!< Interrupt in UTR of this hub          \hideinitializer */
     uint8_t    buff[HUB_STATUS_MAX_BYTE];   /*!< Interrupt in buffer              \hideinitializer */

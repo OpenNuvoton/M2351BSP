@@ -200,7 +200,7 @@ int usbh_ctrl_xfer(UDEV_T *udev, uint8_t bmRequestType, uint8_t bRequest, uint16
 
     *xfer_len = 0;
 
-    //if (check_device(udev))
+    //if(check_device(udev))
     //    return USBH_ERR_INVALID_PARAM;
 
     utr = alloc_utr(udev);
@@ -1109,7 +1109,7 @@ int  usbh_reset_device(UDEV_T *udev)
                       USB_REQ_SET_FEATURE, 0x01, 0x0000, 0x0000,
                       NULL, &read_len, 300) < 0)
     {
-        USB_debug("Device not accept remote wakeup enable command.\n");
+        USB_debug("Device does not accept remote wakeup enable command.\n");
     }
 
     if(g_conn_func)
@@ -1154,8 +1154,8 @@ static int  check_device(UDEV_T *udev)
     if(udev == NULL)
         return USBH_ERR_INVALID_PARAM;
 
-    //if ((udev->hc_driver != &ohci_driver))
-    //  return USBH_ERR_INVALID_PARAM;
+    //if((udev->hc_driver != &ohci_driver))
+    //    return USBH_ERR_INVALID_PARAM;
 
     d = g_udev_list;
     while(d)

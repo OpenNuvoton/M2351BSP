@@ -224,12 +224,10 @@ void SpiLoopTest_WithPDMA(void)
     /* Disable table interrupt */
     PDMA0->DSCT[SPI_SLAVE_TX_DMA_CH].CTL |= PDMA_DSCT_CTL_TBINTDIS_Msk;
 
-    /* Enable SPI slave DMA function */
-    SPI_TRIGGER_RX_PDMA(SPI1);
-    SPI_TRIGGER_TX_PDMA(SPI1);
-    /* Enable SPI master DMA function */
-    QSPI_TRIGGER_TX_PDMA(QSPI0);
-    QSPI_TRIGGER_RX_PDMA(QSPI0);
+    /* Enable SPI slave PDMA function */
+    SPI_TRIGGER_TX_RX_PDMA(SPI1);
+    /* Enable SPI master PDMA function */
+    QSPI_TRIGGER_TX_RX_PDMA(QSPI0);
 
     i32Err = 0;
     for(u32TestCycle = 0; u32TestCycle < 10000; u32TestCycle++)
@@ -255,8 +253,7 @@ void SpiLoopTest_WithPDMA(void)
                     PDMA_CLR_TD_FLAG(PDMA0, (1 << SPI_MASTER_TX_DMA_CH) | (1 << SPI_MASTER_RX_DMA_CH) | (1 << SPI_SLAVE_TX_DMA_CH) | (1 << SPI_SLAVE_RX_DMA_CH));
 
                     /* Disable SPI master's PDMA transfer function */
-                    QSPI_DISABLE_TX_PDMA(QSPI0);
-                    QSPI_DISABLE_RX_PDMA(QSPI0);
+                    QSPI_DISABLE_TX_RX_PDMA(QSPI0);
 
                     /* Check the transfer data */
                     for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
@@ -307,13 +304,12 @@ void SpiLoopTest_WithPDMA(void)
                     /* Set request source; set basic mode. */
                     PDMA_SetTransferMode(PDMA0, SPI_MASTER_RX_DMA_CH, PDMA_QSPI0_RX, FALSE, 0);
 
-                    /* Enable master's DMA transfer function */
-                    QSPI_TRIGGER_TX_PDMA(QSPI0);
-                    QSPI_TRIGGER_RX_PDMA(QSPI0);
+                    /* Enable master's PDMA transfer function */
+                    QSPI_TRIGGER_TX_RX_PDMA(QSPI0);
                     break;
                 }
             }
-            /* Check the DMA transfer abort interrupt flag */
+            /* Check the PDMA transfer abort interrupt flag */
             if(u32RegValue & PDMA_INTSTS_ABTIF_Msk)
             {
                 /* Get the target abort flag */
@@ -323,7 +319,7 @@ void SpiLoopTest_WithPDMA(void)
                 i32Err = 1;
                 break;
             }
-            /* Check the DMA time-out interrupt flag */
+            /* Check the PDMA time-out interrupt flag */
             if(u32RegValue & 0x00000300)
             {
                 /* Clear the time-out flag */

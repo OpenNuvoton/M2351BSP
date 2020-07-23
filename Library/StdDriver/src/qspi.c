@@ -271,9 +271,9 @@ uint32_t QSPI_SetBusClock(QSPI_T *qspi, uint32_t u32BusClock)
     /* Check if valid QSPI exist */
     if(!((qspi == QSPI0) || (qspi == QSPI0_NS)))
     {
-        return 0ul;
+        return 0UL;
     }
-    
+
     /* Get system clock frequency */
     u32HCLKFreq = CLK_GetHCLKFreq();
 
@@ -375,9 +375,9 @@ uint32_t QSPI_GetBusClock(QSPI_T *qspi)
     /* Check if valid QSPI exist */
     if(!((qspi == QSPI0) || (qspi == QSPI0_NS)))
     {
-        return 0ul;
+        return 0UL;
     }
-    
+
     /* Get DIVIDER setting */
     u32Div = (qspi->CLKDIV & QSPI_CLKDIV_DIVIDER_Msk) >> QSPI_CLKDIV_DIVIDER_Pos;
 

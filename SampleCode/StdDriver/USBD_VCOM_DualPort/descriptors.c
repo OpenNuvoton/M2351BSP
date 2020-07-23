@@ -167,7 +167,7 @@ static uint8_t s_au8ConfigDescriptor[] =
     0x01,           /* Call management functional descriptor */
     0x00,           /* BIT0: Whether device handle call management itself. */
     /* BIT1: Whether device can send/receive call management information over a Data Class Interface 0 */
-    0x01,           /* Interface number of data class interface optionally used for call management */
+    0x03,           /* Interface number of data class interface optionally used for call management */
 
     /* Communication Class Specified INTERFACE descriptor */
     0x04,           /* Size of the descriptor, in bytes */
@@ -179,8 +179,8 @@ static uint8_t s_au8ConfigDescriptor[] =
     0x05,           /* bLength              */
     0x24,           /* bDescriptorType: CS_INTERFACE descriptor type */
     0x06,           /* bDescriptorSubType   */
-    0x00,           /* bMasterInterface     */
-    0x01,           /* bSlaveInterface0     */
+    0x02,           /* bMasterInterface     */
+    0x03,           /* bSlaveInterface0     */
 
     /* ENDPOINT descriptor */
     LEN_ENDPOINT,                   /* bLength          */
@@ -242,6 +242,7 @@ static uint8_t s_au8ProductStringDesc[] =
     'U', 0, 'S', 0, 'B', 0, ' ', 0, 'V', 0, 'i', 0, 'r', 0, 't', 0, 'u', 0, 'a', 0, 'l', 0, ' ', 0, 'C', 0, 'O', 0, 'M', 0
 };
 
+#ifdef SUPPORT_LPM
 /*!<USB BOS Descriptor */
 static uint8_t s_au8BOSDescriptor[] =
 {
@@ -266,6 +267,7 @@ static uint8_t s_au8BOSDescriptor[] =
                             /* bit 15:12 : Recommend Deep BESL value. Ignore by bit4 is zero. */
                             /* bit 31:16 : Reserved. Must 0. */
 };
+#endif
 
 static uint8_t *s_apu8UsbString[4] =
 {
@@ -302,7 +304,11 @@ const S_USBD_INFO_T gsInfo =
     (uint8_t *)s_au8ConfigDescriptor,
     (uint8_t **)s_apu8UsbString,
     (uint8_t **)s_apu8UsbHidReport,
+#ifdef SUPPORT_LPM
     (uint8_t *)s_au8BOSDescriptor,
+#else
+    NULL,
+#endif
     (uint32_t *)s_au32UsbHidReportLen,
     (uint32_t *)s_au32ConfigHidDescIdx
 };

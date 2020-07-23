@@ -69,7 +69,7 @@ static int  do_scsi_command(MSC_T *msc, uint8_t *buff, uint32_t data_len, int bI
 {
     int   ret;
     struct bulk_cb_wrap  *cmd_blk = &msc->cmd_blk;         /* MSC Bulk-only command block   */
-    struct bulk_cs_wrap  *cmd_status = &msc->cmd_status;;  /* MSC Bulk-only command status  */
+    struct bulk_cs_wrap  *cmd_status = &msc->cmd_status;   /* MSC Bulk-only command status  */
 
     cmd_blk->Signature = MSC_CB_SIGN;
     cmd_blk->Tag = __tag++;

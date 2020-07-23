@@ -28,7 +28,7 @@ static uint32_t I2S_GetSourceClockFreq(I2S_T *i2s);
   * @brief  This function is used to get I2S source clock frequency.
   * @param[in]  i2s The base address of I2S module.
   * @return I2S source clock frequency (Hz).
-  * @details Return the source clock frequency according to the setting of I2S0_SEL (CLK_CLKSEL3[17:16]).
+  * @details Return the source clock frequency according to the setting of I2S0SEL (CLK_CLKSEL3[17:16]).
   */
 static uint32_t I2S_GetSourceClockFreq(I2S_T *i2s)
 {
@@ -75,7 +75,7 @@ static uint32_t I2S_GetSourceClockFreq(I2S_T *i2s)
   *                                     - \ref I2S_DATABIT_16
   *                                     - \ref I2S_DATABIT_24
   *                                     - \ref I2S_DATABIT_32
-  * @param[in] u32MonoData: Set audio data to mono or not. Valid values are:
+  * @param[in] u32MonoData Set audio data to mono or not. Valid values are:
   *                                     - \ref I2S_ENABLE_MONO
   *                                     - \ref I2S_DISABLE_MONO
   * @param[in] u32DataFormat Data format. This is also used to select I2S or PCM(TDM) function. Valid values are:
@@ -263,4 +263,3 @@ void I2S_ConfigureTDM(I2S_T *i2s, uint32_t u32ChannelWidth, uint32_t u32ChannelN
 /*@}*/ /* end of group Standard_Driver */
 
 /*** (C) COPYRIGHT 2016-2020 Nuvoton Technology Corp. ***/
-
