@@ -198,16 +198,25 @@ int main(void)
         if(s_u8CANPackageFlag)
         {
             s_u8CANPackageFlag = 0;
-            Address = inpw((uint32_t)&s_rrMsg.Data);
-            Data = inpw((uint32_t)&s_rrMsg.Data[4]);
+            Address = (uint32_t)((s_rrMsg.Data[3]<<24)|(s_rrMsg.Data[2]<<16)|(s_rrMsg.Data[1]<<8)|s_rrMsg.Data[0]);
+            Data = (uint32_t)((s_rrMsg.Data[7]<<24)|(s_rrMsg.Data[6]<<16)|(s_rrMsg.Data[5]<<8)|s_rrMsg.Data[4]);
 
             if(Address == CMD_GET_DEVICEID)
             {
-                outpw((uint32_t)&s_rrMsg.Data[4], SYS->PDID);
+                s_rrMsg.Data[4] = _GET_BYTE0(SYS->PDID);
+                s_rrMsg.Data[5] = _GET_BYTE1(SYS->PDID);
+                s_rrMsg.Data[6] = _GET_BYTE2(SYS->PDID);
+                s_rrMsg.Data[7] = _GET_BYTE3(SYS->PDID);
             }
             else if(Address == CMD_READ_CONFIG)
             {
-                outpw((uint32_t)&s_rrMsg.Data[4], FMC_Read(Data));
+                uint32_t u32ReadData;
+
+                u32ReadData = FMC_Read(Data);
+                s_rrMsg.Data[4] = _GET_BYTE0(u32ReadData);
+                s_rrMsg.Data[5] = _GET_BYTE1(u32ReadData);
+                s_rrMsg.Data[6] = _GET_BYTE2(u32ReadData);
+                s_rrMsg.Data[7] = _GET_BYTE3(u32ReadData);
             }
             else if(Address == CMD_RUN_APROM)
             {

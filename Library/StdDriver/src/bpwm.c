@@ -414,8 +414,8 @@ uint32_t BPWM_GetCaptureIntFlag(BPWM_T *bpwm, uint32_t u32ChannelNum)
 {
     uint32_t u32CapIf = 0UL;
 
-    u32CapIf = ((((bpwm)->CAPIF & (BYTE1_Msk << u32ChannelNum)) ? 1UL : 0UL) << 1);
-    u32CapIf |= (((bpwm)->CAPIF & (BYTE0_Msk << u32ChannelNum)) ? 1UL : 0UL);
+    u32CapIf = ((((bpwm)->CAPIF & (BPWM_CAPIF_CAPFIF0_Msk << u32ChannelNum)) ? 1UL : 0UL) << 1);
+    u32CapIf |= (((bpwm)->CAPIF & (BPWM_CAPIF_CAPRIF0_Msk << u32ChannelNum)) ? 1UL : 0UL);
     return u32CapIf;
 }
 /**
@@ -460,7 +460,7 @@ void BPWM_DisableDutyInt(BPWM_T *bpwm, uint32_t u32ChannelNum)
  */
 void BPWM_ClearDutyIntFlag(BPWM_T *bpwm, uint32_t u32ChannelNum)
 {
-    (bpwm)->INTSTS = (BYTE2_Msk | BYTE3_Msk) << u32ChannelNum;
+    (bpwm)->INTSTS = (BPWM_INTSTS_CMPUIF0_Msk | BPWM_INTSTS_CMPDIF0_Msk) << u32ChannelNum;
 }
 
 /**
@@ -476,7 +476,7 @@ void BPWM_ClearDutyIntFlag(BPWM_T *bpwm, uint32_t u32ChannelNum)
  */
 uint32_t BPWM_GetDutyIntFlag(BPWM_T *bpwm, uint32_t u32ChannelNum)
 {
-    return ((((bpwm)->INTSTS & ((BYTE2_Msk | BYTE3_Msk) << u32ChannelNum))) ? 1UL : 0UL);
+    return ((((bpwm)->INTSTS & ((BPWM_INTSTS_CMPDIF0_Msk | BPWM_INTSTS_CMPUIF0_Msk) << u32ChannelNum))) ? 1UL : 0UL);
 }
 
 /**
