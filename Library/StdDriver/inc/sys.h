@@ -72,7 +72,6 @@ extern "C"
 #define SPI3_RST    ((0x8UL<<24)|(uint32_t)SYS_IPRST2_SPI3RST_Pos)      /*!< SPI3 reset is one of the SYS_ResetModule parameter */
 #define USCI0_RST   ((0x8UL<<24)|(uint32_t)SYS_IPRST2_USCI0RST_Pos)     /*!< USCI0 reset is one of the SYS_ResetModule parameter */
 #define USCI1_RST   ((0x8UL<<24)|(uint32_t)SYS_IPRST2_USCI1RST_Pos)     /*!< USCI1 reset is one of the SYS_ResetModule parameter */
-#define USCI2_RST   ((0x8UL<<24)|(uint32_t)SYS_IPRST2_USCI2RST_Pos)     /*!< USCI2 reset is one of the SYS_ResetModule parameter */
 #define DAC_RST     ((0x8UL<<24)|(uint32_t)SYS_IPRST2_DACRST_Pos)       /*!< DAC reset is one of the SYS_ResetModule parameter */
 #define EPWM0_RST   ((0x8UL<<24)|(uint32_t)SYS_IPRST2_EPWM0RST_Pos)     /*!< EPWM0 reset is one of the SYS_ResetModule parameter */
 #define EPWM1_RST   ((0x8UL<<24)|(uint32_t)SYS_IPRST2_EPWM1RST_Pos)     /*!< EPWM1 reset is one of the SYS_ResetModule parameter */
