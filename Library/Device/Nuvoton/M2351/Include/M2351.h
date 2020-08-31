@@ -518,7 +518,6 @@ extern void SystemInit(void);
 
 #define UI2C0_S             ((UI2C_T *) USCI0_BASE)                     /*!< UI2C0 Pointer                       */
 #define UI2C1_S             ((UI2C_T *) USCI1_BASE)                     /*!< UI2C1 Pointer                       */
-#define UI2C2_S             ((UI2C_T *) USCI2_BASE)                     /*!< UI2C2 Pointer                       */
 
 #define USPI0_S             ((USPI_T *) USCI0_BASE)                     /*!< USPI0 Pointer                       */
 #define USPI1_S             ((USPI_T *) USCI1_BASE)                     /*!< USPI1 Pointer                       */
@@ -593,7 +592,6 @@ extern void SystemInit(void);
 #define PDMA1_NS               ((PDMA_T *)  (PDMA1_BASE +NS_OFFSET))                     /*!< PDMA1 Pointer                      */
 #define UI2C0_NS               ((UI2C_T *)  (USCI0_BASE +NS_OFFSET))                     /*!< UI2C0 Pointer                      */
 #define UI2C1_NS               ((UI2C_T *)  (USCI1_BASE +NS_OFFSET))                     /*!< UI2C1 Pointer                      */
-#define UI2C2_NS               ((UI2C_T *)  (USCI2_BASE +NS_OFFSET))                     /*!< UI2C2 Pointer                      */
 #define USPI0_NS               ((USPI_T *)  (USCI0_BASE +NS_OFFSET))                     /*!< USPI0 Pointer                      */
 #define USPI1_NS               ((USPI_T *)  (USCI1_BASE +NS_OFFSET))                     /*!< USPI1 Pointer                      */
 #define UUART0_NS              ((UUART_T *) (USCI0_BASE+NS_OFFSET))                      /*!< UUART0 Pointer                     */
