@@ -33,8 +33,10 @@ extern "C"
 #define I2S_DATABIT_32          (3UL << I2S_CTL0_DATWIDTH_Pos)       /*!< I2S data width is 32-bit  \hideinitializer */
 
 /* Audio Format */
-#define I2S_ENABLE_MONO         I2S_CTL0_MONO_Msk                    /*!< Mono channel  \hideinitializer */
-#define I2S_DISABLE_MONO        (0UL)                                /*!< Stereo channel  \hideinitializer */
+#define I2S_MONO                I2S_CTL0_MONO_Msk                    /*!< Mono channel  \hideinitializer */
+#define I2S_STEREO              (0UL)                                /*!< Stereo channel  \hideinitializer */
+#define I2S_ENABLE_MONO         I2S_MONO
+#define I2S_DISABLE_MONO        I2S_STEREO
 
 /* I2S Data Format */
 #define I2S_FORMAT_I2S          (0UL << I2S_CTL0_FORMAT_Pos)         /*!< I2S data format  \hideinitializer */

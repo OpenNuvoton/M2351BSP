@@ -133,7 +133,7 @@ int32_t main(void)
     I2C2_Init();
 
     /* Open I2S0 as slave mode */
-    I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_DISABLE_MONO, I2S_FORMAT_I2S);
+    I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_STEREO, I2S_FORMAT_I2S);
 
     /* Select source from HIRC(12MHz) */
     CLK_SetModuleClock(I2S0_MODULE, CLK_CLKSEL3_I2S0SEL_HIRC, 0);

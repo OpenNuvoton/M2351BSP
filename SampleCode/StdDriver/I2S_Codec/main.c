@@ -333,7 +333,7 @@ int32_t main(void)
 #endif
 
     /* Open I2S0 interface and set to slave mode, stereo channel, I2S format */
-    I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_DISABLE_MONO, I2S_FORMAT_I2S);
+    I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_STEREO, I2S_FORMAT_I2S);
     NVIC_EnableIRQ(I2S0_IRQn);
 
     /* select source from HXT(12MHz) */

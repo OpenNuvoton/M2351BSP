@@ -530,7 +530,7 @@ int32_t main(void)
     NAU88L25_Reset();
 
     /* Configure as I2S slave */
-    I2S_Open(I2S0, I2S_MODE_SLAVE, 16000, I2S_DATABIT_16, I2S_DISABLE_MONO, I2S_FORMAT_I2S);
+    I2S_Open(I2S0, I2S_MODE_SLAVE, 16000, I2S_DATABIT_16, I2S_STEREO, I2S_FORMAT_I2S);
 
     /* Initialize NAU88L25 codec */
     CLK_SysTickDelay(20000);
