@@ -1732,7 +1732,7 @@ int32_t OTACmdReqProcess(ISP_INFO_T *pISPInfo)
                 /* Get Server public key 0 */
                 memcpy(pISPInfo->ServerPubKey.au32Key0, cmd.au32Data, cmd.u16Len);
                 for(i=0; i<8; i++)
-                    DEBUG_MSG("Get pub0[%d]: 0x%08x.\n", i, pISPInfo->ServerPubKey.au32Key0[i]);
+                    NUBL_MSG("Get pub0[%d]: 0x%08x.\n", i, pISPInfo->ServerPubKey.au32Key0[i]);
 
                 /* Response status ok */
                 memset(cmd.au32Data, 0x0, sizeof(cmd.au32Data));
@@ -1744,7 +1744,7 @@ int32_t OTACmdReqProcess(ISP_INFO_T *pISPInfo)
                 /* Get Server public key 1 and generate ist ECDH AES key */
                 memcpy(pISPInfo->ServerPubKey.au32Key1, cmd.au32Data, cmd.u16Len);
                 for(i=0; i<8; i++)
-                    DEBUG_MSG("Get pub1[%d]: 0x%08x.\n", i, pISPInfo->ServerPubKey.au32Key1[i]);
+                    NUBL_MSG("Get pub1[%d]: 0x%08x.\n", i, pISPInfo->ServerPubKey.au32Key1[i]);
 
                 /* Identify Host public key */
                 if(((uint32_t)IdentifyPublicKey((uint32_t *)pISPInfo->ServerPubKey.au32Key0, 0)&BIT2) != BIT2)
@@ -1887,7 +1887,7 @@ void OTA_CallBackHandler(uint8_t* pu8Buff, uint32_t u32Len, uint32_t u32StartIdx
             /* Copy session key to ISP Info */
             memcpy((void *)s_pISPInfo->au32AESKey, AESKey, sizeof(AESKey));
             for(i=0; i<8; i++)
-                DEBUG_MSG("Gen 1st KEY[%d]: 0x%08x.\n", i, s_pISPInfo->au32AESKey[i]);
+                NUBL_MSG("Gen 1st KEY[%d]: 0x%08x.\n", i, s_pISPInfo->au32AESKey[i]);
         }
         case CMD_ECDH_PUB1:
         case CMD_AUTH_KEY:

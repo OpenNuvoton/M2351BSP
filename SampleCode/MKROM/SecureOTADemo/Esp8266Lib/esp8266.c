@@ -935,12 +935,17 @@ void ParseReceived(evol ESP_t* ESP, Received_t* Received_p) {
             } else if (str[12] == 'n') {
                 ParseIP(ESP, str + 21, (void *)&ESP->STANetmask, NULL); /* Parse IP string */
             }
+        } else  if (ESP->ActiveCmd == CMD_WIFI_CIPSTA && strncmp(str, FROMMEM("+CIPSTA"), 7) == 0) {   /* +CIPSTA received */
+            //print connected information of client
+            __DEBUG("[Client] %s", str + 8);
         } else if (ESP->ActiveCmd == CMD_WIFI_CIPSTAMAC && strncmp(str, FROMMEM("+CIPSTAMAC"), 10) == 0) {  /* On CIPSTAMAC active command */
+            __DEBUG("[Client] STA MAC address %s", str + 10);
             ParseMAC(ESP, str + 16, (void *)&ESP->STAMAC, NULL);    /* Parse MAC */
             if (Pointers.Ptr1) {
                 memcpy((void *)Pointers.Ptr1, (void *)&ESP->STAMAC, 6);
             }
         } else if (ESP->ActiveCmd == CMD_WIFI_CIPAPMAC && strncmp(str, FROMMEM("+CIPAPMAC"), 9) == 0) { /* On CIPAPMAC active command */
+            __DEBUG("[Client] AP MAC address %s", str + 9);
             ParseMAC(ESP, str + 15, (void *)&ESP->APMAC, NULL); /* Parse MAC */
             if (Pointers.Ptr1) {
                 memcpy((void *)Pointers.Ptr1, (void *)&ESP->APMAC, 6);
@@ -961,20 +966,25 @@ void ParseReceived(evol ESP_t* ESP, Received_t* Received_p) {
     /* Connecting to AP */
     if (ESP->ActiveCmd == CMD_WIFI_CWJAP) {                 /* Trying to connect to wifi network */
         if (strcmp(str, FROMMEM("FAIL\r\n")) == 0) {        /* Fail received */
+            __DEBUG("Connecting to WIFP AP: FAIL\n");
             is_error = 1;
         //} else if (strncmp(str, FROMMEM("+CWJAP_CUR"), 10) == 0) {  /* Received currently connected AP info */
         } else if (strncmp(str, FROMMEM("+CWJAP"), 10) == 0) {  /* Received currently connected AP info */
+            __DEBUG("%s", str + 10);
             ParseCWJAP(ESP, str + 10, (void *)Pointers.Ptr1);   /* Parse and save */
         }
+        __DEBUG("\n");
     }
 
     /* Wifi management informations */
     if (strcmp(str, FROMMEM("WIFI CONNECTED\r\n")) == 0) {  /* Just connected */
+        __DEBUG("%s", str);
         if (ESP->ActiveCmd == CMD_WIFI_CWJAP) {             /* If trying to join AP */
             ESP->Events.F.RespWifiConnected = 1;
         }
         ESP->CallbackFlags.F.WifiConnected = 1;
     } else if (strcmp(str, FROMMEM("WIFI DISCONNECT\r\n")) == 0) {  /* Just disconnected */
+        __DEBUG("%s", str);
         if (ESP->ActiveCmd == CMD_WIFI_CWJAP) {             /* If trying to join AP */
             ESP->Events.F.RespWifiDisconnected = 1;
         }
@@ -1020,6 +1030,7 @@ void ParseReceived(evol ESP_t* ESP, Received_t* Received_p) {
     /* Manage connection status */
     if (ESP->ActiveCmd == CMD_TCPIP_CIPSTATUS) {
         if (strncmp(str, FROMMEM("+CIPSTATUS"), 10) == 0) { /* +CIPSTATUS received */
+            __DEBUG("%s\n", str);
             ParseCIPSTATUS(ESP, (void *)&ESP->ActiveConnsResp, str + 11);   /* Parse CIPSTATUS response */
         } else if (is_ok) {                                 /* OK received */
             /* Check and merge all connections from ESP */
@@ -1568,6 +1579,7 @@ cmd_wifi_listaccesspoints_clean:
     } else if (ESP->ActiveCmd == CMD_WIFI_CWJAP) {          /* Connect to network */
         ptr = (uint8_t *) Pointers.Ptr1;
         __RST_EVENTS_RESP(ESP);                             /* Reset all events */
+        __DEBUG("Connecting to WIFI AP: ssid: %s, pass: %s\n", Pointers.CPtr2, Pointers.CPtr3);
 //        UART_SEND_STR(FROMMEM("AT+CWJAP_"));                /* Send data */
         UART_SEND_STR(FROMMEM("AT+CWJAP"));                /* Send data */
 //        UART_SEND_STR(FROMMEM(Pointers.CPtr1));
@@ -1867,20 +1879,27 @@ PT_THREAD(PT_Thread_TCPIP(struct pt* pt, evol ESP_t* ESP)) {
         NumberToString(str, (*(ESP_CONN_t **)Pointers.PPtr1)->Number);  /* Convert mode to string */
         UART_SEND_STR(FROMMEM(str));
         UART_SEND_STR(FROMMEM(","));
+        __DEBUG("[Server] ID(Link No.): %s\n", str);
 #endif /* ESP_SINGLE_CONN */
         if (((ESP_CONN_Type_t)(Pointers.UI >> 16)) == ESP_CONN_Type_TCP) {
             UART_SEND_STR(FROMMEM("\"TCP"));
+            __DEBUG("[Server] Type        : TCP\n");
         } else if (((ESP_CONN_Type_t)(Pointers.UI >> 16)) == ESP_CONN_Type_UDP) {
             UART_SEND_STR(FROMMEM("\"UDP"));
+            __DEBUG("[Server] Type        : UDP\n");
         } else if (((ESP_CONN_Type_t)(Pointers.UI >> 16)) == ESP_CONN_Type_SSL) {
             UART_SEND_STR(FROMMEM("\"SSL"));
+            __DEBUG("[Server] Type        : SSL\n");
         }
         UART_SEND_STR(FROMMEM("\",\""));
         UART_SEND_STR(FROMMEM(Pointers.CPtr1));
+        __DEBUG("[Server] IP          : %s\n", Pointers.CPtr1);
         UART_SEND_STR(FROMMEM("\","));
         NumberToString(str, Pointers.UI & 0xFFFF);
         UART_SEND_STR(FROMMEM(str));
         UART_SEND_STR(_CRLF);
+        __DEBUG("[Server] Port        : %s\n", str);
+
         StartCommand(ESP, CMD_TCPIP_CIPSTART, NULL);        /* Start command */
 
         PT_WAIT_UNTIL(pt, ESP->Events.F.RespOk ||

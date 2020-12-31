@@ -72,7 +72,7 @@ PT_THREAD(CLIENT_THREAD(struct pt* pt)) {
 
     /* Check connected status */
     if (espRes == espOK) {
-//          printf("Connection to OTA server has been successfull!\r\n");
+//          printf("Connection to server has been successfull!\r\n");
 
         /* Send HTTP request for example in non-blocking mode */
         if ((espRes = ESP_CONN_Send(&ESP, conn, g_au8SendBuf, g_u32SendbytesLen, &s_u32BW, 0)) == espOK) {
@@ -94,7 +94,7 @@ PT_THREAD(CLIENT_THREAD(struct pt* pt)) {
             printf("Problems trying to start sending data!\r\n");
         }
     } else {
-        printf("Problems to connect to example.com: %d\r\n", espRes);
+        printf("Problems to connect to server : %s(%d)\r\n\n", (espRes == espOK)?"OK":"ERROR", espRes);
     }
     g_u8SendbytesFlag = 0;
     PT_END(pt)
@@ -113,11 +113,11 @@ uint8_t Transfer_Connect(void)
     if ((espRes = ESP_STA_Connect(&ESP, WIFINAME, WIFIPASS, NULL, 0, 1)) == espOK) {
         printf("Connected to network\r\n");
     } else {
-        printf("Problems trying to connect to network: %d\r\n", espRes);
+        printf("Problems trying to connect to network: %s(%d)\r\n", (espRes == espOK)?"OK":"ERROR", espRes);
     }
 
     if ((espRes = ESP_CONN_Start(&ESP, &conn, ESP_CONN_Type_TCP, WIFIIP, WIFIPORT, 0)) == espOK) {//can get IP address of AP by ESP_AP_GetIP()
-        printf("Connection to OTA server has started!\r\n");
+        printf("\nConnection to server has started!\r\n");
 
     } else {
         printf("Problems trying to start connection to server as client: %d\r\n", espRes);
@@ -315,21 +315,23 @@ int8_t Transfer_Process(void)
 {
     /* Init ESP */
     if ((espRes = ESP_Init(&ESP, 115200, ESP_Callback)) == espOK) {
-        printf("ESP module init successfully!\r\n");
+        printf("\nESP module init successfully!\r\n");
     } else {
-        printf("ESP Init error. Status: %d\r\n", espRes);
+        printf("\nESP Init error. Status: %d\r\n", espRes);
     }
 
 #if INPUT_WIFI_PROMPT
     {
-        uint8_t au8InputBuffer[50];
+        uint8_t au8InputBuffer[32];
         uint8_t u8InputTmp;
         uint8_t u8Idx = 0;
 //        uint16_t u16Port = 0;
 
+        printf("\n========= Input connection settings =========\n");
         memset(au8InputBuffer, 0, sizeof(au8InputBuffer)/sizeof(uint8_t));
+        memset(g_au8WifiName, 0, sizeof(g_au8WifiName)/sizeof(uint8_t));
 
-        printf("WIFI NAME: ");
+        printf("WIFI AP NAME    : ");
         u8Idx = 0;
         while(u8InputTmp != 0x0D) /* enter key */
         {
@@ -337,11 +339,18 @@ int8_t Transfer_Process(void)
             printf("%c",u8InputTmp);
             au8InputBuffer[u8Idx] = u8InputTmp;
             u8Idx++;
+            if (u8Idx == ((sizeof(au8InputBuffer)/sizeof(uint8_t)) - 1))
+            {
+                printf("\n[ERROR]The length of input name is too long! \n");
+                while(1){}
+            }
         }
-        memcpy(g_au8WifiName, au8InputBuffer, sizeof(au8InputBuffer)/sizeof(uint8_t));
+        memcpy(g_au8WifiName, au8InputBuffer, u8Idx - 1);
 
         memset(au8InputBuffer, 0, sizeof(au8InputBuffer)/sizeof(uint8_t));
-        printf("\nWIFI PASSWORD: ");
+        memset(g_au8WifiPass, 0, sizeof(g_au8WifiPass)/sizeof(uint8_t));
+        u8InputTmp = 0;
+        printf("\nWIFI AP PASSWORD: ");
         u8Idx = 0;
         while(u8InputTmp != 0x0D) /* enter key */
         {
@@ -349,11 +358,18 @@ int8_t Transfer_Process(void)
             printf("%c",u8InputTmp);
             au8InputBuffer[u8Idx] = u8InputTmp;
             u8Idx++;
+            if (u8Idx == ((sizeof(au8InputBuffer)/sizeof(uint8_t)) - 1))
+            {
+                printf("\n[ERROR]The length of input password is too long! \n");
+                while(1){}
+            }
         }
-        memcpy(g_au8WifiPass, au8InputBuffer, sizeof(au8InputBuffer)/sizeof(uint8_t));
+        memcpy(g_au8WifiPass, au8InputBuffer, u8Idx - 1);
 
         memset(au8InputBuffer, 0, sizeof(au8InputBuffer)/sizeof(uint8_t));
-        printf("\nWIFI IP: ");
+        memset(g_au8WifiIp, 0, sizeof(g_au8WifiIp)/sizeof(uint8_t));
+        u8InputTmp = 0;
+        printf("\nServer IP       : ");
         u8Idx = 0;
         while(u8InputTmp != 0x0D) /* enter key */
         {
@@ -361,8 +377,15 @@ int8_t Transfer_Process(void)
             printf("%c",u8InputTmp);
             au8InputBuffer[u8Idx] = u8InputTmp;
             u8Idx++;
+            if (u8Idx == ((sizeof(au8InputBuffer)/sizeof(uint8_t)) - 1))
+            {
+                printf("\n[ERROR]The length of input ip is too long! \n");
+                while(1){}
+            }
         }
-        memcpy(g_au8WifiIp, au8InputBuffer, sizeof(au8InputBuffer)/sizeof(uint8_t));
+        memcpy(g_au8WifiIp, au8InputBuffer, u8Idx - 1);
+        u8InputTmp = 0;
+        u8Idx = 0;
 
 //        memset(au8InputBuffer, 0, sizeof(au8InputBuffer)/sizeof(uint8_t));
 //        printf("\nWIFI PORT: ");
@@ -377,17 +400,19 @@ int8_t Transfer_Process(void)
 //        memcpy(g_au8WifiPort, au8InputBuffer, sizeof(au8InputBuffer)/sizeof(uint8_t));
 //
 //        u16Port = ParseNumber(au8InputBuffer, NULL);
+
+        printf("\n\n============== Start connection ==============\n");
     }
 
     /* Try to connect to wifi network in blocking mode */
     if ((espRes = ESP_STA_Connect(&ESP, (const char *)g_au8WifiName, (const char *)g_au8WifiPass, NULL, 0, 1)) == espOK) {
-        printf("Connected to network\r\n");
+        printf("Connected to network successed.\r\n\n");
     } else {
-        printf("Problems trying to connect to network: %d\r\n", espRes);
+        printf("Problems trying to connect to network: %s(%d)\r\n", (espRes == espOK)?"OK":"ERROR", espRes);
     }
 
     if ((espRes = ESP_CONN_Start(&ESP, &conn, ESP_CONN_Type_TCP, (const char *)g_au8WifiIp, 1111, 0)) == espOK) {//can get IP address of AP by ESP_AP_GetIP()
-        printf("Connection to OTA server has started!\r\n");
+        printf("\nConnection to server has started!\r\n");
         s_u8InitialWifiFail = 0;
 
     } else {
@@ -395,15 +420,16 @@ int8_t Transfer_Process(void)
         s_u8InitialWifiFail = 1;
     }
 #else
+    printf("\n\n============== Start connection ==============\n");
     /* Try to connect to wifi network in blocking mode */
     if ((espRes = ESP_STA_Connect(&ESP, WIFINAME, WIFIPASS, NULL, 0, 1)) == espOK) {
-        printf("Connected to network\r\n");
+        printf("Connected to network successed.\r\n\n");
     } else {
-        printf("Problems trying to connect to network: %d\r\n", espRes);
+        printf("Problems trying to connect to network: %s(%d)\r\n", (espRes == espOK)?"OK":"ERROR", espRes);
     }
 
     if ((espRes = ESP_CONN_Start(&ESP, &conn, ESP_CONN_Type_TCP, WIFIIP, WIFIPORT, 0)) == espOK) {//can get IP address of AP by ESP_AP_GetIP()
-        printf("Connection to OTA server has started!\r\n");
+        printf("\nConnection to server has started!\r\n");
 
     } else {
         printf("Problems trying to start connection to server as client: %d\r\n", espRes);
