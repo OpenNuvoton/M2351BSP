@@ -54,7 +54,7 @@ uint32_t get_ticks()
     return s_u32TickCnt;
 }
 
-void delay_us(uint32_t u32USec)
+void delay_us(int usec)
 {
     /*
      *  Configure Timer0, clock source from XTL_12M. Prescale 12
@@ -64,7 +64,7 @@ void delay_us(uint32_t u32USec)
     CLK->APBCLK0 |= CLK_APBCLK0_TMR0CKEN_Msk;
     TIMER0->CTL = 0;        /* disable timer */
     TIMER0->INTSTS = (TIMER_INTSTS_TIF_Msk | TIMER_INTSTS_TWKF_Msk);   /* write 1 to clear for safety */
-    TIMER0->CMP = u32USec;
+    TIMER0->CMP = usec;
     TIMER0->CTL = (11 << TIMER_CTL_PSC_Pos) | TIMER_ONESHOT_MODE | TIMER_CTL_CNTEN_Msk;
 
     while(!TIMER0->INTSTS) {}

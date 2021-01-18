@@ -809,7 +809,7 @@ void MSC_ReadTrig(void)
         else
         {
             u32Len = s_u32Length;
-            if(g_u32LbaAddress <= (16 * CDROM_BLOCK_SIZE))   /* Logical Block Address > 32KB */
+            if(s_u32LbaAddress <= (16 * CDROM_BLOCK_SIZE))   /* Logical Block Address > 32KB */
             {
                 if(u32Len > STORAGE_BUFFER_SIZE)
                     u32Len = STORAGE_BUFFER_SIZE;
