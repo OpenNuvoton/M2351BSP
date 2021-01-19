@@ -42,7 +42,16 @@ To experience the powerful features of M2351 in few minutes, please refer to NuM
 	Sample codes for non-invasivephysical attack detection.
 
 - CardReader<br>
-	USB CCID Smartcard Readersample code
+	USB CCID Smartcard Readersample code.
+
+- CortexM23<br>
+	Cortex®-M23 sample code.
+
+- Crypto<br>
+	Crypto sample code using MbedTLS library.
+
+- FreeRTOS<br>
+	Simple FreeRTOSTM demo code.
 
 - Hard\_Fault\_Sample<br>
 	Show hard fault information when hard fault happened. The hard fault handler show some information included program counter, which is the address where the processor was executing when the hard fault occur. The listing file (or map file) can show what function and instruction that was. It also shows the Link Register (LR), which contains the return address of the last function call. It can show the status where CPU comes from to get to this point.
@@ -77,7 +86,7 @@ To experience the powerful features of M2351 in few minutes, please refer to NuM
 
 ## .\ThirdParty\
 
-- Alibaba\_TEE\_Air<br>
+- Alibaba\_Link\_TEE\_Air<br>
 	Security TEE Air of Alibaba.
 
 - Crypto<br>
@@ -89,9 +98,17 @@ To experience the powerful features of M2351 in few minutes, please refer to NuM
 - FatFs<br>
 	An open source FAT/exFAT filesystem library.
 
+- FreeRTOS<br>
+	FreeRTOS porting for M2351.
+
+- mbedTLS<br>
+	An open source crypto library.
+
 - QinglianCloud<br>
 	The TinyTEE and Cloud Client of QinglianCloud.
 
+- Winbond_SecureFlash<br>
+	Secure Flash library header File.
 
 # Licesne
 
