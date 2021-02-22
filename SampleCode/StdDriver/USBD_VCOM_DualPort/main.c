@@ -215,7 +215,7 @@ void UART0_IRQHandler(void)
     if(u32IntStatus & UART_INTSTS_THREIF_Msk)
     {
 
-        if(g_u16ComTbytes0)
+        if(g_u16ComTbytes0 && (UART0->INTEN & UART_INTEN_THREIEN_Msk))
         {
             /* Fill the Tx FIFO */
             i32Size = g_u16ComTbytes0;
@@ -279,7 +279,7 @@ void UART1_IRQHandler(void)
     if(u32IntStatus & UART_INTSTS_THREIF_Msk)
     {
 
-        if(g_u16ComTbytes1)
+        if(g_u16ComTbytes1 && (UART1->INTEN & UART_INTEN_THREIEN_Msk))
         {
             /* Fill the Tx FIFO */
             i32Size = g_u16ComTbytes1;
@@ -432,9 +432,7 @@ void VCOM_TransferData(void)
             if(g_u16ComThead0 >= TXBUFSIZE)
                 g_u16ComThead0 = 0;
 
-            __set_PRIMASK(1);
             g_u16ComTbytes0--;
-            __set_PRIMASK(0);
 
             /* Enable Tx Empty Interrupt. (Trigger first one) */
             UART0->INTEN |= UART_INTEN_THREIEN_Msk;
@@ -451,9 +449,7 @@ void VCOM_TransferData(void)
             if(g_u16ComThead1 >= TXBUFSIZE)
                 g_u16ComThead1 = 0;
 
-            __set_PRIMASK(1);
             g_u16ComTbytes1--;
-            __set_PRIMASK(0);
 
             /* Enable Tx Empty Interrupt. (Trigger first one) */
             UART1->INTEN |= UART_INTEN_THREIEN_Msk;
