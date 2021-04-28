@@ -24,6 +24,7 @@ static uint8_t s_au8SlvData[SLV_DATA_BUF_SIZE];
 static uint8_t s_au8SlvRxData[3];
 static volatile uint8_t s_u8SlvTRxAbortFlag = 0;
 static volatile uint8_t s_u8SlvWarningMsgFlag = 0;
+static volatile uint8_t s_u8TimeoutFlag = 0;
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -53,6 +54,7 @@ void I2C0_IRQHandler(void)
     {
         /* Clear I2C0 Timeout Flag */
         I2C_ClearTimeoutFlag(I2C0);
+        s_u8TimeoutFlag = 1;
     }
     else
     {
@@ -290,9 +292,21 @@ int32_t main(void)
 
     printf("\n");
     printf("I2C Slave Mode is Running.\n");
+    s_u8TimeoutFlag = 0;
 
     while(1)
     {
+        /* Handle Slave timeout condition */
+        if(s_u8TimeoutFlag)
+        {
+            printf(" SlaveTRx time out, any to reset IP\n");
+            getchar();
+            SYS->IPRST1 |= SYS_IPRST1_I2C0RST_Msk;
+            SYS->IPRST1 = 0;
+            I2C0_Init();
+            s_u8TimeoutFlag = 0;
+            s_u8SlvTRxAbortFlag = 1;
+        }
         /* When I2C abort, clear SI to enter non-addressed SLV mode*/
         if(s_u8SlvTRxAbortFlag)
         {
@@ -309,6 +323,7 @@ int32_t main(void)
             printf("         Please adjust the value of SLV_DATA_BUF_SIZE! \n");
             s_u8SlvWarningMsgFlag = 0;
         }
+
     }
 
 }
