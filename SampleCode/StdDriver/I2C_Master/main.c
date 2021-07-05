@@ -134,7 +134,7 @@ void I2C_MasterRx(uint32_t u32Status)
     else
     {
         /* Error condition process */
-			  printf("[MasterRx] Status [0x%x] Unexpected abort!! Anykey to re-start\n", u32Status);
+        printf("[MasterRx] Status [0x%x] Unexpected abort!! Anykey to re-start\n", u32Status);
         if(u32Status == 0x38)                 /* Master arbitration lost, stop I2C and clear SI */
         {
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STO_SI);
@@ -299,6 +299,9 @@ void SYS_Init(void)
     /* Set PA multi-function pins for I2C0 SDA and SCL */
     SYS->GPA_MFPL &= ~(SYS_GPA_MFPL_PA4MFP_Msk | SYS_GPA_MFPL_PA5MFP_Msk);
     SYS->GPA_MFPL |= (SYS_GPA_MFPL_PA4MFP_I2C0_SDA | SYS_GPA_MFPL_PA5MFP_I2C0_SCL);
+
+    /* I2C pins enable schmitt trigger */
+    PA->SMTEN |= (GPIO_SMTEN_SMTEN4_Msk | GPIO_SMTEN_SMTEN5_Msk);
 }
 
 
@@ -374,18 +377,18 @@ int32_t I2C0_Read_Write_SLAVE(uint8_t u8SlvAddr)
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STA);
 
             /* Wait I2C Rx Finish or Unexpected Abort*/
-            do{
-                  if(s_u8TimeoutFlag)
-                  {
-										  /* When I2C timeout, reset IP*/
-                      printf(" MasterRx time out, any to reset IP\n");
-                      getchar();
-                      SYS->IPRST1 |= SYS_IPRST1_I2C0RST_Msk;
-                      SYS->IPRST1 = 0;
-                      I2C0_Init();
-                      /* Set MasterRx abort flag*/
-                      s_u8MstRxAbortFlag = 1;
-                  }
+            do {
+                if(s_u8TimeoutFlag)
+                {
+                    /* When I2C timeout, reset IP*/
+                    printf(" MasterRx time out, any to reset IP\n");
+                    getchar();
+                    SYS->IPRST1 |= SYS_IPRST1_I2C0RST_Msk;
+                    SYS->IPRST1 = 0;
+                    I2C0_Init();
+                    /* Set MasterRx abort flag*/
+                    s_u8MstRxAbortFlag = 1;
+                }
             } while(s_u8MstEndFlag == 0 && s_u8MstRxAbortFlag == 0);
 
             s_u8MstEndFlag = 0;

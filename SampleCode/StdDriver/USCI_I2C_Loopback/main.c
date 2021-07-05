@@ -410,6 +410,10 @@ void SYS_Init(void)
     /* Set PB multi-function pins for UI2C1_SDA(PB.2) and UI2C1_SCL(PB.1) */
     SYS->GPB_MFPL &= ~(SYS_GPB_MFPL_PB2MFP_Msk | SYS_GPB_MFPL_PB1MFP_Msk);
     SYS->GPB_MFPL |= (SYS_GPB_MFPL_PB2MFP_USCI1_DAT0 | SYS_GPB_MFPL_PB1MFP_USCI1_CLK);
+
+    /* I2C pins enable schmitt trigger */
+    PA->SMTEN |= (GPIO_SMTEN_SMTEN10_Msk | GPIO_SMTEN_SMTEN11_Msk);
+    PB->SMTEN |= (GPIO_SMTEN_SMTEN1_Msk | GPIO_SMTEN_SMTEN2_Msk);
 }
 
 void UI2C0_Init(uint32_t u32ClkSpeed)
