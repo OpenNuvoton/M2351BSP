@@ -2627,11 +2627,11 @@ Example: If user want to set PA.1 as UART0_TXD and PA.0 as UART0_RXD in initial 
 #define TM3_PB2_Msk             SYS_GPB_MFPL_PB2MFP_Msk        /*<! TM3             PB2      MFP Mask */
 #define TM3_EXT_PA8_Msk         SYS_GPA_MFPH_PA8MFP_Msk        /*<! TM3_EXT         PA8      MFP Mask */
 #define TM3_EXT_PB12_Msk        SYS_GPB_MFPH_PB12MFP_Msk       /*<! TM3_EXT         PB12     MFP Mask */
-#define TRACE_CLK_PE12_Msk      SYS_GPE_MFPH_PE8MFP_Msk        /*<! TRACE_CLK       PE12     MFP Mask */
-#define TRACE_DATA0_PE11_Msk    SYS_GPE_MFPH_PE9MFP_Msk        /*<! TRACE_DATA0     PE11     MFP Mask */
+#define TRACE_CLK_PE12_Msk      SYS_GPE_MFPH_PE12MFP_Msk        /*<! TRACE_CLK       PE12     MFP Mask */
+#define TRACE_DATA0_PE11_Msk    SYS_GPE_MFPH_PE11MFP_Msk        /*<! TRACE_DATA0     PE11     MFP Mask */
 #define TRACE_DATA1_PE10_Msk    SYS_GPE_MFPH_PE10MFP_Msk       /*<! TRACE_DATA1     PE10     MFP Mask */
-#define TRACE_DATA2_PE9_Msk     SYS_GPE_MFPH_PE11MFP_Msk       /*<! TRACE_DATA2     PE9      MFP Mask */
-#define TRACE_DATA3_PE8_Msk     SYS_GPE_MFPH_PE12MFP_Msk       /*<! TRACE_DATA3     PE8      MFP Mask */
+#define TRACE_DATA2_PE9_Msk     SYS_GPE_MFPH_PE9MFP_Msk       /*<! TRACE_DATA2     PE9      MFP Mask */
+#define TRACE_DATA3_PE8_Msk     SYS_GPE_MFPH_PE8MFP_Msk       /*<! TRACE_DATA3     PE8      MFP Mask */
 #define UART0_RXD_PD2_Msk       SYS_GPD_MFPL_PD2MFP_Msk        /*<! UART0_RXD       PD2      MFP Mask */
 #define UART0_RXD_PB8_Msk       SYS_GPB_MFPH_PB8MFP_Msk        /*<! UART0_RXD       PB8      MFP Mask */
 #define UART0_RXD_PA0_Msk       SYS_GPA_MFPL_PA0MFP_Msk        /*<! UART0_RXD       PA0      MFP Mask */
@@ -2799,6 +2799,7 @@ Example: If user want to set PA.1 as UART0_TXD and PA.0 as UART0_RXD in initial 
 #define X32_OUT_PF4_Msk         SYS_GPF_MFPL_PF4MFP_Msk        /*<! X32_OUT         PF4      MFP Mask */
 #define XT1_IN_PF3_Msk          SYS_GPF_MFPL_PF3MFP_Msk        /*<! XT1_IN          PF3      MFP Mask */
 #define XT1_OUT_PF2_Msk         SYS_GPF_MFPL_PF2MFP_Msk        /*<! XT1_OUT         PF2      MFP Mask */
+
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Multi-Function macro definitions.                                                                      */
@@ -3422,11 +3423,11 @@ Example: If user want to set PA.1 as UART0_TXD and PA.0 as UART0_RXD in initial 
 #define SET_TM3_PB2()            SYS->GPB_MFPL = (SYS->GPB_MFPL & (~TM3_PB2_Msk)) | TM3_PB2                      /*!< Set PB2 function to TM3              */
 #define SET_TM3_EXT_PA8()        SYS->GPA_MFPH = (SYS->GPA_MFPH & (~TM3_EXT_PA8_Msk)) | TM3_EXT_PA8              /*!< Set PA8 function to TM3_EXT          */
 #define SET_TM3_EXT_PB12()       SYS->GPB_MFPH = (SYS->GPB_MFPH & (~TM3_EXT_PB12_Msk)) | TM3_EXT_PB12            /*!< Set PB12 function to TM3_EXT         */
-#define SET_TRACE_CLK_PE8()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_CLK_PE8_Msk)) | TRACE_CLK_PE8          /*!< Set PE8 function to TRACE_CLK        */
-#define SET_TRACE_DATA0_PE9()    SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA0_PE9_Msk)) | TRACE_DATA0_PE9      /*!< Set PE9 function to TRACE_DATA0      */
+#define SET_TRACE_CLK_PE12()     SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_CLK_PE12_Msk)) | TRACE_CLK_PE12        /*!< Set PE8 function to TRACE_CLK        */
+#define SET_TRACE_DATA0_PE11()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA0_PE11_Msk)) | TRACE_DATA0_PE11    /*!< Set PE9 function to TRACE_DATA0      */
 #define SET_TRACE_DATA1_PE10()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA1_PE10_Msk)) | TRACE_DATA1_PE10    /*!< Set PE10 function to TRACE_DATA1     */
-#define SET_TRACE_DATA2_PE11()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA2_PE11_Msk)) | TRACE_DATA2_PE11    /*!< Set PE11 function to TRACE_DATA2     */
-#define SET_TRACE_DATA3_PE12()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA3_PE12_Msk)) | TRACE_DATA3_PE12    /*!< Set PE12 function to TRACE_DATA3     */
+#define SET_TRACE_DATA2_PE9()    SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA2_PE9_Msk)) | TRACE_DATA2_PE9      /*!< Set PE11 function to TRACE_DATA2     */
+#define SET_TRACE_DATA3_PE8()    SYS->GPE_MFPH = (SYS->GPE_MFPH & (~TRACE_DATA3_PE8_Msk)) | TRACE_DATA3_PE8      /*!< Set PE12 function to TRACE_DATA3     */
 #define SET_UART0_RXD_PD2()      SYS->GPD_MFPL = (SYS->GPD_MFPL & (~UART0_RXD_PD2_Msk)) | UART0_RXD_PD2          /*!< Set PD2 function to UART0_RXD        */
 #define SET_UART0_RXD_PB8()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~UART0_RXD_PB8_Msk)) | UART0_RXD_PB8          /*!< Set PB8 function to UART0_RXD        */
 #define SET_UART0_RXD_PA0()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~UART0_RXD_PA0_Msk)) | UART0_RXD_PA0          /*!< Set PA0 function to UART0_RXD        */
