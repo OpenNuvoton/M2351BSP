@@ -45,12 +45,6 @@ struct __FILE
 FILE __stdout;
 FILE __stdin;
 
-#if defined(__ARMCC_VERSION) && (__ARMCC_VERSION > 6040000)
-# if !defined(__MICROLIB)
-__asm(".global __ARM_use_no_argv\n\t" "__ARM_use_no_argv:\n\t");    
-# endif
-#endif
-
 
 #if (defined(__ARMCC_VERSION) || defined(__ICCARM__))
 extern int32_t SH_DoCommand(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0);
