@@ -157,6 +157,10 @@ int32_t main(void)
     /* Initial TRNG */
     BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
 
+    /* Init Timer */
+    SysTick->LOAD  = 0xfffffful;                                              /* set reload register */
+    SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;    /* Enable SysTick IRQ and SysTick Timer */
+
     do
     {
 
