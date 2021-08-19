@@ -1579,7 +1579,7 @@ cmd_wifi_listaccesspoints_clean:
     } else if (ESP->ActiveCmd == CMD_WIFI_CWJAP) {          /* Connect to network */
         ptr = (uint8_t *) Pointers.Ptr1;
         __RST_EVENTS_RESP(ESP);                             /* Reset all events */
-        __DEBUG("Connecting to WIFI AP: ssid: %s, pass: %s\n", Pointers.CPtr2, Pointers.CPtr3);
+        __DEBUG("Connecting to WIFI AP: ssid: %s, pass: %s\n", (char *)Pointers.CPtr2, (char *)Pointers.CPtr3);
 //        UART_SEND_STR(FROMMEM("AT+CWJAP_"));                /* Send data */
         UART_SEND_STR(FROMMEM("AT+CWJAP"));                /* Send data */
 //        UART_SEND_STR(FROMMEM(Pointers.CPtr1));
@@ -1893,7 +1893,7 @@ PT_THREAD(PT_Thread_TCPIP(struct pt* pt, evol ESP_t* ESP)) {
         }
         UART_SEND_STR(FROMMEM("\",\""));
         UART_SEND_STR(FROMMEM(Pointers.CPtr1));
-        __DEBUG("[Server] IP          : %s\n", Pointers.CPtr1);
+        __DEBUG("[Server] IP          : %s\n", (char *)Pointers.CPtr1);
         UART_SEND_STR(FROMMEM("\","));
         NumberToString(str, Pointers.UI & 0xFFFF);
         UART_SEND_STR(FROMMEM(str));
