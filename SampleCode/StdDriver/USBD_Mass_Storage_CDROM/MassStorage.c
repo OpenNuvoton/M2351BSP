@@ -387,13 +387,11 @@ void EP2_Handler(void)
     MSC_AckCmd();
 }
 
-
 void EP3_Handler(void)
 {
     /* Bulk OUT */
     s_u8EP3Ready = 1;
 }
-
 
 void MSC_Init(void)
 {
@@ -622,7 +620,7 @@ void MSC_GetConfiguration(uint32_t u32Len, uint8_t *pu8Buff)
         u32Index = 8;
 
         // find the specified feature
-        while(u32Index < sizeof(s_au8GetConfiguration))
+        while(u32Index < (sizeof(s_au8GetConfiguration) - u32Index))
         {
             if((s_au8GetConfiguration[u32Index] == s_sCBW.au8Data[0]) && (s_au8GetConfiguration[u32Index + 1] == s_sCBW.au8Data[1]))
             {
@@ -649,7 +647,7 @@ void MSC_GetConfiguration(uint32_t u32Len, uint8_t *pu8Buff)
         u32Index = 8;
 
         // find current features
-        while(u32Index < sizeof(s_au8GetConfiguration))
+        while(u32Index < (sizeof(s_au8GetConfiguration) - u32Index))
         {
             u32FeatureLen = s_au8GetConfiguration[u32Index + 3] + 4;
             if(s_au8GetConfiguration[u32Index + 2] & 0x01)     // check current bit
@@ -787,6 +785,37 @@ void MSC_Read(void)
     }
 }
 
+void MSC_ReadConfiguration(void)
+{
+    if(s_u32Length)
+    {
+        {
+            /* Prepare next data packet */
+            s_u32Size = EP2_MAX_PKT_SIZE;
+
+            if(s_u32Size > s_u32Length)
+                s_u32Size = s_u32Length;
+
+            if(USBD_GET_EP_BUF_ADDR(EP2) == s_u32BulkBuf1)
+                USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf0), (uint8_t *)s_u32Address, s_u32Size);
+            else
+                USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1), (uint8_t *)s_u32Address, s_u32Size);
+
+            s_u32Address += s_u32Size;
+        }
+
+        if(USBD_GET_EP_BUF_ADDR(EP2) == s_u32BulkBuf1)
+            USBD_SET_EP_BUF_ADDR(EP2, s_u32BulkBuf0);
+        else
+            USBD_SET_EP_BUF_ADDR(EP2, s_u32BulkBuf1);
+
+        USBD_SET_PAYLOAD_LEN(EP2, s_u32Size);
+
+        s_u32Length -= s_u32Size;
+
+    }
+}
+
 void MSC_ReadTrig(void)
 {
     uint32_t u32Len;
@@ -848,7 +877,6 @@ void MSC_ReadTrig(void)
         USBD_SET_PAYLOAD_LEN(EP2, 0);
 }
 
-
 void MSC_ReadCapacity(void)
 {
     uint32_t u32Tmp;
@@ -870,7 +898,7 @@ void MSC_ReadCapacity(void)
     *((uint8_t *)(MassCMD_BUF + 7)) = (CDROM_BLOCK_SIZE >>  0) & 0xFF;
 }
 
-void MSC_ModeSense10(void)
+uint32_t MSC_ModeSense10(void)
 {
     uint8_t i, j;
     uint8_t u8NumHead, u8NumSector;
@@ -941,11 +969,16 @@ void MSC_ModeSense10(void)
             *((uint8_t *)(MassCMD_BUF + 29)) = (uint8_t)(u16NumCyl & 0x00ff);
             break;
 
+        case 0x2A:
+            /* Page code not support */
+            return 1;
+
         default:
             s_au8SenseKey[0] = 0x05;
             s_au8SenseKey[1] = 0x24;
             s_au8SenseKey[2] = 0x00;
     }
+    return 0;
 }
 
 void MSC_ProcessCmd(void)
@@ -1127,7 +1160,11 @@ void MSC_ProcessCmd(void)
                         s_u32Address = MassCMD_BUF;
                     }
 
-                    MSC_ModeSense10();
+                    if(MSC_ModeSense10())
+                    {
+                        s_u32Length = 0; /* Page code not support */
+                    }
+
                     s_u8BulkState = BULK_IN;
                     if(s_u32Length > 0)
                     {
@@ -1142,6 +1179,12 @@ void MSC_ProcessCmd(void)
 
                         USBD_SET_EP_BUF_ADDR(EP2, s_u32BulkBuf0);
                         MSC_Read();
+                    }
+                    else
+                    {
+                        /* Page code not support */
+                        USBD_SET_EP_BUF_ADDR(EP2, s_u32BulkBuf0);
+                        USBD_SET_PAYLOAD_LEN(EP2, 0); /* Zero length packet ack */
                     }
                     return;
                 }
@@ -1171,6 +1214,8 @@ void MSC_ProcessCmd(void)
                 case UFI_READ_12:
                 case UFI_READ_10:
                 {
+                    extern const unsigned long eprom_length;
+
                     /* Check if it is a new transfer */
                     if(s_u32Length == 0)
                     {
@@ -1227,7 +1272,7 @@ void MSC_ProcessCmd(void)
                     if(i > STORAGE_BUFFER_SIZE)
                         i = STORAGE_BUFFER_SIZE;
 
-                    if(s_u32LbaAddress >= (16 * CDROM_BLOCK_SIZE))   /* Logical Block Address > 32KB */
+                    if((s_u32LbaAddress >= (16 * CDROM_BLOCK_SIZE)) && ((s_u32LbaAddress - 32768) < eprom_length))
                     {
                         /*
                             Because first 32KB of the ISO file are all '0', remove first 32KB data from ISO file
@@ -1350,6 +1395,7 @@ void MSC_ProcessCmd(void)
                     }
                     s_u32Address = (uint32_t)g_au32MassBlock;
                     s_u8BulkState = BULK_IN;
+                    s_u32BytesInStorageBuf = s_u32Length;
                     if(s_u32Length > 0)
                     {
                         if(s_u32Length > EP2_MAX_PKT_SIZE)
@@ -1359,7 +1405,7 @@ void MSC_ProcessCmd(void)
 
                         USBD_MemCopy((uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1), (uint8_t *)s_u32Address, s_u32Size);
 
-                        USBD_SET_EP_BUF_ADDR(EP2, s_u32BulkBuf0);
+                        USBD_SET_EP_BUF_ADDR(EP2, s_u32BulkBuf1);
                         /* Trigger to send out the data packet */
                         USBD_SET_PAYLOAD_LEN(EP2, s_u32Size);
 
@@ -1385,10 +1431,10 @@ void MSC_ProcessCmd(void)
                 }
                 case UFI_MODE_SENSE_6:
                 {
-                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1+0) = 0x3;
-                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1+1) = 0x0;
-                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1+2) = 0x0;
-                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1+3) = 0x0;
+                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1 + 0) = 0x3;
+                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1 + 1) = 0x0;
+                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1 + 2) = 0x0;
+                    *(uint8_t *)((uint32_t)USBD_BUF_BASE + s_u32BulkBuf1 + 3) = 0x0;
                     USBD_SET_PAYLOAD_LEN(EP2, 4);
                     s_u8BulkState = BULK_IN;
                     s_sCSW.bCSWStatus = 0;
@@ -1453,8 +1499,6 @@ void MSC_AckCmd(void)
             }
             case UFI_READ_FORMAT_CAPACITY:
             case UFI_READ_CAPACITY:
-            case UFI_MODE_SENSE_10:
-            case UFI_GET_CONFIGURATION:
             case UFI_READ_CD:
             {
                 if(s_u32Length > 0)
@@ -1466,7 +1510,18 @@ void MSC_AckCmd(void)
                 s_sCSW.bCSWStatus = 0;
                 break;
             }
+            case UFI_GET_CONFIGURATION:
+            {
+                if(s_u32Length > 0)
+                {
+                    MSC_ReadConfiguration();
+                    return;
+                }
 
+                s_sCSW.dCSWDataResidue = 0;
+                s_sCSW.bCSWStatus = 0;
+                break;
+            }
             case UFI_WRITE_12:
             case UFI_WRITE_10:
                 break;
@@ -1476,11 +1531,13 @@ void MSC_AckCmd(void)
             case UFI_GET_EVENT_STATUS_NOTIFICATION:
             case UFI_SET_CDROM_SPEED:
             {
-                if (s_sCBW.dCBWDataTransferLength < STORAGE_BUFFER_SIZE)
-                    s_sCSW.dCSWDataResidue = 0;
-                else
-                    s_sCSW.dCSWDataResidue = s_sCBW.dCBWDataTransferLength - STORAGE_BUFFER_SIZE;
+                int32_t i32Tmp;
 
+                i32Tmp = s_sCBW.dCBWDataTransferLength - STORAGE_BUFFER_SIZE;
+                if(i32Tmp < 0)
+                    i32Tmp = 0;
+
+                s_sCSW.dCSWDataResidue = i32Tmp;
                 s_sCSW.bCSWStatus = 0;
                 break;
             }
@@ -1497,6 +1554,7 @@ void MSC_AckCmd(void)
                 s_sCSW.bCSWStatus = 0;
                 break;
             }
+            case UFI_MODE_SENSE_10:
             default:
             {
                 /* Unsupported command. Return command fail status */
@@ -1530,6 +1588,3 @@ void MSC_WriteMedia(uint32_t u32Addr, uint32_t u32Size, uint8_t *pu8Buffer)
     (void)u32Size;
     (void)pu8Buffer;
 }
-
-
-

@@ -17,6 +17,9 @@ static volatile ISP_INFO_T     s_ISPInfo = {0};
 static volatile BL_USBD_INFO_T s_USBDInfo;
 
 #define TRIM_INIT           (SYS_BASE+0x10C)
+#define TRIM_THRESHOLD      16      /* Each value is 0.125%, max 2% */
+
+static volatile uint32_t s_u32DefaultTrim, s_u32LastTrim;
 
 void ProcessHardFault(void);
 void SH_Return(void);
@@ -71,7 +74,6 @@ void SYS_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint32_t u32TrimInit;
     volatile ISP_INFO_T      *pISPInfo;
     volatile BL_USBD_INFO_T  *pUSBDInfo;
 
@@ -106,7 +108,8 @@ int32_t main(void)
         BL_USBDStart();
 
         /* Backup default trim */
-        u32TrimInit = M32(TRIM_INIT);
+        s_u32DefaultTrim = M32(TRIM_INIT);
+        s_u32LastTrim = s_u32DefaultTrim;
         /* Clear SOF */
         USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
 
@@ -129,14 +132,26 @@ int32_t main(void)
             /* Disable USB Trim when error */
             if(SYS->TISTS48M & (SYS_TISTS48M_CLKERRIF_Msk | SYS_TISTS48M_TFAILIF_Msk))
             {
-                /* Init TRIM */
-                M32(TRIM_INIT) = u32TrimInit;
+                /* Last TRIM */
+                M32(TRIM_INIT) = s_u32LastTrim;
                 /* Disable crystal-less */
                 SYS->TCTL48M = 0;
                 /* Clear error flags */
                 SYS->TISTS48M = SYS_TISTS48M_CLKERRIF_Msk | SYS_TISTS48M_TFAILIF_Msk;
                 /* Clear SOF */
                 USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+            }
+
+            /* Check trim value whether it is over the threshold */
+            if((M32(TRIM_INIT) > (s_u32DefaultTrim + TRIM_THRESHOLD)) || (M32(TRIM_INIT) < (s_u32DefaultTrim - TRIM_THRESHOLD)))
+            {
+                /* Write updated value */
+                M32(TRIM_INIT) = s_u32LastTrim;
+            }
+            else
+            {
+                /* Backup trim value */
+                s_u32LastTrim = M32(TRIM_INIT);
             }
 
             if(bUsbDataReady == TRUE)

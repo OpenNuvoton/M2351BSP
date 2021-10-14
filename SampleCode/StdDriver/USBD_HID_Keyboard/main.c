@@ -12,8 +12,13 @@
 
 #define CRYSTAL_LESS        1
 #define TRIM_INIT           (SYS_BASE+0x10C)
+#define TRIM_THRESHOLD      16      /* Each value is 0.125%, max 2% */
 
 #define CLK_PLLCTL_144MHz_HXT   (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2) | CLK_PLLCTL_NF( 12) | CLK_PLLCTL_NO_1)
+
+#if CRYSTAL_LESS
+static volatile uint32_t s_u32DefaultTrim, s_u32LastTrim;
+#endif
 
 /*--------------------------------------------------------------------------*/
 uint8_t volatile g_u8EP2Ready = 0;
@@ -163,10 +168,6 @@ void PowerDown(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-#if CRYSTAL_LESS
-    uint32_t u32TrimInit;
-#endif
-
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -192,7 +193,8 @@ int32_t main(void)
 
 #if CRYSTAL_LESS
     /* Backup default trim */
-    u32TrimInit = M32(TRIM_INIT);
+    s_u32DefaultTrim = M32(TRIM_INIT);
+    s_u32LastTrim = s_u32DefaultTrim;
 #endif
 
     /* Clear SOF */
@@ -222,8 +224,8 @@ int32_t main(void)
         /* Disable USB Trim when error */
         if(SYS->TISTS48M & (SYS_TISTS48M_CLKERRIF_Msk | SYS_TISTS48M_TFAILIF_Msk))
         {
-            /* Init TRIM */
-            M32(TRIM_INIT) = u32TrimInit;
+            /* Last TRIM */
+            M32(TRIM_INIT) = s_u32LastTrim;
 
             /* Disable crystal-less */
             SYS->TCTL48M = 0;
@@ -233,6 +235,18 @@ int32_t main(void)
 
             /* Clear SOF */
             USBD->INTSTS = USBD_INTSTS_SOFIF_Msk;
+        }
+
+        /* Check trim value whether it is over the threshold */
+        if((M32(TRIM_INIT) > (s_u32DefaultTrim + TRIM_THRESHOLD)) || (M32(TRIM_INIT) < (s_u32DefaultTrim - TRIM_THRESHOLD)))
+        {
+            /* Write updated value */
+            M32(TRIM_INIT) = s_u32LastTrim;
+        }
+        else
+        {
+            /* Backup trim value */
+            s_u32LastTrim = M32(TRIM_INIT);
         }
 #endif
 
