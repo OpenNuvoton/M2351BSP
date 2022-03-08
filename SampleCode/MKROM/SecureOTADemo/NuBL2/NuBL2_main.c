@@ -412,6 +412,7 @@ int main(void)
     uint32_t u32Cfg;
 #endif
     uint8_t u8FailNuBL3x; /* Bit0 = 1: NuBL32, Bit1 = 1: NuBL33 */
+    uint32_t u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -579,7 +580,9 @@ _VERIFY_FAIL:
 #endif
 
 reset:
-    while(!(UART_IS_TX_EMPTY(DEBUG_PORT)));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!(UART_IS_TX_EMPTY(DEBUG_PORT)))
+        if(--u32TimeOutCnt == 0) break;
 
     /* Reset CPU only to reset to new vector page */
     SYS_ResetChip();

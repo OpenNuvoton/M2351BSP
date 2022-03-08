@@ -1,5 +1,5 @@
 /**************************************************************************//**
- * @file     timer.c
+ * @file     timer_pwm.c
  * @version  V3.00
  * @brief    Timer PWM Controller(Timer PWM) driver source file
  *

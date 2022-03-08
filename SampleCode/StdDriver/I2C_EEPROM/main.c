@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -185,7 +184,7 @@ void SYS_Init(void)
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
-    /* Select UART module clock source as HXT `and UART module clock divider as 1 */
+    /* Select UART module clock source as HXT and UART module clock divider as 1 */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
 
     /* Enable I2C0 peripheral clock */
@@ -242,7 +241,7 @@ void I2C0_Init(void)
 
 int32_t main(void)
 {
-    uint32_t u32i;
+    uint32_t u32i, u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -290,7 +289,15 @@ int32_t main(void)
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STA);
 
         /* Wait I2C Tx Finish */
-        while(s_u8EndFlag == 0);
+        u32TimeOutCnt = I2C_TIMEOUT;
+        while(s_u8EndFlag == 0)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for I2C Tx finish time-out!\n");
+                return -1;
+            }
+        }
         s_u8EndFlag = 0;
 
         /* I2C function to read data from slave */
@@ -302,7 +309,15 @@ int32_t main(void)
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STA);
 
         /* Wait I2C Rx Finish */
-        while(s_u8EndFlag == 0);
+        u32TimeOutCnt = I2C_TIMEOUT;
+        while(s_u8EndFlag == 0)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for I2C Rx finish time-out!\n");
+                return -1;
+            }
+        }
 
         /* Compare data */
         if(s_u8RxData != s_au8TxData[2])

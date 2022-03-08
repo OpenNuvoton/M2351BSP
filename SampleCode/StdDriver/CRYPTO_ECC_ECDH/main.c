@@ -93,13 +93,15 @@ void CRPT_IRQHandler()
 
 void SYS_Init(void)
 {
-
+    uint32_t u32TimeOutCnt;
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -120,8 +122,8 @@ void SYS_Init(void)
     /* User can use SystemCoreClockUpdate() to calculate PllClock, SystemCoreClock and CycylesPerUs automatically. */
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
-    SystemCoreClock = 128000000 / 1;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    SystemCoreClock = 128000000 / 2;       // HCLK
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -185,6 +187,7 @@ void GenPrivateKey(BL_RNG_T *rng, char *d, uint32_t u32NBits)
             else
             {
                 /* Invalid key */
+                printf("Current private key is not valid. Need a new one.\n");
             }
         }
     }
@@ -228,7 +231,7 @@ int32_t main(void)
     /* Initial TRNG */
     BL_RandomInit(&rng, BL_RNG_PRNG | BL_RNG_LIRC32K);
 
-/*------------------------------------------------------------------------*/
+    /*------------------------------------------------------------------------*/
     /* Generate a private key A */
     GenPrivateKey(&rng, d, ECC_KEY_SIZE);
     printf("Private key A = %s\n", d);
@@ -240,7 +243,7 @@ int32_t main(void)
     if(ECC_GeneratePublicKey(CRPT, ECC_CURVE_TYPE, d, Qx, Qy) < 0)
     {
         printf("ECC key generation failed!!\n");
-        while(1);
+        return -1;
     }
     u32Time = 0xffffff - SysTick->VAL;
 
@@ -249,7 +252,7 @@ int32_t main(void)
     printf("Elapsed time: %d.%d ms\n", u32Time / CyclesPerUs / 1000, u32Time / CyclesPerUs % 1000);
 
 
-/*------------------------------------------------------------------------*/
+    /*------------------------------------------------------------------------*/
     /* Generate a private key B */
     GenPrivateKey(&rng, d2, ECC_KEY_SIZE);
     printf("Private key  B = %s\n", d2);
@@ -260,7 +263,7 @@ int32_t main(void)
     if(ECC_GeneratePublicKey(CRPT, ECC_CURVE_TYPE, d2, Qx2, Qy2) < 0)
     {
         printf("ECC key generation failed!!\n");
-        while(1);
+        return -1;
     }
     u32Time = 0xffffff - SysTick->VAL;
 
@@ -272,7 +275,7 @@ int32_t main(void)
     if(ECC_GenerateSecretZ(CRPT, ECC_CURVE_TYPE, d, Qx2, Qy2, k) < 0)
     {
         printf("ECC ECDH share key calculation fail\n");
-        while(1);
+        return -1;
     }
 
     printf("Share key calculated by A = %s\n", k);
@@ -281,7 +284,7 @@ int32_t main(void)
     if(ECC_GenerateSecretZ(CRPT, ECC_CURVE_TYPE, d2, Qx, Qy, k2) < 0)
     {
         printf("ECC ECDH share key calculation fail\n");
-        while(1);
+        return -1;
     }
 
     printf("Share key calculated by B = %s\n", k2);

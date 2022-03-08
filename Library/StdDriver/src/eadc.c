@@ -17,6 +17,8 @@
   @{
 */
 
+int32_t g_EADC_i32ErrCode = 0; /*!< EADC global error code */
+
 /** @addtogroup EADC_EXPORTED_FUNCTIONS EADC Exported Functions
   @{
 */
@@ -30,15 +32,24 @@
   * @return None
   * @details This function is used to set analog input mode and enable A/D Converter.
   *         Before starting A/D conversion function, ADCEN bit (EADC_CTL[0]) should be set to 1.
-  * @note
+  * @note   This function sets g_EADC_i32ErrCode to EADC_TIMEOUT_ERR if PWUPRDY(EADC_PWRM[0]) is not set to 1.
   */
 void EADC_Open(EADC_T *eadc, uint32_t u32InputMode)
 {
+    uint32_t u32TimeOutCnt = EADC_TIMEOUT;
+
     eadc->CTL &= (~(EADC_CTL_DIFFEN_Msk));
 
     eadc->CTL |= (u32InputMode | EADC_CTL_ADCEN_Msk);
 
-    while(!(eadc->PWRM & EADC_PWRM_PWUPRDY_Msk)) {}
+    while(!(eadc->PWRM & EADC_PWRM_PWUPRDY_Msk))
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            g_EADC_i32ErrCode = EADC_TIMEOUT_ERR;
+            break;
+        }
+    }
 }
 
 /**

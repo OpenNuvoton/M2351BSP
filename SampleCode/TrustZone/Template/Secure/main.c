@@ -239,6 +239,8 @@ int main(void)
 
 void SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
@@ -247,7 +249,9 @@ void SYS_Init(void)
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -266,7 +270,7 @@ void SYS_Init(void)
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
     SystemCoreClock = 128000000 / 2;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */

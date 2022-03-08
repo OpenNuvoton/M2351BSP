@@ -64,7 +64,7 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
-    /* Enable HIRC clock (Internal RC 22.1184 MHz) */
+    /* Enable HIRC clock (Internal RC 12 MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Waiting for HIRC clock ready */
@@ -146,6 +146,7 @@ void UART0_Init()
 int32_t main(void)
 {
     uint32_t u32NewCNR = 0;
+    uint32_t u32TimeOutCnt = 0;
     /* Init System, IP clock and multi-function I/O
        In the end of SYS_Init() will issue SYS_LockReg()
        to lock protected register. If user want to write
@@ -166,7 +167,7 @@ int32_t main(void)
 
     printf("\n\nCPU @ %dHz(PLL@ %dHz)\n", SystemCoreClock, PllClock);
     printf("+------------------------------------------------------------------------+\n");
-    printf("|                          EPWM Driver Sample Code                        |\n");
+    printf("|                         EPWM Driver Sample Code                        |\n");
     printf("|                                                                        |\n");
     printf("+------------------------------------------------------------------------+\n");
     printf("  This sample code demonstrate EPWM1 channel 0 accumulator interrupt trigger PDMA.\n");
@@ -177,7 +178,7 @@ int32_t main(void)
     getchar();
 
     /*--------------------------------------------------------------------------------------*/
-    /* Set the EPWM1 Channel 0 as EPWM output function.                                       */
+    /* Set the EPWM1 Channel 0 as EPWM output function.                                     */
     /*--------------------------------------------------------------------------------------*/
 
     /* Assume EPWM output frequency is 250Hz and duty ratio is 30%, user can calculate EPWM settings by follows.(up counter type)
@@ -213,7 +214,7 @@ int32_t main(void)
     EPWM_Start(EPWM1, EPWM_CH_0_MASK);
 
     /*--------------------------------------------------------------------------------------*/
-    /* Configure PDMA peripheral mode form memory to EPWM                                    */
+    /* Configure PDMA peripheral mode form memory to EPWM                                   */
     /*--------------------------------------------------------------------------------------*/
     /* Open Channel 0 */
     PDMA_Open(PDMA0, BIT0);
@@ -236,7 +237,15 @@ int32_t main(void)
     s_u32IsTestOver = 0;
 
     /* Wait for PDMA transfer done */
-    while(s_u32IsTestOver != 1);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(s_u32IsTestOver != 1)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for PDMA transfer done time-out!\n");
+            goto lexit;
+        }
+    }
 
     u32NewCNR = EPWM_GET_CNR(EPWM1, 0);
     printf("\n\nEPWM1 channel0 period register is updated to %d(0x%x)\n", u32NewCNR, u32NewCNR);
@@ -247,7 +256,17 @@ int32_t main(void)
     EPWM_Stop(EPWM1, EPWM_CH_0_MASK);
 
     /* Wait until EPWM1 channel 0 Timer Stop */
-    while((EPWM1->CNT[0] & EPWM_CNT0_CNT_Msk) != 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((EPWM1->CNT[0] & EPWM_CNT0_CNT_Msk) != 0)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for EPWM stop time-out!\n");
+            break;
+        }
+    }
+
+lexit:
 
     /* Disable Timer for EPWM1 channel 0 */
     EPWM_ForceStop(EPWM1, EPWM_CH_0_MASK);

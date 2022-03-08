@@ -98,7 +98,7 @@ void SYS_Init(void)
     /* Waiting for clock ready */
     CLK_WaitClockReady(CLK_STATUS_HXTSTB_Msk);
 
-    /* Select HXT as the clock source of UART */
+    /* Select HIRC as the clock source of UART */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
 
     /* Enable UART peripheral clock */
@@ -129,10 +129,14 @@ void SYS_Init(void)
 
 void PowerDownFunction(void)
 {
+    uint32_t u32TimeOutCnt;
+
     printf("\nSystem enter power-down mode ... ");
 
     /* To check if all the debug messages are finished */
-    while(IsDebugFifoEmpty() == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(IsDebugFifoEmpty() == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Deep sleep mode is selected */
     SCB->SCR = SCB_SCR_SLEEPDEEP_Msk;

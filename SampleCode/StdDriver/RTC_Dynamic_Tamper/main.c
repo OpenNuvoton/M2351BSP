@@ -162,7 +162,12 @@ int main(void)
     sInitTime.u32Second     = 0;
     sInitTime.u32DayOfWeek  = RTC_MONDAY;
     sInitTime.u32TimeScale  = RTC_CLOCK_24;
-    RTC_Open(&sInitTime);
+    if(RTC_Open(&sInitTime) != 0)
+    {
+        printf("\n RTC initial fail!!");
+        printf("\n Please check h/w setting!!");
+        return -1;
+    }
 
     RTC_GetDateAndTime(&sGetTime);
     printf("# Initial data/time is: %d/%d/%d %d:%d:%d.\n",

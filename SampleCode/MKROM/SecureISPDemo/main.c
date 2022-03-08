@@ -24,7 +24,7 @@ extern void Exec_VendorFunction(uint32_t *pu32Buf, uint32_t u32Len);
 
 void USBD_IRQHandler(void);
 void UART1_IRQHandler(void);
-void EnableXOM0(void);
+int32_t EnableXOM0(void);
 void SYS_Init(void);
 void UART_Init(void);
 
@@ -137,16 +137,16 @@ static int32_t ConfigureUART1ISP(uint32_t mode)
     CLK_SetModuleClock(UART1_MODULE, CLK_CLKSEL1_UART1SEL_HIRC, CLK_CLKDIV0_UART1(1));
 
     printf("\n");
-    
+
     return __HIRC;
 }
 
-void EnableXOM0(void)
+int32_t EnableXOM0(void)
 {
     int32_t i32Status;
     uint32_t u32Base = 0x10000;
     uint8_t u8Page = 2;
-    
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -168,13 +168,13 @@ void EnableXOM0(void)
             else
             {
                 printf("Configure XOM0 FAIL.\n");
-                while(1) {}
+                return -1;
             }
         }
         else
         {
             printf("Get XOM0 status FAIL.\n\n");
-            while(1) {}
+            return -1;
         }
 
         printf("Reset chip to enable XOM region.\n\n");
@@ -188,6 +188,8 @@ void EnableXOM0(void)
     {
         printf("XOM0 region is already actived.\n\n");
     }
+
+    return 0;
 }
 
 void SYS_Init(void)

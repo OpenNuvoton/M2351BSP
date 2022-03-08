@@ -92,13 +92,15 @@ void DumpBuffHex(uint8_t *pucBuff, int nBytes)
 
 void SYS_Init(void)
 {
-
+    uint32_t u32TimeOutCnt;
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if( --u32TimeOutCnt == 0 ) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -120,7 +122,7 @@ void SYS_Init(void)
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
     SystemCoreClock = 128000000 / 2;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -148,7 +150,8 @@ int32_t main(void)
     uint32_t i;
     uint32_t u32AesMode;
     uint32_t u32KeySizeOpt;
-    
+    uint32_t u32TimeOutCnt;
+
     SYS_UnlockReg();
 
     /* Init System, IP clock and multi-function I/O */
@@ -169,20 +172,28 @@ int32_t main(void)
      *---------------------------------------*/
     u32AesMode = AES_MODE_CFB;
     u32KeySizeOpt = AES_KEY_SIZE_256;
-     
+
     AES_Open(CRPT, 0, 1, u32AesMode, u32KeySizeOpt, AES_IN_OUT_SWAP);
     AES_SetKey(CRPT, 0, s_au32MyAESKey, u32KeySizeOpt);
-    
+
     /* The IV should be changed at each encrypt/decrypt */
     AES_SetInitVect(CRPT, 0, s_au32MyAESIV);
-    
+
     AES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8InputData, (uint32_t)s_au8OutputData, sizeof(s_au8InputData));
 
     g_AES_done = 0;
-    /* Start AES Eecrypt */
+    /* Start AES Encrypt */
     AES_Start(CRPT, 0, CRYPTO_DMA_ONE_SHOT);
     /* Waiting for AES calculation */
-    while(!g_AES_done);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!g_AES_done)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for AES encrypt done time-out!\n");
+            return -1;
+        }
+    }
 
     printf("AES encrypt done.\n\n");
     DumpBuffHex(s_au8OutputData, sizeof(s_au8InputData));
@@ -192,23 +203,31 @@ int32_t main(void)
      *---------------------------------------*/
     AES_Open(CRPT, 0, 0, u32AesMode, u32KeySizeOpt, AES_IN_OUT_SWAP);
     AES_SetKey(CRPT, 0, s_au32MyAESKey, u32KeySizeOpt);
-    
+
     /* The IV should be changed at each encrypt/decrypt */
     AES_SetInitVect(CRPT, 0, s_au32MyAESIV);
-    
+
     AES_SetDMATransfer(CRPT, 0, (uint32_t)s_au8OutputData, (uint32_t)s_au8OutputData2, sizeof(s_au8InputData));
 
     g_AES_done = 0;
     /* Start AES decrypt */
     AES_Start(CRPT, 0, CRYPTO_DMA_ONE_SHOT);
     /* Waiting for AES calculation */
-    while(!g_AES_done);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!g_AES_done)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for AES decrypt done time-out!\n");
+            return -1;
+        }
+    }
 
     printf("AES decrypt done.\n\n");
-    
+
     printf("Original data:\n");
     DumpBuffHex(s_au8InputData, sizeof(s_au8InputData));
-    
+
     printf("Decrypt data :\n");
     DumpBuffHex(s_au8OutputData2, sizeof(s_au8InputData));
 

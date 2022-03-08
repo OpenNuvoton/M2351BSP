@@ -64,6 +64,9 @@ extern "C"
 #define    CardDetect_From_GPIO  (1UL << 8)   /*!< Card detection pin is GPIO \hideinitializer */
 #define    CardDetect_From_DAT3  (1UL << 9)   /*!< Card detection pin is DAT3 \hideinitializer */
 
+#define TIMEOUT_SDH          (SystemCoreClock)   /*!< 1 second time-out \hideinitializer */
+#define SDH_TIMEOUT_ERR      (-1L)               /*!< SDH time-out error value \hideinitializer */
+
 /*@}*/ /* end of group SDH_EXPORTED_CONSTANTS */
 
 /** @addtogroup SDH_EXPORTED_TYPEDEF SDH Exported Type Defines

@@ -148,7 +148,7 @@ int main(void)
     if(XECC_GeneratePublicKey(XCRPT, ECC_CURVE_TYPE, d, Qx, Qy) < 0)
     {
         printf("ECC key generation failed!!\n");
-        while(1) {}
+        return -1;
     }
     u32Ticks = 0xffffff - SysTick->VAL;
 
@@ -185,7 +185,7 @@ int main(void)
         {
             /* Invalid key */
             printf("Current k is not valid\n");
-            while(1) {}
+            return -1;
         }
 
         SysTick->VAL = 0;
@@ -193,7 +193,7 @@ int main(void)
         if(XECC_GenerateSignature(XCRPT, ECC_CURVE_TYPE, msg, d, k, R, S) < 0)
         {
             printf("ECC signature generation failed!!\n");
-            while(1) {}
+            return -1;
         }
         u32Ticks = 0xffffff - SysTick->VAL;
 
@@ -209,7 +209,7 @@ int main(void)
         if(i32Err < 0)
         {
             printf("ECC signature verification failed!!\n");
-            while(1) {}
+            return -1;
         }
         else
         {

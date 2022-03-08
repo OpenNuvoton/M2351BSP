@@ -147,12 +147,15 @@ void CRPT_IRQHandler()
 
 void SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -173,8 +176,8 @@ void SYS_Init(void)
     /* User can use SystemCoreClockUpdate() to calculate PllClock, SystemCoreClock and CycylesPerUs automatically. */
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
-    SystemCoreClock = 128000000 / 1;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    SystemCoreClock = 128000000 / 2;       // HCLK
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -223,14 +226,14 @@ int32_t main(void)
         if(ECC_GenerateSecretZ(CRPT, gPattern[p].curve, (char *)(uint32_t)gPattern[p].d, (char *)(uint32_t)gPattern[p].Qx, (char *)(uint32_t)gPattern[p].Qy, s_acZ) < 0)
         {
             printf("ECC CDH secret Z generation failed!!\n");
-            while(1);
+            return -1;
         }
 
         /* truncate leading zeros                */
-        for(pz = &s_acZ[0]; *pz == '0'; pz++);    
+        for(pz = &s_acZ[0]; *pz == '0'; pz++);
 
         /* truncate leading zeros  */
-        for(pZ = (char *)(uint32_t)&gPattern[p].Z[0]; *pZ == '0'; pZ++);  
+        for(pZ = (char *)(uint32_t)&gPattern[p].Z[0]; *pZ == '0'; pZ++);
 
         if(strcmp(pz, pZ))
         {
@@ -240,7 +243,7 @@ int32_t main(void)
                 if(pz[i] != pZ[i])
                     printf("%d - 0x%x 0x%x\n", i, pz[i], pZ[i]);
             }
-            while(1);
+            return -1;
         }
         printf("PASS.\n");
     }

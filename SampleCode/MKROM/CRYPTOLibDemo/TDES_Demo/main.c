@@ -134,12 +134,14 @@ void UART_Init(void)
  *----------------------------------------------------------------------------*/
 int main(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
     /* Init System, peripheral clock and multi-function I/O */
     SYS_Init();
-    
+
     /* Init UART for printf */
     UART_Init();
 
@@ -163,7 +165,15 @@ int main(void)
 
     s_u32IsTDES_done = 0;
     XTDES_Start(XCRPT, 0, CRYPTO_DMA_ONE_SHOT);
-    while(s_u32IsTDES_done == 0) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(s_u32IsTDES_done == 0)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for TDES encrypt done time-out!\n");
+            return -1;
+        }
+    }
 
     printf("TDES encrypt done.\n\n");
     dump_buff_hex(s_au8OutputData, sizeof(s_au8InputData));
@@ -178,7 +188,15 @@ int main(void)
 
     s_u32IsTDES_done = 0;
     XTDES_Start(XCRPT, 0, CRYPTO_DMA_ONE_SHOT);
-    while(s_u32IsTDES_done == 0) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(s_u32IsTDES_done == 0)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for TDES decrypt done time-out!\n");
+            return -1;
+        }
+    }
 
     printf("TDES decrypt done.\n\n");
     dump_buff_hex(s_au8InputData, sizeof(s_au8InputData));

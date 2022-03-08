@@ -30,13 +30,15 @@ void CRPT_IRQHandler()
 
 void SYS_Init(void)
 {
-
+    uint32_t u32TimeOutCnt;
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -57,8 +59,8 @@ void SYS_Init(void)
     /* User can use SystemCoreClockUpdate() to calculate PllClock, SystemCoreClock and CycylesPerUs automatically. */
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
-    SystemCoreClock = 128000000 / 1;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    SystemCoreClock = 128000000 / 2;       // HCLK
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -105,9 +107,9 @@ int32_t main(void)
     if(ECC_GeneratePublicKey(CRPT, CURVE_P_192, d, gKey1, gKey2) < 0)
     {
         printf("ECC key generation failed!!\n");
-        while(1);
+        return -1;
     }
-    
+
     /* Verify public key 1 */
     if(memcmp(Qx, gKey1, KEY_LENGTH / 8))
     {
@@ -125,14 +127,14 @@ int32_t main(void)
             if(Qx[i] != gKey1[i])
                 printf("\n%d - 0x%x 0x%x\n", i, Qx[i], gKey1[i]);
         }
-        while(1);
+        return -1;
     }
 
     /* Verify public key 2 */
     if(memcmp(Qy, gKey2, KEY_LENGTH / 8))
     {
         printf("Public key 2 [%s] is not matched with expected [%s]!\n", gKey2, Qy);
-        while(1);
+        return -1;
     }
 
     printf("ECC key compared OK.\n");

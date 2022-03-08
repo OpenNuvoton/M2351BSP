@@ -228,8 +228,8 @@ void RS485_FunctionTest(void)
     printf("|  ______                                            _____  |\n");
     printf("| |      |                                          |     | |\n");
     printf("| |Master|                                          |Slave| |\n");
-    printf("| |    TX|--USCI0_DAT1(PE.4) <==> USCI0_DAT0(PE.3)--|RX   | |\n");
-    printf("| |   RTS|--USCI0_CTL1(PE.5) <==> USCI0_CTL1(PE.5)--|RTS  | |\n");
+    printf("| |    TX|--USCI0_DAT1(PE.4)      USCI0_DAT0(PE.3)--|RX   | |\n");
+    printf("| |   RTS|--USCI0_CTL1(PE.5)      USCI0_CTL1(PE.5)--|RTS  | |\n");
     printf("| |______|                                          |_____| |\n");
     printf("|                                                           |\n");
     printf("+-----------------------------------------------------------+\n");
@@ -255,6 +255,17 @@ void RS485_FunctionTest(void)
             1.Set RTS auto direction enabled and HW will control RTS pin. CTLOINV is set to '1'.
             2.The received byte, parity bit is '1' , is considered "ADDRESS".
             3.The received byte, parity bit is '0' , is considered "DATA".
+
+        Note: User can measure transmitted data waveform on TX and RX pin.
+              RTS pin is used for RS485 transceiver to control transmission direction.
+              RTS pin is low in idle state. When master is sending data, RTS pin will be pull high.
+              The connection to RS485 transceiver is as following figure for reference.
+               __________     ___________      ___________      __________
+              |          |   |           |    |           |    |          |
+              |Master    |   |RS485      |    |RS485      |    |Slave     |
+              | UART_TX  |---|Transceiver|<==>|Transceiver|----| UART_RX  |
+              | UART_RTS |---|           |    |           |----| UART_RTS |
+              |__________|   |___________|    |___________|    |__________|
     */
 
     if(i32Item == '0')

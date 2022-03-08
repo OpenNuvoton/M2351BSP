@@ -117,6 +117,8 @@ double GetTemperature(void)
 /*---------------------------------------------------------------------------------------------------------*/
 uint32_t GetTemperatureCodeFromADC(void)
 {
+    uint32_t u32TimeOutCnt = EADC_TIMEOUT;
+
     /* Set input mode as single-end and enable the A/D converter */
     EADC_Open(EADC, EADC_CTL_DIFFEN_SINGLE_END);
 
@@ -136,7 +138,14 @@ uint32_t GetTemperatureCodeFromADC(void)
     EADC_START_CONV(EADC, BIT17);
 
     /* Wait EADC conversion done */
-    while(s_u32AdcIntFlag == 0);
+    while(s_u32AdcIntFlag == 0)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for EADC conversion done time-out!\n");
+            break;
+        }
+    }
 
     /* Disable the ADINT0 interrupt */
     EADC_DISABLE_INT(EADC, BIT0);

@@ -45,7 +45,7 @@ void enable_sys_tick(int ticks_per_second)
     {
         /* Setup SysTick Timer for 1 second interrupts  */
         printf("Set system tick error!!\n");
-        while(1);
+        //while(1);
     }
 }
 

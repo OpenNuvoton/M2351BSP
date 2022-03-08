@@ -218,7 +218,7 @@ int32_t main(void)
 
     printf("\n");
     printf("+----------------------------------------------------------+\n");
-    printf("|   M2351 Enhanced Input Capture Timer Driver Sample Code   |\n");
+    printf("|   M2351 Enhanced Input Capture Timer Driver Sample Code  |\n");
     printf("+----------------------------------------------------------+\n");
     printf("\n");
     printf("  !! GPIO PC.2 toggle periodically    !!\n");

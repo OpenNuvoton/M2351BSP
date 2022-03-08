@@ -168,7 +168,7 @@ void I2C_PDMA_SlaveRx(uint32_t u32Status)
     {
         /* TO DO */
         printf("Status 0x%x is NOT processed\n", u32Status);
-        while (1);
+        //while (1);
     }
 }
 
@@ -244,7 +244,7 @@ void I2C_PDMA_SlaveTx(uint32_t u32Status)
         /* TO DO */
         printf("Status 0x%x is NOT processed\n", u32Status);
 
-        while (1);
+        //while (1);
     }
 }
 
@@ -390,7 +390,7 @@ void SYS_Init(void)
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
-    /* Select UART module clock source as HXT `and UART module clock divider as 1 */
+    /* Select UART module clock source as HXT and UART module clock divider as 1 */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
 
     /* Enable I2C0 peripheral clock */
@@ -521,6 +521,7 @@ void PDMA_Init(void)
 void I2C_PDMA(void)
 {
     uint8_t i;
+    uint32_t u32TimeOutCnt;
 
     for (i = 0; i < PDMA_TEST_LENGTH; i++)
     {
@@ -552,7 +553,15 @@ void I2C_PDMA(void)
     /* Send START condition, start the PDMA data transmit */
     I2C_START(I2C0);
 
-    while (!s_u32PDMADoneFlag);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while (!s_u32PDMADoneFlag)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for PDMA transfer done time-out!\n");
+            return;
+        }
+    }
 
     /* Disable I2C0 PDMA TX mode */
     I2C0->CTL1 &= ~I2C_CTL1_TXPDMAEN_Msk;
@@ -564,7 +573,7 @@ void I2C_PDMA(void)
         if (s_au8SlaveRxBuffer[i] != s_au8MasterTxBuffer[i])
         {
             printf("\n Slave Receive Data Compare Error !!");
-            while (1);
+            return;
         }
         else
         {
@@ -585,7 +594,16 @@ void I2C_PDMA(void)
     /* Send START condition */
     I2C_START(I2C0);
 
-    while (!s_u32PDMADoneFlag);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while (!s_u32PDMADoneFlag)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for PDMA transfer done time-out!\n");
+            return;
+        }
+    }
+
     I2C_STOP(I2C0);
     /* Disable I2C0 PDMA RX mode */
     I2C0->CTL1 &= ~I2C_CTL1_RXPDMAEN_Msk;
@@ -598,7 +616,7 @@ void I2C_PDMA(void)
         {
             printf("\n Slave Receive Data Compare Error !!");
 
-            while (1);
+            return;
         }
     }
 

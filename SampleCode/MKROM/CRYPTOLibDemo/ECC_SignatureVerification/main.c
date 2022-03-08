@@ -87,23 +87,23 @@ int main(void)
     printf("|    Crypto ECC P-256 Signature Verification Demo    |\n");
     printf("+----------------------------------------------------+\n");
     printf("\n");
-    
-    
+
+
     ECC_ENABLE_INT(CRPT);
 
     if(XECC_VerifySignature(XCRPT, ECC_CURVE_TYPE, sha_msg, Qx, Qy, R, S) < 0)
     {
         printf("ECC signature verification failed!!\n");
-        while(1) {}
+        return -1;
     }
 
     printf("msg: %s\n", sha_msg);
     printf("Qx:  %s\n", Qx);
     printf("Qy:  %s\n", Qy);
     printf("R:   %s\n", R);
-    printf("S:   %s\n", S);    
+    printf("S:   %s\n", S);
     printf("ECC digital signature verification OK.\n");
-    
+
     while(1) {}
 }
 

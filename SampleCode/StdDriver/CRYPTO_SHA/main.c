@@ -57,6 +57,7 @@ int  do_compare(uint8_t *output, uint8_t *expect, int cmp_len)
 int32_t RunSHA()
 {
     uint32_t  au32OutputDigest[8];
+    uint32_t u32TimeOutCnt;
 
     SHA_Open(CRPT, SHA_MODE_SHA1, SHA_IN_SWAP, 0);
 
@@ -67,10 +68,18 @@ int32_t RunSHA()
     g_SHA_done = 0;
     /* Start SHA calculation */
     SHA_Start(CRPT, CRYPTO_DMA_ONE_SHOT);
-    
+
     /* Waiting for SHA calcuation done */
-    while(!g_SHA_done) ;
-    
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!g_SHA_done)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for SHA calcuation done time-out!\n");
+            return (-1);
+        }
+    }
+
     /* Read SHA calculation result */
     SHA_Read(CRPT, au32OutputDigest);
 
@@ -78,7 +87,7 @@ int32_t RunSHA()
     if(do_compare((uint8_t *)&au32OutputDigest[0], &g_au8ShaDigest[0], g_i32DigestLength) < 0)
     {
         printf("Compare error!\n");
-        while(1);
+        return (-1);
     }
     return 0;
 }
@@ -86,11 +95,15 @@ int32_t RunSHA()
 
 void SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -112,7 +125,7 @@ void SYS_Init(void)
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
     SystemCoreClock = 128000000 / 2;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -147,7 +160,7 @@ int main(void)
     DEBUG_PORT_Init();
 
     printf("+-----------------------------------+\n");
-    printf("|  M2351 Crypto SHA Sample Demo      |\n");
+    printf("|  M2351 Crypto SHA Sample Demo     |\n");
     printf("+-----------------------------------+\n");
 
     NVIC_EnableIRQ(CRPT_IRQn);
@@ -157,13 +170,14 @@ int main(void)
     OpenTestVector();
 
     while(1)
-    {   
-        /* Get data from test vector to calcualte and 
+    {
+        /* Get data from test vector to calcualte and
            compre the result with golden pattern */
         if(GetNextPattern() < 0)
             break;
 
-        RunSHA();
+        if(RunSHA() < 0)
+            break;
     }
 
     printf("SHA test done.\n");

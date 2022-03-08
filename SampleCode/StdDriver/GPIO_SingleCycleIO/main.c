@@ -90,7 +90,7 @@ void UART0_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -107,18 +107,18 @@ int32_t main(void)
     printf("+--------------------------------------------+\n");
     printf("|    GPIO Single Cycle IO Bus Sample Code    |\n");
     printf("+--------------------------------------------+\n\n");
-    printf("GPIO supports Single Cycle IO Bus. User can access GPIO in one clock cycle.\n");     
-    printf("This sample code toggles PA.0 state 50 times and measures the toggle speed.\n");        
+    printf("GPIO supports Single Cycle IO Bus. User can access GPIO in one clock cycle.\n");
+    printf("This sample code toggles PA.0 state 50 times and measures the toggle speed.\n");
     printf("Please connect PA.0 and PD.0(TIMER2 event counter pin).\n");
     printf("Enter any key to continue.\n\n");
     getchar();
     printf("Testing ...\n\n");
 
-    /* Configure PA.0 as output mode */ 
+    /* Configure PA.0 as output mode */
     PA0=0;
-    GPIO_SetMode(PA, BIT0, GPIO_MODE_OUTPUT);     
-    
-    /* Toggle PA.0 state 50 times and measure the toggle speed. */    
+    GPIO_SetMode(PA, BIT0, GPIO_MODE_OUTPUT);
+
+    /* Toggle PA.0 state 50 times and measure the toggle speed. */
     GPIO_SingleCycleIO_Test();
 
     while(1);

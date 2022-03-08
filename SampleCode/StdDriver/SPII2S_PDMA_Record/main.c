@@ -61,7 +61,7 @@ void PDMA_ResetRxSGTable(uint8_t id)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint32_t u32InitValue, u32DataCount;
+    uint32_t u32InitValue, u32DataCount, u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -147,7 +147,15 @@ int32_t main(void)
     SPII2S_ENABLE_RXDMA(SPI0);
 
     /* wait RX Buffer 1 and RX Buffer 2 get first buffer */
-    while(s_u8Count != 2);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(s_u8Count != 2)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for PDMA time-out!\n");
+            return -1;
+        }
+    }
 
     /* Once I2S is enabled, CLK would be sent immediately, we still have chance to get zero data at beginning,
        in this case we only need to make sure the on-going data is correct */

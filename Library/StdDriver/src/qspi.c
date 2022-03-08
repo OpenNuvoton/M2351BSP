@@ -370,7 +370,7 @@ void QSPI_SetFIFO(QSPI_T *qspi, uint32_t u32TxThreshold, uint32_t u32RxThreshold
 uint32_t QSPI_GetBusClock(QSPI_T *qspi)
 {
     uint32_t u32Div;
-    uint32_t u32ClkSrc;
+    uint32_t u32ClkSrc = 0UL;
 
     /* Check if valid QSPI exist */
     if(!((qspi == QSPI0) || (qspi == QSPI0_NS)))

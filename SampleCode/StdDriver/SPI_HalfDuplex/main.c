@@ -104,7 +104,7 @@ void SPI_Init(void)
 
 int main(void)
 {
-    uint32_t u32DataCount;
+    uint32_t u32DataCount, u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -135,7 +135,15 @@ int main(void)
     /* Set slave SPI1 to half-duplex mode */
     SPI1->CTL |= SPI_CTL_HALFDPX_Msk;
     /* Enable half-duplex will produce TXFBCLR (SPIx_FIFOCTL[9]) and RXFBCLR (SPIx_FIFOCTL[8])*/
-    while(SPI1->STATUS & SPI_STATUS_TXRXRST_Msk) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(SPI1->STATUS & SPI_STATUS_TXRXRST_Msk)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for SPI time-out!\n");
+            return -1;
+        }
+    }
     /* Set slave SPI1 data direction to output */
     SPI1->CTL |= SPI_CTL_DATDIR_Msk;
 
@@ -148,7 +156,15 @@ int main(void)
     /* Set master SPI0 to half-duplex mode */
     SPI0->CTL |= SPI_CTL_HALFDPX_Msk;
     /* Enable half-duplex will produce TXFBCLR (SPIx_FIFOCTL[9]) and RXFBCLR (SPIx_FIFOCTL[8])*/
-    while(SPI0->STATUS & SPI_STATUS_TXRXRST_Msk) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(SPI0->STATUS & SPI_STATUS_TXRXRST_Msk)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for SPI time-out!\n");
+            return -1;
+        }
+    }
     /* Set master SPI0 data direction to input */
     SPI0->CTL &= ~SPI_CTL_DATDIR_Msk;
 

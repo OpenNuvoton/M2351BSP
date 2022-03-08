@@ -79,13 +79,15 @@ void  dump_buff_hex(uint8_t *pucBuff, int nBytes)
 
 void SYS_Init(void)
 {
-
+    uint32_t u32TimeOutCnt;
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -106,8 +108,8 @@ void SYS_Init(void)
     /* User can use SystemCoreClockUpdate() to calculate PllClock, SystemCoreClock and CycylesPerUs automatically. */
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
-    SystemCoreClock = 128000000 / 1;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    SystemCoreClock = 128000000 / 2;       // HCLK
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -196,7 +198,7 @@ int32_t main(void)
     if(ECC_GeneratePublicKey(CRPT, CURVE_P_SIZE, d, Qx, Qy) < 0)
     {
         printf("ECC key generation failed!!\n");
-        while(1);
+        return -1;
     }
     time = 0xffffff - SysTick->VAL;
 
@@ -233,7 +235,7 @@ int32_t main(void)
         {
             /* Invalid key */
             printf("Current k is not valid\n");
-            while(1);
+            return -1;
 
         }
 
@@ -241,7 +243,7 @@ int32_t main(void)
         if(ECC_GenerateSignature(CRPT, CURVE_P_SIZE, msg, d, k, R, S) < 0)
         {
             printf("ECC signature generation failed!!\n");
-            while(1);
+            return -1;
         }
         time = 0xffffff - SysTick->VAL;
 
@@ -256,7 +258,7 @@ int32_t main(void)
         if(err < 0)
         {
             printf("ECC signature verification failed!!\n");
-            while(1);
+            return -1;
         }
         else
         {

@@ -67,7 +67,7 @@ int main(void)
     else
     {
         printf("Fail!\n");
-        while(1) {}
+        return -1;
     }
 
     /* Check page data are not all one by BL_CheckFlashAllOne */
@@ -80,10 +80,10 @@ int main(void)
     else
     {
         printf("Fail! (0x%0x)\n", u32Status);
-        while(1) {}
+        return -1;
     }
 
-    
+
     /* Page erase then check page data should be all one
         by BL_FlashPageErase and BL_CheckFlashAllOne */
     printf("Page Erase [0x%08x] ... ", u32Addr);
@@ -94,7 +94,7 @@ int main(void)
     else
     {
         printf("Fail!\n");
-        while(1) {}
+        return -1;
     }
     printf("Check [0x%08x] one page are all one ... ", u32Addr);
     u32Status = BL_CheckFlashAllOne(u32Addr, FMC_FLASH_PAGE_SIZE);
@@ -105,10 +105,10 @@ int main(void)
     else
     {
         printf("Fail! (0x%08x)\n", u32Status);
-        while(1) {}
+        return -1;
     }
 
-    
+
     /* Program/Read Non-secure flash by single read/write and multi-read/write API */
     printf("\n*** Perform flash Read/Write/Multi-Read/Multi-Write API ***\n");
     for(i = 0; i < (FMC_FLASH_PAGE_SIZE / 4); i++)
@@ -124,7 +124,7 @@ int main(void)
     else
     {
         printf("Fail! (0x%08x)\n", u32Status);
-        while(1) {}
+        return -1;
     }
     /* BL_FlashWrite last 1024 bytes */
     printf("Single Write [0x%08x] 1024 bytes ... ", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2)));
@@ -133,12 +133,12 @@ int main(void)
         if(BL_FlashWrite(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4), s_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]) != 0)
         {
             printf("Fail! (0x%0x: 0x%08x)\n\n", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4)), (uint32_t)(s_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]));
-            while(1) {}
+            return -1;
         }
     }
     printf("Ok.\n");
 
-    
+
     /* BL_FlashMultiRead one page data */
     printf("Multi-Read [0x%08x] one page ... ", u32Addr);
     if(BL_FlashMultiRead(u32Addr, (uint32_t *)(uint32_t)s_au32GetData, FMC_FLASH_PAGE_SIZE) == 0)
@@ -148,7 +148,7 @@ int main(void)
     else
     {
         printf("Fail! (0x%08x)\n", u32Status);
-        while(1) {}
+        return -1;
     }
     /* BL_FlashRead one page data and compare data */
     printf("Single read then compare all data ... ");
@@ -158,13 +158,13 @@ int main(void)
         if(BL_FlashRead(u32Addr + (i * 4)) != (0xA5A50000UL + i))
         {
             printf("Fail! (0x%08x: 0x%08x)\n", (u32Addr + (i * 4)), BL_FlashRead(u32Addr + (i * 4)));
-            while(1) {}
+            return -1;
         }
         data_tmp = s_au32FlashData[i];
         if(data_tmp != s_au32GetData[i])
         {
             printf("Fail! (0x%08x. W:0x%08x, R:0x%08x)\n", (u32Addr + (i * 4)), data_tmp, s_au32GetData[i]);
-            while(1) {}
+            return -1;
         }
     }
     printf("Pass.\n");

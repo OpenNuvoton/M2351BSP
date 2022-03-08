@@ -33,7 +33,7 @@ void SYS_Init(void)
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Enable HIRC clock (Internal RC 22.1184 MHz) */
+    /* Enable HIRC clock (Internal RC 12 MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Wait for HIRC clock ready */
@@ -97,12 +97,13 @@ void UART0_Init()
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* EADC function test                                                                                       */
+/* EADC function test                                                                                      */
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
     int32_t  i32Option;
     int32_t  i32ConversionData;
+    uint32_t u32TimeOutCnt;
 
     printf("\n");
     printf("+----------------------------------------------------------------------+\n");
@@ -138,7 +139,15 @@ void EADC_FunctionTest()
             EADC_START_CONV(EADC, BIT0);
 
             /* Wait ADC interrupt (s_u32AdcIntFlag will be set at IRQ_Handler function) */
-            while(s_u32AdcIntFlag == 0);
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(s_u32AdcIntFlag == 0)
+            {
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for EADC interrupt time-out!\n");
+                    return;
+                }
+            }
 
             /* Disable the ADINT0 interrupt */
             EADC_DISABLE_INT(EADC, BIT0);
@@ -169,7 +178,15 @@ void EADC_FunctionTest()
             EADC_START_CONV(EADC, BIT0);
 
             /* Wait ADC interrupt (s_u32AdcIntFlag will be set at IRQ_Handler function) */
-            while(s_u32AdcIntFlag == 0);
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(s_u32AdcIntFlag == 0)
+            {
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for EADC interrupt time-out!\n");
+                    return;
+                }
+            }
 
             /* Disable the ADINT0 interrupt */
             EADC_DISABLE_INT(EADC, BIT0);

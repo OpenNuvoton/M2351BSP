@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -171,7 +170,7 @@ void SYS_Init(void)
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
-    /* Select UART module clock source as HXT `and UART module clock divider as 1 */
+    /* Select UART module clock source as HXT and UART module clock divider as 1 */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
 
     /* Enable I2C0 peripheral clock */
@@ -290,7 +289,7 @@ int32_t main(void)
             /* I2C as master sends START signal */
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STA);
 
-            /* Wait I2C Tx Finish or Unexpected Abort*/
+            /* Wait I2C Tx Finish or Unexpected Abort */
             do
             {
                 if(s_u8TimeoutFlag)

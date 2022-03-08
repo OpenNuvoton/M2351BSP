@@ -31,11 +31,15 @@ void CRPT_IRQHandler()
 
 void SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -57,7 +61,7 @@ void SYS_Init(void)
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
     SystemCoreClock = 128000000 / 2;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -85,6 +89,7 @@ int32_t main(void)
 {
     uint32_t    i, u32KeySize;
     uint32_t    au32PrngData[8];
+    uint32_t u32TimeOutCnt;
 
     SYS_UnlockReg();
 
@@ -95,7 +100,7 @@ int32_t main(void)
     DEBUG_PORT_Init();
 
     printf("+-----------------------------------+\n");
-    printf("|  M2351 Crypto PRNG Sample Demo     |\n");
+    printf("|  M2351 Crypto PRNG Sample Demo    |\n");
     printf("+-----------------------------------+\n");
 
     NVIC_EnableIRQ(CRPT_IRQn);
@@ -109,16 +114,24 @@ int32_t main(void)
                (u32KeySize == PRNG_KEY_SIZE_256) ? "256" : "unknown");
 
         /* start PRNG with seed 0x55 */
-        PRNG_Open(CRPT, u32KeySize, 1, 0x55);     
+        PRNG_Open(CRPT, u32KeySize, 1, 0x55);
 
         for(i = 0; i < GENERATE_COUNT; i++)
         {
             g_PRNG_done = 0;
             /* Start random number generator */
             PRNG_Start(CRPT);
-            
+
             /* Waiting for number ready */
-            while(!g_PRNG_done);
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(!g_PRNG_done)
+            {
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for PRNG time-out!\n");
+                    return -1;
+                }
+            }
 
             /* Read random number */
             memset(au32PrngData, 0, sizeof(au32PrngData));

@@ -64,7 +64,7 @@ uint32_t GetPDMAChecksum(uint32_t u32Address, uint32_t u32Size)
         if(u32Loop++ > (SystemCoreClock / 100))
         {
             printf("\n[PDMA transfer time-out]\n");
-            while(1);
+            return 0;
         }
     }
 

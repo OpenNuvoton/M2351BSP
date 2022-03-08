@@ -51,8 +51,14 @@ extern "C"
 /*---------------------------------------------------------------------------------------------------------*/
 #define WDT_RESET_COUNTER_KEYWORD   (0x00005AA5UL)    /*!< Fill this value to WDT_RSTCNT register to free reset WDT counter \hideinitializer */
 
+/*---------------------------------------------------------------------------------------------------------*/
+/* WDT Time-out Handler Constant Definitions                                                               */
+/*---------------------------------------------------------------------------------------------------------*/
+#define WDT_TIMEOUT                  SystemCoreClock   /*!< 1 second time-out \hideinitializer */
+
 /*@}*/ /* end of group WDT_EXPORTED_CONSTANTS */
 
+extern int32_t g_WDT_i32ErrCode;
 
 /** @addtogroup WDT_EXPORTED_FUNCTIONS WDT Exported Functions
   @{
@@ -168,8 +174,13 @@ __STATIC_INLINE void WDT_DisableInt(void);
   */
 __STATIC_INLINE void WDT_Close(void)
 {
+    uint32_t u32TimeOutCnt = WDT_TIMEOUT;
+
     WDT->CTL = 0UL;
-    while(WDT->CTL & WDT_CTL_SYNC_Msk) {} /* Wait disable WDTEN bit completed, it needs 2 * WDT_CLK. */
+    while(WDT->CTL & WDT_CTL_SYNC_Msk)  /* Wait disable WDTEN bit completed, it needs 2 * WDT_CLK. */
+    {
+        if(--u32TimeOutCnt == 0) break;
+    }
 }
 
 /**
@@ -180,11 +191,18 @@ __STATIC_INLINE void WDT_Close(void)
   * @return     None
   *
   * @details    This function will enable the WDT time-out interrupt function.
+  *
+  * @note       This function sets g_WDT_i32ErrCode to WDT_TIMEOUT_ERR if waiting WDT time-out.
   */
 __STATIC_INLINE void WDT_EnableInt(void)
 {
+    uint32_t u32TimeOutCnt = WDT_TIMEOUT;
+
     WDT->CTL |= WDT_CTL_INTEN_Msk;
-    while(WDT->CTL & WDT_CTL_SYNC_Msk) {} /* Wait enable WDTEN bit completed, it needs 2 * WDT_CLK. */
+    while(WDT->CTL & WDT_CTL_SYNC_Msk)  /* Wait enable WDTEN bit completed, it needs 2 * WDT_CLK. */
+    {
+        if(--u32TimeOutCnt == 0) break;
+    }
 }
 
 /**

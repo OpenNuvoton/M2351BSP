@@ -19,6 +19,7 @@
   @{
 */
 
+int32_t g_UI2C_i32ErrCode = 0;       /*!< UI2C global error code */
 
 /** @addtogroup USCI_I2C_EXPORTED_FUNCTIONS USCI_I2C Exported Functions
   @{
@@ -597,18 +598,31 @@ void UI2C_DisableWakeup(UI2C_T *ui2c)
   *
   * @details    The function is used for USCI_I2C Master write a byte data to Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 
 uint8_t UI2C_WriteByte(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t data)
 {
     uint8_t u8Xfering = 1U, u8Err = 0U, u8Ctrl = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+    uint32_t u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
-    while(u8Xfering)
+    while(u8Xfering && (u8Err == 0U))
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -671,18 +685,30 @@ uint8_t UI2C_WriteByte(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t data)
   *
   * @details    The function is used for USCI_I2C Master write multi bytes data to Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 
 uint32_t UI2C_WriteMultiBytes(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t *data, uint32_t u32wLen)
 {
     uint8_t u8Xfering = 1U, u8Ctrl = 0U;
-    uint32_t u32txLen = 0U;
+    uint32_t u32txLen = 0U, u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
     while(u8Xfering)
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -740,18 +766,30 @@ uint32_t UI2C_WriteMultiBytes(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t *data, 
   *
   * @details    The function is used for USCI_I2C Master specify a address that data write to in Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 
 uint8_t UI2C_WriteByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAddr, uint8_t data)
 {
     uint8_t u8Xfering = 1U, u8Err = 0U, u8Ctrl = 0U;
-    uint32_t u32txLen = 0U;
+    uint32_t u32txLen = 0U, u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
-    while(u8Xfering)
+    u32TimeOutCount = UI2C_TIMEOUT;
+    while(u8Xfering && (u8Err == 0U))
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -820,19 +858,31 @@ uint8_t UI2C_WriteByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAd
   *
   * @details    The function is used for USCI_I2C Master specify a byte address that multi data bytes write to in Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 
 uint32_t UI2C_WriteMultiBytesOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAddr, uint8_t *data, uint32_t u32wLen)
 {
     uint8_t u8Xfering = 1U, u8Ctrl = 0U;
-    uint32_t u32txLen = 0U;
+    uint32_t u32txLen = 0U, u32TimeOutCount = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
     while(u8Xfering)
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -899,18 +949,30 @@ uint32_t UI2C_WriteMultiBytesOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u
   *
   * @details    The function is used for USCI_I2C Master specify two bytes address that data write to in Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 
 uint8_t UI2C_WriteByteTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16DataAddr, uint8_t data)
 {
     uint8_t u8Xfering = 1U, u8Err = 0U, u8Ctrl = 0U;
-    uint32_t u32txLen = 0U;
+    uint32_t u32txLen = 0U, u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                           /* Send START */
 
-    while(u8Xfering)
+    while(u8Xfering && (u8Err == 0U))
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -984,19 +1046,31 @@ uint8_t UI2C_WriteByteTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16Dat
   *
   * @details    The function is used for USCI_I2C Master specify a byte address that multi data write to in Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 
 uint32_t UI2C_WriteMultiBytesTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16DataAddr, uint8_t *data, uint32_t u32wLen)
 {
     uint8_t u8Xfering = 1U, u8Addr = 1U, u8Ctrl = 0U;
-    uint32_t u32txLen = 0U;
+    uint32_t u32txLen = 0U, u32TimeOutCount = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                           /* Send START */
 
     while(u8Xfering)
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -1070,17 +1144,30 @@ uint32_t UI2C_WriteMultiBytesTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t
   *
   * @details    The function is used for USCI_I2C Master to read a byte data from Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
+  *
   */
 uint8_t UI2C_ReadByte(UI2C_T *ui2c, uint8_t u8SlaveAddr)
 {
     uint8_t u8Xfering = 1U, u8Err = 0U, rdata = 0U, u8Ctrl = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+    uint32_t u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
-    while(u8Xfering)
+    while(u8Xfering && (u8Err == 0U))
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -1147,19 +1234,30 @@ uint8_t UI2C_ReadByte(UI2C_T *ui2c, uint8_t u8SlaveAddr)
   *
   * @details    The function is used for USCI_I2C Master to read multi data bytes from Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
   *
   */
 uint32_t UI2C_ReadMultiBytes(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t *rdata, uint32_t u32rLen)
 {
     uint8_t u8Xfering = 1U, u8Ctrl = 0U;
-    uint32_t u32rxLen = 0U;
+    uint32_t u32rxLen = 0U, u32TimeOutCount = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
     while(u8Xfering)
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -1230,18 +1328,30 @@ uint32_t UI2C_ReadMultiBytes(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t *rdata, 
   *
   * @details    The function is used for USCI_I2C Master specify a byte address that a data byte read from Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
   *
   */
 uint8_t UI2C_ReadByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAddr)
 {
     uint8_t u8Xfering = 1U, u8Err = 0U, rdata = 0U, u8Ctrl = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+    uint32_t u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
-    while(u8Xfering)
+    while(u8Xfering && (u8Err == 0U))
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -1336,19 +1446,30 @@ uint8_t UI2C_ReadByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAdd
   *
   * @details    The function is used for USCI_I2C Master specify a byte address that multi data bytes read from Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
   *
   */
 uint32_t UI2C_ReadMultiBytesOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAddr, uint8_t *rdata, uint32_t u32rLen)
 {
     uint8_t u8Xfering = 1U, u8Ctrl = 0U;
-    uint32_t u32rxLen = 0U;
+    uint32_t u32rxLen = 0U, u32TimeOutCount = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
     while(u8Xfering)
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -1440,18 +1561,30 @@ uint32_t UI2C_ReadMultiBytesOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8
   *
   * @details    The function is used for USCI_I2C Master specify two bytes address that a data byte read from Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
   *
   */
 uint8_t UI2C_ReadByteTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16DataAddr)
 {
     uint8_t u8Xfering = 1U, u8Err = 0U, rdata = 0U, u8Addr = 1U, u8Ctrl = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+    uint32_t u32TimeOutCount = 0U;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
-    while(u8Xfering)
+    while(u8Xfering && (u8Err == 0u))
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {
@@ -1553,19 +1686,30 @@ uint8_t UI2C_ReadByteTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16Data
   *
   * @details    The function is used for USCI_I2C Master specify two bytes address that multi data bytes read from Slave.
   *
+  * @note       This function sets g_UI2C_i32ErrCode to UI2C_TIMEOUT_ERR if waiting USCI_I2C time-out.
   *
   */
 uint32_t UI2C_ReadMultiBytesTwoRegs(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint16_t u16DataAddr, uint8_t *rdata, uint32_t u32rLen)
 {
     uint8_t u8Xfering = 1U, u8Addr = 1U, u8Ctrl = 0U;
-    uint32_t u32rxLen = 0U;
+    uint32_t u32rxLen = 0U, u32TimeOutCount = 0U;
     enum UI2C_MASTER_EVENT eEvent = MASTER_SEND_START;
+
+    g_UI2C_i32ErrCode = 0;
 
     UI2C_START(ui2c);                                                       /* Send START */
 
     while(u8Xfering)
     {
-        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U));                      /* Wait UI2C new status occur */
+        u32TimeOutCount = UI2C_TIMEOUT;
+        while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
+        {
+            if(--u32TimeOutCount == 0)
+            {
+                g_UI2C_i32ErrCode = UI2C_TIMEOUT_ERR;
+                break;
+            }
+        }
 
         switch(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U)
         {

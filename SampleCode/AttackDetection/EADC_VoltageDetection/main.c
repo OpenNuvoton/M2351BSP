@@ -123,11 +123,11 @@ uint32_t GetAVDDVoltage(void)
 /*   ADC code of AVDD voltage.                                                                             */
 /*                                                                                                         */
 /* Description:                                                                                            */
-/*   Get EADC conversion result of Band-gap voltage.                                                        */
+/*   Get EADC conversion result of Band-gap voltage.                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 uint32_t GetAVDDCodeByADC(void)
 {
-    uint32_t u32Count, u32Sum, u32Data;
+    uint32_t u32Count, u32Sum, u32Data, u32TimeOutCnt;
 
     /* Set input mode as single-end and enable the A/D converter */
     EADC_Open(EADC, EADC_CTL_DIFFEN_SINGLE_END);
@@ -157,7 +157,15 @@ uint32_t GetAVDDCodeByADC(void)
 
         u32Data = 0;
         /* Wait conversion done */
-        while(s_u8ADF == 0);
+        u32TimeOutCnt = EADC_TIMEOUT;
+        while(s_u8ADF == 0)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for EADC conversion done time-out!\n");
+                break;
+            }
+        }
         s_u8ADF = 0;
         /* Get the conversion result */
         u32Data = EADC_GET_CONV_DATA(EADC, 16);

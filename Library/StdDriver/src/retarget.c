@@ -325,18 +325,21 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
         pc  = sp[6]
         psr = sp[7]
     */
-    
+
     printf("!!---------------------------------------------------------------!!\n");
     printf("                       <<< HardFault >>>\n");
     /* Get the instruction caused the hardfault */
-    addr = sp[6];
-    inst = M16(addr);
+    if (sp != 0)
+    {
+        addr = sp[6];
+        inst = M16(addr);
+    }
     eFlag = 0;
     if((!secure) && ((addr & NS_OFFSET) == 0) )
     {
         printf("  Non-secure CPU try to fetch secure code in 0x%x\n", addr);
         printf("  Try to check NSC region or SAU settings.\n");
-        
+
         eFlag = 1;
     }else if(inst == 0xBEAB)
     {
@@ -566,16 +569,16 @@ void SendChar_ToUART(int ch)
         if(i32Tail == i32Head)
             return;
     }
-    
+
     // pop char
     do
     {
         i32Tmp = i32Tail + 1;
         if(i32Tmp > BUF_SIZE) i32Tmp = 0;
-        
-        if((DEBUG_PORT->FSR & UART_FSR_TX_FULL_Msk) == 0)
+
+        if((DEBUG_PORT->FIFOSTS & UART_FIFOSTS_TXFULL_Msk) == 0)
         {
-            DEBUG_PORT->DATA = u8Buf[i32Tail];
+            DEBUG_PORT->DAT = u8Buf[i32Tail];
             i32Tail = i32Tmp;
         }
         else

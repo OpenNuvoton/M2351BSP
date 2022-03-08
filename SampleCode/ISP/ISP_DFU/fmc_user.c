@@ -13,6 +13,7 @@ int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end
 int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end, unsigned int *data)
 {
     unsigned int u32Addr, Reg;
+    uint32_t u32TimeOutCnt;
 
     for (u32Addr = addr_start; u32Addr < addr_end; data++, u32Addr += 4)
     {
@@ -23,7 +24,12 @@ int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end
             FMC->ISPCMD = FMC_ISPCMD_PAGE_ERASE;
             FMC->ISPTRG = 0x1;
 
-            while (FMC->ISPTRG & 0x1) ;
+            u32TimeOutCnt = FMC_TIMEOUT_ERASE;
+            while (FMC->ISPTRG & 0x1)
+            {
+                if(--u32TimeOutCnt == 0)
+                    return -1;
+            }
         }
 
         FMC->ISPCMD = u32Cmd;
@@ -36,7 +42,12 @@ int FMC_Proc(unsigned int u32Cmd, unsigned int addr_start, unsigned int addr_end
         FMC->ISPTRG = 0x1;
         //        __ISB();
 
-        while (FMC->ISPTRG & 0x1) ;  /* Wait for ISP command done. */
+        u32TimeOutCnt = FMC_TIMEOUT_WRITE;
+        while (FMC->ISPTRG & 0x1)   /* Wait for ISP command done. */
+        {
+            if(--u32TimeOutCnt == 0)
+                return -1;
+        }
 
         Reg = FMC->ISPCTL;
 

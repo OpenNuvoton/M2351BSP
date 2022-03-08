@@ -155,7 +155,7 @@ void USCI_AutoBaudRate_Test(void)
     printf("|  ______                                            _____  |\n");
     printf("| |      |                                          |     | |\n");
     printf("| |Master|                                          |Slave| |\n");
-    printf("| |    TX|--USCI0_DAT1(PE.3) <==> USCI0_DAT0(PE.2)--|RX   | |\n");
+    printf("| |    TX|--USCI0_DAT1(PE.4) <==> USCI0_DAT0(PE.3)--|RX   | |\n");
     printf("| |______|                                          |_____| |\n");
     printf("|                                                           |\n");
     printf("+-----------------------------------------------------------+\n");

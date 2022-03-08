@@ -29,20 +29,24 @@ void UART0_Init(void);
 
 void SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Unlock registers */
     SYS_UnlockReg();
 
     /*-----------------------------------------------------------------------------------------------------*/
-    /* Setting clock tree: PCLK0 = CPUCLK = CRYPTOCLK = HCLK = 64MHz. PLL = 192MHz                         */
+    /* Setting clock tree: PCLK0 = CPUCLK = CRYPTOCLK = HCLK = 64MHz. PLL = 64MHz                          */
     /*-----------------------------------------------------------------------------------------------------*/
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_64MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
-    /* Set HCLK divider to3 */
+    /* Set HCLK divider to 1 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | CLK_CLKDIV0_HCLK(1);
 
     /* Set PCLK0 divider to HCLK */
@@ -128,7 +132,7 @@ int32_t main(void)
     printf("SFI library version : 0.%X.%X \n", (u32Ver >> 8) & 0xffu, u32Ver & 0xffu);
 
     /*-------------------------------------------------------------------------------------*/
-    /* Secure Session init                                                                            */
+    /* Secure Session init                                                                 */
     /*-------------------------------------------------------------------------------------*/
 
     if(SFL_SessionInit() != 0)

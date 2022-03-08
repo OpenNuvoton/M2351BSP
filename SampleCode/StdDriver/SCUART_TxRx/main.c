@@ -109,7 +109,7 @@ int main(void)
 
     printf("\n\nCPU @ %dHz\n", SystemCoreClock);
     printf("+----------------------------------------+\n");
-    printf("|    Smartcard UART Mode Sample Code    |\n");
+    printf("|    Smartcard UART Mode Sample Code     |\n");
     printf("+----------------------------------------+\n\n");
     printf("# Please connect SC0 CLK pin(PB.5) with SC0 DAT pin(PB.4) first.\n");
     printf("    - PB.5 as UART Tx\n");

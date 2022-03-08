@@ -92,15 +92,35 @@ int32_t main(void)
     FMC_Open();                        /* Enable FMC ISP function */
 
     u32Data = FMC_ReadCID();           /* Read company ID. Should be 0xDA. */
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_ReadCID failed!\n");
+        goto lexit;
+    }
     printf("  Company ID ............................ [0x%08x]\n", u32Data);
 
     u32Data = FMC_ReadPID();           /* Read product ID. */
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_ReadPID failed!\n");
+        goto lexit;
+    }
     printf("  Product ID ............................ [0x%08x]\n", u32Data);
 
     /* Read User Configuration CONFIG0 */
     printf("  User Config 0 ......................... [0x%08x]\n", FMC_Read(FMC_CONFIG_BASE));
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_Read(FMC_CONFIG_BASE) failed!\n");
+        goto lexit;
+    }
     /* Read User Configuration CONFIG3 */
     printf("  User Config 3 ......................... [0x%08x]\n", FMC_Read(FMC_CONFIG_BASE + 0xC));
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_Read(FMC_CONFIG_BASE + 0xC) failed!\n");
+        goto lexit;
+    }
 
     printf("\nLDROM (0x100000 ~ 0x101000) CRC32 checksum =>  ");
 
@@ -130,7 +150,7 @@ int32_t main(void)
     printf("0x%x\n", u32ChkSum);       /* print out APROM CRC32 check sum value */
 
     /*
-     *  Request FMC hardware to run CRC32 caculation on APROM bank 1.
+     *  Request FMC hardware to run CRC32 calculation on APROM bank 1.
      */
     printf("\nAPROM bank1 (0x40000 ~ 0x80000) CRC32 checksum =>  ");
     u32ChkSum = FMC_GetChkSum(FMC_APROM_BASE + 0x40000, 0x40000);

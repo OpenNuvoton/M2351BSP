@@ -88,25 +88,25 @@ int main(void)
     printf("|    Crypto ECC P-256 Signature Generation Demo     |\n");
     printf("+---------------------------------------------------+\n");
     printf("\n");
-    
+
     ECC_ENABLE_INT(CRPT);
 
     if(XECC_GenerateSignature(XCRPT, ECC_CURVE_TYPE, sha_msg, d, k, sig_R, sig_S) < 0)
     {
         printf("ECC signature generation failed!!\n");
-        while(1);
+        return -1;
     }
 
     if(memcmp(sig_R, R, sizeof(R)))
     {
         printf("Signature R [%s] is not matched with expected [%s]!\n", sig_R, R);
-        while(1);
+        return -1;
     }
 
     if(memcmp(sig_S, S, sizeof(S)))
     {
         printf("Signature S [%s] is not matched with expected [%s]!\n", sig_S, S);
-        while(1);
+        return -1;
     }
 
     printf("Message:     %s\n", sha_msg);
@@ -115,7 +115,7 @@ int main(void)
     printf("Signature R: %s\n", sig_R);
     printf("Signature S: %s\n", sig_S);
     printf("ECC digital signature compared OK.\n");
-    
+
     while(1) {}
 }
 

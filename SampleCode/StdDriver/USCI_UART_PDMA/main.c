@@ -43,7 +43,7 @@ void SYS_Init(void);
 void UART0_Init(void);
 void USCI0_Init(void);
 /*---------------------------------------------------------------------------------------------------------*/
-/* Clear buffer function                                                                                    */
+/* Clear buffer function                                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
 void ClearBuf(uint32_t u32Addr, uint32_t u32Length, uint8_t u8Pattern)
 {
@@ -249,6 +249,8 @@ void UART0_IRQHandler(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void PDMA_UART(int32_t i32option)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Source data initiation */
     BuildSrcPattern((uint32_t)s_au8SrcArray, s_u32UuartTestLength);
     ClearBuf((uint32_t)s_au8DestArray, s_u32UuartTestLength, 0xFF);
@@ -322,7 +324,15 @@ void PDMA_UART(int32_t i32option)
     UUART0->PDMACTL |= (UUART_PDMACTL_PDMAEN_Msk | UUART_PDMACTL_RXPDMAEN_Msk);
 
     /* Wait for PDMA operation finish */
-    while(s_i32IsTestOver == FALSE);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(s_i32IsTestOver == FALSE)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for PDMA operation finish time-out!\n");
+            break;
+        }
+    }
 
     /* Check PDMA status */
     if(s_i32IsTestOver == 2)

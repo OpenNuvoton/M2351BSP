@@ -49,7 +49,7 @@ void SYS_Init(void)
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Enable HIRC clock (Internal RC 22.1184 MHz) */
+    /* Enable HIRC clock (Internal RC 12 MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Wait for HIRC clock ready */
@@ -196,6 +196,7 @@ void EADC_FunctionTest()
 {
     int32_t  i32Option;
     uint8_t  u8Index = 0;
+    uint32_t u32TimeOutCnt = 0;
 
     printf("\n");
     printf("+----------------------------------------------------------------------+\n");
@@ -228,11 +229,15 @@ void EADC_FunctionTest()
             /* Enable EPWM0 channel 0 counter */
             EPWM_Start(EPWM0, BIT0); /* EPWM0 channel 0 counter start running. */
 
-            while(1)
+            /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(s_u32IsTestOver == 0)
             {
-                /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
-                while(s_u32IsTestOver == 0);
-                break;
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for PDMA interrupt time-out!\n");
+                    return;
+                }
             }
             s_u32IsTestOver = 0;
 
@@ -256,11 +261,15 @@ void EADC_FunctionTest()
             /* Enable EPWM0 channel 0 counter */
             EPWM_Start(EPWM0, BIT0); /* EPWM0 channel 0 counter start running. */
 
-            while(1)
+            /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(s_u32IsTestOver == 0)
             {
-                /* Wait PDMA interrupt (s_u32IsTestOver will be set at IRQ_Handler function) */
-                while(s_u32IsTestOver == 0);
-                break;
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for PDMA interrupt time-out!\n");
+                    while(1);
+                }
             }
             s_u32IsTestOver = 0;
 

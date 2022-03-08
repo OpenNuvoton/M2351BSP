@@ -44,7 +44,7 @@ void UART_ClearIntFlag(UART_T* uart, uint32_t u32InterruptFlag)
 
     if(u32InterruptFlag & UART_INTSTS_RLSINT_Msk)           /* Clear Receive Line Status Interrupt */
     {
-        uart->FIFOSTS = UART_FIFOSTS_BIF_Msk | UART_FIFOSTS_FEF_Msk | UART_FIFOSTS_FEF_Msk | UART_FIFOSTS_ADDRDETF_Msk;
+        uart->FIFOSTS = UART_FIFOSTS_BIF_Msk | UART_FIFOSTS_FEF_Msk | UART_FIFOSTS_PEF_Msk | UART_FIFOSTS_ADDRDETF_Msk;
     }
 
     if(u32InterruptFlag & UART_INTSTS_MODEMINT_Msk)         /* Clear MODEM Status Interrupt */
@@ -170,16 +170,7 @@ void UART_DisableInt(UART_T*  uart, uint32_t u32InterruptFlag)
  *
  *    @return       None
  *
- *    @details      The function is used to Enable UART auto flow control.
- */
-/**
- *    @brief        Enable UART auto flow control function
- *
- *    @param[in]    uart    The pointer of the specified UART module.
- *
- *    @return       None
- *
- *    @details      The function is used to Enable UART auto flow control.
+ *    @details      The function is used to enable UART auto flow control.
  */
 void UART_EnableFlowCtrl(UART_T* uart)
 {
@@ -660,7 +651,7 @@ uint32_t UART_Write(UART_T* uart, uint8_t pu8TxBuf[], uint32_t u32WriteBytes)
     for(u32Count = 0ul; u32Count != u32WriteBytes; u32Count++)
     {
         u32delayno = 0ul;
-        while( UART_IS_TX_FULL(uart) )   /* Wait Tx not full and Time-out manner */        
+        while( UART_IS_TX_FULL(uart) )   /* Wait Tx not full or Time-out manner */
         {
             u32delayno++;
             if(u32delayno >= 0x40000000ul)

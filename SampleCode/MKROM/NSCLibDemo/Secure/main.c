@@ -99,18 +99,18 @@ int main(void)
     printf("|    MKROM Non-secure API Sample Code in Secure Region   |\n");
     printf("+--------------------------------------------------------+\n\n");
 
-    
+
     /* The setting of Non-secure flash base address must be the same as SAU setting. */
     printf("Maximum APROM flash size = %d bytes.\n", BL_EnableFMC());
     printf("Non-secure flash base = %d (0x%08x).\n", BL_GetNSBoundary(), SCU->FNSADDR);
     if(SCU->FNSADDR != FMC_SECURE_ROM_SIZE)
     {
         printf("Set Non-secure base address fail!\n");
-        while(1) {}
+        return -1;
     }
     printf("\n");
 
-    
+
     /* Show basic chip information */
     printf("Basic chip info:\n");
     printf("PID:    0x%08x\n", BL_ReadPID());
@@ -122,15 +122,15 @@ int main(void)
     printf("UCID-2: 0x%08x\n", BL_ReadUCID(2));
     printf("UCID-3: 0x%08x\n", BL_ReadUCID(3));
     printf("\n");
-    
-    
+
+
     /* Prepare Non-secure flash data */
     u32Addr = 0x10070000UL;
     printf("Page erase [0x%08x] ... ", u32Addr);
     if(BL_FlashPageErase(u32Addr))
     {
         printf("Fail!\n");
-        while(1) {}
+        return -1;
     }
     else
     {
@@ -143,17 +143,17 @@ int main(void)
         else
         {
             printf("Fail!\n");
-            while(1) {}
+            return -1;
         }
     }
     printf("\n");
 
-    
+
     /* Jump to perform MKROM Non-secure API in Non-secure region */
     printf("Jump to perform MKROM Non-secure API in Non-secure region.\n\n");
     //printf("Hit any key, then jump to perform MKROM Non-secure API in Non-secure region.\n\n");
     //getchar();
-    
+
     Nonsecure_Init(); /* Jump to Non-secure code */
     
     while(1) {}

@@ -123,7 +123,7 @@ int main(void)
 
     printf("\n\nCPU @ %d Hz\n", SystemCoreClock);
     printf("+------------------------------------------------+\n");
-    printf("|    WWDT Compare March Interrupt Sample Code    |\n");
+    printf("|    WWDT Compare Match Interrupt Sample Code    |\n");
     printf("+------------------------------------------------+\n\n");
 
     /* To check if system has been reset by WWDT time-out reset or not */

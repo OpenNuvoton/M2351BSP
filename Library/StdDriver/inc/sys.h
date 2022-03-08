@@ -106,7 +106,6 @@ extern "C"
 #define SYS_VREFCTL_VREF_2_0V       (0x7UL<<SYS_VREFCTL_VREFCTL_Pos)    /*!< Vref = 2.0V */
 #define SYS_VREFCTL_VREF_2_5V       (0xBUL<<SYS_VREFCTL_VREFCTL_Pos)    /*!< Vref = 2.5V */
 #define SYS_VREFCTL_VREF_3_0V       (0xFUL<<SYS_VREFCTL_VREFCTL_Pos)    /*!< Vref = 3.0V */
-#define SYS_VREFCTL_VREF_AVDD       (0x10UL<<SYS_VREFCTL_VREFCTL_Pos)   /*!< Vref = AVDD */
 
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -144,7 +143,7 @@ extern "C"
 #define SYS_SRAMPCTL_SRAM_POWER_SHUT_DOWN 0x2UL   /*!< Select system SRAM power mode to power shut down mode */
 
 /*---------------------------------------------------------------------------------------------------------*/
-/*  SRAMPPCTL constant definitions. (Write-Protection Register)                                            */
+/*  SRAMPPCT constant definitions. (Write-Protection Register)                                             */
 /*---------------------------------------------------------------------------------------------------------*/
 #define SYS_SRAMPPCT_SRAM_NORMAL          0x0UL   /*!< Select peripheral SRAM power mode to normal mode */
 #define SYS_SRAMPPCT_SRAM_RETENTION       0x1UL   /*!< Select peripheral SRAM power mode to retention mode */
@@ -3129,67 +3128,67 @@ Example: If user want to set PA.1 as UART0_TXD and PA.0 as UART0_RXD in initial 
 #define SET_INT6_PB8()           SYS->GPB_MFPH = (SYS->GPB_MFPH & (~INT6_PB8_Msk)) | INT6_PB8                    /*!< Set PB8 function to INT6             */
 #define SET_INT7_PB9()           SYS->GPB_MFPH = (SYS->GPB_MFPH & (~INT7_PB9_Msk)) | INT7_PB9                    /*!< Set PB9 function to INT7             */
 #define SET_INT7_PD10()          SYS->GPD_MFPH = (SYS->GPD_MFPH & (~INT7_PD10_Msk)) | INT7_PD10                  /*!< Set PD10 function to INT7            */
-#define SET_PWM0_BRAKE0_PE8()    SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_BRAKE0_PE8_Msk)) | PWM0_BRAKE0_PE8      /*!< Set PE8 function to PWM0_BRAKE0      */
-#define SET_PWM0_BRAKE0_PB1()    SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_BRAKE0_PB1_Msk)) | PWM0_BRAKE0_PB1      /*!< Set PB1 function to PWM0_BRAKE0      */
-#define SET_PWM0_BRAKE1_PB0()    SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_BRAKE1_PB0_Msk)) | PWM0_BRAKE1_PB0      /*!< Set PB0 function to PWM0_BRAKE1      */
-#define SET_PWM0_BRAKE1_PE9()    SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_BRAKE1_PE9_Msk)) | PWM0_BRAKE1_PE9      /*!< Set PE9 function to PWM0_BRAKE1      */
-#define SET_PWM0_CH0_PA5()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM0_CH0_PA5_Msk)) | PWM0_CH0_PA5            /*!< Set PA5 function to PWM0_CH0         */
-#define SET_PWM0_CH0_PE7()       SYS->GPE_MFPL = (SYS->GPE_MFPL & (~PWM0_CH0_PE7_Msk)) | PWM0_CH0_PE7            /*!< Set PE7 function to PWM0_CH0         */
-#define SET_PWM0_CH0_PE8()       SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_CH0_PE8_Msk)) | PWM0_CH0_PE8            /*!< Set PE8 function to PWM0_CH0         */
-#define SET_PWM0_CH0_PB5()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_CH0_PB5_Msk)) | PWM0_CH0_PB5            /*!< Set PB5 function to PWM0_CH0         */
-#define SET_PWM0_CH1_PA4()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM0_CH1_PA4_Msk)) | PWM0_CH1_PA4            /*!< Set PA4 function to PWM0_CH1         */
-#define SET_PWM0_CH1_PB4()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_CH1_PB4_Msk)) | PWM0_CH1_PB4            /*!< Set PB4 function to PWM0_CH1         */
-#define SET_PWM0_CH1_PE9()       SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_CH1_PE9_Msk)) | PWM0_CH1_PE9            /*!< Set PE9 function to PWM0_CH1         */
-#define SET_PWM0_CH1_PE6()       SYS->GPE_MFPL = (SYS->GPE_MFPL & (~PWM0_CH1_PE6_Msk)) | PWM0_CH1_PE6            /*!< Set PE6 function to PWM0_CH1         */
-#define SET_PWM0_CH2_PE5()       SYS->GPE_MFPL = (SYS->GPE_MFPL & (~PWM0_CH2_PE5_Msk)) | PWM0_CH2_PE5            /*!< Set PE5 function to PWM0_CH2         */
-#define SET_PWM0_CH2_PB3()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_CH2_PB3_Msk)) | PWM0_CH2_PB3            /*!< Set PB3 function to PWM0_CH2         */
-#define SET_PWM0_CH2_PE10()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_CH2_PE10_Msk)) | PWM0_CH2_PE10          /*!< Set PE10 function to PWM0_CH2        */
-#define SET_PWM0_CH2_PA3()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM0_CH2_PA3_Msk)) | PWM0_CH2_PA3            /*!< Set PA3 function to PWM0_CH2         */
-#define SET_PWM0_CH3_PA2()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM0_CH3_PA2_Msk)) | PWM0_CH3_PA2            /*!< Set PA2 function to PWM0_CH3         */
-#define SET_PWM0_CH3_PE11()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_CH3_PE11_Msk)) | PWM0_CH3_PE11          /*!< Set PE11 function to PWM0_CH3        */
-#define SET_PWM0_CH3_PE4()       SYS->GPE_MFPL = (SYS->GPE_MFPL & (~PWM0_CH3_PE4_Msk)) | PWM0_CH3_PE4            /*!< Set PE4 function to PWM0_CH3         */
-#define SET_PWM0_CH3_PB2()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_CH3_PB2_Msk)) | PWM0_CH3_PB2            /*!< Set PB2 function to PWM0_CH3         */
-#define SET_PWM0_CH4_PD14()      SYS->GPD_MFPH = (SYS->GPD_MFPH & (~PWM0_CH4_PD14_Msk)) | PWM0_CH4_PD14          /*!< Set PD14 function to PWM0_CH4        */
-#define SET_PWM0_CH4_PB1()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_CH4_PB1_Msk)) | PWM0_CH4_PB1            /*!< Set PB1 function to PWM0_CH4         */
-#define SET_PWM0_CH4_PE3()       SYS->GPE_MFPL = (SYS->GPE_MFPL & (~PWM0_CH4_PE3_Msk)) | PWM0_CH4_PE3            /*!< Set PE3 function to PWM0_CH4         */
-#define SET_PWM0_CH4_PA1()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM0_CH4_PA1_Msk)) | PWM0_CH4_PA1            /*!< Set PA1 function to PWM0_CH4         */
-#define SET_PWM0_CH4_PE12()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_CH4_PE12_Msk)) | PWM0_CH4_PE12          /*!< Set PE12 function to PWM0_CH4        */
-#define SET_PWM0_CH5_PB0()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM0_CH5_PB0_Msk)) | PWM0_CH5_PB0            /*!< Set PB0 function to PWM0_CH5         */
-#define SET_PWM0_CH5_PE2()       SYS->GPE_MFPL = (SYS->GPE_MFPL & (~PWM0_CH5_PE2_Msk)) | PWM0_CH5_PE2            /*!< Set PE2 function to PWM0_CH5         */
-#define SET_PWM0_CH5_PA0()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM0_CH5_PA0_Msk)) | PWM0_CH5_PA0            /*!< Set PA0 function to PWM0_CH5         */
-#define SET_PWM0_CH5_PE13()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM0_CH5_PE13_Msk)) | PWM0_CH5_PE13          /*!< Set PE13 function to PWM0_CH5        */
-#define SET_PWM0_CH5_PH11()      SYS->GPH_MFPH = (SYS->GPH_MFPH & (~PWM0_CH5_PH11_Msk)) | PWM0_CH5_PH11          /*!< Set PH11 function to PWM0_CH5        */
-#define SET_PWM0_SYNC_IN_PA15()  SYS->GPA_MFPH = (SYS->GPA_MFPH & (~PWM0_SYNC_IN_PA15_Msk)) | PWM0_SYNC_IN_PA15  /*!< Set PA15 function to PWM0_SYNC_IN    */
-#define SET_PWM0_SYNC_OUT_PF5()  SYS->GPF_MFPL = (SYS->GPF_MFPL & (~PWM0_SYNC_OUT_PF5_Msk)) | PWM0_SYNC_OUT_PF5  /*!< Set PF5 function to PWM0_SYNC_OUT    */
-#define SET_PWM0_SYNC_OUT_PA11() SYS->GPA_MFPH = (SYS->GPA_MFPH & (~PWM0_SYNC_OUT_PA11_Msk)) | PWM0_SYNC_OUT_PA11/*!< Set PA11 function to PWM0_SYNC_OUT   */
-#define SET_PWM1_BRAKE0_PB7()    SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_BRAKE0_PB7_Msk)) | PWM1_BRAKE0_PB7      /*!< Set PB7 function to PWM1_BRAKE0      */
-#define SET_PWM1_BRAKE0_PE10()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM1_BRAKE0_PE10_Msk)) | PWM1_BRAKE0_PE10    /*!< Set PE10 function to PWM1_BRAKE0     */
-#define SET_PWM1_BRAKE1_PB6()    SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_BRAKE1_PB6_Msk)) | PWM1_BRAKE1_PB6      /*!< Set PB6 function to PWM1_BRAKE1      */
-#define SET_PWM1_BRAKE1_PE11()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM1_BRAKE1_PE11_Msk)) | PWM1_BRAKE1_PE11    /*!< Set PE11 function to PWM1_BRAKE1     */
-#define SET_PWM1_CH0_PC5()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH0_PC5_Msk)) | PWM1_CH0_PC5            /*!< Set PC5 function to PWM1_CH0         */
-#define SET_PWM1_CH0_PE13()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM1_CH0_PE13_Msk)) | PWM1_CH0_PE13          /*!< Set PE13 function to PWM1_CH0        */
-#define SET_PWM1_CH0_PC12()      SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH0_PC12_Msk)) | PWM1_CH0_PC12          /*!< Set PC12 function to PWM1_CH0        */
-#define SET_PWM1_CH0_PB15()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH0_PB15_Msk)) | PWM1_CH0_PB15          /*!< Set PB15 function to PWM1_CH0        */
-#define SET_PWM1_CH1_PB14()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH1_PB14_Msk)) | PWM1_CH1_PB14          /*!< Set PB14 function to PWM1_CH1        */
-#define SET_PWM1_CH1_PC11()      SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH1_PC11_Msk)) | PWM1_CH1_PC11          /*!< Set PC11 function to PWM1_CH1        */
-#define SET_PWM1_CH1_PC4()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH1_PC4_Msk)) | PWM1_CH1_PC4            /*!< Set PC4 function to PWM1_CH1         */
-#define SET_PWM1_CH1_PC8()       SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH1_PC8_Msk)) | PWM1_CH1_PC8            /*!< Set PC8 function to PWM1_CH1         */
-#define SET_PWM1_CH2_PC7()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH2_PC7_Msk)) | PWM1_CH2_PC7            /*!< Set PC7 function to PWM1_CH2         */
-#define SET_PWM1_CH2_PC10()      SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH2_PC10_Msk)) | PWM1_CH2_PC10          /*!< Set PC10 function to PWM1_CH2        */
-#define SET_PWM1_CH2_PC3()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH2_PC3_Msk)) | PWM1_CH2_PC3            /*!< Set PC3 function to PWM1_CH2         */
-#define SET_PWM1_CH2_PB13()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH2_PB13_Msk)) | PWM1_CH2_PB13          /*!< Set PB13 function to PWM1_CH2        */
-#define SET_PWM1_CH3_PB12()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH3_PB12_Msk)) | PWM1_CH3_PB12          /*!< Set PB12 function to PWM1_CH3        */
-#define SET_PWM1_CH3_PC6()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH3_PC6_Msk)) | PWM1_CH3_PC6            /*!< Set PC6 function to PWM1_CH3         */
-#define SET_PWM1_CH3_PC9()       SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH3_PC9_Msk)) | PWM1_CH3_PC9            /*!< Set PC9 function to PWM1_CH3         */
-#define SET_PWM1_CH3_PC2()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH3_PC2_Msk)) | PWM1_CH3_PC2            /*!< Set PC2 function to PWM1_CH3         */
-#define SET_PWM1_CH4_PB7()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH4_PB7_Msk)) | PWM1_CH4_PB7            /*!< Set PB7 function to PWM1_CH4         */
-#define SET_PWM1_CH4_PB1()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH4_PB1_Msk)) | PWM1_CH4_PB1            /*!< Set PB1 function to PWM1_CH4         */
-#define SET_PWM1_CH4_PC1()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH4_PC1_Msk)) | PWM1_CH4_PC1            /*!< Set PC1 function to PWM1_CH4         */
-#define SET_PWM1_CH4_PA7()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM1_CH4_PA7_Msk)) | PWM1_CH4_PA7            /*!< Set PA7 function to PWM1_CH4         */
-#define SET_PWM1_CH5_PA6()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM1_CH5_PA6_Msk)) | PWM1_CH5_PA6            /*!< Set PA6 function to PWM1_CH5         */
-#define SET_PWM1_CH5_PC0()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH5_PC0_Msk)) | PWM1_CH5_PC0            /*!< Set PC0 function to PWM1_CH5         */
-#define SET_PWM1_CH5_PB6()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH5_PB6_Msk)) | PWM1_CH5_PB6            /*!< Set PB6 function to PWM1_CH5         */
-#define SET_PWM1_CH5_PB0()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH5_PB0_Msk)) | PWM1_CH5_PB0            /*!< Set PB0 function to PWM1_CH5         */
+#define SET_EPWM0_BRAKE0_PE8()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_BRAKE0_PE8_Msk)) | EPWM0_BRAKE0_PE8    /*!< Set PE8 function to EPWM0_BRAKE0     */
+#define SET_EPWM0_BRAKE0_PB1()   SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_BRAKE0_PB1_Msk)) | EPWM0_BRAKE0_PB1    /*!< Set PB1 function to EPWM0_BRAKE0     */
+#define SET_EPWM0_BRAKE1_PB0()   SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_BRAKE1_PB0_Msk)) | EPWM0_BRAKE1_PB0    /*!< Set PB0 function to EPWM0_BRAKE1     */
+#define SET_EPWM0_BRAKE1_PE9()   SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_BRAKE1_PE9_Msk)) | EPWM0_BRAKE1_PE9    /*!< Set PE9 function to EPWM0_BRAKE1     */
+#define SET_EPWM0_CH0_PA5()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~EPWM0_CH0_PA5_Msk)) | EPWM0_CH0_PA5          /*!< Set PA5 function to EPWM0_CH0        */
+#define SET_EPWM0_CH0_PE7()      SYS->GPE_MFPL = (SYS->GPE_MFPL & (~EPWM0_CH0_PE7_Msk)) | EPWM0_CH0_PE7          /*!< Set PE7 function to EPWM0_CH0        */
+#define SET_EPWM0_CH0_PE8()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_CH0_PE8_Msk)) | EPWM0_CH0_PE8          /*!< Set PE8 function to EPWM0_CH0        */
+#define SET_EPWM0_CH0_PB5()      SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_CH0_PB5_Msk)) | EPWM0_CH0_PB5          /*!< Set PB5 function to EPWM0_CH0        */
+#define SET_EPWM0_CH1_PA4()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~EPWM0_CH1_PA4_Msk)) | EPWM0_CH1_PA4          /*!< Set PA4 function to EPWM0_CH1        */
+#define SET_EPWM0_CH1_PB4()      SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_CH1_PB4_Msk)) | EPWM0_CH1_PB4          /*!< Set PB4 function to EPWM0_CH1        */
+#define SET_EPWM0_CH1_PE9()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_CH1_PE9_Msk)) | EPWM0_CH1_PE9          /*!< Set PE9 function to EPWM0_CH1        */
+#define SET_EPWM0_CH1_PE6()      SYS->GPE_MFPL = (SYS->GPE_MFPL & (~EPWM0_CH1_PE6_Msk)) | EPWM0_CH1_PE6          /*!< Set PE6 function to EPWM0_CH1        */
+#define SET_EPWM0_CH2_PE5()      SYS->GPE_MFPL = (SYS->GPE_MFPL & (~EPWM0_CH2_PE5_Msk)) | EPWM0_CH2_PE5          /*!< Set PE5 function to EPWM0_CH2        */
+#define SET_EPWM0_CH2_PB3()      SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_CH2_PB3_Msk)) | EPWM0_CH2_PB3          /*!< Set PB3 function to EPWM0_CH2        */
+#define SET_EPWM0_CH2_PE10()     SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_CH2_PE10_Msk)) | EPWM0_CH2_PE10        /*!< Set PE10 function to EPWM0_CH2       */
+#define SET_EPWM0_CH2_PA3()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~EPWM0_CH2_PA3_Msk)) | EPWM0_CH2_PA3          /*!< Set PA3 function to EPWM0_CH2        */
+#define SET_EPWM0_CH3_PA2()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~EPWM0_CH3_PA2_Msk)) | EPWM0_CH3_PA2          /*!< Set PA2 function to EPWM0_CH3        */
+#define SET_EPWM0_CH3_PE11()     SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_CH3_PE11_Msk)) | EPWM0_CH3_PE11        /*!< Set PE11 function to EPWM0_CH3       */
+#define SET_EPWM0_CH3_PE4()      SYS->GPE_MFPL = (SYS->GPE_MFPL & (~EPWM0_CH3_PE4_Msk)) | EPWM0_CH3_PE4          /*!< Set PE4 function to EPWM0_CH3        */
+#define SET_EPWM0_CH3_PB2()      SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_CH3_PB2_Msk)) | EPWM0_CH3_PB2          /*!< Set PB2 function to EPWM0_CH3        */
+#define SET_EPWM0_CH4_PD14()     SYS->GPD_MFPH = (SYS->GPD_MFPH & (~EPWM0_CH4_PD14_Msk)) | EPWM0_CH4_PD14        /*!< Set PD14 function to EPWM0_CH4       */
+#define SET_EPWM0_CH4_PB1()      SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_CH4_PB1_Msk)) | EPWM0_CH4_PB1          /*!< Set PB1 function to EPWM0_CH4        */
+#define SET_EPWM0_CH4_PE3()      SYS->GPE_MFPL = (SYS->GPE_MFPL & (~EPWM0_CH4_PE3_Msk)) | EPWM0_CH4_PE3          /*!< Set PE3 function to EPWM0_CH4        */
+#define SET_EPWM0_CH4_PA1()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~EPWM0_CH4_PA1_Msk)) | EPWM0_CH4_PA1          /*!< Set PA1 function to EPWM0_CH4        */
+#define SET_EPWM0_CH4_PE12()     SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_CH4_PE12_Msk)) | EPWM0_CH4_PE12        /*!< Set PE12 function to EPWM0_CH4       */
+#define SET_EPWM0_CH5_PB0()      SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM0_CH5_PB0_Msk)) | EPWM0_CH5_PB0          /*!< Set PB0 function to EPWM0_CH5        */
+#define SET_EPWM0_CH5_PE2()      SYS->GPE_MFPL = (SYS->GPE_MFPL & (~EPWM0_CH5_PE2_Msk)) | EPWM0_CH5_PE2          /*!< Set PE2 function to EPWM0_CH5        */
+#define SET_EPWM0_CH5_PA0()      SYS->GPA_MFPL = (SYS->GPA_MFPL & (~EPWM0_CH5_PA0_Msk)) | EPWM0_CH5_PA0          /*!< Set PA0 function to EPWM0_CH5        */
+#define SET_EPWM0_CH5_PE13()     SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM0_CH5_PE13_Msk)) | EPWM0_CH5_PE13        /*!< Set PE13 function to EPWM0_CH5       */
+#define SET_EPWM0_CH5_PH11()     SYS->GPH_MFPH = (SYS->GPH_MFPH & (~EPWM0_CH5_PH11_Msk)) | EPWM0_CH5_PH11        /*!< Set PH11 function to EPWM0_CH5       */
+#define SET_EPWM0_SYNC_IN_PA15() SYS->GPA_MFPH = (SYS->GPA_MFPH & (~EPWM0_SYNC_IN_PA15_Msk)) | EPWM0_SYNC_IN_PA15 /*!< Set PA15 function to EPWM0_SYNC_IN  */
+#define SET_EPWM0_SYNC_OUT_PF5() SYS->GPF_MFPL = (SYS->GPF_MFPL & (~EPWM0_SYNC_OUT_PF5_Msk)) | EPWM0_SYNC_OUT_PF5 /*!< Set PF5 function to EPWM0_SYNC_OUT  */
+#define SET_EPWM0_SYNC_OUT_PA11() SYS->GPA_MFPH = (SYS->GPA_MFPH & (~EPWM0_SYNC_OUT_PA11_Msk)) | EPWM0_SYNC_OUT_PA11 /*!< Set PA11 function to EPWM0_SYNC_OUT */
+#define SET_EPWM1_BRAKE0_PB7()   SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM1_BRAKE0_PB7_Msk)) | EPWM1_BRAKE0_PB7    /*!< Set PB7 function to EPWM1_BRAKE0     */
+#define SET_EPWM1_BRAKE0_PE10()  SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM1_BRAKE0_PE10_Msk)) | EPWM1_BRAKE0_PE10  /*!< Set PE10 function to EPWM1_BRAKE0    */
+#define SET_EPWM1_BRAKE1_PB6()   SYS->GPB_MFPL = (SYS->GPB_MFPL & (~EPWM1_BRAKE1_PB6_Msk)) | EPWM1_BRAKE1_PB6    /*!< Set PB6 function to EPWM1_BRAKE1     */
+#define SET_EPWM1_BRAKE1_PE11()  SYS->GPE_MFPH = (SYS->GPE_MFPH & (~EPWM1_BRAKE1_PE11_Msk)) | EPWM1_BRAKE1_PE11  /*!< Set PE11 function to EPWM1_BRAKE1    */
+#define SET_EPWM1_CH0_PC5()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH0_PC5_Msk)) | EPWM1_CH0_PC5          /*!< Set PC5 function to EPWM1_CH0        */
+#define SET_EPWM1_CH0_PE13()      SYS->GPE_MFPH = (SYS->GPE_MFPH & (~PWM1_CH0_PE13_Msk)) | EPWM1_CH0_PE13        /*!< Set PE13 function to EPWM1_CH0       */
+#define SET_EPWM1_CH0_PC12()      SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH0_PC12_Msk)) | EPWM1_CH0_PC12        /*!< Set PC12 function to EPWM1_CH0       */
+#define SET_EPWM1_CH0_PB15()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH0_PB15_Msk)) | EPWM1_CH0_PB15        /*!< Set PB15 function to EPWM1_CH0       */
+#define SET_EPWM1_CH1_PB14()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH1_PB14_Msk)) | EPWM1_CH1_PB14        /*!< Set PB14 function to EPWM1_CH1       */
+#define SET_EPWM1_CH1_PC11()      SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH1_PC11_Msk)) | EPWM1_CH1_PC11        /*!< Set PC11 function to EPWM1_CH1       */
+#define SET_EPWM1_CH1_PC4()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH1_PC4_Msk)) | EPWM1_CH1_PC4          /*!< Set PC4 function to EPWM1_CH1        */
+#define SET_EPWM1_CH1_PC8()       SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH1_PC8_Msk)) | EPWM1_CH1_PC8          /*!< Set PC8 function to EPWM1_CH1        */
+#define SET_EPWM1_CH2_PC7()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH2_PC7_Msk)) | EPWM1_CH2_PC7          /*!< Set PC7 function to EPWM1_CH2        */
+#define SET_EPWM1_CH2_PC10()      SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH2_PC10_Msk)) | EPWM1_CH2_PC10        /*!< Set PC10 function to EPWM1_CH2       */
+#define SET_EPWM1_CH2_PC3()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH2_PC3_Msk)) | EPWM1_CH2_PC3          /*!< Set PC3 function to EPWM1_CH2        */
+#define SET_EPWM1_CH2_PB13()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH2_PB13_Msk)) | EPWM1_CH2_PB13        /*!< Set PB13 function to EPWM1_CH2       */
+#define SET_EPWM1_CH3_PB12()      SYS->GPB_MFPH = (SYS->GPB_MFPH & (~PWM1_CH3_PB12_Msk)) | EPWM1_CH3_PB12        /*!< Set PB12 function to EPWM1_CH3       */
+#define SET_EPWM1_CH3_PC6()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH3_PC6_Msk)) | EPWM1_CH3_PC6          /*!< Set PC6 function to EPWM1_CH3        */
+#define SET_EPWM1_CH3_PC9()       SYS->GPC_MFPH = (SYS->GPC_MFPH & (~PWM1_CH3_PC9_Msk)) | EPWM1_CH3_PC9          /*!< Set PC9 function to EPWM1_CH3        */
+#define SET_EPWM1_CH3_PC2()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH3_PC2_Msk)) | EPWM1_CH3_PC2          /*!< Set PC2 function to EPWM1_CH3        */
+#define SET_EPWM1_CH4_PB7()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH4_PB7_Msk)) | EPWM1_CH4_PB7          /*!< Set PB7 function to EPWM1_CH4        */
+#define SET_EPWM1_CH4_PB1()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH4_PB1_Msk)) | EPWM1_CH4_PB1          /*!< Set PB1 function to EPWM1_CH4        */
+#define SET_EPWM1_CH4_PC1()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH4_PC1_Msk)) | EPWM1_CH4_PC1          /*!< Set PC1 function to EPWM1_CH4        */
+#define SET_EPWM1_CH4_PA7()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM1_CH4_PA7_Msk)) | EPWM1_CH4_PA7          /*!< Set PA7 function to EPWM1_CH4        */
+#define SET_EPWM1_CH5_PA6()       SYS->GPA_MFPL = (SYS->GPA_MFPL & (~PWM1_CH5_PA6_Msk)) | EPWM1_CH5_PA6          /*!< Set PA6 function to EPWM1_CH5        */
+#define SET_EPWM1_CH5_PC0()       SYS->GPC_MFPL = (SYS->GPC_MFPL & (~PWM1_CH5_PC0_Msk)) | EPWM1_CH5_PC0          /*!< Set PC0 function to EPWM1_CH5        */
+#define SET_EPWM1_CH5_PB6()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH5_PB6_Msk)) | EPWM1_CH5_PB6          /*!< Set PB6 function to EPWM1_CH5        */
+#define SET_EPWM1_CH5_PB0()       SYS->GPB_MFPL = (SYS->GPB_MFPL & (~PWM1_CH5_PB0_Msk)) | EPWM1_CH5_PB0          /*!< Set PB0 function to EPWM1_CH5        */
 #define SET_QEI0_A_PE3()         SYS->GPE_MFPL = (SYS->GPE_MFPL & (~QEI0_A_PE3_Msk)) | QEI0_A_PE3                /*!< Set PE3 function to QEI0_A           */
 #define SET_QEI0_A_PA4()         SYS->GPA_MFPL = (SYS->GPA_MFPL & (~QEI0_A_PA4_Msk)) | QEI0_A_PA4                /*!< Set PA4 function to QEI0_A           */
 #define SET_QEI0_A_PD11()        SYS->GPD_MFPH = (SYS->GPD_MFPH & (~QEI0_A_PD11_Msk)) | QEI0_A_PD11              /*!< Set PD11 function to QEI0_A          */
@@ -3835,11 +3834,15 @@ __STATIC_INLINE void SYS_LockReg(void);
   */
 __STATIC_INLINE void SYS_UnlockReg(void)
 {
+    uint32_t u32TimeOutCount = SystemCoreClock; /* 1 second time-out */
+
     do
     {
         SYS->REGLCTL = 0x59UL;
         SYS->REGLCTL = 0x16UL;
         SYS->REGLCTL = 0x88UL;
+
+        if(--u32TimeOutCount == 0) break;
     }
     while(SYS->REGLCTL == 0UL);
 }
@@ -3871,6 +3874,7 @@ void SYS_SetPowerLevel(uint32_t u32PowerLevel);
 uint32_t SYS_SetPowerRegulator(uint32_t u32PowerRegulator);
 void SYS_SetSSRAMPowerMode(uint32_t u32SRAMSel, uint32_t u32PowerMode);
 void SYS_SetPSRAMPowerMode(uint32_t u32SRAMSel, uint32_t u32PowerMode);
+void SYS_SetVRef(uint32_t u32VRefCTL);
 
 
 /*@}*/ /* end of group SYS_EXPORTED_FUNCTIONS */

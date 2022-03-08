@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -56,7 +55,7 @@ void SYS_Init(void)
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
-    /* Select UART module clock source as HXT `and UART module clock divider as 1 */
+    /* Select UART module clock source as HXT and UART module clock divider as 1 */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
 
     /*---------------------------------------------------------------------------------------------------------*/
@@ -94,7 +93,7 @@ int32_t main(void)
     /* Unlock protected registers */
     SYS_UnlockReg();
 
-    /* Enable FMC ISP function and enable APROM active*/
+    /* Enable FMC ISP function and enable APROM active */
     FMC_Open();
     FMC_ENABLE_AP_UPDATE();
 

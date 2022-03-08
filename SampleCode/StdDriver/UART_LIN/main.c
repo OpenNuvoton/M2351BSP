@@ -304,6 +304,8 @@ void LIN_SendHeader(uint32_t u32id)
 /*-------------------------------------------------------------------------------------------------------------------------------*/
 void LIN_SendHeaderUsingLinCtlReg(uint32_t u32id, uint32_t u32HeaderSel)
 {
+    uint32_t u32TimeOutCnt;
+
     s_i32Pointer = 0 ;
 
     /* Switch back to LIN Function */
@@ -322,7 +324,15 @@ void LIN_SendHeaderUsingLinCtlReg(uint32_t u32id, uint32_t u32HeaderSel)
         /* LIN TX Send Header Enable */
         UART1->LINCTL |= UART_LINCTL_SENDH_Msk;
         /* Wait until break field, sync field and ID field transfer completed */
-        while((UART1->LINCTL & UART_LINCTL_SENDH_Msk) == UART_LINCTL_SENDH_Msk);
+        u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+        while((UART1->LINCTL & UART_LINCTL_SENDH_Msk) == UART_LINCTL_SENDH_Msk)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for UART LIN header transfer completed time-out!\n");
+                return;
+            }
+        }
     }
 
     /* Set LIN 1. Header select as includes "break field" and "sync field".[UART_LINCTL_HSEL_BREAK_SYNC]
@@ -335,7 +345,15 @@ void LIN_SendHeaderUsingLinCtlReg(uint32_t u32id, uint32_t u32HeaderSel)
         /* LIN TX Send Header Enable */
         UART1->LINCTL |= UART_LINCTL_SENDH_Msk;
         /* Wait until break field and sync field transfer completed */
-        while((UART1->LINCTL & UART_LINCTL_SENDH_Msk) == UART_LINCTL_SENDH_Msk);
+        u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+        while((UART1->LINCTL & UART_LINCTL_SENDH_Msk) == UART_LINCTL_SENDH_Msk)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for UART LIN header transfer completed time-out!\n");
+                return;
+            }
+        }
 
         /* Send ID field, s_au8SendData[0] is ID+parity field*/
         s_au8SendData[s_i32Pointer++] = GetParityValue(u32id);   // ID+Parity Field
@@ -352,7 +370,15 @@ void LIN_SendHeaderUsingLinCtlReg(uint32_t u32id, uint32_t u32HeaderSel)
         /* LIN TX Send Header Enable */
         UART1->LINCTL |= UART_LINCTL_SENDH_Msk;
         /* Wait until break field transfer completed */
-        while((UART1->LINCTL & UART_LINCTL_SENDH_Msk) == UART_LINCTL_SENDH_Msk);
+        u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+        while((UART1->LINCTL & UART_LINCTL_SENDH_Msk) == UART_LINCTL_SENDH_Msk)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for UART LIN header transfer completed time-out!\n");
+                return;
+            }
+        }
 
         /* Send sync field and ID field*/
         s_au8SendData[s_i32Pointer++] = 0x55 ;                  // SYNC Field

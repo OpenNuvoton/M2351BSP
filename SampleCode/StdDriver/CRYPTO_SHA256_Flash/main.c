@@ -19,11 +19,15 @@ int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t dig
 
 void SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -45,7 +49,7 @@ void SYS_Init(void)
     //SystemCoreClockUpdate();
     PllClock        = 128000000;           // PLL
     SystemCoreClock = 128000000 / 2;       // HCLK
-    CyclesPerUs     = 64000000 / 1000000;  // For SYS_SysTickDelay()
+    CyclesPerUs     = 64000000 / 1000000;  // For CLK_SysTickDelay()
 
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
@@ -69,14 +73,15 @@ int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t dig
 {
     int32_t i;
     int32_t n = 0;
+    uint32_t u32TimeOutCnt;
 
     /* Enable CRYPTO */
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
-    
+
     /* Init SHA */
     CRPT->HMAC_CTL = (u32Mode << CRPT_HMAC_CTL_OPMODE_Pos) | CRPT_HMAC_CTL_INSWAP_Msk;
     CRPT->HMAC_DMACNT = (uint32_t)size;
-    
+
     /* Calculate SHA */
     while(size > 0)
     {
@@ -84,22 +89,38 @@ int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t dig
         {
             CRPT->HMAC_CTL |= CRPT_HMAC_CTL_DMALAST_Msk;
         }
-        
+
         /* Trigger to start SHA processing */
         CRPT->HMAC_CTL |= CRPT_HMAC_CTL_START_Msk;
-        
+
         /* Waiting for SHA data input ready */
-        while((CRPT->HMAC_STS & CRPT_HMAC_STS_DATINREQ_Msk) == 0);
-        
+        u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+        while((CRPT->HMAC_STS & CRPT_HMAC_STS_DATINREQ_Msk) == 0)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for SHA data input ready time-out!\n");
+                return -1;
+            }
+        }
+
         /* Input new SHA date */
         CRPT->HMAC_DATIN = *pu32Addr;
         pu32Addr++;
         size -= 4;
     }
-    
+
     /* Waiting for calculation done */
-    while(CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk);
-    
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for SHA calculation done time-out!\n");
+            return -1;
+        }
+    }
+
     /* return SHA results */
     if(u32Mode == SHA_MODE_SHA1)
         n = 5;
@@ -109,7 +130,7 @@ int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t dig
         n = 8;
     else if(u32Mode == SHA_MODE_SHA384)
         n = 12;
-    
+
     for(i = 0; i < n; i++)
         digest[i] = CRPT->HMAC_DGST[i];
 
@@ -129,7 +150,7 @@ int main(void)
 {
     uint32_t hash[16] = {0};
     int32_t i;
-    
+
     SYS_UnlockReg();
 
     /* Init System, IP clock and multi-function I/O */
@@ -139,7 +160,7 @@ int main(void)
     DEBUG_PORT_Init();
 
     printf("+-----------------------------------+\n");
-    printf("|  M2351 Crypto SHA Sample Demo      |\n");
+    printf("|  M2351 Crypto SHA Sample Demo     |\n");
     printf("+-----------------------------------+\n");
 
     NVIC_EnableIRQ(CRPT_IRQn);
@@ -149,7 +170,7 @@ int main(void)
     {
         printf("%02x", s_au8Test[i]);
     }
-    
+
     printf("\n");
     SHAHash(SHA_MODE_SHA1, (uint32_t *)(uint32_t)s_au8Test, 32, hash);
     printf("\nOutput SHA1 Hash:\n");

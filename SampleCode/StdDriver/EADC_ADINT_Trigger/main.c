@@ -42,7 +42,7 @@ void SYS_Init(void)
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Enable HIRC clock (Internal RC 22.1184 MHz) */
+    /* Enable HIRC clock (Internal RC 12 MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Wait for HIRC clock ready */
@@ -107,13 +107,14 @@ void UART0_Init()
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* EADC function test                                                                                       */
+/* EADC function test                                                                                      */
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
     uint8_t  u8SampleCnt = 0;
     int32_t  ai32ConversionData[8] = {0};
     int32_t  i32Option;
+    uint32_t u32TimeOutCnt;
 
     printf("\n");
     printf("+----------------------------------------------------------------------+\n");
@@ -162,7 +163,15 @@ void EADC_FunctionTest()
             EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, BIT7);
 
             /* Wait conversion done */
-            while(EADC_GET_DATA_VALID_FLAG(EADC, (BIT7 | BIT6 | BIT5 | BIT4)) != (BIT7 | BIT6 | BIT5 | BIT4));
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(EADC_GET_DATA_VALID_FLAG(EADC, (BIT7 | BIT6 | BIT5 | BIT4)) != (BIT7 | BIT6 | BIT5 | BIT4))
+            {
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for EADC conversion done time-out!\n");
+                    return;
+                }
+            }
 
             /* Get the conversion result of the sample module */
             for(u8SampleCnt = 0; u8SampleCnt < 4; u8SampleCnt++)
@@ -206,7 +215,15 @@ void EADC_FunctionTest()
             EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, BIT6);
 
             /* Wait conversion done */
-            while(EADC_GET_DATA_VALID_FLAG(EADC, (BIT6 | BIT4)) != (BIT6 | BIT4));
+            u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+            while(EADC_GET_DATA_VALID_FLAG(EADC, (BIT6 | BIT4)) != (BIT6 | BIT4))
+            {
+                if(--u32TimeOutCnt == 0)
+                {
+                    printf("Wait for EADC conversion done time-out!\n");
+                    return;
+                }
+            }
 
             /* Get the conversion result of the sample module */
             for(u8SampleCnt = 0; u8SampleCnt < 4; u8SampleCnt++)

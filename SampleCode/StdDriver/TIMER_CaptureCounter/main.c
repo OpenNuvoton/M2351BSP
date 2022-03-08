@@ -118,6 +118,7 @@ int main(void)
 {
     uint32_t u32InitCount;
     uint32_t au32CAPValue[10], u32CAPDiff;
+    uint32_t u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -196,7 +197,7 @@ int main(void)
                 if(au32CAPValue[u32InitCount] != 0)   // First capture event will reset counter value
                 {
                     printf("*** FAIL ***\n");
-                    while(1) {}
+                    return -1;
                 }
             }
             else if(u32InitCount ==  1)
@@ -205,7 +206,7 @@ int main(void)
                 if(au32CAPValue[u32InitCount] != 500)   // Second event gets two capture event duration counts directly
                 {
                     printf("*** FAIL ***\n");
-                    while(1) {}
+                    return -1;
                 }
             }
             else
@@ -215,7 +216,7 @@ int main(void)
                 if(u32CAPDiff != 500)
                 {
                     printf("*** FAIL ***\n");
-                    while(1) {}
+                    return -1;
                 }
             }
             u32InitCount = s_au32TMRINTCount[2];
@@ -229,7 +230,9 @@ int main(void)
     /* case 2. */
     TIMER_StopCapture(TIMER2);
     TIMER_Stop(TIMER2);
-    while(TIMER_IS_ACTIVE(TIMER2)) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(TIMER_IS_ACTIVE(TIMER2))
+        if(--u32TimeOutCnt == 0) break;
     TIMER_ClearIntFlag(TIMER2);
     TIMER_ClearCaptureIntFlag(TIMER2);
     /* Enable Timer2 event counter input and external capture function */
@@ -242,7 +245,7 @@ int main(void)
     TIMER_EnableCaptureInt(TIMER2);
     TIMER_Start(TIMER2);
 
-    printf("# Get first low duration shoulb be 250 counts.\n");
+    printf("# Get first low duration should be 250 counts.\n");
     printf("# And follows duration between two rising edge captured event should be 500 counts.\n");
 
     /* Clear Timer2 interrupt counts to 0 */
@@ -265,7 +268,7 @@ int main(void)
                 if(au32CAPValue[u32InitCount] != 0)   // First capture event will reset counter value
                 {
                     printf("*** FAIL ***\n");
-                    while(1) {}
+                    return -1;
                 }
             }
             else if(u32InitCount ==  1)
@@ -274,7 +277,7 @@ int main(void)
                 if(au32CAPValue[u32InitCount] != 250)   // Get low duration counts directly
                 {
                     printf("*** FAIL ***\n");
-                    while(1) {}
+                    return -1;
                 }
             }
             else
@@ -284,7 +287,7 @@ int main(void)
                 if(u32CAPDiff != 500)
                 {
                     printf("*** FAIL ***\n");
-                    while(1) {}
+                    return -1;
                 }
             }
             u32InitCount = s_au32TMRINTCount[2];

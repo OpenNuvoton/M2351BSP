@@ -86,7 +86,15 @@ extern "C"
 #define EADC_CMP_ADCMPIE_ENABLE             (EADC_CMP_ADCMPIE_Msk)   /*!< A/D result compare interrupt enable */
 #define EADC_CMP_ADCMPIE_DISABLE            (~EADC_CMP_ADCMPIE_Msk)  /*!< A/D result compare interrupt disable */
 
+/*---------------------------------------------------------------------------------------------------------*/
+/* EADC Time-out Handler Constant Definitions                                                              */
+/*---------------------------------------------------------------------------------------------------------*/
+#define EADC_TIMEOUT                        (SystemCoreClock)   /*!< 1 second time-out */
+#define EADC_TIMEOUT_ERR                    (-1L)               /*!< EADC time-out error value */
+
 /*@}*/ /* end of group EADC_EXPORTED_CONSTANTS */
+
+extern int32_t g_EADC_i32ErrCode;
 
 /** @addtogroup EADC_EXPORTED_FUNCTIONS EADC Exported Functions
   @{

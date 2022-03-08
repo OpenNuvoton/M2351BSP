@@ -364,7 +364,7 @@ int32_t Card_ResponseATR(SC_INFO_T *sc_info)
     else if(sc == SC2)
         NVIC_EnableIRQ(SC2_IRQn);
     else
-        while(1) {}
+        return -1;
 
 #if (SEL_PROTOCOL_T == 0UL)
     if(sc_info->u8Protocol == 0)
@@ -375,7 +375,7 @@ int32_t Card_ResponseATR(SC_INFO_T *sc_info)
     else
     {
         printf("\nERROR. Unknow ptotocol.\n");
-        while(1) {}
+        return -1;
     }
 #endif
 #if (SEL_PROTOCOL_T == 1UL)
@@ -387,7 +387,7 @@ int32_t Card_ResponseATR(SC_INFO_T *sc_info)
     else
     {
         printf("\nERROR. Unknow ptotocol.\n");
-        while(1) {}
+        return -1;
     }
 #endif
 

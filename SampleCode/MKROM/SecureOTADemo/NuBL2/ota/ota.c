@@ -89,8 +89,8 @@ static void NuBL_BytesSwap(char *buf, int32_t len)
 {
     int32_t i;
     char    tmp;
-    
-    for(i=0; i<(len/2); i++) 
+
+    for(i=0; i<(len/2); i++)
     {
         tmp = buf[len-i-1];
         buf[len-i-1] = buf[i];
@@ -1194,7 +1194,7 @@ _exit_OTA_GetBLxFwVer:
   */
 int32_t cmd_AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *KEY, uint32_t *IV)
 {
-    CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
+    uint32_t u32TimeOutCnt;
 
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
 
@@ -1208,7 +1208,12 @@ int32_t cmd_AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *K
     CRPT->AES_CTL = ((AES_KEY_SIZE_256 << CRPT_AES_CTL_KEYSZ_Pos) | (AES_IN_OUT_SWAP << CRPT_AES_CTL_OUTSWAP_Pos));
     CRPT->AES_CTL |= ((AES_MODE_CFB << CRPT_AES_CTL_OPMODE_Pos) | CRPT_AES_CTL_START_Msk | CRPT_AES_CTL_DMAEN_Msk);
 //    CRPT->AES_CTL |= ((AES_MODE_ECB << CRPT_AES_CTL_OPMODE_Pos) | CRPT_AES_CTL_START_Msk | CRPT_AES_CTL_DMAEN_Msk);
-    while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk)
+    {
+        if( --u32TimeOutCnt == 0 )
+            return -1;
+    }
 
     return 0;
 }
@@ -1487,14 +1492,20 @@ int32_t MassWriteReqProcess(ISP_INFO_T *pISPInfo)
     if (cmd.u16PacketID == 7)
     {
         /* First raw data package */
-        cmd_AES256Decrypt(s_au32RawData, s_au32RawData, sizeof(s_au32RawData), pNuBL3xKey, s_FwIV);
+        if( cmd_AES256Decrypt(s_au32RawData, s_au32RawData, sizeof(s_au32RawData), pNuBL3xKey, s_FwIV) !=0 )
+        {
+            return (-1);
+        }
         /* CFB mode need bofore 16 bytes to be decrypted current raw data correctly. */
         memcpy((uint8_t *)&s_au32DecryptRawData, &cmd.au32Data[8], 16);
     }
     else
     {
         /* Not first raw data package, so CFB mode need bofore 16 bytes to be decrypted current raw data correctly. */
-        cmd_AES256Decrypt(s_au32DecryptRawData, s_au32DecryptRawData, sizeof(s_au32DecryptRawData), pNuBL3xKey, s_FwIV);
+        if( cmd_AES256Decrypt(s_au32DecryptRawData, s_au32DecryptRawData, sizeof(s_au32DecryptRawData), pNuBL3xKey, s_FwIV) != 0)
+        {
+            return (-1);
+        }
         memcpy((uint8_t *)&s_au32RawData, (uint8_t *)&s_au32DecryptRawData + 16, cmd.u16Len);
         /* CFB mode need bofore 16 bytes to be decrypted current raw data correctly. */
         memcpy((uint8_t *)&s_au32DecryptRawData, &cmd.au32Data[8], 16);

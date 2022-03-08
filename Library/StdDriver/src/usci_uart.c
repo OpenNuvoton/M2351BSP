@@ -267,7 +267,7 @@ void UUART_DisableInt(UUART_T* uuart, uint32_t u32Mask)
  *
  *    @return       None
  *
- *    @details      The function is used to enable USCI_UART related interrupts specified by u32Mask parameter..
+ *    @details      The function is used to enable USCI_UART related interrupts specified by u32Mask parameter.
  */
 void UUART_EnableInt(UUART_T*  uuart, uint32_t u32Mask)
 {

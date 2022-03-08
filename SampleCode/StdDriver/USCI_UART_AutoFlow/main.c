@@ -218,7 +218,7 @@ void USCI_AutoFlow_FunctionTxTest(void)
 /*---------------------------------------------------------------------------------------------------------*/
 void USCI_AutoFlow_FunctionRxTest(void)
 {
-    uint32_t u32Idx;
+    uint32_t u32Idx, u32Err = 0;
 
     /* Enable CTS and RTS autoflow control */
     UUART_EnableFlowCtrl(UUART0);
@@ -237,10 +237,14 @@ void USCI_AutoFlow_FunctionRxTest(void)
     {
         if(s_au8RecData[u32Idx] != (u32Idx & 0xFF))
         {
-            printf("Compare Data Failed\n");
-            while(1);
+            u32Err = 1;
+            break;
         }
     }
+
+    if(u32Err)
+        printf("Compare Data Failed\n");
+    else
     printf("\n Receive OK & Check OK\n");
 
     /* Disable USCI interrupt */

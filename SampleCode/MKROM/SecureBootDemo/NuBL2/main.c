@@ -17,7 +17,7 @@
 
 static volatile FW_INFO_T  s_NuBL3xFwInfo; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
 
-void EnableXOM0(void);
+int32_t EnableXOM0(void);
 void SYS_Init(void);
 void UART_Init(void);
 
@@ -29,7 +29,7 @@ static int32_t CheckBootingStatus(void)
     uint32_t     i;
     uint32_t    u32CFG0, au32OTP[8];
     uint32_t    *pu32Info, u32Size;
-        
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -106,12 +106,12 @@ static int32_t CheckBootingStatus(void)
         printf("    0x%08x", pu32Info[i+3]);
         printf("\n");
     }
-    printf("\n");    
+    printf("\n");
 
     return 0;
 }
 
-void EnableXOM0(void)
+int32_t EnableXOM0(void)
 {
     int32_t i32Status;
     uint32_t u32Base = 0x10000;
@@ -138,13 +138,13 @@ void EnableXOM0(void)
             else
             {
                 printf("Configure XOM0 FAIL.\n");
-                while(1) {}
+                return -1;
             }
         }
         else
         {
             printf("Get XOM0 status FAIL.\n\n");
-            while(1) {}
+            return -1;
         }
 
         printf("Reset chip to enable XOM region.\n\n");
@@ -158,6 +158,8 @@ void EnableXOM0(void)
     {
         printf("XOM0 region is already actived.\n\n");
     }
+
+    return 0;
 }
 
 void SYS_Init(void)
@@ -214,8 +216,8 @@ void UART_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
-    uint32_t u32NuBL32Base;
-    
+    uint32_t u32NuBL32Base, u32TimeOutCnt;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -229,50 +231,52 @@ int main(void)
     printf("+------------------------------------------+\n");
     printf("|    SecureBootDemo - NuBL2 Sample Code    |\n");
     printf("+------------------------------------------+\n\n");
-    
+
     /* Show booting status */
     CheckBootingStatus();
-    
+
 #if (ENABLE_XOM0_REGION == 1)
 
     /* Enable XOM0, and all the functions in VerifyNuBL3x.c cannot trace in ICE debug mode  */
-    EnableXOM0();
-#endif    
-    
+    if( EnableXOM0() < 0 ) return -1;
+#endif
+
     /* Verify NuBL32 identity and F/W integrity */
     memcpy((void *)(uint32_t)&s_NuBL3xFwInfo, (void *)NUBL32_FW_INFO_BASE, sizeof(FW_INFO_T));
     if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL32_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL32 FAIL.\n");
-        while(1) {}
+        return -1;
     }
     else
     {
         u32NuBL32Base = s_NuBL3xFwInfo.mData.au32FwRegion[0].u32Start;
         printf("\nNuBL2 identify NuBL32 public key and verify NuBL32 F/W integrity PASS.\n");
     }
-    
-    
+
+
     /* Verify NuBL33 identity and F/W integrity */
     memcpy((void *)(uint32_t)&s_NuBL3xFwInfo, (void *)NUBL33_FW_INFO_BASE, sizeof(FW_INFO_T));
     if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL33_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL33 FAIL.\n");
-        while(1) {}
+        return -1;
     }
     else
     {
         printf("\nNuBL2 identify NuBL33 public key and verify NuBL33 F/W integrity PASS.\n");
     }
-    
-    
+
+
     /* Jump to execute NuBL32 F/W */
     printf("\nJump to execute NuBL32...\n");
-    UART_WAIT_TX_EMPTY((UART_T *)DEBUG_PORT);
-    
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    UART_WAIT_TX_EMPTY((UART_T *)DEBUG_PORT)
+        if(--u32TimeOutCnt == 0) break;
+
     /* Disable all interrupt */
     __set_PRIMASK(1);
-    
+
     FMC_ENABLE_ISP();
     FMC_SetVectorPageAddr(u32NuBL32Base);
 

@@ -1,7 +1,6 @@
 /**************************************************************************//**
  * @file     uart_transfer.c
  * @version  V1.00
- * $Date: 14/11/17 5:36p $
  * @brief    General UART ISP slave Sample file
  *
  * @note

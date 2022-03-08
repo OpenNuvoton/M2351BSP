@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -61,7 +60,7 @@ void SYS_Init(void)
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
-    /* Select UART module clock source as HXT `and UART module clock divider as 1 */
+    /* Select UART module clock source as HXT and UART module clock divider as 1 */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
 
     /* Enable I2C0 peripheral clock */
@@ -119,6 +118,7 @@ int32_t main(void)
 {
     uint16_t u16i;
     uint8_t u8Data, u8Tmp, u8Err;
+    uint32_t u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -160,7 +160,17 @@ int32_t main(void)
         u8Tmp = (uint8_t)u16i + 3;
 
         /* Single Byte Write (Two Registers) */
-        while(I2C_WriteByteTwoRegs(I2C0, s_u8DeviceAddr, u16i, u8Tmp));
+        u32TimeOutCnt = I2C_TIMEOUT;
+        while(I2C_WriteByteTwoRegs(I2C0, s_u8DeviceAddr, u16i, u8Tmp))
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                u8Err = 1;
+                printf("Wait for I2C Tx time-out!\n");
+                break;
+            }
+        }
+        if(u32TimeOutCnt == 0) break;
 
         /* Single Byte Read (Two Registers) */
         u8Data = I2C_ReadByteTwoRegs(I2C0, s_u8DeviceAddr, u16i);

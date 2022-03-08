@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -75,7 +74,11 @@ int32_t FillDataPattern(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32
 
     for(u32Addr = u32StartAddr; u32Addr < u32EndAddr; u32Addr += 4)
     {
-        FMC_Write(u32Addr, u32Pattern);
+        if (FMC_Write(u32Addr, u32Pattern) != 0)          /* Program flash */
+        {
+            printf("FMC_Write address 0x%x failed!\n", u32Addr);
+            return -1;
+        }
     }
     return 0;
 }
@@ -89,6 +92,11 @@ int32_t  VerifyData(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Patt
     for(u32Addr = u32StartAddr; u32Addr < u32EndAddr; u32Addr += 4)
     {
         u32Data = FMC_Read(u32Addr);
+        if (g_FMC_i32ErrCode != 0)
+        {
+            printf("FMC_Read address 0x%x failed!\n", u32Addr);
+            return -1;
+        }
         if(u32Data != u32Pattern)
         {
             printf("\nFMC_Read data verify failed at address 0x%x, read=0x%x, expect=0x%x\n", u32Addr, u32Data, u32Pattern);
@@ -108,7 +116,11 @@ int32_t  FlashTest(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Patte
         printf("    Flash test address: 0x%x    \r", u32Addr);
 
         // Erase page
-        FMC_Erase(u32Addr);
+        if (FMC_Erase(u32Addr) != 0)
+        {
+            printf("FMC_Erase address 0x%x failed!\n", u32Addr);
+            return -1;
+        }
 
         // Verify if page contents are all 0xFFFFFFFF
         if(VerifyData(u32Addr, u32Addr + FMC_FLASH_PAGE_SIZE, 0xFFFFFFFF) < 0)
@@ -131,7 +143,12 @@ int32_t  FlashTest(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Patte
             return -1;
         }
 
-        FMC_Erase(u32Addr);
+        // Erase page
+        if (FMC_Erase(u32Addr) != 0)
+        {
+            printf("FMC_Erase address 0x%x failed!\n", u32Addr);
+            return -1;
+        }
 
         // Verify if page contents are all 0xFFFFFFFF
         if(VerifyData(u32Addr, u32Addr + FMC_FLASH_PAGE_SIZE, 0xFFFFFFFF) < 0)
@@ -188,28 +205,68 @@ int32_t main(void)
     }
 
     u32Data = FMC_ReadCID();
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_ReadCID failed!\n");
+        goto lexit;
+    }
     printf("  Company ID ............................ [0x%08x]\n", u32Data);
 
     u32Data = FMC_ReadPID();
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_ReadPID failed!\n");
+        goto lexit;
+    }
     printf("  Product ID ............................ [0x%08x]\n", u32Data);
 
     for(i = 0; i < 3; i++)
     {
         u32Data = FMC_ReadUID(i);
+        if (g_FMC_i32ErrCode != 0)
+        {
+            printf("FMC_ReadUID %d failed!\n", i);
+            goto lexit;
+        }
         printf("  Unique ID %d ........................... [0x%08x]\n", i, u32Data);
     }
 
     for(i = 0; i < 4; i++)
     {
         u32Data = FMC_ReadUCID(i);
+        if (g_FMC_i32ErrCode != 0)
+        {
+            printf("FMC_ReadUCID %d failed!\n", i);
+            goto lexit;
+        }
         printf("  Unique Customer ID %d .................. [0x%08x]\n", i, u32Data);
     }
 
     /* Read User Configuration */
     printf("  User Config 0 ......................... [0x%08x]\n", FMC_Read(FMC_USER_CONFIG_0));
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_Read(FMC_CONFIG_BASE) failed!\n");
+        goto lexit;
+    }
     printf("  User Config 1 ......................... [0x%08x]\n", FMC_Read(FMC_USER_CONFIG_1));
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_Read(FMC_USER_CONFIG_1) failed!\n");
+        goto lexit;
+    }
     printf("  User Config 2 ......................... [0x%08x]\n", FMC_Read(FMC_USER_CONFIG_2));
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_Read(FMC_USER_CONFIG_2) failed!\n");
+        goto lexit;
+    }
     printf("  User Config 3 ......................... [0x%08x]\n", FMC_Read(FMC_USER_CONFIG_3));
+    if (g_FMC_i32ErrCode != 0)
+    {
+        printf("FMC_Read(FMC_USER_CONFIG_3) failed!\n");
+        goto lexit;
+    }
 
     printf("\n\nLDROM test =>\n");
     FMC_ENABLE_LD_UPDATE();

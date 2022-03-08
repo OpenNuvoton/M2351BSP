@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -27,6 +26,20 @@ extern int IsDebugFifoEmpty(void);
 
 void WDT_IRQHandler(void);
 void SYS_Init(void);
+
+__STATIC_INLINE void wait_FMC_ISPTRG(void)
+{
+    uint32_t u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+
+    while(FMC->ISPTRG)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for FMC ISP operation finish time-out!\n");
+            break;
+        }
+    }
+}
 
 /**
  * @brief       IRQ Handler for WDT Interrupt
@@ -359,9 +372,9 @@ int32_t main(void)
         /* Set remmaping address */
         FMC->ISPADDR = BANK0_FW_BASE;
         /* Set VECMAP */
-        FMC->ISPCMD = 0x2E; 
+        FMC->ISPCMD = 0x2E;
         FMC->ISPTRG = 1;
-        while(FMC->ISPTRG);
+        wait_FMC_ISPTRG();
         /* CPU Reset */
         SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
         while(1) {}
@@ -385,9 +398,9 @@ int32_t main(void)
         /* Set remmaping address */
         FMC->ISPADDR = BANK0_FW_BASE;
         /* Set VECMAP */
-        FMC->ISPCMD = 0x2E; 
+        FMC->ISPCMD = 0x2E;
         FMC->ISPTRG = 1;
-        while(FMC->ISPTRG);
+        wait_FMC_ISPTRG();
         /* CPU Reset */
         SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
     }
@@ -429,7 +442,7 @@ int32_t main(void)
         /* Set VECMAP */
         FMC->ISPCMD = 0x2E; 
         FMC->ISPTRG = 1;
-        while(FMC->ISPTRG);
+        wait_FMC_ISPTRG();
         /* CPU Reset */
         SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
     }
@@ -484,7 +497,7 @@ int32_t main(void)
             /* Set VECMAP */
             FMC->ISPCMD = 0x2E;
             FMC->ISPTRG = 1;
-            while(FMC->ISPTRG);
+            wait_FMC_ISPTRG();
             /* CPU Reset */
             SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
         }
@@ -501,7 +514,7 @@ int32_t main(void)
             /* Set VECMAP */
             FMC->ISPCMD = 0x2E;
             FMC->ISPTRG = 1;
-            while(FMC->ISPTRG);
+            wait_FMC_ISPTRG();
             /* CPU Reset */
             SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
         }
@@ -520,7 +533,7 @@ int32_t main(void)
                 /* Set VECMAP */
                 FMC->ISPCMD = 0x2E;
                 FMC->ISPTRG = 1;
-                while(FMC->ISPTRG);
+                wait_FMC_ISPTRG();
                 /* CPU Reset */
                 SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
             }
@@ -546,7 +559,7 @@ int32_t main(void)
                 /* Set VECMAP */
                 FMC->ISPCMD = 0x2E;
                 FMC->ISPTRG = 1;
-                while(FMC->ISPTRG);
+                wait_FMC_ISPTRG();
                 /* CPU Reset */
                 SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
             }
@@ -562,7 +575,7 @@ int32_t main(void)
             /* Set VECMAP */
             FMC->ISPCMD = 0x2E;
             FMC->ISPTRG = 1;
-            while(FMC->ISPTRG);
+            wait_FMC_ISPTRG();
             /* CPU Reset */
             SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
         }
@@ -576,7 +589,7 @@ int32_t main(void)
             /* Set VECMAP */
             FMC->ISPCMD = 0x2E;
             FMC->ISPTRG = 1;
-            while(FMC->ISPTRG);
+            wait_FMC_ISPTRG();
             /* CPU Reset */
             SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
         }

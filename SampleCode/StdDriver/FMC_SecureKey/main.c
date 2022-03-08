@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * @file     main.c
  * @version  V3.00
@@ -59,7 +58,7 @@ void SYS_Init(void)
     /* Enable UART module clock */
     CLK_EnableModuleClock(UART0_MODULE);
 
-    /* Select UART module clock source as HXT `and UART module clock divider as 1 */
+    /* Select UART module clock source as HXT and UART module clock divider as 1 */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HXT, CLK_CLKDIV0_UART0(1));
 
     /*---------------------------------------------------------------------------------------------------------*/
@@ -96,6 +95,8 @@ void dump_key_status()
 
 int32_t main(void)
 {
+    int32_t   ret;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -124,26 +125,45 @@ int32_t main(void)
     if(FMC_SetSPKey(s_au32GoodKey, KPMAX_VAL, KEMAX_VAL, 0, 0) < 0)
     {
         printf("Failed to setup key!\n");   /* error message */
-        while(1);                      /* Failed to setup security key. Program aborted. */
+        return -1;                     /* Failed to setup security key. Program aborted. */
     }
 
     printf("The security key status after key setup:\n");
     dump_key_status();                 /* Dump FMC security key status. */
 
-    FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
+    ret = FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
     printf("The security key status after enter a wrong key:\n");
     dump_key_status();                 /* Dump FMC security key status. */
+    if (ret != -3)
+    {
+        printf("Unexpected error on comparing a bad key!\n");
+        return -1;
+    }
 
-    FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
+    ret = FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
     printf("The security key status after enter a wrong key second time:\n");
     dump_key_status();                 /* Dump FMC security key status. */
+    if (ret != -3)
+    {
+        printf("Unexpected error on comparing a bad key!\n");
+        return -1;
+    }
 
-    FMC_CompareSPKey(s_au32GoodKey);        /* Enter the right key for key comparison. */
+    ret = FMC_CompareSPKey(s_au32GoodKey);        /* Enter the right key for key comparison. */
     printf("The security key status after enter a good key.\n");
     dump_key_status();                 /* Dump FMC security key status. */
+    if (ret != 0)
+    {
+        printf("Unexpected error on comparing a good key!\n");
+        return -1;
+    }
 
     printf("Erase KPROM key.\n");
-    FMC_Erase(FMC_KPROM_BASE);
+    if (FMC_Erase(FMC_KPROM_BASE) != 0)
+    {
+        printf("FMC_Erase FMC_KPROM_BASE failed!\n");
+        return -1;
+    }
 
     printf("Test done.\n");
     while(1);

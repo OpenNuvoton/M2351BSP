@@ -88,13 +88,15 @@ void DumpBuffHex(uint8_t *pucBuff, int nBytes)
 
 void SYS_Init(void)
 {
-
+    uint32_t u32TimeOutCnt;
 
     /* Enable PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((CLK->STATUS & CLK_STATUS_PLLSTB_Msk) == 0)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Set HCLK divider to 2 */
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | 1;
@@ -144,6 +146,7 @@ int32_t main(void)
     uint32_t u32FlashAddr;
     uint32_t u32AesMode, u32KeySizeOpt;
     uint8_t *pu8OutBuf;
+    uint32_t u32TimeOutCnt;
 
     SYS_UnlockReg();
 
@@ -200,10 +203,18 @@ int32_t main(void)
             printf(".");
             AES_Start(CRPT, 0, CRYPTO_DMA_CONTINUE);
         }
-        
+
         /* Waiting for AES calculation */
-        while(!g_AES_done);
-        
+        u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+        while(!g_AES_done)
+        {
+            if(--u32TimeOutCnt == 0)
+            {
+                printf("Wait for AES encrypt time-out!\n");
+                return -1;
+            }
+        }
+
         pu8OutBuf += DMA_BUF_SIZE;
     }
 
@@ -217,16 +228,24 @@ int32_t main(void)
     /* Start AES decrypt */
     AES_Start(CRPT, 0, CRYPTO_DMA_ONE_SHOT);
     /* Waiting for AES calculation */
-    while(!g_AES_done);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!g_AES_done)
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for AES decrypt time-out!\n");
+            return -1;
+        }
+    }
 
     printf("AES decrypt done.\n");
-    
+
     printf("Encrypt data:\n");
     DumpBuffHex(s_au8OutputData, FLASH_PT_SIZE);
-    
+
     printf("Decrypt data:\n");
     DumpBuffHex(s_au8OutputData2, FLASH_PT_SIZE);
-    
+
     /* Compare with original data */
     if(memcmp(s_au8OutputData2, (void *)FLASH_PT_BASE, FLASH_PT_SIZE) == 0)
     {

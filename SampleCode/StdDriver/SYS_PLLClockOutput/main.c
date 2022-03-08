@@ -210,7 +210,7 @@ void UART0_Init()
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint32_t u32data;
+    uint32_t u32data, u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -268,7 +268,9 @@ int32_t main(void)
     printf("\n\n  >>> Reset CPU <<<\n");
 
     /* Wait for message send out */
-    UART_WAIT_TX_EMPTY(DEBUG_PORT);
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    UART_WAIT_TX_EMPTY(DEBUG_PORT)
+        if(--u32TimeOutCnt == 0) break;
 
     /* Select HCLK clock source as HIRC and HCLK source divider as 1 */
     CLK_SetHCLK(CLK_CLKSEL0_HCLKSEL_HIRC, CLK_CLKDIV0_HCLK(1));

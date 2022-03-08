@@ -24,6 +24,7 @@
 # pragma diag_suppress=Pm073, Pm143        /* Misra C rule 14.7 */
 #endif
 
+#define TIMEOUT_ECC        SystemCoreClock    /* 1 second time-out */
 
 /** @addtogroup Standard_Driver Standard Driver
   @{
@@ -57,7 +58,7 @@ static int  get_nibble_value(char c);
 
 /**
   * @brief  Open PRNG function
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @param[in]  u32KeySize   it is PRNG key size, including:
   *         - \ref PRNG_KEY_SIZE_64
   *         - \ref PRNG_KEY_SIZE_128
@@ -82,7 +83,7 @@ void PRNG_Open(CRPT_T *crpt, uint32_t u32KeySize, uint32_t u32SeedReload, uint32
 
 /**
   * @brief  Start to generate one PRNG key.
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @return None
   */
 void PRNG_Start(CRPT_T *crpt)
@@ -92,7 +93,7 @@ void PRNG_Start(CRPT_T *crpt)
 
 /**
   * @brief  Read the PRNG key.
-  * @param[in]   crpt         The pointer of CRYPTO module 
+  * @param[in]   crpt         The pointer of CRYPTO module
   * @param[out]  u32RandKey  The key buffer to store newly generated PRNG key.
   * @return None
   */
@@ -113,7 +114,7 @@ void PRNG_Read(CRPT_T *crpt, uint32_t u32RandKey[])
 
 /**
   * @brief  Open AES encrypt/decrypt function.
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @param[in]  u32Channel   AES channel. Must be 0~3.
   * @param[in]  u32EncDec    1: AES encode;  0: AES decode
   * @param[in]  u32OpMode    AES operation mode, including:
@@ -149,10 +150,10 @@ void AES_Open(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32EncDec,
 
 /**
   * @brief  Start AES encrypt/decrypt
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32Channel  AES channel. Must be 0~3.
   * @param[in]  u32DMAMode  AES DMA control, including:
-  *         - \ref CRYPTO_DMA_ONE_SHOT   One shop AES encrypt/decrypt.
+  *         - \ref CRYPTO_DMA_ONE_SHOT   One shot AES encrypt/decrypt.
   *         - \ref CRYPTO_DMA_CONTINUE   Continuous AES encrypt/decrypt.
   *         - \ref CRYPTO_DMA_LAST       Last AES encrypt/decrypt of a series of AES_Start.
   * @return None
@@ -165,7 +166,7 @@ void AES_Start(CRPT_T *crpt, int32_t u32Channel, uint32_t u32DMAMode)
 
 /**
   * @brief  Set AES keys
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32Channel  AES channel. Must be 0~3.
   * @param[in]  au32Keys    An word array contains AES keys.
   * @param[in]  u32KeySize is AES key size, including:
@@ -190,7 +191,7 @@ void AES_SetKey(CRPT_T *crpt, uint32_t u32Channel, uint32_t au32Keys[], uint32_t
 
 /**
   * @brief  Set AES initial vectors
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32Channel  AES channel. Must be 0~3.
   * @param[in]  au32IV      A four entry word array contains AES initial vectors.
   * @return None
@@ -210,7 +211,7 @@ void AES_SetInitVect(CRPT_T *crpt, uint32_t u32Channel, uint32_t au32IV[])
 
 /**
   * @brief  Set AES DMA transfer configuration.
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @param[in]  u32Channel   AES channel. Must be 0~3.
   * @param[in]  u32SrcAddr   AES DMA source address
   * @param[in]  u32DstAddr   AES DMA destination address
@@ -356,7 +357,7 @@ void TDES_SetDMATransfer(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32SrcAddr,
 
 /**
   * @brief  Open SHA encrypt function.
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32OpMode   SHA operation mode, including:
   *         - \ref SHA_MODE_SHA1
   *         - \ref SHA_MODE_SHA224
@@ -382,7 +383,7 @@ void SHA_Open(CRPT_T *crpt, uint32_t u32OpMode, uint32_t u32SwapType, uint32_t h
 
 /**
   * @brief  Start SHA encrypt
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32DMAMode  TDES DMA control, including:
   *         - \ref CRYPTO_DMA_ONE_SHOT   One shop SHA encrypt.
   *         - \ref CRYPTO_DMA_CONTINUE   Continuous SHA encrypt.
@@ -397,7 +398,7 @@ void SHA_Start(CRPT_T *crpt, uint32_t u32DMAMode)
 
 /**
   * @brief  Set SHA DMA transfer
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @param[in]  u32SrcAddr   SHA DMA source address
   * @param[in]  u32TransCnt  SHA DMA transfer byte count
   * @return None
@@ -410,7 +411,7 @@ void SHA_SetDMATransfer(CRPT_T *crpt, uint32_t u32SrcAddr, uint32_t u32TransCnt)
 
 /**
   * @brief  Read the SHA digest.
-  * @param[in]   crpt       The pointer of CRYPTO module 
+  * @param[in]   crpt       The pointer of CRYPTO module
   * @param[out]  u32Digest  The SHA encrypt output digest.
   * @return None
   */
@@ -758,7 +759,7 @@ static ECC_CURVE  Curve_Copy;
 
 static ECC_CURVE * get_curve(E_ECC_CURVE ecc_curve);
 static int32_t ecc_init_curve(CRPT_T *crpt, E_ECC_CURVE ecc_curve);
-static void run_ecc_codec(CRPT_T *crpt, uint32_t mode);
+static int32_t run_ecc_codec(CRPT_T *crpt, uint32_t mode);
 
 static char  temp_hex_str[160];
 
@@ -974,7 +975,7 @@ static int  get_nibble_value(char c)
 
 /**
   * @brief  Check if the private key is located in valid range of curve.
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  ecc_curve   The pre-defined ECC curve.
   * @param[in]  private_k   The input private key.
   * @return  1    Is valid.
@@ -1020,22 +1021,22 @@ int ECC_IsPrivateKeyValid(CRPT_T *crpt, E_ECC_CURVE ecc_curve,  char private_k[]
 
 /**
   * @brief  Given a private key and curve to generate the public key pair.
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  private_k   The input private key.
   * @param[in]  ecc_curve   The pre-defined ECC curve.
   * @param[out] public_k1   The output publick key 1.
   * @param[out] public_k2   The output publick key 2.
   * @return  0    Success.
-  * @return  -1   "ecc_curve" value is invalid.
+  * @return  -1   Hardware error or time-out.
+  * @return  -2   "ecc_curve" value is invalid.
   */
 int32_t  ECC_GeneratePublicKey(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *private_k, char public_k1[], char public_k2[])
 {
-    int32_t  ret = 0, i;
-    uint32_t u32Tmp;
+    int32_t  ret = 0, i, i32TimeOutCnt;
 
     if(ecc_init_curve(crpt, ecc_curve) != 0)
     {
-        ret = -1;
+        ret = -2;
     }
 
     if(ret == 0)
@@ -1061,13 +1062,19 @@ int32_t  ECC_GeneratePublicKey(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *privat
         crpt->ECC_CTL |= ((uint32_t)pCurve->key_len << CRPT_ECC_CTL_CURVEM_Pos) |
                          ECCOP_POINT_MUL | CRPT_ECC_CTL_START_Msk;
 
-        do
+        i32TimeOutCnt = TIMEOUT_ECC;
+        while(g_ECC_done == 0UL)
         {
-            u32Tmp = g_ECC_done;
-            u32Tmp |= g_ECCERR_done;
+            if( (i32TimeOutCnt-- <= 0) || g_ECCERR_done )
+            {
+                ret = -1;
+                break;
+            }
         }
-        while(u32Tmp == 0UL);
+    }
 
+    if(ret == 0)
+    {
         Reg2Hex(pCurve->Echar, crpt->ECC_X1, public_k1);
         Reg2Hex(pCurve->Echar, crpt->ECC_Y1, public_k2);
     }
@@ -1078,23 +1085,23 @@ int32_t  ECC_GeneratePublicKey(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *privat
 
 /**
   * @brief  Given a curve parameter, the other party's public key, and one's own private key to generate the secret Z.
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  ecc_curve   The pre-defined ECC curve.
   * @param[in]  private_k   One's own private key.
   * @param[in]  public_k1   The other party's publick key 1.
   * @param[in]  public_k2   The other party's publick key 2.
   * @param[out] secret_z    The ECC CDH secret Z.
   * @return  0    Success.
-  * @return  -1   "ecc_curve" value is invalid.
+  * @return  -1   Hardware error or time-out.
+  * @return  -2   "ecc_curve" value is invalid.
   */
 int32_t  ECC_GenerateSecretZ(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *private_k, char public_k1[], char public_k2[], char secret_z[])
 {
-    int32_t  i, ret = 0;
-    uint32_t u32Tmp;
+    int32_t  i, ret = 0, i32TimeOutCnt;
 
     if(ecc_init_curve(crpt, ecc_curve) != 0)
     {
-        ret = -1;
+        ret = -2;
     }
 
     if(ret == 0)
@@ -1137,22 +1144,29 @@ int32_t  ECC_GenerateSecretZ(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *private_
         crpt->ECC_CTL |= ((uint32_t)pCurve->key_len << CRPT_ECC_CTL_CURVEM_Pos) |
                          ECCOP_POINT_MUL | CRPT_ECC_CTL_START_Msk;
 
-        do
+        i32TimeOutCnt = TIMEOUT_ECC;
+        while(g_ECC_done == 0UL)
         {
-            u32Tmp = g_ECC_done;
-            u32Tmp |= g_ECCERR_done;
+            if( (i32TimeOutCnt-- <= 0) || g_ECCERR_done )
+            {
+                ret = -1;
+                break;
+            }
         }
-        while(u32Tmp == 0UL);
+    }
 
+    if(ret == 0)
+    {
         Reg2Hex(pCurve->Echar, crpt->ECC_X1, secret_z);
     }
 
     return ret;
 }
 
-static void run_ecc_codec(CRPT_T *crpt, uint32_t mode)
+static int32_t run_ecc_codec(CRPT_T *crpt, uint32_t mode)
 {
     uint32_t u32Tmp;
+    int32_t i32TimeOutCnt;
 
     if((mode & CRPT_ECC_CTL_ECCOP_Msk) == ECCOP_MODULE)
     {
@@ -1175,19 +1189,30 @@ static void run_ecc_codec(CRPT_T *crpt, uint32_t mode)
     g_ECC_done = g_ECCERR_done = 0UL;
     crpt->ECC_CTL |= ((uint32_t)pCurve->key_len << CRPT_ECC_CTL_CURVEM_Pos) | mode | CRPT_ECC_CTL_START_Msk;
 
-    do
+    i32TimeOutCnt = TIMEOUT_ECC;
+    while(g_ECC_done == 0UL)
     {
-        u32Tmp = g_ECC_done;
-        u32Tmp |= g_ECCERR_done;
+        if( (i32TimeOutCnt-- <= 0) || g_ECCERR_done )
+        {
+            return -1;
+        }
     }
-    while(u32Tmp == 0UL);
 
-    while(crpt->ECC_STS & CRPT_ECC_STS_BUSY_Msk) { }
+    i32TimeOutCnt = TIMEOUT_ECC;
+    while(crpt->ECC_STS & CRPT_ECC_STS_BUSY_Msk)
+    {
+        if( i32TimeOutCnt-- <= 0)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 /**
   * @brief  ECDSA digital signature generation.
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  ecc_curve   The pre-defined ECC curve.
   * @param[in]  message     The hash value of source context.
   * @param[in]  d           The private key.
@@ -1272,7 +1297,7 @@ int32_t  ECC_GenerateSignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *messag
         Reg2Hex(pCurve->Echar, temp_result1, R);
 
         /*
-         *   4. Compute s = k ? 1 ｝ (e + d ｝ r)(mod n). If s = 0, go to step 2
+         *   4. Compute s = k^-1 * (e + d * r)(mod n). If s = 0, go to step 2
          *      (1) Write the curve order to N registers according
          *      (2) Write 0x1 to Y1 registers
          *      (3) Write the random integer k to X1 registers according
@@ -1422,7 +1447,7 @@ int32_t  ECC_GenerateSignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *messag
 
 /**
   * @brief  ECDSA dogotal signature verification.
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  ecc_curve   The pre-defined ECC curve.
   * @param[in]  message     The hash value of source context.
   * @param[in]  public_k1   The public key 1.
@@ -1504,7 +1529,7 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
 #endif
 
         /*
-         *   4. Compute u1 = e ｝ w (mod n) and u2 = r ｝ w (mod n)
+         *   4. Compute u1 = e * w (mod n) and u2 = r * w (mod n)
          *      (1) Write the curve order and curve length to N ,M registers
          *      (2) Write e, w to X1, Y1 registers
          *      (3) Set ECCOP(CRPT_ECC_CTL[10:9]) to 01
@@ -1586,7 +1611,7 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
 #endif
 
         /*
-         *   5. Compute X・ (x1・, y1・) = u1 * G + u2 * Q
+         *   5. Compute X * (x1', y1') = u1 * G + u2 * Q
          *      (1) Write the curve parameter A, B, N, and curve length M to corresponding registers
          *      (2) Write the point G(x, y) to X1, Y1 registers
          *      (3) Write u1 to K registers
@@ -1605,17 +1630,17 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
          *      (16) Set ECCOP(CRPT_ECC_CTL[10:9]) to 10
          *      (17) Set START(CRPT_ECC_CTL[0]) to 1
          *      (18) Wait for BUSY(CRPT_ECC_STS[0]) be cleared
-         *      (19) Read X1, Y1 registers to get X・(x1・, y1・)
+         *      (19) Read X1, Y1 registers to get X *(x1', y1')
          *      (20) Write the curve order and curve length to N ,M registers
-         *      (21) Write x1・ to X1 registers
+         *      (21) Write x1 * to X1 registers
          *      (22) Write 0x0 to Y1 registers
          *      (23) Set ECCOP(CRPT_ECC_CTL[10:9]) to 01
          *      (24) Set MOPOP(CRPT_ECC_CTL[12:11]) to 10
          *      (25) Set START(CRPT_ECC_CTL[0]) to 1
          *      (26) Wait for BUSY(CRPT_ECC_STS[0]) be cleared
-         *      (27) Read X1 registers to get x1・ (mod n)
+         *      (27) Read X1 registers to get x1 * (mod n)
          *
-         *   6. The signature is valid if x1・ = r, otherwise it is invalid
+         *   6. The signature is valid if x1 * = r, otherwise it is invalid
          */
 
         /*
@@ -1699,7 +1724,7 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
 
         run_ecc_codec(crpt, ECCOP_POINT_ADD);
 
-        /* (19) Read X1, Y1 registers to get X・(x1・, y1・) */
+        /* (19) Read X1, Y1 registers to get X * (x1', y1') */
         for(i = 0; i < 18; i++)
         {
             temp_x[i] = crpt->ECC_X1[i];
@@ -1721,7 +1746,7 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
         Hex2Reg(pCurve->Eorder, crpt->ECC_N);
 
         /*
-         *  (21) Write x1・ to X1 registers
+         *  (21) Write x1 * to X1 registers
          *  (22) Write 0x0 to Y1 registers
          */
         for(i = 0; i < 18; i++)
@@ -1739,11 +1764,11 @@ int32_t  ECC_VerifySignature(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *message,
 
         run_ecc_codec(crpt, ECCOP_MODULE | MODOP_ADD);
 
-        /*  (27) Read X1 registers to get x1・ (mod n) */
+        /*  (27) Read X1 registers to get x1 * (mod n) */
         Reg2Hex(pCurve->Echar, crpt->ECC_X1, temp_hex_str);
         CRPT_DBGMSG("5-(27) x1' (mod n) = %s\n", temp_hex_str);
 
-        /* 6. The signature is valid if x1・ = r, otherwise it is invalid */
+        /* 6. The signature is valid if x1 * = r, otherwise it is invalid */
 
         /* Compare with test pattern to check if r is correct or not */
         if(strcasecmp(temp_hex_str, R) != 0)

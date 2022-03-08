@@ -38,8 +38,11 @@ extern "C"
 #define SCUART_STOP_BIT_1     (SC_CTL_NSB_Msk)                  /*!< Set SCUART transfer with one stop bit  \hideinitializer */
 #define SCUART_STOP_BIT_2     (0UL)                             /*!< Set SCUART transfer with two stop bits \hideinitializer */
 
-/*@}*/ /* end of group SCUART_EXPORTED_CONSTANTS */
+#define SCUART_TIMEOUT_ERR    (-1L)                             /*!< SCUART operation abort due to timeout error \hideinitializer */
 
+/**@}*/ /* end of group SCUART_EXPORTED_CONSTANTS */
+
+extern int32_t g_SCUART_i32ErrCode;
 
 /** @addtogroup SCUART_EXPORTED_FUNCTIONS SCUART Exported Functions
   @{
@@ -338,7 +341,7 @@ uint32_t SCUART_Open(SC_T* sc, uint32_t u32Baudrate);
 uint32_t SCUART_Read(SC_T* sc, uint8_t pu8RxBuf[], uint32_t u32ReadBytes);
 uint32_t SCUART_SetLineConfig(SC_T* sc, uint32_t u32Baudrate, uint32_t u32DataWidth, uint32_t u32Parity, uint32_t u32StopBits);
 void SCUART_SetTimeoutCnt(SC_T* sc, uint32_t u32TOC);
-void SCUART_Write(SC_T* sc, uint8_t pu8TxBuf[], uint32_t u32WriteBytes);
+uint32_t SCUART_Write(SC_T* sc, uint8_t pu8TxBuf[], uint32_t u32WriteBytes);
 
 /*@}*/ /* end of group SCUART_EXPORTED_FUNCTIONS */
 

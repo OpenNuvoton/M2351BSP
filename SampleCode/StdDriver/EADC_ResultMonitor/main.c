@@ -34,7 +34,7 @@ void SYS_Init(void)
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Enable HIRC clock (Internal RC 22.1184MHz) */
+    /* Enable HIRC clock (Internal RC 12MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Wait for HIRC clock ready */
@@ -98,10 +98,12 @@ void UART0_Init()
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* EADC function test                                                                                       */
+/* EADC function test                                                                                      */
 /*---------------------------------------------------------------------------------------------------------*/
 void EADC_FunctionTest()
 {
+    uint32_t u32TimeOutCnt;
+
     printf("\n");
     printf("+----------------------------------------------------------------------+\n");
     printf("|           EADC compare function (result monitor) sample code         |\n");
@@ -151,7 +153,15 @@ void EADC_FunctionTest()
     EADC_START_CONV(EADC, BIT0);
 
     /* Wait EADC compare interrupt */
-    while((s_u32AdcCmp0IntFlag == 0) && (s_u32AdcCmp1IntFlag == 0));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while((s_u32AdcCmp0IntFlag == 0) && (s_u32AdcCmp1IntFlag == 0))
+    {
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for EADC compare interrupt time-out!\n");
+            return;
+        }
+    }
 
     /* Disable the sample module 0 interrupt */
     EADC_DISABLE_SAMPLE_MODULE_INT(EADC, 0, BIT0);

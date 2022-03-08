@@ -106,6 +106,7 @@ void UART_Init(void)
 int main(void)
 {
     volatile uint32_t u32Loop = 0;
+    uint32_t u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -122,7 +123,9 @@ int main(void)
     printf("\n\nCPU @ %d Hz\n", SystemCoreClock);
 
     printf("Timer power down/wake up sample code.\n\n");
-    while(!UART_IS_TX_EMPTY(DEBUG_PORT));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!UART_IS_TX_EMPTY(DEBUG_PORT))
+        if(--u32TimeOutCnt == 0) break;
 
     /* Initial Timer0 to periodic mode with 1Hz, since system is fast (64MHz)
        and timer is slow (10kHz), and following function calls all modified timer's
@@ -151,7 +154,9 @@ int main(void)
     {
         CLK_PowerDown();
         printf("\nWake %d\n", u32Loop++);
-        while(!UART_IS_TX_EMPTY(DEBUG_PORT));
+        u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+        while(!UART_IS_TX_EMPTY(DEBUG_PORT))
+            if(--u32TimeOutCnt == 0) break;
     }
 }
 

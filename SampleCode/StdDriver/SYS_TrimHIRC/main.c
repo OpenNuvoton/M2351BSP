@@ -133,6 +133,7 @@ int32_t main(void)
 
     /* Enable Interrupt */
     NVIC_EnableIRQ(IRC_IRQn);
+
     /* Trim HIRC to 12MHz */
     TrimHIRC();
 
@@ -146,22 +147,29 @@ int32_t main(void)
 
 void TrimHIRC(void)
 {
-    /*  Enable IRC Trim, set HIRC clock and enable interrupt */
+    uint32_t u32TimeOutCnt;
+
+    /* Enable IRC Trim, set HIRC clock and enable interrupt */
     SYS->TIEN12M |= (SYS_TIEN12M_CLKEIEN_Msk | SYS_TIEN12M_TFAILIEN_Msk);
     SYS->TCTL12M = (SYS->TCTL12M & (~SYS_TCTL12M_FREQSEL_Msk)) | 0x1;
 
     CLK_SysTickDelay(2000); /* Waiting for HIRC Frequency Lock */
 
     /* Get HIRC Frequency Lock */
-    while(1)
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while( (SYS->TISTS12M & SYS_TISTS12M_FREQLOCK_Msk) == 0 )
     {
-        if(SYS->TISTS12M & SYS_TISTS12M_FREQLOCK_Msk)
+        if(--u32TimeOutCnt == 0)
         {
-            printf("HIRC Frequency Lock\n");
-            SYS->TISTS12M = SYS_TISTS12M_FREQLOCK_Msk;     /* Clear Trim Lock */
-            break;
+            printf("HIRC Trim failed\n");
+            return;
         }
     }
+
+    printf("HIRC Frequency Lock\n");
+
+    /* Clear Trim Lock */
+    SYS->TISTS12M = SYS_TISTS12M_FREQLOCK_Msk;
 
     /* Enable CLKO and output frequency = HIRC */
     CLK_EnableCKO(CLK_CLKSEL1_CLKOSEL_HIRC, 0, 1);

@@ -226,7 +226,7 @@ void AutoBaudRate_TxTest()
         /* Send input pattern 0x1 for auto baud rate detection bit length is 1-bit */
         UART_WRITE(UART1, 0x1);
 
-    } 
+    }
     while(1);
 
 }

@@ -10,10 +10,12 @@
 #include "targetdev.h"
 #include "spi_transfer.h"
 
+int32_t g_FMC_i32ErrCode;
+
 void ProcessHardFault(void);
 void SH_Return(void);
 void TIMER3_Init(void);
-void SYS_Init(void);
+int32_t SYS_Init(void);
 
 void ProcessHardFault(void) {}
 void SH_Return(void) {}
@@ -68,8 +70,10 @@ void TIMER3_Init(void)
     TIMER_Start(TIMER3);
 }
 
-void SYS_Init(void)
+int32_t SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Set XT1_OUT(PF.2) and XT1_IN(PF.3) to input mode */
     PF->MODE &= ~(GPIO_MODE_MODE2_Msk | GPIO_MODE_MODE3_Msk);
 
@@ -80,19 +84,23 @@ void SYS_Init(void)
     CLK->PWRCTL |= CLK_PWRCTL_HIRCEN_Msk;
 
     /* Wait for HIRC clock ready */
-    while(!(CLK->STATUS & CLK_STATUS_HIRCSTB_Msk));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!(CLK->STATUS & CLK_STATUS_HIRCSTB_Msk))
+        if(--u32TimeOutCnt == 0) return -1;
 
     /* Set core clock as PLL_CLOCK from PLL */
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
-    while(!(CLK->STATUS & CLK_STATUS_PLLSTB_Msk));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!(CLK->STATUS & CLK_STATUS_PLLSTB_Msk))
+        if(--u32TimeOutCnt == 0) return -1;
 
     CLK->CLKSEL0 = (CLK->CLKSEL0 & (~CLK_CLKSEL0_HCLKSEL_Msk)) | CLK_CLKSEL0_HCLKSEL_PLL;
     CLK->CLKDIV0 = (CLK->CLKDIV0 & (~CLK_CLKDIV0_HCLKDIV_Msk)) | CLK_CLKDIV0_HCLK(2);
 
     PllClock        = 128000000;
     SystemCoreClock = 128000000 / 2;
-    CyclesPerUs     = SystemCoreClock / 1000000;  // For SYS_SysTickDelay()
+    CyclesPerUs     = SystemCoreClock / 1000000;  // For CLK_SysTickDelay()
     /* Select PCLK0 as the clock source of SPI1 */
     CLK->CLKSEL2 = (CLK->CLKSEL2 & (~CLK_CLKSEL2_SPI1SEL_Msk)) | CLK_CLKSEL2_SPI1SEL_PCLK0;
     /* Enable SPI1 peripheral clock */
@@ -108,6 +116,8 @@ void SYS_Init(void)
                     | (SYS_GPH_MFPH_PH8MFP_SPI1_CLK | SYS_GPH_MFPH_PH9MFP_SPI1_SS);
     /* Enable SPI1 clock pin (PH8) schmitt trigger */
     PH->SMTEN |= GPIO_SMTEN_SMTEN8_Msk;
+
+    return 0;
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -120,7 +130,7 @@ int32_t main(void)
     /* Unlock protected registers */
     SYS_UnlockReg();
     /* Init System, peripheral clock and multi-function I/O */
-    SYS_Init();
+    if( SYS_Init() < 0 ) goto _APROM;
     SPI_Init();
     TIMER3_Init();
 

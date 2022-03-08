@@ -58,7 +58,15 @@ extern "C"
 #define I2C_PECTX_ENABLE            (1U)    /*!< Enable  SMBus Packet Error Check Transmit function                          */
 #define I2C_PECTX_DISABLE           (0U)    /*!< Disable SMBus Packet Error Check Transmit function                          */
 
+/*---------------------------------------------------------------------------------------------------------*/
+/* I2C Time-out Handler Constant Definitions                                                               */
+/*---------------------------------------------------------------------------------------------------------*/
+#define I2C_TIMEOUT                 (SystemCoreClock)   /*!< 1 second time-out */
+#define I2C_TIMEOUT_ERR             (-1L)               /*!< I2C time-out error value */
+
 /*@}*/ /* end of group I2C_EXPORTED_CONSTANTS */
+
+extern int32_t g_I2C_i32ErrCode;
 
 /** @addtogroup I2C_EXPORTED_FUNCTIONS I2C Exported Functions
   @{
@@ -465,9 +473,13 @@ static __INLINE void I2C_STOP(I2C_T *i2c);
  */
 static __INLINE void I2C_STOP(I2C_T *i2c)
 {
+    uint32_t u32TimeOutCount = I2C_TIMEOUT;
 
     (i2c)->CTL0 |= (I2C_CTL0_SI_Msk | I2C_CTL0_STO_Msk);
-    while(i2c->CTL0 & I2C_CTL0_STO_Msk) {}
+    while(i2c->CTL0 & I2C_CTL0_STO_Msk)
+    {
+        if(--u32TimeOutCount == 0) break;
+    }
 }
 
 

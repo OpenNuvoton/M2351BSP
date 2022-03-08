@@ -46,6 +46,11 @@ extern "C"
 #define    CAN_REMOTE_FRAME    0    /*!< CAN frame select remote frame */
 #define    CAN_DATA_FRAME    1      /*!< CAN frame select data frame */
 
+/*---------------------------------------------------------------------------------------------------------*/
+/* CAN Time-out Handler Constant Definitions                                                               */
+/*---------------------------------------------------------------------------------------------------------*/
+#define    CAN_TIMEOUT         SystemCoreClock    /*!< 1 second time-out */
+
 /*@}*/ /* end of group CAN_EXPORTED_CONSTANTS */
 
 

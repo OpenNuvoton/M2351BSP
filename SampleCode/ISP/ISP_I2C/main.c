@@ -14,16 +14,19 @@
 #include "i2c_transfer.h"
 
 uint32_t u32Pclk1;
+int32_t g_FMC_i32ErrCode;
 
 void ProcessHardFault(void);
 void SH_Return(void);
-void SYS_Init(void);
+int32_t SYS_Init(void);
 
 void ProcessHardFault(void) {}
 void SH_Return(void) {}
 
-void SYS_Init(void)
+int32_t SYS_Init(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Set PF multi-function pins for XT1_OUT(PF.2) and XT1_IN(PF.3) */
     SYS->GPF_MFPL = (SYS->GPF_MFPL & (~SYS_GPF_MFPL_PF2MFP_Msk)) | SYS_GPF_MFPL_PF2MFP_XT1_OUT;
     SYS->GPF_MFPL = (SYS->GPF_MFPL & (~SYS_GPF_MFPL_PF3MFP_Msk)) | SYS_GPF_MFPL_PF3MFP_XT1_IN;
@@ -34,7 +37,9 @@ void SYS_Init(void)
     CLK->PWRCTL |= CLK_PWRCTL_HIRCEN_Msk;
 
     /* Wait for HIRC clock ready */
-    while (!(CLK->STATUS & CLK_STATUS_HIRCSTB_Msk));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while (!(CLK->STATUS & CLK_STATUS_HIRCSTB_Msk))
+        if(--u32TimeOutCnt == 0) break;
 
     /* Select HCLK clock source as HIRC and HCLK clock divider as 1 */
     CLK->CLKSEL0 = (CLK->CLKSEL0 & (~CLK_CLKSEL0_HCLKSEL_Msk)) | CLK_CLKSEL0_HCLKSEL_HIRC; /* Set HCLK source to HIRC first */
@@ -43,7 +48,9 @@ void SYS_Init(void)
     CLK->PLLCTL = CLK_PLLCTL_128MHz_HIRC;
 
     /* Waiting for PLL stable */
-    while (!(CLK->STATUS & CLK_STATUS_PLLSTB_Msk));
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while (!(CLK->STATUS & CLK_STATUS_PLLSTB_Msk))
+        if(--u32TimeOutCnt == 0) return -1;
 
     /* Select HCLK clock source as PLL and HCLK source divider as 2 */
     CLK->CLKSEL0 = (CLK->CLKSEL0 & (~CLK_CLKSEL0_HCLKSEL_Msk)) | CLK_CLKSEL0_HCLKSEL_PLL;
@@ -68,6 +75,8 @@ void SYS_Init(void)
 
     /* I2C clock pin enable schmitt trigger */
     PA->SMTEN |= GPIO_SMTEN_SMTEN3_Msk;
+
+    return 0;
 }
 
 int main(void)
@@ -78,7 +87,7 @@ int main(void)
     SYS_UnlockReg();
 
     /* Init System, peripheral clock and multi-function I/O */
-    SYS_Init();
+    if( SYS_Init() < 0 ) goto _APROM;
 
     /* Enable ISP */
     CLK->AHBCLK |= CLK_AHBCLK_ISPCKEN_Msk;

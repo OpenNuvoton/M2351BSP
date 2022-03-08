@@ -317,6 +317,8 @@ static uint32_t _Perform_CRC32(uint32_t *pu32buf, uint16_t len, uint8_t mode)
   */
 static int32_t _AES256Encrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *KEY, uint32_t *IV)
 {
+    uint32_t u32TimeOutCnt;
+
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
 
     /* KEY and IV are byte order (32 bit) reversed, Swap32(x)) and stored in ISP_INFO_T */
@@ -329,7 +331,12 @@ static int32_t _AES256Encrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_
     CRPT->AES_CTL = ((AES_KEY_SIZE_256 << CRPT_AES_CTL_KEYSZ_Pos) | (AES_IN_OUT_SWAP << CRPT_AES_CTL_OUTSWAP_Pos));
     CRPT->AES_CTL |= (CRPT_AES_CTL_ENCRPT_Msk);
     CRPT->AES_CTL |= ((AES_MODE_CFB << CRPT_AES_CTL_OPMODE_Pos) | CRPT_AES_CTL_START_Msk | CRPT_AES_CTL_DMAEN_Msk);
-    while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk)
+    {
+        if( --u32TimeOutCnt == 0 )
+            return -1;
+    }
 
     return 0;
 }
@@ -339,7 +346,7 @@ static int32_t _AES256Encrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_
   */
 static int32_t _AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *KEY, uint32_t *IV)
 {
-    CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
+    uint32_t u32TimeOutCnt;
 
     CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
 
@@ -352,7 +359,12 @@ static int32_t _AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_
     CRPT->AES0_CNT   = len;
     CRPT->AES_CTL = ((AES_KEY_SIZE_256 << CRPT_AES_CTL_KEYSZ_Pos) | (AES_IN_OUT_SWAP << CRPT_AES_CTL_OUTSWAP_Pos));
     CRPT->AES_CTL |= ((AES_MODE_CFB << CRPT_AES_CTL_OPMODE_Pos) | CRPT_AES_CTL_START_Msk | CRPT_AES_CTL_DMAEN_Msk);
-    while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk) {}
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk)
+    {
+        if( --u32TimeOutCnt == 0 )
+            return -1;
+    }
 
     return 0;
 }
@@ -392,7 +404,10 @@ static int32_t _Perform_GenPacket(CMD_PACKET_T *pCMD)
     }
     else
     {
-        _AES256Encrypt(pCMD->au32Data, pCMD->au32Data, sizeof(pCMD->au32Data), s_ChipISPInfo.au32AESKey, s_ChipISPInfo.au32AESIV);
+        if( _AES256Encrypt(pCMD->au32Data, pCMD->au32Data, sizeof(pCMD->au32Data), s_ChipISPInfo.au32AESKey, s_ChipISPInfo.au32AESIV) < 0 )
+        {
+            return -1;
+        }
     }
 #if (0)
     {
@@ -462,7 +477,10 @@ static int32_t _Perform_ParsePacket(CMD_PACKET_T *pCMD)
     }
     else
     {
-        _AES256Decrypt(pCMD->au32Data, pCMD->au32Data, sizeof(pCMD->au32Data), s_ChipISPInfo.au32AESKey, s_ChipISPInfo.au32AESIV);
+        if( _AES256Decrypt(pCMD->au32Data, pCMD->au32Data, sizeof(pCMD->au32Data), s_ChipISPInfo.au32AESKey, s_ChipISPInfo.au32AESIV) < 0 )
+        {
+            return -1;
+        }
     }
 #if (0)
     {

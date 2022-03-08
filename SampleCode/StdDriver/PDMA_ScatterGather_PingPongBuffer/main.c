@@ -83,7 +83,7 @@ void SYS_Init(void)
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Enable HIRC clock (Internal RC 22.1184 MHz) */
+    /* Enable HIRC clock (Internal RC 12 MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Waiting for HIRC clock ready */
@@ -139,6 +139,8 @@ void UART0_Init(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int main(void)
 {
+    uint32_t u32TimeOutCnt;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -283,17 +285,26 @@ int main(void)
     /* Start PDMA operatin */
     PDMA_Trigger(PDMA0, 4);
 
-    while(1)
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(s_u32IsTestOver == 0)
     {
-        if(s_u32IsTestOver == 1)
+        if(--u32TimeOutCnt == 0)
         {
-            s_u32IsTestOver = 0;
-            printf("test done...\n");
-
-            /* Close PDMA channel */
-            PDMA_Close(PDMA0);
+            printf("Wait for PDMA time-out!\n");
+            break;
         }
     }
+
+    if(s_u32IsTestOver == 1)
+    {
+        s_u32IsTestOver = 0;
+        printf("test done...\n");
+    }
+
+    /* Close PDMA channel */
+    PDMA_Close(PDMA0);
+
+    while(1);
 }
 
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/

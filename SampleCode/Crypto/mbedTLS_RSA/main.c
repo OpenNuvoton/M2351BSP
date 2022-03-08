@@ -110,7 +110,7 @@ int32_t main(void)
     if(i32Ret != MBEDTLS_EXIT_SUCCESS)
     {
         printf("\n  Test fail\n");
-        while(1);
+        return -1;
     }
 #if 0
     printf("\n RSA encrypt with hash test. \n Please enter the [verbose] value, then press Enter Key:\n");
