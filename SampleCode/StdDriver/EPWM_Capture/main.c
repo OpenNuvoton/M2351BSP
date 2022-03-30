@@ -52,7 +52,7 @@ int32_t CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
     {
         if(--u32TimeOutCnt == 0)
         {
-            printf("Wait for EPWM time-out!\n");
+            printf("Wait for EPWM Capture Falling Indicator time-out!\n");
             return (-1);
         }
     }
@@ -70,7 +70,7 @@ int32_t CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
         {
             if(--u32TimeOutCnt == 0)
             {
-                printf("Wait for EPWM time-out!\n");
+                printf("Wait for EPWM Capture Falling Indicator time-out!\n");
                 return (-1);
             }
         }
@@ -87,7 +87,7 @@ int32_t CalPeriodTime(EPWM_T *EPWM, uint32_t u32Ch)
         {
             if(--u32TimeOutCnt == 0)
             {
-                printf("Wait for EPWM time-out!\n");
+                printf("Wait for EPWM Capture Rising Indicator time-out!\n");
                 return (-1);
             }
         }

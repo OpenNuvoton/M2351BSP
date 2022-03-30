@@ -504,7 +504,7 @@ void UI2C_SetSlaveAddr(UI2C_T *ui2c, uint8_t u8SlaveNo, uint16_t u16SlaveAddr, u
  *    @brief        Configure the mask bit of slave address.
  *
  *    @param[in]    ui2c             The pointer of the specified USCI_I2C module.
- *    @param[in]    u8SlaveNo        Slave channle number [0/1]
+ *    @param[in]    u8SlaveNo        Slave channel number [0/1]
  *    @param[in]    u16SlaveAddrMask The slave address mask.
  *
  *    @return None
@@ -779,9 +779,9 @@ uint8_t UI2C_WriteByteOneReg(UI2C_T *ui2c, uint8_t u8SlaveAddr, uint8_t u8DataAd
 
     UI2C_START(ui2c);                                                       /* Send START */
 
-    u32TimeOutCount = UI2C_TIMEOUT;
     while(u8Xfering && (u8Err == 0U))
     {
+        u32TimeOutCount = UI2C_TIMEOUT;
         while(!(UI2C_GET_PROT_STATUS(ui2c) & 0x3F00U))                      /* Wait UI2C new status occur */
         {
             if(--u32TimeOutCount == 0)

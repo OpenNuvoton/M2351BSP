@@ -135,7 +135,7 @@ void I2C1_IRQHandler(void)
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/*  I2C1 PDMA Slave Rx Callback Function                                                                       */
+/*  I2C1 PDMA Slave Rx Callback Function                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
 void I2C_PDMA_SlaveRx(uint32_t u32Status)
 {
@@ -173,7 +173,7 @@ void I2C_PDMA_SlaveRx(uint32_t u32Status)
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/*  I2C1 PDMA Slave Tx Callback Function                                                                       */
+/*  I2C1 PDMA Slave Tx Callback Function                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
 void I2C_PDMA_SlaveTx(uint32_t u32Status)
 {
@@ -243,8 +243,6 @@ void I2C_PDMA_SlaveTx(uint32_t u32Status)
     {
         /* TO DO */
         printf("Status 0x%x is NOT processed\n", u32Status);
-
-        //while (1);
     }
 }
 

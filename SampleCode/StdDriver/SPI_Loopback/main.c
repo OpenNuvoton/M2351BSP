@@ -151,7 +151,7 @@ int main(void)
             {
                 if(--u32TimeOutCnt == 0)
                 {
-                    printf("Wait for SPI time-out!\n");
+                    printf("Wait for SPI busy flag is cleared time-out!\n");
                     return -1;
                 }
             }

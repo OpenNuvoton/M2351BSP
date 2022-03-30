@@ -17,7 +17,7 @@ int32_t FlashAccess_OnSRAM(void)
     uint32_t u32Data, u32RData;
     uint32_t u32Addr;
     uint32_t u32Cnt;
-    
+
     SYS_UnlockReg();
     FMC_Open();
     FMC_ENABLE_AP_UPDATE();
@@ -42,7 +42,7 @@ int32_t FlashAccess_OnSRAM(void)
         {
             printf("[Read/Write FAIL]\n");
 
-            while (1);
+            return -1;
         }
     }
     printf("\nISP function demo done.\n");

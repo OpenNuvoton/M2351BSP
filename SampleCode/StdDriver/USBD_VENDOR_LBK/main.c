@@ -97,11 +97,15 @@ void UART0_Init(void)
 
 void PowerDown(void)
 {
+    uint32_t u32timeOutCnt;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
     printf("Enter power down ...\n");
-    while(!IsDebugFifoEmpty());
+    u32timeOutCnt = SystemCoreClock; /* 1 second time-out */
+    while(!IsDebugFifoEmpty())
+        if(--u32timeOutCnt == 0) break;
 
     /* Wakeup Enable */
     USBD_ENABLE_INT(USBD_INTEN_WKEN_Msk);

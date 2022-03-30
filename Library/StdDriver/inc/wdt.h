@@ -58,8 +58,6 @@ extern "C"
 
 /*@}*/ /* end of group WDT_EXPORTED_CONSTANTS */
 
-extern int32_t g_WDT_i32ErrCode;
-
 /** @addtogroup WDT_EXPORTED_FUNCTIONS WDT Exported Functions
   @{
 */
@@ -191,8 +189,6 @@ __STATIC_INLINE void WDT_Close(void)
   * @return     None
   *
   * @details    This function will enable the WDT time-out interrupt function.
-  *
-  * @note       This function sets g_WDT_i32ErrCode to WDT_TIMEOUT_ERR if waiting WDT time-out.
   */
 __STATIC_INLINE void WDT_EnableInt(void)
 {

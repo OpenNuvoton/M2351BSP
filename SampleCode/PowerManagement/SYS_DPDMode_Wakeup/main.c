@@ -2,7 +2,7 @@
  * @file     main.c
  * @version  V3.00
  * @brief
- *           Show how to wake up system form DPD Power-down mode by Wake-up pin(PC.0)
+ *           Show how to wake up system from DPD Power-down mode by Wake-up pin(PC.0)
  *           or Wake-up Timer or RTC Tick or RTC Alarm or RTC Tamper 0.
  *
  * @copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.

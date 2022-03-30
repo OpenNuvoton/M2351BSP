@@ -41,18 +41,18 @@ int32_t CalPeriodTime(BPWM_T *BPWM, uint32_t u32Ch)
     /* Clear Capture Falling Indicator (Time A) */
     BPWM_ClearCaptureIntFlag(BPWM, u32Ch, BPWM_CAPTURE_INT_FALLING_LATCH | BPWM_CAPTURE_INT_RISING_LATCH);
 
-    /* Wait for Capture Falling Indicator  */
+    /* Wait for Capture Falling Indicator */
     u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
     while(BPWM_GetCaptureIntFlag(BPWM, u32Ch) < 2)
     {
         if(--u32TimeOutCnt == 0)
         {
-            printf("Wait for BPWM time-out!\n");
+            printf("Wait for BPWM Capture Falling Indicator time-out!\n");
             return -1;
         }
     }
 
-    /* Clear Capture Falling Indicator (Time B)*/
+    /* Clear Capture Falling Indicator (Time B) */
     BPWM_ClearCaptureIntFlag(BPWM, u32Ch, BPWM_CAPTURE_INT_FALLING_LATCH);
 
     u32i = 0;
@@ -65,7 +65,7 @@ int32_t CalPeriodTime(BPWM_T *BPWM, uint32_t u32Ch)
         {
             if(--u32TimeOutCnt == 0)
             {
-                printf("Wait for BPWM time-out!\n");
+                printf("Wait for BPWM Capture Falling Indicator time-out!\n");
                 return -1;
             }
         }
@@ -82,7 +82,7 @@ int32_t CalPeriodTime(BPWM_T *BPWM, uint32_t u32Ch)
         {
             if(--u32TimeOutCnt == 0)
             {
-                printf("Wait for BPWM time-out!\n");
+                printf("Wait for BPWM Capture Rising Indicator time-out!\n");
                 return -1;
             }
         }

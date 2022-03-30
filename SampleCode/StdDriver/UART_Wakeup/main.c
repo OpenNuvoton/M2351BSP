@@ -1,7 +1,7 @@
 /****************************************************************************
  * @file     main.c
  * @version  V3.00
- * @brief    Show how to wake up system form Power-down mode by UART interrupt.
+ * @brief    Show how to wake up system from Power-down mode by UART interrupt.
  *
  * @copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
  *
