@@ -16,18 +16,16 @@
   @{
 */
 
-int32_t g_CLK_i32ErrCode = 0;    /*!< CLK global error code */
-
 /** @addtogroup CLK_EXPORTED_FUNCTIONS CLK Exported Functions
   @{
 */
 
 
 /**
-  * @brief      Disable frequency output function
+  * @brief      Disable clock divider output function
   * @param      None
   * @return     None
-  * @details    This function disable frequency output function.
+  * @details    This function disable clock divider output function.
   */
 void CLK_DisableCKO(void)
 {
@@ -37,22 +35,22 @@ void CLK_DisableCKO(void)
 
 
 /**
-  * @brief      This function enable frequency divider module clock.
-  *             enable frequency divider clock function and configure frequency divider.
+  * @brief      This function enable clock divider output module clock,
+  *             enable clock divider output function and set frequency selection.
   * @param[in]  u32ClkSrc is frequency divider function clock source. Including :
   *             - \ref CLK_CLKSEL1_CLKOSEL_HXT
   *             - \ref CLK_CLKSEL1_CLKOSEL_LXT
   *             - \ref CLK_CLKSEL1_CLKOSEL_HCLK
   *             - \ref CLK_CLKSEL1_CLKOSEL_HIRC
-  * @param[in]  u32ClkDiv is divider output frequency selection.
-  * @param[in]  u32ClkDivBy1En is frequency divided by one enable.
+  * @param[in]  u32ClkDiv is divider output frequency selection. It could be 0~15.
+  * @param[in]  u32ClkDivBy1En is clock divided by one enabled.
   * @return     None
   *
-  * @details    Output selected clock to CKO. The output clock frequency is divided by u32ClkDiv.
-  *             The formula is:
-  *                 CKO frequency = (Clock source frequency) / 2^(u32ClkDiv + 1)
+  * @details    Output selected clock to CKO. The output clock frequency is divided by u32ClkDiv. \n
+  *             The formula is: \n
+  *                 CKO frequency = (Clock source frequency) / 2^(u32ClkDiv + 1) \n
   *             This function is just used to set CKO clock.
-  *             User must enable I/O for CKO clock output pin by themselves.
+  *             User must enable I/O for CKO clock output pin by themselves. \n
   */
 void CLK_EnableCKO(uint32_t u32ClkSrc, uint32_t u32ClkDiv, uint32_t u32ClkDivBy1En)
 {
@@ -925,19 +923,16 @@ void CLK_DisablePLL(void)
   * @retval     0  clock is not stable
   * @retval     1  clock is stable
   * @details    To wait for clock ready by specified clock source stable flag or timeout (>125ms)
-  * @note       This function sets g_CLK_i32ErrCode to CLK_TIMEOUT_ERR if clock source status is not stable.
   */
 uint32_t CLK_WaitClockReady(uint32_t u32ClkMask)
 {
     uint32_t u32TimeOutCnt = SystemCoreClock>>3; /* 125ms time-out */
     uint32_t u32Ret = 1U;
 
-    g_CLK_i32ErrCode = 0;
     while((CLK->STATUS & u32ClkMask) != u32ClkMask)
     {
         if(--u32TimeOutCnt == 0)
         {
-            g_CLK_i32ErrCode = CLK_TIMEOUT_ERR;
             u32Ret = 0U;
             break;
         }
@@ -1012,6 +1007,7 @@ void CLK_DisableSysTick(void)
   *             - \ref CLK_PMUCTL_PDMSEL_DPD
   * @return     None
   * @details    This function is used to set power-down mode.
+  *             The register write-protection function should be disabled before using this function.
   */
 void CLK_SetPowerDownMode(uint32_t u32PDMode)
 {
@@ -1026,6 +1022,7 @@ void CLK_SetPowerDownMode(uint32_t u32PDMode)
  *              - \ref CLK_DPDWKPIN_BOTHEDGE
  * @return      None
  * @details     This function is used to enable Wake-up pin trigger type.
+ *              The register write-protection function should be disabled before using this function.
  */
 
 void CLK_EnableDPDWKPin(uint32_t u32TriggerType)

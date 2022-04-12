@@ -49,7 +49,7 @@ extern "C"
 /*---------------------------------------------------------------------------------------------------------*/
 /* CAN Time-out Handler Constant Definitions                                                               */
 /*---------------------------------------------------------------------------------------------------------*/
-#define    CAN_TIMEOUT         SystemCoreClock    /*!< 1 second time-out */
+#define    CAN_TIMEOUT         SystemCoreClock    /*!< CAN time-out counter (1 second time-out) */
 
 /*@}*/ /* end of group CAN_EXPORTED_CONSTANTS */
 

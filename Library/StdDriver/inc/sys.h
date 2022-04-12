@@ -120,8 +120,8 @@ extern "C"
 /*---------------------------------------------------------------------------------------------------------*/
 /*  PLCTL constant definitions. (Write-Protection Register)                                                */
 /*---------------------------------------------------------------------------------------------------------*/
-#define SYS_PLCTL_PLSEL_PL0     (0x0UL<<SYS_PLCTL_PLSEL_Pos)   /*!< Set power level to power level 0 */
-#define SYS_PLCTL_PLSEL_PL1     (0x1UL<<SYS_PLCTL_PLSEL_Pos)   /*!< Set power level to power level 1 */
+#define SYS_PLCTL_PLSEL_PL0     (0x0UL<<SYS_PLCTL_PLSEL_Pos)   /*!< Set power level to power level 0. Supports system clock up to 64MHz. */
+#define SYS_PLCTL_PLSEL_PL1     (0x1UL<<SYS_PLCTL_PLSEL_Pos)   /*!< Set power level to power level 1. Supports system clock up to 48MHz. */
 #define SYS_PLCTL_MVRS_LDO      (0x0UL<<SYS_PLCTL_MVRS_Pos)    /*!< Set main voltage regulator type to LDO */
 #define SYS_PLCTL_MVRS_DCDC     (0x1UL<<SYS_PLCTL_MVRS_Pos)    /*!< Set main voltage regulator type to DCDC */
 
@@ -129,8 +129,8 @@ extern "C"
 /*---------------------------------------------------------------------------------------------------------*/
 /*  PLSTS constant definitions. (Write-Protection Register)                                                */
 /*---------------------------------------------------------------------------------------------------------*/
-#define SYS_PLSTS_PLSTATUS_PL0  (0x0UL<<SYS_PLSTS_PLSTATUS_Pos) /*!< Power level is power level 0 */
-#define SYS_PLSTS_PLSTATUS_PL1  (0x1UL<<SYS_PLSTS_PLSTATUS_Pos) /*!< Power level is power level 1 */
+#define SYS_PLSTS_PLSTATUS_PL0  (0x0UL<<SYS_PLSTS_PLSTATUS_Pos) /*!< Power level is power level 0. Supports system clock up to 64MHz. */
+#define SYS_PLSTS_PLSTATUS_PL1  (0x1UL<<SYS_PLSTS_PLSTATUS_Pos) /*!< Power level is power level 1. Supports system clock up to 48MHz. */
 #define SYS_PLSTS_CURMVR_LDO    (0x0UL<<SYS_PLSTS_CURMVR_Pos)   /*!< Main voltage regulator type is LDO */
 #define SYS_PLSTS_CURMVR_DCDC   (0x1UL<<SYS_PLSTS_CURMVR_Pos)   /*!< Main voltage regulator type is DCDC */
 

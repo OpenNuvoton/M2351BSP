@@ -54,7 +54,7 @@ extern "C"
 /*---------------------------------------------------------------------------------------------------------*/
 /* WDT Time-out Handler Constant Definitions                                                               */
 /*---------------------------------------------------------------------------------------------------------*/
-#define WDT_TIMEOUT                  SystemCoreClock   /*!< 1 second time-out \hideinitializer */
+#define WDT_TIMEOUT                 SystemCoreClock   /*!< WDT time-out counter (1 second time-out) \hideinitializer */
 
 /*@}*/ /* end of group WDT_EXPORTED_CONSTANTS */
 

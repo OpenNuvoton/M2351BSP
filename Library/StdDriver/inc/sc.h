@@ -44,7 +44,7 @@ extern "C"
 #define SC_TMR_MODE_8                   (8ul << SC_TMRCTL0_OPMODE_Pos)     /*!<Timer Operation Mode 8, up count                                                        \hideinitializer */
 #define SC_TMR_MODE_F                   (0xF << SC_TMRCTL0_OPMODE_Pos)     /*!<Timer Operation Mode 15, down count, reload after detect start bit                      \hideinitializer */
 
-#define SC_TIMEOUT                      (SystemCoreClock)   /*!< 1 second time-out */
+#define SC_TIMEOUT                      (SystemCoreClock)    /*!< SC time-out counter (1 second time-out) \hideinitializer */
 
 /*@}*/ /* end of group SC_EXPORTED_CONSTANTS */
 

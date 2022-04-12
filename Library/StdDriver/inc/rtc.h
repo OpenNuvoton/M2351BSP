@@ -103,7 +103,7 @@ extern "C"
 /*---------------------------------------------------------------------------------------------------------*/
 /* RTC Time-out Handler Constant Definitions                                                               */
 /*---------------------------------------------------------------------------------------------------------*/
-#define RTC_TIMEOUT             (SystemCoreClock)   /*!< 1 second time-out */
+#define RTC_TIMEOUT             SystemCoreClock     /*!< RTC time-out counter (1 second time-out) */
 
 /*@}*/ /* end of group RTC_EXPORTED_CONSTANTS */
 

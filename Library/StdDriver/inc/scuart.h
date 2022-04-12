@@ -38,11 +38,7 @@ extern "C"
 #define SCUART_STOP_BIT_1     (SC_CTL_NSB_Msk)                  /*!< Set SCUART transfer with one stop bit  \hideinitializer */
 #define SCUART_STOP_BIT_2     (0UL)                             /*!< Set SCUART transfer with two stop bits \hideinitializer */
 
-#define SCUART_TIMEOUT_ERR    (-1L)                             /*!< SCUART operation abort due to timeout error \hideinitializer */
-
 /**@}*/ /* end of group SCUART_EXPORTED_CONSTANTS */
-
-extern int32_t g_SCUART_i32ErrCode;
 
 /** @addtogroup SCUART_EXPORTED_FUNCTIONS SCUART Exported Functions
   @{

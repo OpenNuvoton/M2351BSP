@@ -84,9 +84,8 @@ void TIMER_Close(TIMER_T *timer)
   * @param[in]  timer       The pointer of the specified Timer module. It could be TIMER0, TIMER1, TIMER2, TIMER3.
   * @param[in]  u32Usec     Delay period in micro seconds. Valid values are between 100~1000000 (100 micro second ~ 1 second).
   *
-  * @return     Delay success or not
-  * @retval     0 Success, target delay time reached
-  * @retval     TIMER_TIMEOUT_ERR Delay function execute failed due to timer stop working
+  * @retval     TIMER_OK          Delay success, target delay time reached
+  * @retval     TIMER_ERR_TIMEOUT Delay function execute failed due to timer stop working
   *
   * @details    This API is used to create a delay loop for u32usec micro seconds by using timer one-shot mode.
   * @note       This API overwrites the register setting of the timer used to count the delay time.
@@ -163,7 +162,7 @@ int32_t TIMER_Delay(TIMER_T *timer, uint32_t u32Usec)
         {
             if(i++ > u32Delay)
             {
-                return TIMER_TIMEOUT_ERR;
+                return TIMER_ERR_TIMEOUT;
             }
         }
         else
@@ -172,7 +171,7 @@ int32_t TIMER_Delay(TIMER_T *timer, uint32_t u32Usec)
             u32Cntr = timer->CNT;
         }
     }
-    return 0;
+    return TIMER_OK;
 }
 
 /**
@@ -411,9 +410,8 @@ void TIMER_SetTriggerTarget(TIMER_T *timer, uint32_t u32Mask)
   *
   * @param[in]  timer       The pointer of the specified Timer module. It could be TIMER0, TIMER1, TIMER2, TIMER3.
   *
-  * @return     Reset success or not
-  * @retval     0 Timer reset success
-  * @retval     TIMER_TIMEOUT_ERR Timer reset failed
+  * @retval     TIMER_OK          Timer reset success
+  * @retval     TIMER_ERR_TIMEOUT Timer reset failed
   *
   * @details    This function is used to reset current counter value and internal prescale counter value.
   */
@@ -428,7 +426,7 @@ int32_t TIMER_ResetCounter(TIMER_T *timer)
     {
         __NOP();
     }
-    return u32Delay > 0 ? 0 : TIMER_TIMEOUT_ERR;
+    return u32Delay > 0 ? TIMER_OK : TIMER_ERR_TIMEOUT;
 }
 
 /*@}*/ /* end of group TIMER_EXPORTED_FUNCTIONS */

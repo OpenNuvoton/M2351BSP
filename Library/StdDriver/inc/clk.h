@@ -596,15 +596,8 @@ extern "C"
 #define CLK_DISABLE_RTCWK(void)       (CLK->PMUCTL &= ~CLK_PMUCTL_RTCWKEN_Msk)    /*!< Disable RTC Wake-up at Standby or Deep Power-down mode \hideinitializer */
 #define CLK_ENABLE_RTCWK(void)        (CLK->PMUCTL |= CLK_PMUCTL_RTCWKEN_Msk)     /*!< Enable RTC Wake-up at Standby or Deep Power-down mode \hideinitializer */
 
-/*---------------------------------------------------------------------------------------------------------*/
-/* CLK Time-out Handler Constant Definitions                                                               */
-/*---------------------------------------------------------------------------------------------------------*/
-#define CLK_TIMEOUT                 (SystemCoreClock)   /*!< 1 second time-out */
-#define CLK_TIMEOUT_ERR             (-1L)               /*!< CLK time-out error value */
 
 /*@}*/ /* end of group CLK_EXPORTED_CONSTANTS */
-
-extern int32_t g_CLK_i32ErrCode;
 
 /** @addtogroup CLK_EXPORTED_FUNCTIONS CLK Exported Functions
   @{
@@ -665,77 +658,61 @@ extern int32_t g_CLK_i32ErrCode;
 /* static inline functions                                                                                 */
 /*---------------------------------------------------------------------------------------------------------*/
 /* Declare these inline functions here to avoid MISRA C 2004 rule 8.1 error */
-__STATIC_INLINE int32_t CLK_SysTickDelay(uint32_t us);
-__STATIC_INLINE int32_t CLK_SysTickLongDelay(uint32_t us);
+__STATIC_INLINE void CLK_SysTickDelay(uint32_t us);
+__STATIC_INLINE void CLK_SysTickLongDelay(uint32_t us);
 
 
 /**
   * @brief      This function execute delay function.
   * @param[in]  us  Delay time. The Max value is (2^24-1) / CPU Clock(MHz). Ex:
   *                             64MHz => 262143us, 48MHz => 349525us ...
-  * @retval     0 Delay success. Target delay time reached.
-  * @retval     CLK_TIMEOUT_ERR Delay function execute failed due to SysTick stop working.
-  * @details    Use the SysTick to generate the delay time and the UNIT is in us.
+  * @return     None
+  * @details    Use the SysTick to generate the delay time and the unit is in us.
   *             The SysTick clock source is from HCLK, i.e the same as system core clock.
   *             User can use SystemCoreClockUpdate() to calculate CyclesPerUs automatically before using this function.
   */
-__STATIC_INLINE int32_t CLK_SysTickDelay(uint32_t us)
+__STATIC_INLINE void CLK_SysTickDelay(uint32_t us)
 {
-    /* The u32TimeOutCnt value must be greater than the max delay time of 1398ms if HCLK=12MHz */
-    uint32_t u32TimeOutCnt = SystemCoreClock<<1; /* 2 second time-out */
-
     SysTick->LOAD = us * CyclesPerUs;
     SysTick->VAL  = (0x0UL);
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
 
     /* Waiting for down-count to zero */
     while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0UL)
-        if(--u32TimeOutCnt == 0) break;
+    {
+    }
 
     /* Disable SysTick counter */
     SysTick->CTRL = 0UL;
-
-    if(u32TimeOutCnt == 0)
-        return CLK_TIMEOUT_ERR;
-    else
-        return 0;
 }
 
 
 #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3L)
 
-__STATIC_INLINE int32_t CLK_SysTickDelay_NS(uint32_t us);
+__STATIC_INLINE void CLK_SysTickDelay_NS(uint32_t us);
 
 /**
   * @brief      This function execute delay function.
   * @param[in]  us  Delay time. The Max value is (2^24-1) / CPU Clock(MHz). Ex:
   *                             64MHz => 262143us, 48MHz => 349525us ...
-  * @retval     0 Delay success. Target delay time reached.
-  * @retval     CLK_TIMEOUT_ERR Delay function execute failed due to SysTick stop working.
+  * @return     None
   * @details    Use the SysTick to generate the delay time and the UNIT is in us.
   *             The SysTick clock source is from HCLK, i.e the same as system core clock.
   *             User can use SystemCoreClockUpdate() to calculate CyclesPerUs automatically before using this function.
   */
-__STATIC_INLINE int32_t CLK_SysTickDelay_NS(uint32_t us)
+__STATIC_INLINE void CLK_SysTickDelay_NS(uint32_t us)
 {
-    /* The u32TimeOutCnt value must be greater than the max delay time of 1398ms if HCLK=12MHz */
-    uint32_t u32TimeOutCnt = SystemCoreClock<<1; /* 2 second time-out */
-
     SysTick_NS->LOAD = us * CyclesPerUs;
     SysTick_NS->VAL  = (0x00UL);
     SysTick_NS->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
 
     /* Waiting for down-count to zero */
     while((SysTick_NS->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0UL)
-        if(--u32TimeOutCnt == 0) break;
+    {
+    }
 
     /* Disable SysTick counter */
     SysTick_NS->CTRL = 0UL;
-
-    if(u32TimeOutCnt == 0)
-        return CLK_TIMEOUT_ERR;
-    else
-        return 0;
 }
 #endif /* defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3L) */
 
@@ -745,16 +722,14 @@ __STATIC_INLINE int32_t CLK_SysTickDelay_NS(uint32_t us)
 /**
   * @brief      This function execute long delay function.
   * @param[in]  us  Delay time.
-  * @retval     0 Delay success. Target delay time reached.
-  * @retval     CLK_TIMEOUT_ERR Delay function execute failed due to SysTick stop working.
+  * @return     None
   * @details    Use the SysTick to generate the long delay time and the UNIT is in us.
   *             The SysTick clock source is from HCLK, i.e the same as system core clock.
   *             User can use SystemCoreClockUpdate() to calculate CyclesPerUs automatically before using this function.
   */
-__STATIC_INLINE int32_t CLK_SysTickLongDelay(uint32_t us)
+__STATIC_INLINE void CLK_SysTickLongDelay(uint32_t us)
 {
-    /* The u32TimeOutCnt value must be greater than the max delay time of 1398ms if HCLK=12MHz */
-    uint32_t u32Delay, u32TimeOutCnt;
+    uint32_t u32Delay;
 
     /* It should <= 65536us for each delay loop */
     u32Delay = 65536UL;
@@ -776,39 +751,29 @@ __STATIC_INLINE int32_t CLK_SysTickLongDelay(uint32_t us)
         SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
 
         /* Waiting for down-count to zero */
-        u32TimeOutCnt = SystemCoreClock<<1; /* 2 second time-out */
-        while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0UL)
-            if(--u32TimeOutCnt == 0) break;
+        while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0UL);
 
         /* Disable SysTick counter */
         SysTick->CTRL = 0UL;
-
     }
-    while( (us > 0UL) && (u32TimeOutCnt != 0) );
-
-    if(u32TimeOutCnt == 0)
-        return CLK_TIMEOUT_ERR;
-    else
-        return 0;
+    while(us > 0UL);
 }
 
 #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3L)
 
-__STATIC_INLINE int32_t CLK_SysTickLongDelay_NS(uint32_t us);
+__STATIC_INLINE void CLK_SysTickLongDelay_NS(uint32_t us);
 
 /**
   * @brief      This function execute long delay function.
   * @param[in]  us  Delay time.
-  * @retval     0 Delay success. Target delay time reached.
-  * @retval     CLK_TIMEOUT_ERR Delay function execute failed due to SysTick stop working.
+  * @return     None
   * @details    Use the SysTick to generate the long delay time and the UNIT is in us.
   *             The SysTick clock source is from HCLK, i.e the same as system core clock.
   *             User can use SystemCoreClockUpdate() to calculate CyclesPerUs automatically before using this function.
   */
-__STATIC_INLINE int32_t CLK_SysTickLongDelay_NS(uint32_t us)
+__STATIC_INLINE void CLK_SysTickLongDelay_NS(uint32_t us)
 {
-    /* The u32TimeOutCnt value must be greater than the max delay time of 1398ms if HCLK=12MHz */
-    uint32_t u32Delay, u32TimeOutCnt;
+    uint32_t u32Delay;
 
     /* It should <= 65536us for each delay loop */
     u32Delay = 65536UL;
@@ -830,20 +795,13 @@ __STATIC_INLINE int32_t CLK_SysTickLongDelay_NS(uint32_t us)
         SysTick_NS->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
 
         /* Waiting for down-count to zero */
-        u32TimeOutCnt = SystemCoreClock<<1; /* 2 second time-out */
-        while((SysTick_NS->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0UL)
-            if(--u32TimeOutCnt == 0) break;
+        while((SysTick_NS->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0UL);
 
         /* Disable SysTick counter */
         SysTick_NS->CTRL = 0UL;
 
     }
-    while( (us > 0UL) && (u32TimeOutCnt != 0) );
-
-    if(u32TimeOutCnt == 0)
-        return CLK_TIMEOUT_ERR;
-    else
-        return 0;
+    while(us > 0UL);
 }
 
 #endif /* defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3L) */
