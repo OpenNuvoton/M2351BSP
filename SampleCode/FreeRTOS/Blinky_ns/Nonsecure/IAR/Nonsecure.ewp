@@ -220,7 +220,7 @@
                 <debug>0</debug>
                 <option>
                     <name>CCDefines</name>
-                    <state></state>
+                    <state>DEBUG_PORT=UART1_NS</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>

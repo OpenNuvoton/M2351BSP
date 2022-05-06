@@ -615,7 +615,7 @@ void UART_SelectRS485Mode(UART_T* uart, uint32_t u32Mode, uint32_t u32Addr)
  *    @param[in]    u32Mode         The LIN direction :
  *                                  - \ref UART_ALTCTL_LINTXEN_Msk
  *                                  - \ref UART_ALTCTL_LINRXEN_Msk
- *    @param[in]    u32BreakLength  The breakfield length.
+ *    @param[in]    u32BreakLength  The break field length.
  *
  *    @return       None
  *

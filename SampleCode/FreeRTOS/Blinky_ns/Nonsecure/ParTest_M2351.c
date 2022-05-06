@@ -88,16 +88,26 @@ perform the desired operation. */
 #define partstOFF_SHIFT	( 0UL )
 
 /*-----------------------------------------------------------*/
+void DEBUG_PORT_Init(void)
+{
+    /*---------------------------------------------------------------------------------------------------------*/
+    /* Init UART                                                                                               */
+    /*---------------------------------------------------------------------------------------------------------*/
+
+    DEBUG_PORT->BAUD = UART_BAUD_MODE2 | UART_BAUD_MODE2_DIVIDER(__HIRC, 115200);
+    DEBUG_PORT->LINE = UART_WORD_LEN_8 | UART_PARITY_NONE | UART_STOP_BIT_1;
+}
 
 void vParTestInitialise( void )
 {
- 
-    /* LED IO PA11*/
+    DEBUG_PORT_Init();
+
+    /* LED IO PA11 */
     PA_NS->MODE = (PA_NS->MODE & (~(3ul << 11*2))) | GPIO_MODE_OUTPUT << 11*2;
 
-    
+
     printf("\b\b\b\b\b\b\n\nFreeRTOS ...\n");
-    
+
 }
 /*-----------------------------------------------------------*/
 

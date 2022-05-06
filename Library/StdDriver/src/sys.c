@@ -171,11 +171,11 @@ void SYS_ResetModule(uint32_t u32ModuleIndex)
     /* Generate reset signal to the corresponding module */
     u32TmpVal = (1UL << (u32ModuleIndex & 0x00ffffffUL));
     u32TmpAddr = (uint32_t)&SYS->IPRST0 + ((u32ModuleIndex >> 24UL));
-    *(uint32_t *)u32TmpAddr |= u32TmpVal;
+    *(volatile uint32_t *)u32TmpAddr |= u32TmpVal;
 
     /* Release corresponding module from reset state */
     u32TmpVal = ~(1UL << (u32ModuleIndex & 0x00ffffffUL));
-    *(uint32_t *)u32TmpAddr &= u32TmpVal;
+    *(volatile uint32_t *)u32TmpAddr &= u32TmpVal;
 }
 
 /**

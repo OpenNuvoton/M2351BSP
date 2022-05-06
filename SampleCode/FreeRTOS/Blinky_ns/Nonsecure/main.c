@@ -18,6 +18,7 @@
 
 /* Standard includes. */
 #include "string.h"
+#include "stdio.h"
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
@@ -127,15 +128,15 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 	function is called if a stack overflow is detected. */
 	taskDISABLE_INTERRUPTS();
 
-  //__BKPT();
-	
+    //__BKPT();
+
     printf("Stack overflow task name=%s\n", pcTaskName);
-    
-	
+
+
 	for( ;; );
-    
-    
-    
+
+
+
 }
 /*-----------------------------------------------------------*/
 
