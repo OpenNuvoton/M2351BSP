@@ -313,13 +313,17 @@ int32_t main(void)
             if(s_au8SlvData[u32i] != s_au8SlvTxData[2])
             {
                 printf("GC Mode Receive data fail.\n");
-                return -1;
+                goto lexit;
             }
         }
 
         printf("GC Mode receive data OK. Any key to continue.\n");
         getchar();
     }
+
+lexit:
+
+    while(1);
 }
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
 

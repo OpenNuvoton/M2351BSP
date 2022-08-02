@@ -191,7 +191,7 @@ int32_t main(void)
         if(--u32TimeOutCnt == 0)
         {
             printf("Wait for AES encrypt done time-out!\n");
-            return -1;
+            goto lexit;
         }
     }
 
@@ -219,7 +219,7 @@ int32_t main(void)
         if(--u32TimeOutCnt == 0)
         {
             printf("Wait for AES decrypt done time-out!\n");
-            return -1;
+            goto lexit;
         }
     }
 
@@ -231,7 +231,7 @@ int32_t main(void)
     printf("Decrypt data :\n");
     DumpBuffHex(s_au8OutputData2, sizeof(s_au8InputData));
 
-    /* Compare the decrpt results */
+    /* Compare the decrypt results */
     for(i=0;i<sizeof(s_au8InputData);i++)
     {
         if(s_au8InputData[i] != s_au8OutputData2[i])
@@ -240,12 +240,13 @@ int32_t main(void)
             break;
         }
     }
-    
+
     if(i == sizeof(s_au8InputData))
     {
         printf("AES Encrypt/Decrypt OK!\n");
     }
 
+lexit:
 
     while(1);
 }

@@ -116,12 +116,12 @@ void vParTestSetLED( unsigned long ulLED, signed portBASE_TYPE xValue )
     (void)ulLED;
     if( xValue == pdTRUE )
     {
-        /* Turn the LED on. */			
+        /* Turn the LED on. */
         PA11_NS = 0;
     }
     else
     {
-        /* Turn the LED off. */			
+        /* Turn the LED off. */
         PA11_NS = 1;
     }
 }

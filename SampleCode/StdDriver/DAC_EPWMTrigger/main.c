@@ -64,7 +64,7 @@ void SYS_Init(void)
     /* Wait for HXT clock ready */
     CLK_WaitClockReady(CLK_STATUS_HXTSTB_Msk);
 
-    /* Set PLL to power down mode and PLL_STB bit in CLKSTATUS register will be cleared by hardware.*/
+    /* Set PLL to power down mode and PLLSTB bit in CLK_STATUS register will be cleared by hardware.*/
     CLK->PLLCTL |= CLK_PLLCTL_PD_Msk;
 
     /* Set PLL frequency */
@@ -85,10 +85,10 @@ void SYS_Init(void)
     /* Enable DAC module clock */
     CLK_EnableModuleClock(DAC_MODULE);
 
-    /* Enable PWM0 module clock */
+    /* Enable EPWM0 module clock */
     CLK_EnableModuleClock(EPWM0_MODULE);
 
-    /* Select PWM0 module clock source as PCLK0 */
+    /* Select EPWM0 module clock source as PCLK0 */
     CLK_SetModuleClock(EPWM0_MODULE, CLK_CLKSEL2_EPWM0SEL_PCLK0, 0);
 
     /*

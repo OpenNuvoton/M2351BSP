@@ -67,7 +67,7 @@ int main(void)
     else
     {
         printf("Fail!\n");
-        return -1;
+        goto lexit;
     }
 
     /* Check page data are not all one by BL_CheckFlashAllOne */
@@ -80,7 +80,7 @@ int main(void)
     else
     {
         printf("Fail! (0x%0x)\n", u32Status);
-        return -1;
+        goto lexit;
     }
 
 
@@ -94,7 +94,7 @@ int main(void)
     else
     {
         printf("Fail!\n");
-        return -1;
+        goto lexit;
     }
     printf("Check [0x%08x] one page are all one ... ", u32Addr);
     u32Status = BL_CheckFlashAllOne(u32Addr, FMC_FLASH_PAGE_SIZE);
@@ -105,7 +105,7 @@ int main(void)
     else
     {
         printf("Fail! (0x%08x)\n", u32Status);
-        return -1;
+        goto lexit;
     }
 
 
@@ -124,7 +124,7 @@ int main(void)
     else
     {
         printf("Fail! (0x%08x)\n", u32Status);
-        return -1;
+        goto lexit;
     }
     /* BL_FlashWrite last 1024 bytes */
     printf("Single Write [0x%08x] 1024 bytes ... ", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2)));
@@ -133,7 +133,7 @@ int main(void)
         if(BL_FlashWrite(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4), s_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]) != 0)
         {
             printf("Fail! (0x%0x: 0x%08x)\n\n", (uint32_t)(u32Addr + (FMC_FLASH_PAGE_SIZE / 2) + (i * 4)), (uint32_t)(s_au32FlashData[((FMC_FLASH_PAGE_SIZE / 4) / 2) + i]));
-            return -1;
+            goto lexit;
         }
     }
     printf("Ok.\n");
@@ -148,7 +148,7 @@ int main(void)
     else
     {
         printf("Fail! (0x%08x)\n", u32Status);
-        return -1;
+        goto lexit;
     }
     /* BL_FlashRead one page data and compare data */
     printf("Single read then compare all data ... ");
@@ -158,18 +158,20 @@ int main(void)
         if(BL_FlashRead(u32Addr + (i * 4)) != (0xA5A50000UL + i))
         {
             printf("Fail! (0x%08x: 0x%08x)\n", (u32Addr + (i * 4)), BL_FlashRead(u32Addr + (i * 4)));
-            return -1;
+            goto lexit;
         }
         data_tmp = s_au32FlashData[i];
         if(data_tmp != s_au32GetData[i])
         {
             printf("Fail! (0x%08x. W:0x%08x, R:0x%08x)\n", (u32Addr + (i * 4)), data_tmp, s_au32GetData[i]);
-            return -1;
+            goto lexit;
         }
     }
     printf("Pass.\n");
 
     printf("\n[Non-secure code call MKROM Non-secure API sample code done.\n\n");
+
+lexit:
 
     while(1) {}
 }

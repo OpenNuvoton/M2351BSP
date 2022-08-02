@@ -96,7 +96,7 @@ int main(void)
     if(XECC_GeneratePublicKey(XCRPT, ECC_CURVE_TYPE, d, key1, key2) < 0)
     {
         printf("ECC key generation failed!!\n");
-        return -1;
+        goto lexit;
     }
 
     if(memcmp(Qx, key1, ECC_KEY_SIZE / 8))
@@ -113,13 +113,13 @@ int main(void)
             if(Qx[i] != key1[i])
                 printf("\n%d - 0x%x 0x%x\n", i, Qx[i], key1[i]);
         }
-        return -1;
+        goto lexit;
     }
 
     if(memcmp(Qy, key2, ECC_KEY_SIZE / 8))
     {
         printf("Public key 2 [%s] is not matched with expected [%s]!\n", key2, Qy);
-        return -1;
+        goto lexit;
     }
 
     printf("Private key: %s\n", d);
@@ -127,6 +127,8 @@ int main(void)
     printf("Public key1: %s\n", key2);
 
     printf("ECC public key compared OK.\n");
+
+lexit:
 
     while(1) {}
 }

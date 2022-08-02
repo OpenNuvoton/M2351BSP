@@ -162,13 +162,13 @@ void UART_TEST_HANDLE(void)
         /* Get all the input characters */
         while( UART_GET_RX_EMPTY(UART0) == 0 )
         {
-            /* Receive Line Status Error Handle */ 
+            /* Receive Line Status Error Handle */
             if(u32IntSts & UART_INTSTS_RLSINT_Msk)
-            {                
+            {
                 /* Clear Receive Line Status Interrupt */
-                UART_ClearIntFlag(UART0, UART_INTSTS_RLSINT_Msk);   
+                UART_ClearIntFlag(UART0, UART_INTSTS_RLSINT_Msk);
             }
-            
+
             /* Get the character from UART Buffer */
             u8InChar = (uint8_t)UART_READ(UART0);
 

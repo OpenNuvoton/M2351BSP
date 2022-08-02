@@ -185,11 +185,14 @@ int32_t main(void)
     TDES_Start(CRPT, 0, CRYPTO_DMA_ONE_SHOT);
 
     /* Waiting for TDES done */
-    u32TimeOutCnt = SystemCoreClock; /* 1 secod time-out */
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
     while(!g_TDES_done)
     {
-        printf("Wait for TDES encrypt done time-out!\n");
-        goto lexit;
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for TDES encrypt done time-out!\n");
+            goto lexit;
+        }
     }
 
     printf("TDES encrypt done.\n\n");
@@ -205,11 +208,14 @@ int32_t main(void)
 
     g_TDES_done = 0;
     TDES_Start(CRPT, 0, CRYPTO_DMA_ONE_SHOT);
-    u32TimeOutCnt = SystemCoreClock; /* 1 secod time-out */
+    u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
     while(!g_TDES_done)
     {
-        printf("Wait for TDES decrypt done time-out!\n");
-        goto lexit;
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("Wait for TDES decrypt done time-out!\n");
+            goto lexit;
+        }
     }
 
     printf("TDES decrypt done.\n\n");

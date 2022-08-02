@@ -295,7 +295,7 @@ int32_t main(void)
             if(--u32TimeOutCnt == 0)
             {
                 printf("Wait for I2C Tx finish time-out!\n");
-                return -1;
+                goto lexit;
             }
         }
         s_u8EndFlag = 0;
@@ -315,7 +315,7 @@ int32_t main(void)
             if(--u32TimeOutCnt == 0)
             {
                 printf("Wait for I2C Rx finish time-out!\n");
-                return -1;
+                goto lexit;
             }
         }
 
@@ -323,10 +323,12 @@ int32_t main(void)
         if(s_u8RxData != s_au8TxData[2])
         {
             printf("I2C Byte Write/Read Failed, Data 0x%x\n", s_u8RxData);
-            return -1;
+            goto lexit;
         }
     }
     printf("I2C0 Access EEPROM Test OK\n");
+
+lexit:
 
     s_I2C0HandlerFn = NULL;
 

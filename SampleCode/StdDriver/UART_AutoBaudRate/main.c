@@ -144,7 +144,7 @@ int32_t main(void)
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Auto Baud Rate Function Test                                                                           */
 /*---------------------------------------------------------------------------------------------------------*/
-void AutoBaudRate_Test()
+void AutoBaudRate_Test(void)
 {
 
     int32_t i32Item;
@@ -186,7 +186,7 @@ void AutoBaudRate_Test()
 /*---------------------------------------------------------------------------------------------------------*/
 /*  Auto Baud Rate Function Tx Test                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-void AutoBaudRate_TxTest()
+void AutoBaudRate_TxTest(void)
 {
     int32_t i32Item;
 
@@ -267,6 +267,8 @@ uint32_t GetUartBaudrate(UART_T* uart)
             u8UartClkSrcSel = (CLK->CLKSEL3 & CLK_CLKSEL3_UART5SEL_Msk) >> CLK_CLKSEL3_UART5SEL_Pos;
             u8UartClkDivNum = (CLK->CLKDIV4 & CLK_CLKDIV4_UART5DIV_Msk) >> CLK_CLKDIV4_UART5DIV_Pos;
             break;
+        default:
+            return 0;
     }
 
     /* Get PLL clock frequency if UART clock source selection is PLL */
@@ -294,7 +296,7 @@ uint32_t GetUartBaudrate(UART_T* uart)
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/*  Auto Baud Rate Function Rx Test                                                                                 */
+/*  Auto Baud Rate Function Rx Test                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 void AutoBaudRate_RxTest()
 {

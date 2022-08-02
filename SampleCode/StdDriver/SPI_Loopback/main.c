@@ -152,15 +152,23 @@ int main(void)
                 if(--u32TimeOutCnt == 0)
                 {
                     printf("Wait for SPI busy flag is cleared time-out!\n");
-                    return -1;
+                    u32Err = 1;
+                    break;
                 }
             }
+
+            if(u32Err)
+                break;
+
             /* Read received data */
             s_au32DestinationData[u32DataCount] = SPI_READ_RX(SPI0);
             u32DataCount++;
             if(u32DataCount >= TEST_COUNT)
                 break;
         }
+
+        if(u32Err)
+            break;
 
         /*  Check the received data */
         for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)

@@ -129,7 +129,7 @@ int32_t main(void)
                 if(--u32TimeOutCnt == 0)
                 {
                     printf("Wait for PRNG time-out!\n");
-                    return -1;
+                    goto lexit;
                 }
             }
 
@@ -144,6 +144,8 @@ int32_t main(void)
     }
 
     printf("\nAll done.\n");
+
+lexit:
 
     while(1);
 }

@@ -26,7 +26,7 @@ void SelectCANSpeed(CAN_T  *tCAN);
 void Test_NormalMode_Tx(CAN_T *tCAN);
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* ISR to handle CAN interrupt event                                                            */
+/* ISR to handle CAN interrupt event                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {
@@ -369,7 +369,7 @@ int main()
     printf("+------------------------------------------------------------------ +\n");
     printf("|  Nuvoton CAN BUS DRIVER DEMO                                      |\n");
     printf("+-------------------------------------------------------------------+\n");
-    printf("|  Transmit a message by normal mode                                 |\n");
+    printf("|  Transmit a message by normal mode                                |\n");
     printf("+-------------------------------------------------------------------+\n");
 
     printf("Press any key to continue ...\n\n");

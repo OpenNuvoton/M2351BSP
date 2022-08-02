@@ -27,7 +27,7 @@ void CAN_ResetIF(CAN_T *tCAN, uint8_t u8IF_Num);
 void Test_BasicMode_Rx(CAN_T *tCAN);
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* ISR to handle CAN interrupt event                                                            */
+/* ISR to handle CAN interrupt event                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {
@@ -342,10 +342,10 @@ int main()
     SelectCANSpeed(tCAN);
 
     printf("\n");
-    printf("+------------------------------------------------------------------ +\n");
+    printf("+-------------------------------------------------------------------+\n");
     printf("|  Nuvoton CAN BUS DRIVER DEMO                                      |\n");
     printf("+-------------------------------------------------------------------+\n");
-    printf("|  Receive a message by basic mode                                 |\n");
+    printf("|  Receive a message by basic mode                                  |\n");
     printf("+-------------------------------------------------------------------+\n");
 
     printf("Press any key to continue ...\n\n");

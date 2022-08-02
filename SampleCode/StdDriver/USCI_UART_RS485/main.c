@@ -383,12 +383,12 @@ int32_t main(void)
 
     printf("\n\nCPU @ %dHz\n", SystemCoreClock);
 
-    printf("\nUART Sample Program\n");
+    printf("\nUSCI UART Sample Program\n");
 
     /* USCI UART RS485 sample function */
     RS485_FunctionTest();
 
-    printf("\nUART Sample Program End\n");
+    printf("\nUSCI UART Sample Program End\n");
 
     while(1);
 

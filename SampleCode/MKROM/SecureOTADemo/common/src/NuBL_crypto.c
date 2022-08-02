@@ -103,7 +103,7 @@ int32_t NuBL_CalculateSHA256(uint32_t start, uint32_t end, uint32_t digest[], E_
                     u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
                     while(CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk)
                     {
-                        if( --u32TimeOutCnt != 0 )
+                        if( --u32TimeOutCnt == 0 )
                             return -1;
                     }
 
@@ -163,7 +163,7 @@ int32_t NuBL_AES256Decrypt(uint32_t *in, uint32_t *out, uint32_t len, uint32_t *
     u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
     while(CRPT->AES_STS & CRPT_AES_STS_BUSY_Msk)
     {
-        if( --u32TimeOutCnt != 0 )
+        if( --u32TimeOutCnt == 0 )
             return -1;
     }
 

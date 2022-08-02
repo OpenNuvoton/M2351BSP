@@ -273,6 +273,7 @@ int32_t main(void)
     uint32_t    u32Loop;                  /* loop counter                                   */
     uint32_t    u32Addr;                  /* flash address                                  */
     uint32_t    u32t;                     /* TIMER0 counter value                           */
+    uint32_t    u32Err = 0;               /* Error flag                                     */
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -315,7 +316,7 @@ int32_t main(void)
     printf("\nTime elapsed without program bank1: %d.%d seconds. Ticks: %d\n\n", u32t / 1000000, u32t / 1000, s_u32TickCnt);
 
     db_addr = APROM_BANK1_BASE;        /* Dual bank background program address           */
-    db_length = DB_PROG_LEN;           /* Dual bank background length                 */
+    db_length = DB_PROG_LEN;           /* Dual bank background length                    */
     db_state = DB_STATE_START;         /* Start background dual bank program             */
 
     enable_sys_tick(1000);
@@ -341,10 +342,13 @@ int32_t main(void)
         if(inpw(u32Addr) != u32Addr)
         {
             printf("Flash address 0x%x verify failed! expect: 0x%x, read: 0x%x.\n", u32Addr, u32Addr, inpw(u32Addr));
-            return -1;
+            u32Err = 1;
+            break;
         }
     }
-    printf("Verify OK.\n");
+
+    if(u32Err == 0)
+        printf("Verify OK.\n");
 
     FMC_Close();                       /* Disable FMC ISP function                       */
 

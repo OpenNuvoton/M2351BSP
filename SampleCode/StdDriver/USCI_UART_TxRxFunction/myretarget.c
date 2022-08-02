@@ -100,9 +100,9 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
             sp = (uint32_t *)psp;
         else
             sp = (uint32_t *)msp;
-    
+
     }
-#if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3U)    
+#if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3U)
     else
     {
         /* Non-secure stack used */
@@ -110,9 +110,9 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
             sp = (uint32_t *)__TZ_get_PSP_NS();
         else
             sp = (uint32_t *)__TZ_get_MSP_NS();
-    
+
     }
-#endif    
+#endif
 
     if (sp != 0)
     {
@@ -131,10 +131,10 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
             return lr;  // Keep lr in R0
         }
     }
-    
+
     /* It is casued by hardfault (Not semihost). Just process the hard fault here. */
     /* TODO: Implement your hardfault handle code here */
-    
+
     /*
     printf("  HardFault!\n\n");
     printf("r0  = 0x%x\n", sp[0]);
@@ -171,7 +171,7 @@ int32_t SH_Return(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0)
     {
         if(pn32Out_R0)
             *pn32Out_R0 = n32In_R0;
-        
+
         return 1;
     }
     return 0;
@@ -189,14 +189,14 @@ int _write (int fd, char *ptr, int len);
 #if defined( __ICCARM__ )
 __WEAK
 #else
-__attribute__((weak)) 
+__attribute__((weak))
 #endif
 uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
 {
     uint32_t *sp = 0;
     /* It is casued by hardfault. Just process the hard fault */
     /* TODO: Implement your hardfault handle code here */
-    
+
     /* Check the used stack */
     if(lr & 0x40UL)
     {
@@ -209,9 +209,9 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
         {
             sp = (uint32_t *)msp;
         }
-    
+
     }
-#if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3)    
+#if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3)
     else
     {
         /* Non-secure stack used */
@@ -219,10 +219,10 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
             sp = (uint32_t *)__TZ_get_PSP_NS();
         else
             sp = (uint32_t *)__TZ_get_MSP_NS();
-    
+
     }
-#endif    
-    
+#endif
+
     /*
     printf("  HardFault!\n\n");
     printf("r0  = 0x%x\n", sp[0]);
@@ -234,10 +234,10 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
     printf("pc  = 0x%x\n", sp[6]);
     printf("psr = 0x%x\n", sp[7]);
     */
-    
+
     /* Or *sp to remove compiler warning */
     while(1U|*sp){}
-    
+
     return lr;
 }
 

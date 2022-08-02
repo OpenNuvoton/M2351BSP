@@ -38,7 +38,7 @@ void Test_NormalMode_WaitRxMsg(CAN_T *tCAN);
 #endif
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* ISR to handle CAN interrupt event                                                            */
+/* ISR to handle CAN interrupt event                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {
@@ -387,7 +387,7 @@ void Test_NormalMode_Tx(CAN_T *tCAN)
 }
 
 /*----------------------------------------------------------------------------*/
-/*  Receive Rx Msg by Normal Mode Function (With Message RAM)                    */
+/*  Receive Rx Msg by Normal Mode Function (With Message RAM)                 */
 /*----------------------------------------------------------------------------*/
 void Test_NormalMode_SetRxMsg(CAN_T *tCAN)
 {

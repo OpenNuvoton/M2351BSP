@@ -42,7 +42,7 @@ void SYS_Init(void)
     /* Wait for HXT clock ready */
     CLK_WaitClockReady(CLK_STATUS_HXTSTB_Msk);
 
-    /* Set PLL to power down mode and PLL_STB bit in CLKSTATUS register will be cleared by hardware. */
+    /* Set PLL to power down mode and PLLSTB bit in CLK_STATUS register will be cleared by hardware. */
     CLK->PLLCTL |= CLK_PLLCTL_PD_Msk;
 
     /* Set PLL frequency */

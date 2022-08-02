@@ -141,7 +141,7 @@ int main(void)
     {
         printf("\n RTC initial fail!!");
         printf("\n Please check h/w setting!!");
-        return -1;
+        goto lexit;
     }
 
     /* Enable RTC tick interrupt, one RTC tick is 1 second */
@@ -172,7 +172,7 @@ int main(void)
             if(u32Sec == sReadRTC.u32Second)
             {
                 printf("\nRTC time is incorrect.\n");
-                return -1;
+                goto lexit;
             }
 
             u32Sec = sReadRTC.u32Second;
@@ -191,6 +191,10 @@ int main(void)
             }
         }
     }
+
+lexit:
+
+    while(1);
 }
 
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/

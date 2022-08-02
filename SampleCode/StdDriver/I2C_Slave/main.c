@@ -250,7 +250,7 @@ void I2C0_Close(void)
 /*---------------------------------------------------------------------------------------------------------*/
 int32_t main(void)
 {
-    uint32_t u32i;
+    uint32_t u32i, u32TimeOutCnt;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -271,7 +271,7 @@ int32_t main(void)
     printf("| I2C Driver Sample Code(Slave) for access Slave         |\n");
     printf("|  Needs to work with I2C_Master sample code.            |\n");
     printf("| I2C Master (I2C0) <---> I2C Slave(I2C0)                |\n");
-    printf("| !! This sample code requires two borads to test !!     |\n");
+    printf("| !! This sample code requires two boards to test !!     |\n");
     printf("+--------------------------------------------------------+\n");
 
     printf("Configure I2C0 as a slave.\n");
@@ -314,7 +314,10 @@ int32_t main(void)
         {
             s_u8SlvTRxAbortFlag = 0;
 
-            while(I2C0->CTL0 & I2C_CTL0_SI_Msk);
+            u32TimeOutCnt = I2C_TIMEOUT;
+            while(I2C0->CTL0 & I2C_CTL0_SI_Msk)
+                if(--u32TimeOutCnt == 0) break;
+
             printf("I2C Slave re-start. status[0x%x]\n", I2C0->STATUS0);
             I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
         }

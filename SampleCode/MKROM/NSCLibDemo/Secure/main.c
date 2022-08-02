@@ -106,7 +106,7 @@ int main(void)
     if(SCU->FNSADDR != FMC_SECURE_ROM_SIZE)
     {
         printf("Set Non-secure base address fail!\n");
-        return -1;
+        goto lexit;
     }
     printf("\n");
 
@@ -130,7 +130,7 @@ int main(void)
     if(BL_FlashPageErase(u32Addr))
     {
         printf("Fail!\n");
-        return -1;
+        goto lexit;
     }
     else
     {
@@ -143,7 +143,7 @@ int main(void)
         else
         {
             printf("Fail!\n");
-            return -1;
+            goto lexit;
         }
     }
     printf("\n");
@@ -155,7 +155,9 @@ int main(void)
     //getchar();
 
     Nonsecure_Init(); /* Jump to Non-secure code */
-    
+
+lexit:
+
     while(1) {}
 }
 

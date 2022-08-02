@@ -28,7 +28,7 @@ void Test_NormalMode_Rx(CAN_T *tCAN);
 
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* ISR to handle CAN interrupt event                                                            */
+/* ISR to handle CAN interrupt event                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {

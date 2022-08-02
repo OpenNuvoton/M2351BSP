@@ -245,7 +245,7 @@ void USCI_AutoFlow_FunctionRxTest(void)
     if(u32Err)
         printf("Compare Data Failed\n");
     else
-    printf("\n Receive OK & Check OK\n");
+        printf("\n Receive OK & Check OK\n");
 
     /* Disable USCI interrupt */
     UUART_DisableInt(UUART0, UUART_RXEND_INT_MASK | UUART_BUF_RXOV_INT_MASK);

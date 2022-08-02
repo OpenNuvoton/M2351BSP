@@ -27,7 +27,7 @@ void CAN_ResetIF(CAN_T *tCAN, uint8_t u8IF_Num);
 void Test_BasicMode_Tx_Rx(void);
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* ISR to handle CAN interrupt event                                                            */
+/* ISR to handle CAN interrupt event                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/
 void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {

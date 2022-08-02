@@ -98,7 +98,7 @@ void SYS_Init(void)
     SYS->GPF_MFPL &= (~(SYS_GPF_MFPL_PF2MFP_Msk | SYS_GPF_MFPL_PF3MFP_Msk));
     SYS->GPF_MFPL |= (SYS_GPF_MFPL_PF2MFP_XT1_OUT | SYS_GPF_MFPL_PF3MFP_XT1_IN);
 
-    /* Enable Internal RC 22.1184MHz clock */
+    /* Enable Internal RC 12MHz clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
     /* Waiting for Internal RC clock ready */

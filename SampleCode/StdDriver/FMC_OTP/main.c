@@ -96,14 +96,14 @@ int32_t main(void)
         printf("OTP%03d: 0x%08x 0x%08x (%s)\n", u32i, u32OtpLw, u32OtpHw, FMC_Is_OTP_Locked(u32i)?"LOCKED":"UNLOCKED");
     }
 
-#if 0 
+#if 0
     /* NOTE:  Be careful! OTP cannot be erased. Any programming to OTP can not be recovered. */
-    
+
     printf("Ready to program OTP ...\n");
     printf("Programming OTP is not recoverable. Are you sure? (y/n)\n");
     if(getchar() != 'y')
         goto lexit;
-    
+
     printf("Program OTP%d with 0x%x-0x%x...\n", u32i, 0x5A5A0000 | u32i, 0x00005A5A | u32i);
 
     if(FMC_Write_OTP(u32i, 0x5A5A0000 | u32i, 0x00005A5A | u32i) != 0)
@@ -154,7 +154,6 @@ int32_t main(void)
 lexit:
     FMC_Close();                       /* Disable FMC ISP function */
     SYS_LockReg();                     /* Lock protected registers */
-    
 
     while(1);
 }

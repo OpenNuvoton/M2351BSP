@@ -263,12 +263,14 @@ int main(void)
                     (au32Counts[3] > (au32Counts[0] * 8 + 1)) || (au32Counts[3] < (au32Counts[0] * 8 - 1)))
             {
                 printf("*** FAIL ***\n");
-                return -1;
+                goto lexit;
             }
         }
     }
 
     printf("*** PASS ***\n");
+
+lexit:
 
     while(1) {}
 }

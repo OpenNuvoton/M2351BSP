@@ -94,19 +94,19 @@ int main(void)
     if(XECC_GenerateSignature(XCRPT, ECC_CURVE_TYPE, sha_msg, d, k, sig_R, sig_S) < 0)
     {
         printf("ECC signature generation failed!!\n");
-        return -1;
+        goto lexit;
     }
 
     if(memcmp(sig_R, R, sizeof(R)))
     {
         printf("Signature R [%s] is not matched with expected [%s]!\n", sig_R, R);
-        return -1;
+        goto lexit;
     }
 
     if(memcmp(sig_S, S, sizeof(S)))
     {
         printf("Signature S [%s] is not matched with expected [%s]!\n", sig_S, S);
-        return -1;
+        goto lexit;
     }
 
     printf("Message:     %s\n", sha_msg);
@@ -115,6 +115,8 @@ int main(void)
     printf("Signature R: %s\n", sig_R);
     printf("Signature S: %s\n", sig_S);
     printf("ECC digital signature compared OK.\n");
+
+lexit:
 
     while(1) {}
 }

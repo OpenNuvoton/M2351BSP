@@ -125,7 +125,7 @@ int32_t main(void)
     if(FMC_SetSPKey(s_au32GoodKey, KPMAX_VAL, KEMAX_VAL, 0, 0) < 0)
     {
         printf("Failed to setup key!\n");   /* error message */
-        return -1;                     /* Failed to setup security key. Program aborted. */
+        goto lexit;                    /* Failed to setup security key. Program aborted. */
     }
 
     printf("The security key status after key setup:\n");
@@ -137,7 +137,7 @@ int32_t main(void)
     if (ret != -3)
     {
         printf("Unexpected error on comparing a bad key!\n");
-        return -1;
+        goto lexit;
     }
 
     ret = FMC_CompareSPKey(s_au32BadKey);         /* Enter a wrong key for key comparison. */
@@ -146,7 +146,7 @@ int32_t main(void)
     if (ret != -3)
     {
         printf("Unexpected error on comparing a bad key!\n");
-        return -1;
+        goto lexit;
     }
 
     ret = FMC_CompareSPKey(s_au32GoodKey);        /* Enter the right key for key comparison. */
@@ -155,17 +155,20 @@ int32_t main(void)
     if (ret != 0)
     {
         printf("Unexpected error on comparing a good key!\n");
-        return -1;
+        goto lexit;
     }
 
     printf("Erase KPROM key.\n");
     if (FMC_Erase(FMC_KPROM_BASE) != 0)
     {
         printf("FMC_Erase FMC_KPROM_BASE failed!\n");
-        return -1;
+        goto lexit;
     }
 
     printf("Test done.\n");
+
+lexit:
+
     while(1);
 }
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/

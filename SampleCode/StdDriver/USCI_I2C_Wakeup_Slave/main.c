@@ -448,7 +448,7 @@ int main(void)
         if(--u32TimeOutCnt == 0)
         {
             printf("Wait for system or USCI_I2C interrupt time-out!\n");
-            return -1;
+            break;
         }
     }
 

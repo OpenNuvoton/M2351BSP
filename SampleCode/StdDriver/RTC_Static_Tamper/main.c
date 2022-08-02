@@ -164,7 +164,7 @@ int main(void)
     {
         printf("\n RTC initial fail!!");
         printf("\n Please check h/w setting!!");
-        return -1;
+        goto lexit;
     }
 
     RTC_GetDateAndTime(&sGetTime);
@@ -193,6 +193,10 @@ int main(void)
         while(s_u32IsTamper == FALSE) {}
         s_u32IsTamper = FALSE;
     }
+
+lexit:
+
+    while(1);
 }
 
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/

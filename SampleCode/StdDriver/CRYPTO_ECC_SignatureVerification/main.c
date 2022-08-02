@@ -97,17 +97,18 @@ int32_t main(void)
     ECC_ENABLE_INT(CRPT);
 
     printf("+---------------------------------------------+\n");
-    printf("|   Crypto ECC Public Key Verification Demo    |\n");
+    printf("|   Crypto ECC Public Key Verification Demo   |\n");
     printf("+---------------------------------------------+\n");
 
     /* Verify the signature */
     if(ECC_VerifySignature(CRPT, CURVE_P_192, sha_msg, Qx, Qy, R, S) < 0)
     {
         printf("ECC signature verification failed!!\n");
-        return -1;
     }
-
-    printf("ECC digital signature verification OK.\n");
+    else
+    {
+        printf("ECC digital signature verification OK.\n");
+    }
 
     while(1);
 }

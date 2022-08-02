@@ -135,24 +135,26 @@ int32_t main(void)
     if(ECC_GenerateSignature(CRPT, CURVE_P_192, g_SHA_msg, gD, gK, gR1, gS1) < 0)
     {
         printf("ECC signature generation failed!!\n");
-        return -1;
+        goto lexit;
     }
 
     /* Verify the signature R */
     if(memcmp(gR1, gR, sizeof(gR)))
     {
         printf("Signature R [%s] is not matched with expected [%s]!\n", gR1, gR);
-        return -1;
+        goto lexit;
     }
 
     /* Verify the signature S */
     if(memcmp(gS1, gS, sizeof(gS)))
     {
         printf("Signature S [%s] is not matched with expected [%s]!\n", gS1, gS);
-        return -1;
+        goto lexit;
     }
 
     printf("ECC digital signature compared OK.\n");
+
+lexit:
 
     while(1);
 }

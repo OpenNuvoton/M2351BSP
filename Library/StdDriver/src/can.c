@@ -170,7 +170,7 @@ static void ReleaseIF(CAN_T *tCAN, uint32_t u32IfNo)
 /**
   * @brief Enter initialization mode
   * @param[in] tCAN The pointer to CAN module base address.
-  * @param[in] Following values can be used.
+  * @param[in] u8Mask Following values can be used.
   *            \ref CAN_CON_DAR_Msk Disable automatic retransmission.
   *            \ref CAN_CON_EIE_Msk Enable error interrupt.
   *            \ref CAN_CON_SIE_Msk Enable status interrupt.
@@ -450,12 +450,14 @@ int32_t CAN_BasicReceiveMsg(CAN_T *tCAN, STR_CANMSG_T* pCanMsg)
 
 /**
   * @brief Set Rx message object, include ID mask.
+  * @param[in] tCAN The pointer to CAN module base address.
   * @param[in] u8MsgObj Specifies the Message object number, from 0 to 31.
   * @param[in] u8idType Specifies the identifier type of the frames that will be transmitted
   *                     This parameter can be one of the following values:
   *                     \ref CAN_STD_ID (standard ID, 11-bit)
   *                     \ref CAN_EXT_ID (extended ID, 29-bit)
   * @param[in] u32id Specifies the identifier used for acceptance filtering.
+  * @param[in] u32idmask Specifies the identifier mask
   * @param[in] u8singleOrFifoLast Specifies the end-of-buffer indicator.
   *                               This parameter can be one of the following values:
   *                               TRUE: for a single receive object or a FIFO receive object that is the last one of the FIFO.
@@ -516,6 +518,7 @@ int32_t CAN_SetRxMsgObjAndMsk(CAN_T *tCAN, uint8_t u8MsgObj, uint8_t u8idType, u
 
 /**
   * @brief Set Rx message object
+  * @param[in] tCAN The pointer to CAN module base address.
   * @param[in] u8MsgObj Specifies the Message object number, from 0 to 31.
   * @param[in] u8idType Specifies the identifier type of the frames that will be transmitted
   *                     This parameter can be one of the following values:
@@ -579,6 +582,7 @@ int32_t CAN_SetRxMsgObj(CAN_T *tCAN, uint8_t u8MsgObj, uint8_t u8idType, uint32_
 
 /**
   * @brief Gets the message
+  * @param[in] tCAN The pointer to CAN module base address.
   * @param[in] u8MsgObj Specifies the Message object number, from 0 to 31.
   * @param[in] u8Release Specifies the message release indicator.
   *                      This parameter can be one of the following values:
@@ -952,7 +956,11 @@ int32_t CAN_TriggerTxMsg(CAN_T  *tCAN, uint32_t u32MsgNum)
 
     while(tCAN->IF[u8MsgIfNum].CREQ & CAN_IF_CREQ_BUSY_Msk) /*Wait*/
     {
-        if(--u32TimeOutCount == 0) return -1;
+        if(--u32TimeOutCount == 0)
+        {
+            ReleaseIF(tCAN, u8MsgIfNum);
+            return -1;
+        }
     }
     tCAN->IF[u8MsgIfNum].CMASK  = CAN_IF_CMASK_WRRD_Msk | CAN_IF_CMASK_TXRQSTNEWDAT_Msk;
     tCAN->IF[u8MsgIfNum].CREQ  = 1UL + u32MsgNum;

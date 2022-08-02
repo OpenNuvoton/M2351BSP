@@ -238,7 +238,7 @@ int main(void)
 #if (ENABLE_XOM0_REGION == 1)
 
     /* Enable XOM0, and all the functions in VerifyNuBL3x.c cannot trace in ICE debug mode  */
-    if( EnableXOM0() < 0 ) return -1;
+    if( EnableXOM0() < 0 ) goto lexit;
 #endif
 
     /* Verify NuBL32 identity and F/W integrity */
@@ -246,7 +246,7 @@ int main(void)
     if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL32_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL32 FAIL.\n");
-        return -1;
+        goto lexit;
     }
     else
     {
@@ -260,7 +260,7 @@ int main(void)
     if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL33_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL33 FAIL.\n");
-        return -1;
+        goto lexit;
     }
     else
     {
@@ -282,6 +282,8 @@ int main(void)
 
     /* Reset CPU only to reset to new vector page */
     SYS->IPRST0 |= SYS_IPRST0_CPURST_Msk;
+
+lexit:
 
     while(1) {}
 }
