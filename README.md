@@ -92,9 +92,6 @@ To experience the powerful features of M2351 in few minutes, please refer to NuM
 - Crypto<br>
 	An open source library for elliptic curve cryptosystem (ECC).
 
-- emWin<br>
-	Segger embedded graphic library.
-
 - FatFs<br>
 	An open source FAT/exFAT filesystem library.
 
