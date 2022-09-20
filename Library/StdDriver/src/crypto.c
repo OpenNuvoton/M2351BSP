@@ -88,6 +88,7 @@ void PRNG_Open(CRPT_T *crpt, uint32_t u32KeySize, uint32_t u32SeedReload, uint32
   */
 void PRNG_Start(CRPT_T *crpt)
 {
+    crpt->PRNG_CTL = (crpt->PRNG_CTL & (~CRPT_PRNG_CTL_SEEDRLD_Msk));
     crpt->PRNG_CTL |= CRPT_PRNG_CTL_START_Msk;
 }
 
