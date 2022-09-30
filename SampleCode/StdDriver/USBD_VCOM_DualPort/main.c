@@ -32,9 +32,6 @@ uint16_t g_u16CtrlSignal1 = 0;     /* BIT0: DTR(Data Terminal Ready) , BIT1: RTS
 #define RXBUFSIZE           512 /* RX buffer size */
 #define TXBUFSIZE           512 /* RX buffer size */
 
-#define TX_FIFO_SIZE_0        16  /* TX Hardware FIFO size */
-#define TX_FIFO_SIZE_1        16  /* TX Hardware FIFO size */
-
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -223,9 +220,9 @@ void UART0_IRQHandler(void)
         {
             /* Fill the Tx FIFO */
             i32Size = g_u16ComTbytes0;
-            if(i32Size >= TX_FIFO_SIZE_0)
+            if(i32Size >= UART0_FIFO_SIZE)
             {
-                i32Size = TX_FIFO_SIZE_0;
+                i32Size = UART0_FIFO_SIZE;
             }
 
             while(i32Size)
@@ -287,9 +284,9 @@ void UART1_IRQHandler(void)
         {
             /* Fill the Tx FIFO */
             i32Size = g_u16ComTbytes1;
-            if(i32Size >= TX_FIFO_SIZE_1)
+            if(i32Size >= UART1_FIFO_SIZE)
             {
-                i32Size = TX_FIFO_SIZE_1;
+                i32Size = UART1_FIFO_SIZE;
             }
 
             while(i32Size)
