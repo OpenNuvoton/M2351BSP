@@ -818,8 +818,8 @@ int32_t main(void)
                         if(!xatoi(&ptr, &i32P1) || !xatoi(&ptr, &i32P2) || !xatoi(&ptr, &i32P3)) break;
                         Finfo.fdate = (WORD)(((i32P1 - 1980) << 9) | ((i32P2 & 15) << 5) | (i32P3 & 31));
                         if(!xatoi(&ptr, &i32P1) || !xatoi(&ptr, &i32P2) || !xatoi(&ptr, &i32P3)) break;
-                        Finfo.ftime = (WORD)(((i32P1 & 31) << 11) | ((i32P1 & 63) << 5) | ((i32P1 >> 1) & 31));
-                        put_rc(f_utime(ptr, &Finfo));
+                        Finfo.ftime = (WORD)(((i32P1 & 31) << 11) | ((i32P2 & 63) << 5) | ((i32P3 >> 1) & 31));
+                        put_rc(f_utime(ptr+1, &Finfo));
                         break;
 
                     case 'x' : /* fx <src_name> <dst_name> - Copy file */
