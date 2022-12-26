@@ -3834,7 +3834,7 @@ __STATIC_INLINE void SYS_LockReg(void);
   */
 __STATIC_INLINE void SYS_UnlockReg(void)
 {
-    uint32_t u32TimeOutCount = SystemCoreClock; /* 1 second time-out */
+    uint32_t u32TimeOutCount = __HIRC;
 
     do
     {
