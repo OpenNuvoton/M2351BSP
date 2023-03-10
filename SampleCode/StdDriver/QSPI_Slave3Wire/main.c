@@ -1,7 +1,7 @@
 /**************************************************************************//**
  * @file     main.c
  * @version  V3.00
- * @brief    Configure QSPI0 as Slave 3 wire mode and demonstrate how to
+ * @brief    Configure QSPI0 as Slave 3-wire mode and demonstrate how to
  *           communicate with an off-chip SPI Master device with FIFO mode.
  *           This sample code needs to work with SPI_MasterFIFOMode sample code.
  *
@@ -18,7 +18,6 @@ static uint32_t s_au32DestinationData[TEST_COUNT];
 
 void SYS_Init(void);
 void QSPI_Init(void);
-
 
 void SYS_Init(void)
 {
@@ -81,13 +80,12 @@ void SYS_Init(void)
 
 void QSPI_Init(void)
 {
+    /* Enable slave 3-wire mode before enabling QSPI controller */
+    QSPI_ENABLE_3WIRE_MODE(QSPI0);
 
     /* Configure as a slave, clock idle low, 32-bit transaction, drive output on falling clock edge and latch input on rising edge. */
     /* Configure QSPI0 as a low level active device. */
-    QSPI_Open(QSPI0, SPI_SLAVE, SPI_MODE_0, 32, (uint32_t)NULL);
-
-    /* Enable slave 3 wire mode */
-    QSPI0->SSCTL |= QSPI_SSCTL_SLV3WIRE_Msk;
+    QSPI0->CTL = QSPI_SLAVE | QSPI_MODE_0 | QSPI_CTL_SPIEN_Msk;
 }
 
 int main(void)
@@ -108,7 +106,7 @@ int main(void)
 
     printf("\n\n");
     printf("+-----------------------------------------------------------------------+\n");
-    printf("|                  QSPI0 Slave 3 Wire Mode Sample Code                  |\n");
+    printf("|                  QSPI0 Slave 3-Wire Mode Sample Code                  |\n");
     printf("+-----------------------------------------------------------------------+\n");
     printf("\n");
     printf("Configure QSPI0 as a slave.\n");
@@ -159,6 +157,7 @@ int main(void)
 
     /* Reset QSPI0 */
     QSPI_Close(QSPI0);
+
     while(1);
 }
 
