@@ -435,7 +435,7 @@ int32_t main(void)
     }
     else if( SET_PDMSEL == CLK_PMUCTL_PDMSEL_DPD )
     {
-        /* Eable wake-up pin PC.0 falling edge wake-up at DPD mode. PC.0 would be input mode floating at DPD mode. */
+        /* Enable wake-up pin PC.0 falling edge wake-up at DPD mode. PC.0 would be input mode floating at DPD mode. */
         CLK_EnableDPDWKPin(CLK_DPDWKPIN_FALLING);
 
         /* Set PF.4~PF.11 I/O state by RTC control to prevent floating */

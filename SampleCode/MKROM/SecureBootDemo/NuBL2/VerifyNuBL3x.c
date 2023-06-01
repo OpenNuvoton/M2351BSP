@@ -253,8 +253,11 @@ static int32_t IdentifyNuBL3xPubKey(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
     u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
     while(AES_GET_INT_FLAG(CRPT) == 0)
     {
-        printf("\n\tWait for AES time-out!\n");
-        return -1;
+        if(--u32TimeOutCnt == 0)
+        {
+            printf("\n\tWait for AES time-out!\n");
+            return -1;
+        }
     }
 
     AES_CLR_INT_FLAG(CRPT);
