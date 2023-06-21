@@ -12,32 +12,14 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-# if defined (__GNUC__)
+#if (defined (__GNUC__) && (!(defined(__ARMCC_VERSION))))
 extern void initialise_monitor_handles(void);
 #endif
-
-void UART0_Init(void);
 
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Main Function                                                                                            */
 /*---------------------------------------------------------------------------------------------------------*/
-
-void UART0_Init(void)
-{
-    /* Select IP clock source */
-    CLK->CLKSEL1 = (CLK->CLKSEL1 & (~CLK_CLKSEL1_UART0SEL_Msk)) | CLK_CLKSEL1_UART0SEL_HIRC;
-
-    /* Enable IP clock */
-    CLK->APBCLK0 |= CLK_APBCLK0_UART0CKEN_Msk;
-
-    UART0->LINE = UART_PARITY_NONE | UART_STOP_BIT_1 | UART_WORD_LEN_8;
-    UART0->BAUD = UART_BAUD_MODE2 | UART_BAUD_MODE2_DIVIDER(__HIRC, 115200);
-
-    /* Set multi-function pins for UART0 RXD and TXD */
-    SYS->GPB_MFPH = (SYS->GPB_MFPH & (~(UART0_RXD_PB12_Msk | UART0_TXD_PB13_Msk))) | UART0_RXD_PB12 | UART0_TXD_PB13;
-}
-
 
 int32_t main()
 {
@@ -72,7 +54,6 @@ int32_t main()
 
     */
 
-    UART0_Init();
 #if (defined (__GNUC__) && (!(defined(__ARMCC_VERSION))))
     initialise_monitor_handles();
 #endif

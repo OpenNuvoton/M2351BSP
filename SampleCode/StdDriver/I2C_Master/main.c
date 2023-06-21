@@ -54,7 +54,7 @@ void I2C_MasterRx(uint32_t u32Status);
 void I2C_MasterTx(uint32_t u32Status);
 void SYS_Init(void);
 void I2C0_Close(void);
-int32_t I2C0_Read_Write_SLAVE(uint8_t u8SlvAddr);
+int32_t I2C0_Read_Write_SLAVE(uint16_t u8SlvAddr);
 
 /*---------------------------------------------------------------------------------------------------------*/
 /*  I2C0 IRQ Handler                                                                                       */
@@ -126,7 +126,7 @@ void I2C_MasterRx(uint32_t u32Status)
 #if (I2C_10Bit_MODE)
         if (s_u8MstDataLen != 3)
 #else
-        if(s_u8MstDataLen != 2)
+        if (s_u8MstDataLen != 2)
 #endif
         {
             I2C_SET_DATA(I2C0, s_au8MstTxData[s_u8MstDataLen++]);
@@ -344,7 +344,7 @@ void I2C0_Close(void)
 
 }
 
-int32_t I2C0_Read_Write_SLAVE(uint8_t u8SlvAddr)
+int32_t I2C0_Read_Write_SLAVE(uint16_t u8SlvAddr)
 {
     uint32_t u32i;
 
