@@ -12,7 +12,11 @@
 #define APROM_TEST_BASE             0x10000
 #define TEST_PATTERN                0x5A5A5A5A
 
+#if (defined(__GNUC__) && !defined(__ARMCC_VERSION))
+__attribute__((used, long_call, section(".fastcode"))) int32_t FlashAccess_OnSRAM(void)
+#else
 int32_t FlashAccess_OnSRAM(void)
+#endif
 {
     uint32_t u32Data, u32RData;
     uint32_t u32Addr;

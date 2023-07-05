@@ -100,6 +100,14 @@ int32_t main(void)
     /* Read User Configuration */
     printf("  User Config 0 ......................... [0x%08x]\n", FMC_Read(FMC_USER_CONFIG_0));
 
+    if (((FMC->XOMSTS & 0x1) == 0) &&
+            (FMC_CheckAllOne(XOMR0_Base, FMC_FLASH_PAGE_SIZE) == READ_ALLONE_YES))
+    {
+        printf("XOM0 region erased. No program code in XOM0.\n");
+        printf("Demo completed. Please re-program flash if you want to run again.\n");
+        while (1);
+    }
+
     printf("XOM Status = 0x%X\n", FMC->XOMSTS);
     printf("Any key to continue...\n");
     getchar();

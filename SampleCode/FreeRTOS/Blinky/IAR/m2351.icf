@@ -29,7 +29,7 @@ define symbol __ICFEDIT_size_cstack__        = 0x1000;
 define symbol __ICFEDIT_size_proc_s_stack__  = 0x0;
 define symbol __ICFEDIT_size_main_ns_stack__ = 0x0;
 define symbol __ICFEDIT_size_proc_ns_stack__ = 0x0;
-define symbol __ICFEDIT_size_heap__          = 0x2800;
+define symbol __ICFEDIT_size_heap__          = 0x3800;
 /**** End of ICF editor section. ###ICF###*/
 
 define memory mem with size = 4G;

@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-#define PLL_CLOCK       64000000
 
 #define APROM_TEST_BASE             0x3000
 #define TEST_PATTERN                0x5A5A5A5A
@@ -92,7 +91,7 @@ int32_t main(void)
     /*
        This sample code is used to demonstrate how to implement a code to execute in SRAM.
        By setting scatter loading file (scatter.scf),
-       RO code is placed to 0x20000000 ~ 0x20001fff with RW is placed to 0x20002000 ~ 0x20003fff.
+       RO code is placed from 0x20000000 with RW is placed from 0x20004000.
     */
 
     /* Unlock protected registers */
