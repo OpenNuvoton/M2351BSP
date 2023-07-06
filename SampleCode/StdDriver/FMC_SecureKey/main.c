@@ -121,6 +121,9 @@ int32_t main(void)
 
     FMC_Open();                        /* Enable FMC ISP function */
 
+    printf("The security key status before key setup:\n");
+    dump_key_status();                 /* Dump FMC security key status. */
+
     /* Setup a new key */
     if(FMC_SetSPKey(s_au32GoodKey, KPMAX_VAL, KEMAX_VAL, 0, 0) < 0)
     {

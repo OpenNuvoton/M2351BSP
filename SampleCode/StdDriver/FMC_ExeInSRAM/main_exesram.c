@@ -5,7 +5,7 @@
  * $Date: 16/10/17 2:06p $
  * @brief
  *           Implement a code and execute in SRAM to program embedded Flash.
- *           (Support KEIL MDK Only)
+ *           (Support IAR/GCC)
  * @note
  * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
@@ -13,14 +13,10 @@
 #include <string.h>
 #include "NuMicro.h"
 
-#define PLL_CLOCK       64000000
-
-#define APROM_TEST_BASE             0x3000
-#define TEST_PATTERN                0x5A5A5A5A
 
 #define SRAM_CODE_EXE_ADDR  0x20010000
 #define SRAM_CODE_BASE      0x8000
-#define SRAM_CODE_SIZE      0x1000
+#define SRAM_CODE_SIZE      0x2000
 
 typedef void (FUNC_PTR)(void);
 
@@ -76,8 +72,8 @@ void SYS_Init(void)
 int32_t main(void)
 {
 
-    FUNC_PTR    *func;    
- 
+    FUNC_PTR    *func;
+
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -97,28 +93,43 @@ int32_t main(void)
 
     /*
        This sample code is used to demonstrate how to implement a code to execute in SRAM.
-       By setting scatter loading file (scatter.scf),
-       RO code is placed to 0x20000000 ~ 0x20001fff with RW is placed to 0x20002000 ~ 0x20003fff.
     */
+
+#if (defined(__GNUC__) && !defined(__ARMCC_VERSION))
+
+    printf("Will branch to address: 0x%x\n", (uint32_t)FlashAccess_OnSRAM);
+
+    if(FlashAccess_OnSRAM())
+    {
+        printf("Flash access return error.\n");
+    }
+    else
+    {
+        printf("Flash access return ok.\n");
+    }
+
+#else
 
     /* Unlock protected registers */
     SYS_UnlockReg();
 
     printf("Execute demo code in APROM ==>\n");
-    
+
     FlashAccess_OnSRAM();
 
     memcpy((uint8_t *)SRAM_CODE_EXE_ADDR, (uint8_t *)SRAM_CODE_BASE, SRAM_CODE_SIZE);
 
     printf("Execute demo code in SRAM ==>\n");
-    
-    func = (FUNC_PTR *)(SRAM_CODE_BASE+1);
+
+    func = (FUNC_PTR *)(SRAM_CODE_EXE_ADDR+1);
 
     func();   /* branch to exeinsram.o in SRAM  */
 
-    printf("Execute demo code in SRAM Done!\n"); 
+    printf("Execute demo code in SRAM Done!\n");
     /* Lock protected registers */
     SYS_LockReg();
+
+#endif
 
     printf("\nFMC Sample Code Completed.\n");
 

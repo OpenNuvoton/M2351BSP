@@ -8,8 +8,8 @@ define symbol __ICFEDIT_region_IROM1_start__ = 0x00000000;
 define symbol __ICFEDIT_region_IROM1_end__   = 0x0007FFFF;
 define symbol __ICFEDIT_region_IROM2_start__ = 0x0;
 define symbol __ICFEDIT_region_IROM2_end__   = 0x0;
-define symbol __ICFEDIT_region_EROM1_start__ = 0x00010000;
-define symbol __ICFEDIT_region_EROM1_end__   = 0x00011000;
+define symbol __ICFEDIT_region_EROM1_start__ = 0x0;
+define symbol __ICFEDIT_region_EROM1_end__   = 0x0;
 define symbol __ICFEDIT_region_EROM2_start__ = 0x0;
 define symbol __ICFEDIT_region_EROM2_end__   = 0x0;
 define symbol __ICFEDIT_region_EROM3_start__ = 0x0;
@@ -59,9 +59,9 @@ if (isdefinedsymbol(__USE_DLIB_PERTHREAD))
 }
 
 place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
-place at address mem: 0x00010000 { readonly object xom_add.o };
+initialize by copy { readonly object fmc.o };
 
 place in IROM_region  { readonly };
-place in EROM_region  { readonly section application_specific_rw };
+place in EROM_region  { readonly section application_specific_ro };
 place in IRAM_region  { readwrite, block CSTACK, block PROC_STACK_S, block MAIN_STACK_NS, block PROC_STACK_NS, block HEAP };
 place in ERAM_region  { readwrite section application_specific_rw };

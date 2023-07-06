@@ -89,12 +89,20 @@ int32_t main(void)
 
         To use this sample code, please:
         1. Build all targets and download to device individually. The targets are:
+
+           For Keil/IAR project:
             FMC_MultiBoot, RO=0x0
             FMC_Boot0,  RO=0x4000
             FMC_Boot1,  RO=0x8000
             FMC_Boot2,  RO=0xC000
             FMC_Boot3,  RO=0x10000
             FMC_BootLD, RO=0x100000
+
+           For GCC project:
+            FMC_MultiBoot, RO=0x0
+            FMC_Boot1,  RO=0x8000
+            FMC_Boot3,  RO=0x10000
+
         2. Reset MCU to execute FMC_MultiBoot.
 
     */
@@ -118,16 +126,22 @@ int32_t main(void)
 #endif
 
     printf("Select one boot image: \n");
+#if defined(__ARMCC_VERSION) || defined(__ICCARM__)
     printf("[0] Boot 0,  base = 0x4000\n");
     printf("[1] Boot 1,  base = 0x8000\n");
     printf("[2] Boot 2,  base = 0xC000\n");
     printf("[3] Boot 3,  base = 0x10000\n");
     printf("[4] Boot LD, base = 0x100000\n");
+#else
+    printf("[1] Boot 1, base = 0x8000\n");
+    printf("[3] Boot 3, base = 0x10000\n");
+#endif
     printf("[Others] Boot, base = 0x0\n");
 
     i32Ch = getchar();
     switch(i32Ch)
     {
+#if defined(__ARMCC_VERSION) || defined(__ICCARM__)
         case '0':
             FMC_SetVectorPageAddr(0x4000);
             break;
@@ -143,6 +157,14 @@ int32_t main(void)
         case '4':
             FMC_SetVectorPageAddr(0x100000);
             break;
+#else
+    case '1':
+        FMC_SetVectorPageAddr(0x8000);
+        break;
+    case '3':
+        FMC_SetVectorPageAddr(0x10000);
+        break;
+#endif
         default:
             FMC_SetVectorPageAddr(0x0);
             break;

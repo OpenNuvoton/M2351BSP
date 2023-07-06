@@ -19,8 +19,7 @@ int32_t XOM_Sum(int32_t *pbuf, int32_t n);
 int32_t XOM_Add(int32_t a, int32_t b)
 {
     int32_t c;
-    int32_t d = 0x7654321;
-    c =  a + b + d;
+    c =  a + b;
 
     return c;
 }

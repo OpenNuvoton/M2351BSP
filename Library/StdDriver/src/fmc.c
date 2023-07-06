@@ -1040,7 +1040,7 @@ int32_t  FMC_SetSPKey(uint32_t au32Key[3], uint32_t u32Kpmax, uint32_t u32Kemax,
         ret = -2;
     }
 
-    if(FMC_Erase(FMC_KPROM_BASE + 0x200UL))
+    if(FMC_Erase(FMC_KPROM_BASE + 0x800UL))
     {
         ret = -3;
     }
@@ -1278,7 +1278,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
         FMC->ISPTRG = 0x1u;
         idx += 4u;
 
-        for(i = idx; i < (u32Len / 4u); i += 4u) /* Max data length is 256 bytes (512/4 words)*/
+        for(i = idx; i < (u32Len / 4u); i += 4u) /* Max data length is 512 bytes (512/4 words)*/
         {
             i32TimeOutCnt = FMC_TIMEOUT_WRITE;
             __set_PRIMASK(1u); /* Mask interrupt to avoid status check coherence error*/

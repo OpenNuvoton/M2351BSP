@@ -205,7 +205,7 @@ volatile unsigned long ulRegTest1LoopCounter = 0UL, ulRegTest2LoopCounter = 0UL;
 /* The semaphore that is given by the tick hook function (defined in main.c)
 and taken by the task implemented by the prvSemaphoreTakeTask() function.  The
 task toggles LED mainSEMAPHORE_LED each time the semaphore is taken. */
-static SemaphoreHandle_t xLEDSemaphore = NULL;
+SemaphoreHandle_t xLEDSemaphore = NULL;
 /*-----------------------------------------------------------*/
 
 void main_full( void )
@@ -281,7 +281,6 @@ const size_t xRegTestStackSize = 25U;
 
     
     
-#if 0 // CWS: This will cause Task stack overflow. Just disable it.
     
 	/* Create the software timer that performs the 'check' functionality,
 	as described at the top of this file. */
@@ -301,7 +300,6 @@ const size_t xRegTestStackSize = 25U;
 		xTimerStart( xTimer, mainDONT_BLOCK );
 	}
 
-#endif    
 	/* Start the kernel.  From here on, only tasks and interrupts will run. */
 	vTaskStartScheduler();
 
