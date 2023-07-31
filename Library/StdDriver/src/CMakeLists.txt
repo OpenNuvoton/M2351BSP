@@ -1,0 +1,39 @@
+set(DRV_SRC  
+    acmp.c
+    bpwm.c
+    can.c
+    clk.c
+    crc.c
+    crypto.c
+    dac.c
+    eadc.c
+    ebi.c
+    ecap.c
+    epwm.c
+    fmc.c
+    gpio.c
+    i2c.c
+    i2s.c
+    pdma.c
+    qei.c
+    qspi.c
+    retarget.c
+    rtc.c
+    sc.c
+    scuart.c
+    sdh.c
+    spi.c
+    sys.c
+    timer.c
+    timer_pwm.c
+    uart.c
+    usbd.c
+    usci_i2c.c
+    usci_spi.c
+    usci_uart.c
+    wdt.c
+    wwdt.c
+)
+
+
+add_library(standard_driver ${DRV_SRC})
