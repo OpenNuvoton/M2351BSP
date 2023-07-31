@@ -917,6 +917,8 @@ static int32_t ecc_init_curve(CRPT_T *crpt, E_ECC_CURVE ecc_curve)
             crpt->ECC_B[i] = 0UL;
             crpt->ECC_X1[i] = 0UL;
             crpt->ECC_Y1[i] = 0UL;
+            crpt->ECC_X2[i] = 0UL;
+            crpt->ECC_Y2[i] = 0UL;
             crpt->ECC_N[i] = 0UL;
         }
 
