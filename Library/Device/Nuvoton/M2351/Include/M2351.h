@@ -25,7 +25,7 @@
   *
   * <b>Copyright Notice</b>
   *
-  * Copyright (C) 2019-2020 Nuvoton Technology Corp. All rights reserved.
+  * Copyright (C) 2019-2023 Nuvoton Technology Corp. All rights reserved.
   */
 
 
