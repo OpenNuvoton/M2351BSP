@@ -1,7 +1,12 @@
-/*----------------------------------------------------------------------------
- * Name:    main_s.c
- * Purpose: Main function secure mode
- *----------------------------------------------------------------------------*/
+/**************************************************************************//**
+ * @file     main.c
+ * @version  V1.00
+ * @brief    Secure sample code for TrustZone
+ *
+ * @note
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
+ ******************************************************************************/
 
 #include <arm_cmse.h>
 #include <stdio.h>

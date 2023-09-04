@@ -3,7 +3,8 @@
  * @version  V3.00
  * @brief    Change duty cycle and period of output waveform by BPWM Double Buffer function.
  *
- * @copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"

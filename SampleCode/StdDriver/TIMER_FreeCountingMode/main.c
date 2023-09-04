@@ -4,7 +4,8 @@
  * @brief    Use the timer0 pin PA.11 to demonstrate timer free counting mode function.
  *           And displays the measured input frequency to UART console.
  *
- * @copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"

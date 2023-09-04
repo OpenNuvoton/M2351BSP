@@ -7,7 +7,8 @@
  * @brief
  *           Demonstrate I2C PDMA mode and need to connect I2C0 (master) and I2C1 (slave).
  * @note
- * Copyright (C) 2019 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"

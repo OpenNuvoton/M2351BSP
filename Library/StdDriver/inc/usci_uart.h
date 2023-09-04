@@ -4,8 +4,8 @@
  * @brief    M2351 series USCI UART (UUART) driver header file
  *
  * @note
- * SPDX-License-Identifier: Apache-2.0
- * Copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #ifndef __USCI_UART_H__
 #define __USCI_UART_H__
