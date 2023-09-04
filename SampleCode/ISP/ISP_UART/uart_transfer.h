@@ -5,7 +5,8 @@
  * @date     22, Sep, 2014
  *
  * @note
- * Copyright (C) 2015 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef __UART_TRANS_H__
 #define __UART_TRANS_H__

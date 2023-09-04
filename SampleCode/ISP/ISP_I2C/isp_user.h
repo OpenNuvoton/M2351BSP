@@ -5,7 +5,8 @@
  * @date     14, June, 2017
  *
  * @note
- * Copyright (C) 2017 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef ISP_USER_H
 #define ISP_USER_H

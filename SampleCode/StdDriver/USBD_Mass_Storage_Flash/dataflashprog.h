@@ -2,7 +2,8 @@
  * @file     DataFlashProg.h
  * @brief    M2351 series data flash programming driver header
  *
- * @copyright (C) 2016 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef __DATA_FLASH_PROG_H__
 #define __DATA_FLASH_PROG_H__

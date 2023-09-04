@@ -3,9 +3,9 @@
  * @version  V1.00
  * @brief    M2351 Series CAN Driver Header File
  *
- * SPDX-License-Identifier: Apache-2.0
- * @copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  *
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #ifndef __CAN_H__
 #define __CAN_H__

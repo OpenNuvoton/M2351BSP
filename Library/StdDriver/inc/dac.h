@@ -4,8 +4,8 @@
  * @brief    M2351 series DAC driver header file
  *
  * @note
- * SPDX-License-Identifier: Apache-2.0
- * Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #ifndef __DAC_H__
 #define __DAC_H__

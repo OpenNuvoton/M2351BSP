@@ -3,8 +3,8 @@
  * @version  V3.00
  * @brief    M2351 series I2S driver header file
  *
- * SPDX-License-Identifier: Apache-2.0
- * @copyright (C) 2016-2020 Nuvoton Technology Corp. All rights reserved.
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
 *****************************************************************************/
 #ifndef __I2S_H__
 #define __I2S_H__

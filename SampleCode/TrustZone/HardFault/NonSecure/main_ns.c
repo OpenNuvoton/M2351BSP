@@ -1,7 +1,12 @@
-/*----------------------------------------------------------------------------
- * Name:    main_ns.c
- * Purpose: Main function non-secure mode
- *----------------------------------------------------------------------------*/
+/**************************************************************************//**
+ * @file     main_ns.c
+ * @version  V1.00
+ * @brief    Non-secure sample code for TrustZone
+ *
+ * @note
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
+ ******************************************************************************/
 
 #include <arm_cmse.h>
 #include "NuMicro.h"                      /* Device header */
