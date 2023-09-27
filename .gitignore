@@ -15,6 +15,10 @@
 *.map
 *.tree
 *.ewt
+*.uvgui.*
+*.uvguix.*
+*.hex
+*.otp
 .vs/
 !CMakeLists.txt
 !README.txt

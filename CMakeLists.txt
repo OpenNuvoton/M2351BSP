@@ -62,8 +62,8 @@ set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_PATH})
 
 set(LINK_MCU_CORE "Cortex-M23")
 
-set(C_FLAGS "--target=arm-arm-none-eabi -mcpu=${LINK_MCU_CORE} -c -fno-rtti -funsigned-char -fshort-enums -fshort-wchar -D__MICROLIB -gdwarf-3 -O2 -fno-function-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -D__MICROLIB -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -Ic:/Keil_v5/ARM/ARMCLANG/include")
-set(CMAKE_C_FLAGS "-xc -std=c99  ${C_FLAGS}")
+set(C_FLAGS "--target=arm-arm-none-eabi -mcpu=${LINK_MCU_CORE} -c -fno-rtti -funsigned-char -fno-short-enums -fno-short-wchar -D__MICROLIB -gdwarf-3 -O2 -fno-function-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -D__MICROLIB -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -Ic:/Keil_v5/ARM/ARMCLANG/include")
+set(CMAKE_C_FLAGS "-xc -std=c99 ${C_FLAGS}")
 set(CMAKE_CXX_FLAGS ${C_FLAGS})
 set(CMAKE_ASM_FLAGS "--cpu Cortex-M23 -g --16 --apcs=interwork --pd \"__MICROLIB SETA 1\"" )
 set(CMAKE_EXECUTABLE_SUFFIX ".axf")
@@ -77,28 +77,28 @@ include_directories(${TOOLCHAIN_PATH}/include)
 include_directories(${BSP_DIR}/Library/CMSIS/Include)
 include_directories(${BSP_DIR}/Library/Device/Nuvoton/M2351/Include)
 include_directories(${BSP_DIR}/Library/StdDriver/inc)
-include_directories(${BSP_DIR}/Library/CryptoAccelerator)
-include_directories(${BSP_DIR}/ThirdParty/mbedtls-3.1.0/include)
-include_directories(${BSP_DIR}/ThirdParty/mbedtls-3.1.0/library)
+#include_directories(${BSP_DIR}/Library/CryptoAccelerator)
+#include_directories(${BSP_DIR}/ThirdParty/mbedtls-3.1.0/include)
+#include_directories(${BSP_DIR}/ThirdParty/mbedtls-3.1.0/library)
 
 # Build library 
 add_subdirectory(${BSP_DIR}/Library/StdDriver/src)
 add_subdirectory(${BSP_DIR}/Library/Device/Nuvoton/M2351/Source)
-add_subdirectory(${BSP_DIR}/Library/CryptoAccelerator)
-add_subdirectory(${BSP_DIR}/ThirdParty/mbedtls-3.1.0/library)
-
+#add_subdirectory(${BSP_DIR}/Library/CryptoAccelerator)
+#add_subdirectory(${BSP_DIR}/ThirdParty/mbedtls-3.1.0/library)
+#
 # Library for mbedtls test
-add_library(test_lib
-    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/src/helpers.c
-    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/src/random.c
-    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/src/psa_crypto_helpers.c
-)
-target_include_directories(test_lib
-  PUBLIC
-    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/include
-
-)
-
+#add_library(test_lib
+#    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/src/helpers.c
+#    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/src/random.c
+#    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/src/psa_crypto_helpers.c
+#)
+#target_include_directories(test_lib
+#  PUBLIC
+#    ${BSP_DIR}/ThirdParty/mbedtls-3.1.0/tests/include
+#
+#)
+#
 
 # Build sample code
 #add_subdirectory(${BSP_DIR}/SampleCode/StdDriver/CRYPTO_ECC_SM2)
