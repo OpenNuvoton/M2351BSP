@@ -31,6 +31,15 @@
 #define HID_RPT_TYPE_OUTPUT     0x02
 #define HID_RPT_TYPE_FEATURE    0x03
 
+/*!<USB HID Keyboard Output Report */
+#define HID_LED_NumLock         0x01
+#define HID_LED_CapsLock        0x02
+#define HID_LED_ScrollLock      0x04
+#define HID_LED_Compose         0x08
+#define HID_LED_Kana            0x10
+#define HID_LED_Constatnt       0xE0
+#define HID_LED_ALL             0xFF
+
 /*-------------------------------------------------------------*/
 /* Define EP maximum packet size */
 #define EP0_MAX_PKT_SIZE    8
@@ -61,6 +70,7 @@
 /*-------------------------------------------------------------*/
 extern uint8_t volatile g_u8EP2Ready;
 extern uint8_t volatile g_u8Suspend;
+extern uint8_t g_au8LEDStatus[8];
 
 /*-------------------------------------------------------------*/
 void HID_Init(void);

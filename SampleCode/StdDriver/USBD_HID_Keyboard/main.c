@@ -23,6 +23,7 @@ static volatile uint32_t s_u32DefaultTrim, s_u32LastTrim;
 
 /*--------------------------------------------------------------------------*/
 uint8_t volatile g_u8EP2Ready = 0;
+static uint32_t s_u32LEDStatus = 0;
 
 /*--------------------------------------------------------------------------*/
 void SYS_Init(void);
@@ -137,6 +138,43 @@ void HID_UpdateKbData(void)
             pu8Buf[2] = 0x04; /* Key a */
             USBD_SET_PAYLOAD_LEN(EP2, 8);
         }
+    }
+
+    if(g_au8LEDStatus[0] != s_u32LEDStatus)
+    {
+        if((g_au8LEDStatus[0] & HID_LED_ALL) != (s_u32LEDStatus & HID_LED_ALL))
+        {
+            if(g_au8LEDStatus[0] & HID_LED_NumLock)
+                printf("NumLock ON, ");
+
+            else
+                printf("NumLock OFF, ");
+
+            if(g_au8LEDStatus[0] & HID_LED_CapsLock)
+                printf("CapsLock ON, ");
+
+            else
+                printf("CapsLock OFF, ");
+
+            if(g_au8LEDStatus[0] & HID_LED_ScrollLock)
+                printf("ScrollLock ON, ");
+
+            else
+                printf("ScrollLock OFF, ");
+
+            if(g_au8LEDStatus[0] & HID_LED_Compose)
+                printf("Compose ON, ");
+
+            else
+                printf("Compose OFF, ");
+
+            if(g_au8LEDStatus[0] & HID_LED_Kana)
+                printf("Kana ON\n");
+
+            else
+                printf("Kana OFF\n");
+        }
+        s_u32LEDStatus = g_au8LEDStatus[0];
     }
 }
 

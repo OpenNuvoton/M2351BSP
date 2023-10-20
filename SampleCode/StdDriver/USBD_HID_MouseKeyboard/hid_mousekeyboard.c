@@ -20,6 +20,8 @@ static uint8_t volatile s_u8EP2Ready = 0;
 static uint8_t volatile s_u8EP3Ready = 0;
 uint8_t volatile g_u8Suspend = 0;
 static uint8_t s_u8Idle = 0, s_u8Protocol = 0;
+static uint8_t s_au8LEDStatus[8];
+static uint32_t s_u32LEDStatus = 0;
 
 void USBD_IRQHandler(void);
 
@@ -293,8 +295,8 @@ void HID_ClassRequest(void)
                 {
                     /* Request Type = Output */
                     USBD_SET_DATA1(EP1);
-                    USBD_SET_PAYLOAD_LEN(EP1, au8Buf[6]);
-
+                    /* Data stage */
+                    USBD_PrepareCtrlOut(s_au8LEDStatus, au8Buf[6]);
                     /* Status stage */
                     USBD_PrepareCtrlIn(0, 0);
                 }
@@ -394,5 +396,42 @@ void HID_UpdateKbData(void)
             pu8Buf[2] = 0x04; /* Key a */
             USBD_SET_PAYLOAD_LEN(EP3, 8);
         }
+    }
+
+    if(s_au8LEDStatus[0] != s_u32LEDStatus)
+    {
+        if((s_au8LEDStatus[0] & HID_LED_ALL) != (s_u32LEDStatus & HID_LED_ALL))
+        {
+            if(s_au8LEDStatus[0] & HID_LED_NumLock)
+                printf("NumLock ON, ");
+
+            else
+                printf("NumLock OFF, ");
+
+            if(s_au8LEDStatus[0] & HID_LED_CapsLock)
+                printf("CapsLock ON, ");
+
+            else
+                printf("CapsLock OFF, ");
+
+            if(s_au8LEDStatus[0] & HID_LED_ScrollLock)
+                printf("ScrollLock ON, ");
+
+            else
+                printf("ScrollLock OFF, ");
+
+            if(s_au8LEDStatus[0] & HID_LED_Compose)
+                printf("Compose ON, ");
+
+            else
+                printf("Compose OFF, ");
+
+            if(s_au8LEDStatus[0] & HID_LED_Kana)
+                printf("Kana ON\n");
+
+            else
+                printf("Kana OFF\n");
+        }
+        s_u32LEDStatus = s_au8LEDStatus[0];
     }
 }
