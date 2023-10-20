@@ -114,7 +114,7 @@ void TIMER0_Init()
     TIMER_SET_CMP_VALUE(TIMER0, 36);/* TIMER0->CMP = 36 */
 
     /* Start timer counter in periodic mode and enable timer interrupt trigger EADC */
-    TIMER0->CTL = TIMER_PERIODIC_MODE | TIMER_CTL_OPMODE_Msk | TIMER_CTL_CNTEN_Msk;
+    TIMER0->CTL = (TIMER_PERIODIC_MODE | TIMER_CTL_CNTEN_Msk);
     TIMER0->TRGCTL |= TIMER_TRGCTL_TRGEADC_Msk;
 
 }
