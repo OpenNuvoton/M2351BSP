@@ -278,16 +278,17 @@ extern "C"
 #define CLK_PLLCTL_NO_2         0x4000UL        /*!< For output divider is 2 */
 #define CLK_PLLCTL_NO_4         0xC000UL        /*!< For output divider is 4 */
 
+#if (__HXT == 12000000)
 #define CLK_PLLCTL_48MHz_HXT    (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_4) /*!< Predefined PLLCTL setting for 48MHz PLL output with HXT */
-#define CLK_PLLCTL_48MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(2UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_4) /*!< Predefined PLLCTL setting for 48MHz PLL output with HIRC */
-
 #define CLK_PLLCTL_64MHz_HXT    (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(3UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_2) /*!< Predefined PLLCTL setting for 64MHz PLL output with HXT */
-#define CLK_PLLCTL_64MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(3UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_2) /*!< Predefined PLLCTL setting for 64Hz PLL output with HIRC */
-
 #define CLK_PLLCTL_96MHz_HXT    (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(2UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_2) /*!< Predefined PLLCTL setting for 96MHz PLL output with HXT */
-#define CLK_PLLCTL_96MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(2UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_2) /*!< Predefined PLLCTL setting for 96MHz PLL output with HIRC */
-
 #define CLK_PLLCTL_128MHz_HXT    (CLK_PLLCTL_PLLSRC_HXT  | CLK_PLLCTL_NR(3UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_1) /*!< Predefined PLLCTL setting for 128MHz PLL output with HXT */
+#else
+# error "The PLL pre-definitions are only valid when external crystal is 12MHz"
+#endif
+#define CLK_PLLCTL_48MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(2UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_4) /*!< Predefined PLLCTL setting for 48MHz PLL output with HIRC */
+#define CLK_PLLCTL_64MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(3UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_2) /*!< Predefined PLLCTL setting for 64Hz PLL output with HIRC */
+#define CLK_PLLCTL_96MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(2UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_2) /*!< Predefined PLLCTL setting for 96MHz PLL output with HIRC */
 #define CLK_PLLCTL_128MHz_HIRC   (CLK_PLLCTL_PLLSRC_HIRC | CLK_PLLCTL_NR(3UL) | CLK_PLLCTL_NF(16UL) | CLK_PLLCTL_NO_1) /*!< Predefined PLLCTL setting for 128MHz PLL output with HIRC */
 
 

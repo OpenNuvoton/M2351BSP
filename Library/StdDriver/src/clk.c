@@ -818,20 +818,18 @@ uint32_t CLK_EnablePLL(uint32_t u32PllClkSrc, uint32_t u32PllFreq)
             u32NO = 0UL;
         }
 
-        /* u32NR start from 3 to avoid calculation overflow */
-        u32NR = 3UL;
-
         /* Find best solution */
         u32Min = (uint32_t) - 1;    /* initial u32Min to max value of uint32_t (0xFFFFFFFF) */
         u32MinNR = 0UL;
         u32MinNF = 0UL;
 
-        for(; u32NR <= 32UL; u32NR++)   /* max NR = 32 since NR = INDIV+1 and INDIV = 0~31 */
+        for(u32NR = 1UL; u32NR <= 32UL; u32NR++)   /* NR = 1~32 since NR = INDIV+1 and INDIV = 0~31 */
         {
             u32Tmp = u32PllSrcClk / u32NR;                      /* FREF = FIN/NR */
             if((u32Tmp >= FREQ_2MHZ) && (u32Tmp <= FREQ_8MHZ))  /* Constraint 2: 2MHz < FREF < 8MHz. */
             {
-                for(u32NF = 2UL; u32NF <= 513UL; u32NF++)       /* NF = 2~513 since NF = FBDIV+2 and FBDIV = 0~511 */
+                for(u32NF = 2UL; u32NF <= 200UL; u32NF++)       /* NF = 2~513 since NF = FBDIV+2 and FBDIV = 0~511 */
+                                                                /* max NF = 200 to avoid calculation overflow */
                 {
                     u32Tmp2 = (u32Tmp * u32NF) << 1;                            /* FVCO = FREF*2*NF */
                     if((u32Tmp2 >= FREQ_96MHZ) && (u32Tmp2 <= FREQ_200MHZ))     /* Constraint 3: 96MHz < FVCO < 200MHz */
@@ -866,32 +864,57 @@ uint32_t CLK_EnablePLL(uint32_t u32PllClkSrc, uint32_t u32PllFreq)
     }
     else
     {
-
-        /* Wrong frequency request. Just return default setting. */
-        if((SYS->PLSTS & SYS_PLSTS_PLSTATUS_Msk) == SYS_PLCTL_PLSEL_PL0)
+        if(u32PllClkSrc == CLK_PLLCTL_PLLSRC_HXT)
         {
+#if (__HXT == 12000000)
+            if((SYS->PLSTS & SYS_PLSTS_PLSTATUS_Msk) == SYS_PLCTL_PLSEL_PL0)
+            {
+                /* Apply default PLL setting and return */
+                CLK->PLLCTL = CLK_PLLCTL_64MHz_HXT;
 
-            /* Apply default PLL setting and return */
-            CLK->PLLCTL = u32PllClkSrc | CLK_PLLCTL_64MHz_HXT;
+                /* Actual PLL output clock frequency */
+                u32PllClk = FREQ_64MHZ;
+            }
+            else
+            {
+                /* Apply default PLL setting and return */
+                CLK->PLLCTL = CLK_PLLCTL_48MHz_HXT;
 
-            /* Actual PLL output clock frequency */
-            u32PllClk = FREQ_64MHZ;
-
+                /* Actual PLL output clock frequency */
+                u32PllClk = FREQ_48MHZ;
+            }
+#else
+            /* No default PLL setting */
+            u32PllClk = 0;
+#endif
         }
         else
         {
+            /* Wrong frequency request. Just return default setting. */
+            if((SYS->PLSTS & SYS_PLSTS_PLSTATUS_Msk) == SYS_PLCTL_PLSEL_PL0)
+            {
+                /* Apply default PLL setting and return */
+                CLK->PLLCTL = CLK_PLLCTL_64MHz_HIRC;
 
-            /* Apply default PLL setting and return */
-            CLK->PLLCTL = u32PllClkSrc | CLK_PLLCTL_48MHz_HXT;
+                /* Actual PLL output clock frequency */
+                u32PllClk = FREQ_64MHZ;
+            }
+            else
+            {
+                /* Apply default PLL setting and return */
+                CLK->PLLCTL = CLK_PLLCTL_48MHz_HIRC;
 
-            /* Actual PLL output clock frequency */
-            u32PllClk = FREQ_48MHZ;
+                /* Actual PLL output clock frequency */
+                u32PllClk = FREQ_48MHZ;
+            }
         }
-
     }
 
-    /* Wait for PLL clock stable */
-    CLK_WaitClockReady(CLK_STATUS_PLLSTB_Msk);
+    if(u32PllClk != 0)
+    {
+        /* Wait for PLL clock stable */
+        CLK_WaitClockReady(CLK_STATUS_PLLSTB_Msk);
+    }
 
     /* Return actual PLL output clock frequency */
     return u32PllClk;
