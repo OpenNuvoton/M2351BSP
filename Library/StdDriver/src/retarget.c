@@ -761,7 +761,35 @@ int fputc(int ch, FILE *stream)
     SendChar(ch);
     return ch;
 }
+#if defined (__ICCARM__)
+	#include <LowLevelIOInterface.h>
+	size_t __write(int handle, const unsigned char *buf, size_t bufSize)
+	{
+			size_t nChars = 0;
 
+			/* Check for the command to flush all handles */
+			if (handle == -1)
+			{
+					return 0;
+			}
+
+			/* Check for stdout and stderr (only necessary if FILE descriptors are enabled.) */
+			if (handle != 1 && handle != 2)
+			{
+					return -1;
+			}
+
+			for (/* Empty */; bufSize > 0; --bufSize)
+			{
+					//lcdIO = *buf;
+					SendChar_ToUART(*buf);
+					++buf;
+					++nChars;
+			}
+
+			return nChars;
+	}
+#endif
 
 #if (defined(__GNUC__) && !defined(__ARMCC_VERSION))
 
