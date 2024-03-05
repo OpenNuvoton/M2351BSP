@@ -9,7 +9,7 @@
 #ifndef __USBD_H__
 #define __USBD_H__
 
-#define SUPPORT_LPM     // define to support LPM
+//#define SUPPORT_LPM     // define to support LPM
 
 #ifdef __cplusplus
 extern "C"
@@ -38,6 +38,7 @@ typedef struct s_usbd_info
     uint8_t *gu8BosDesc;            /*!< Pointer for USB BOS Descriptor             */
     uint32_t *gu32HidReportSize;    /*!< Pointer for HID Report descriptor Size */
     uint32_t *gu32ConfigHidDescIdx; /*!< Pointer for HID Descriptor start index */
+    uint8_t *gu8MSDesc;             /*!< Pointer for Microsoft OS 2.0 Descriptor Set */
 
 } S_USBD_INFO_T;  /*!< Device description structure */
 
