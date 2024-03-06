@@ -233,8 +233,22 @@ void USBD_GetDescriptor(void)
             USBD_PrepareCtrlIn((uint8_t *)g_USBD_sInfo->gu8ConfigDesc, u32Len);
             break;
         }
+        case DESC_QUALIFIER:
+        {
+            /*
+                If the device is full-speed only or low-speed only,
+                this version number of 2.0 (0200H) indicates that it will respond correctly to a request for the device_qualifier desciptor.
+                 it will respond with a request error.
+            */
+
+            /* Not support. Reply STALL. */
+            USBD_SET_EP_STALL(EP0);
+            USBD_SET_EP_STALL(EP1);
+            break;
+        }
         /* Get BOS Descriptor */
         case DESC_BOS:
+        case 0x7f:
         {
             if(g_USBD_sInfo->gu8BosDesc == 0)
             {
@@ -243,7 +257,7 @@ void USBD_GetDescriptor(void)
             }
             else
             {
-                u32Len = USBD_Minimum(u32Len, LEN_BOS + LEN_BOSCAP);
+                u32Len = USBD_Minimum(u32Len, g_USBD_sInfo->gu8BosDesc[2]);
                 USBD_PrepareCtrlIn((uint8_t *)g_USBD_sInfo->gu8BosDesc, u32Len);
             }
             break;
@@ -374,6 +388,8 @@ void USBD_StandardRequest(void)
             }
             case GET_STATUS:
             {
+                u32Addr = USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0);
+
                 /* Device */
                 if(g_USBD_au8SetupPacket[0] == 0x80UL)
                 {
@@ -389,26 +405,23 @@ void USBD_StandardRequest(void)
                         u8Tmp |= (uint8_t)(g_USBD_u8RemoteWakeupEn << 1UL); /* Remote wake up */
                     }
 
-                    u32Addr = USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0);
                     M8(u32Addr) = u8Tmp;
 
                 }
                 /* Interface */
                 else if(g_USBD_au8SetupPacket[0] == 0x81UL)
                 {
-                    u32Addr = USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0);
                     M8(u32Addr) = (uint8_t)0UL;
                 }
                 /* Endpoint */
                 else if(g_USBD_au8SetupPacket[0] == 0x82UL)
                 {
                     uint8_t ep = (uint8_t)(g_USBD_au8SetupPacket[4] & 0xFUL);
-                    u32Addr = USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0);
                     M8(u32Addr) = (uint8_t)(USBD_GetStall(ep) ? 1UL : 0UL);
                 }
 
-                u32Addr = USBD_BUF_BASE + USBD_GET_EP_BUF_ADDR(EP0) + 1UL;
-                M8(u32Addr) = (uint8_t)0UL;
+                M8(u32Addr+1) = (uint8_t)0UL;
+
                 /* Data stage */
                 USBD_SET_DATA1(EP0);
                 USBD_SET_PAYLOAD_LEN(EP0, 2UL);
