@@ -12,13 +12,14 @@
 #include <string.h>
 #include "NuMicro.h"
 
+#define V6M_AIRCR_VECTKEY_DATA            0x05FA0000UL
+#define V6M_AIRCR_SYSRESETREQ             0x00000004UL
 
-#define PLLCTL_SETTING          CLK_PLLCTL_64MHz_HIRC
-#define PLL_CLOCK               64000000
-#define HCLK_DIV                        1
+#define PLLCTL_SETTING                    CLK_PLLCTL_64MHz_HIRC
+#define PLL_CLOCK                         64000000
+#define HCLK_DIV                          1
 
-#define GPIO_SETMODE(port, pin, u32Mode) (port->MODE = (port->MODE & ~(0x3ul << (pin << 1))) | (u32Mode << (pin << 1)))
-
+#define GPIO_SETMODE(port, pin, u32Mode)  (port->MODE = (port->MODE & ~(0x3ul << (pin << 1))) | (u32Mode << (pin << 1)))
 
 #define CAN_BAUD_RATE                     500000
 #define Master_ISP_ID                     0x487
@@ -181,7 +182,7 @@ int main(void)
     /* Unlock protected registers */
     SYS_UnlockReg();
     /* Init System, IP clock and multi-function I/O */
-    if( SYS_Init() < 0 ) goto lexit;
+    if( SYS_Init() < 0 ) goto _APROM;
     /* Enable FMC ISP function */
     FMC_Open();
     FMC_ENABLE_AP_UPDATE();
@@ -201,7 +202,7 @@ int main(void)
 
         if(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
         {
-            goto lexit;
+            goto _APROM;
         }
     }
 
@@ -251,12 +252,15 @@ int main(void)
         }
     }
 
-lexit:
+_APROM:
+
+    /* Reset system and boot from APROM */
+    SYS->RSTSTS = (SYS_RSTSTS_PORF_Msk | SYS_RSTSTS_PINRF_Msk);
+    FMC->ISPCTL &= ~(FMC_ISPCTL_ISPEN_Msk | FMC_ISPCTL_BS_Msk);
+    SCB->AIRCR = (V6M_AIRCR_VECTKEY_DATA | V6M_AIRCR_SYSRESETREQ);
+
     /* Trap the CPU */
-    for(;;)
-    {
-        __WFI();
-    }
+    while(1);
 }
 
 void ProcessHardFault()

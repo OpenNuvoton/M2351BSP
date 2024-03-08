@@ -16,7 +16,7 @@
 
 static uint32_t s_au32PcmRxBuff[2][BUFF_LEN] = {{0}};
 static uint32_t s_au32PcmTxBuff[2][BUFF_LEN] = {{0}};
-static DMA_DESC_T DMA_TXDESC[2], DMA_RXDESC[2];
+static DMA_DESC_T DMA_TXDESC[2] = {0}, DMA_RXDESC[2] = {0};
 
 static volatile uint8_t s_u8TxIdx = 0, s_u8RxIdx = 0;
 static volatile uint8_t s_u8CopyData = 0;
