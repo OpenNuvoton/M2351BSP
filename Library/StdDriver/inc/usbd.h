@@ -9,8 +9,6 @@
 #ifndef __USBD_H__
 #define __USBD_H__
 
-//#define SUPPORT_LPM     // define to support LPM
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -370,18 +368,16 @@ extern const S_USBD_INFO_T gsInfo;
   *
   * @param    None
   *
-  * @return   The value of USB_ATTR[13:12] and USB_ATTR[3:0].
+  * @return   The value of USB_ATTR[3:0].
   *           Bit 0  indicates USB bus reset status.
   *           Bit 1  indicates USB bus suspend status.
   *           Bit 2  indicates USB bus resume status.
   *           Bit 3  indicates USB bus time-out status.
-  *           Bit 12 indicates USB bus LPM L1 suspend status.
-  *           Bit 13 indicates USB bus LPM L1 resume status.
   *
-  * @details  Return USB_ATTR[13:12] and USB_ATTR[3:0] for USB bus events.
+  * @details  Return USB_ATTR[3:0] for USB bus events.
   *
   */
-#define USBD_GET_BUS_STATE()        (((__PC() & NS_OFFSET) == NS_OFFSET)? ((uint32_t)(USBD_NS->ATTR & 0x300F)):((uint32_t)(USBD->ATTR & 0x300F)))
+#define USBD_GET_BUS_STATE()        (((__PC() & NS_OFFSET) == NS_OFFSET)? ((uint32_t)(USBD_NS->ATTR & 0xF)):((uint32_t)(USBD->ATTR & 0xF)))
 
 /**
   * @brief    Check cable connection state
