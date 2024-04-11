@@ -10,14 +10,17 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-//*** <<< Use Configuration Wizard in Context Menu >>> ***
+// *** <<< Use Configuration Wizard in Context Menu >>> ***
 // <e> Two SPI port loopback transfer
 #define TwoPortLoopback     0
 //  <o> Bi-direction Interface
 //  <0=> 4-wire <1=> 3-wire
 #define Slave3WireMode      0
 // </e>
-//*** <<< end of configuration section >>> ***
+// <o> GPIO Slew Rate Control
+// <0=> Normal <1=> High <2=> Fast
+#define SlewRateMode        0
+// *** <<< end of configuration section >>> ***
 
 #define TEST_COUNT          64
 
@@ -41,6 +44,7 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Enable HIRC clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
@@ -89,6 +93,7 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Set multi-function pins for UART0 RXD and TXD */
     SYS->GPB_MFPH = (SYS->GPB_MFPH & (~(UART0_RXD_PB12_Msk | UART0_TXD_PB13_Msk))) | UART0_RXD_PB12 | UART0_TXD_PB13;
 
@@ -101,6 +106,29 @@ void SYS_Init(void)
 #if (!Slave3WireMode)
     SYS->GPH_MFPH |= SYS_GPH_MFPH_PH9MFP_QSPI0_SS;
 #endif
+
+#if (SlewRateMode == 0)
+    /* Enable QSPI0 I/O normal slew rate */
+    GPIO_SetSlewCtl(PH, BIT8, GPIO_SLEWCTL_NORMAL);
+    GPIO_SetSlewCtl(PE, BIT0 | BIT1, GPIO_SLEWCTL_NORMAL);
+#if (!Slave3WireMode)
+    GPIO_SetSlewCtl(PH, BIT9, GPIO_SLEWCTL_NORMAL);
+#endif
+#elif (SlewRateMode == 1)
+    /* Enable QSPI0 I/O high slew rate */
+    GPIO_SetSlewCtl(PH, BIT8, GPIO_SLEWCTL_HIGH);
+    GPIO_SetSlewCtl(PE, BIT0 | BIT1, GPIO_SLEWCTL_HIGH);
+#if (!Slave3WireMode)
+    GPIO_SetSlewCtl(PH, BIT9, GPIO_SLEWCTL_HIGH);
+#endif
+#elif (SlewRateMode == 2)
+    /* Enable QSPI0 I/O fast slew rate */
+    GPIO_SetSlewCtl(PH, BIT8, GPIO_SLEWCTL_FAST);
+    GPIO_SetSlewCtl(PE, BIT0 | BIT1, GPIO_SLEWCTL_FAST);
+#if (!Slave3WireMode)
+    GPIO_SetSlewCtl(PH, BIT9, GPIO_SLEWCTL_FAST);
+#endif
+#endif
 #endif
 
     /* Setup SPI1 multi-function pins */
@@ -108,6 +136,26 @@ void SYS_Init(void)
     SYS->GPH_MFPL |= (SYS_GPH_MFPL_PH6MFP_SPI1_CLK | SYS_GPH_MFPL_PH5MFP_SPI1_MOSI | SYS_GPH_MFPL_PH4MFP_SPI1_MISO);
 #if (!Slave3WireMode)
     SYS->GPH_MFPL |= SYS_GPH_MFPL_PH7MFP_SPI1_SS;
+#endif
+
+#if (SlewRateMode == 0)
+    /* Enable SPI1 I/O normal slew rate */
+    GPIO_SetSlewCtl(PH, BIT4 | BIT5 | BIT6, GPIO_SLEWCTL_NORMAL);
+#if (!Slave3WireMode)
+    GPIO_SetSlewCtl(PH, BIT7, GPIO_SLEWCTL_NORMAL);
+#endif
+#elif (SlewRateMode == 1)
+    /* Enable SPI1 I/O high slew rate */
+    GPIO_SetSlewCtl(PH, BIT4 | BIT5 | BIT6, GPIO_SLEWCTL_HIGH);
+#if (!Slave3WireMode)
+    GPIO_SetSlewCtl(PH, BIT7, GPIO_SLEWCTL_HIGH);
+#endif
+#elif (SlewRateMode == 2)
+    /* Enable SPI1 I/O fast slew rate */
+    GPIO_SetSlewCtl(PH, BIT4 | BIT5 | BIT6, GPIO_SLEWCTL_FAST);
+#if (!Slave3WireMode)
+    GPIO_SetSlewCtl(PH, BIT7, GPIO_SLEWCTL_FAST);
+#endif
 #endif
 
     /* Update System Core Clock */
@@ -172,7 +220,7 @@ int main(void)
     printf(" SPI1 configuration:\n");
     printf("     Master mode; data width 32 bits.\n");
     printf(" I/O connection:\n");
-    printf("     SPI1_MOSI(PH5) <--> SPI1_MISO(PH4) \n");
+    printf("     SPI1_MOSI(PH5) <--> SPI1_MISO(PH4)\n");
     printf("\nSPI1 Loopback test ");
 
     u32Err = 0;

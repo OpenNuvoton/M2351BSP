@@ -9,8 +9,14 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-#define TEST_NUMBER 1   /* page numbers */
-#define TEST_LENGTH 256 /* length */
+// *** <<< Use Configuration Wizard in Context Menu >>> ***
+// <o> GPIO Slew Rate Control
+// <0=> Normal <1=> High <2=> Fast
+#define SlewRateMode    0
+// *** <<< end of configuration section >>> ***
+
+#define TEST_NUMBER     1   /* page numbers */
+#define TEST_LENGTH     256 /* length */
 
 #define SPI_FLASH_PORT  QSPI0
 
@@ -273,6 +279,7 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Enable HIRC clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
@@ -315,12 +322,24 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Set multi-function pins for UART0 RXD and TXD */
     SYS->GPB_MFPH = (SYS->GPB_MFPH & (~(UART0_RXD_PB12_Msk | UART0_TXD_PB13_Msk))) | UART0_RXD_PB12 | UART0_TXD_PB13;
 
     /* Setup QSPI0 multi-function pins */
     SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC0MFP_Msk | SYS_GPC_MFPL_PC1MFP_Msk | SYS_GPC_MFPL_PC2MFP_Msk | SYS_GPC_MFPL_PC3MFP_Msk);
     SYS->GPC_MFPL |= (SYS_GPC_MFPL_PC0MFP_QSPI0_MOSI0 | SYS_GPC_MFPL_PC1MFP_QSPI0_MISO0 | SYS_GPC_MFPL_PC2MFP_QSPI0_CLK | SYS_GPC_MFPL_PC3MFP_QSPI0_SS);
+
+#if (SlewRateMode == 0)
+    /* Enable QSPI0 I/O normal slew rate */
+    GPIO_SetSlewCtl(PC, BIT0 | BIT1 | BIT2 | BIT3, GPIO_SLEWCTL_NORMAL);
+#elif (SlewRateMode == 1)
+    /* Enable QSPI0 I/O high slew rate */
+    GPIO_SetSlewCtl(PC, BIT0 | BIT1 | BIT2 | BIT3, GPIO_SLEWCTL_HIGH);
+#elif (SlewRateMode == 2)
+    /* Enable QSPI0 I/O fast slew rate */
+    GPIO_SetSlewCtl(PC, BIT0 | BIT1 | BIT2 | BIT3, GPIO_SLEWCTL_FAST);
+#endif
 
     /* Update System Core Clock */
     /* User can use SystemCoreClockUpdate() to calculate SystemCoreClock and CyclesPerUs automatically. */
@@ -350,11 +369,11 @@ int main(void)
     QSPI_EnableAutoSS(SPI_FLASH_PORT, QSPI_SS, QSPI_SS_ACTIVE_LOW);
 
     printf("\n+-------------------------------------------------------------------------+\n");
-    printf("|               M2351 QSPI Dual Mode with Flash Sample Code               |\n");
+    printf("|                  QSPI Dual Mode with Flash Sample Code                  |\n");
     printf("+-------------------------------------------------------------------------+\n");
 
     /* Wait ready */
-    if( SpiFlash_WaitReady() < 0 ) goto lexit;
+    if(SpiFlash_WaitReady() < 0) goto lexit;
 
     if((u16ID = SpiFlash_ReadMidDid()) != 0xEF14)
     {
@@ -370,7 +389,7 @@ int main(void)
     SpiFlash_ChipErase();
 
     /* Wait ready */
-    if( SpiFlash_WaitReady() < 0 ) goto lexit;
+    if(SpiFlash_WaitReady() < 0) goto lexit;
 
     printf("[OK]\n");
 
@@ -387,7 +406,7 @@ int main(void)
     {
         /* page program */
         SpiFlash_NormalPageProgram(u32FlashAddress, s_au8SrcArray);
-        if( SpiFlash_WaitReady() < 0 ) goto lexit;
+        if(SpiFlash_WaitReady() < 0) goto lexit;
         u32FlashAddress += 0x100;
     }
 
@@ -425,6 +444,3 @@ lexit:
 
     while(1);
 }
-
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
-

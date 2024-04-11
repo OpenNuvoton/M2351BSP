@@ -11,7 +11,13 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-#define TEST_COUNT  16
+// *** <<< Use Configuration Wizard in Context Menu >>> ***
+// <o> GPIO Slew Rate Control
+// <0=> Normal <1=> High <2=> Fast
+#define SlewRateMode    0
+// *** <<< end of configuration section >>> ***
+
+#define TEST_COUNT      16
 
 #define InterruptMode /* Undefine it when using polling mode */
 
@@ -20,17 +26,16 @@ static uint32_t s_au32DestinationData[TEST_COUNT];
 static volatile uint32_t s_u32TxDataCount;
 static volatile uint32_t s_u32RxDataCount;
 
-
 void SYS_Init(void);
 void SPI_Init(void);
 void SPI0_IRQHandler(void);
-
 
 void SYS_Init(void)
 {
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Enable HIRC clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
@@ -73,12 +78,24 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Set multi-function pins for UART0 RXD and TXD */
     SYS->GPB_MFPH = (SYS->GPB_MFPH & (~(UART0_RXD_PB12_Msk | UART0_TXD_PB13_Msk))) | UART0_RXD_PB12 | UART0_TXD_PB13;
 
     /* Setup SPI0 multi-function pins */
     SYS->GPD_MFPL &= ~(SYS_GPD_MFPL_PD0MFP_Msk | SYS_GPD_MFPL_PD1MFP_Msk | SYS_GPD_MFPL_PD2MFP_Msk | SYS_GPD_MFPL_PD3MFP_Msk);
     SYS->GPD_MFPL |= (SYS_GPD_MFPL_PD0MFP_SPI0_MOSI | SYS_GPD_MFPL_PD1MFP_SPI0_MISO | SYS_GPD_MFPL_PD2MFP_SPI0_CLK | SYS_GPD_MFPL_PD3MFP_SPI0_SS);
+
+#if (SlewRateMode == 0)
+    /* Enable SPI0 I/O normal slew rate */
+    GPIO_SetSlewCtl(PD, BIT0 | BIT1 | BIT2 | BIT3, GPIO_SLEWCTL_NORMAL);
+#elif (SlewRateMode == 1)
+    /* Enable SPI0 I/O high slew rate */
+    GPIO_SetSlewCtl(PD, BIT0 | BIT1 | BIT2 | BIT3, GPIO_SLEWCTL_HIGH);
+#elif (SlewRateMode == 2)
+    /* Enable SPI0 I/O fast slew rate */
+    GPIO_SetSlewCtl(PD, BIT0 | BIT1 | BIT2 | BIT3, GPIO_SLEWCTL_FAST);
+#endif
 
     /* Update System Core Clock */
     /* User can use SystemCoreClockUpdate() to calculate SystemCoreClock and CyclesPerUs automatically. */
@@ -172,8 +189,9 @@ int main(void)
     getchar();
     printf("\n");
 
-    /* Set TX FIFO threshold and enable FIFO mode. */
-    SPI_SetFIFO(SPI0, 4, 4);
+    /* Set TX FIFO threshold */
+    SPI_SetFIFO(SPI0, 2, 2);
+
 #ifdef InterruptMode
     /* Enable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
     SPI_EnableInt(SPI0, SPI_FIFO_TXTH_INT_MASK | SPI_FIFO_RXTO_INT_MASK);
@@ -200,19 +218,19 @@ int main(void)
     {
         printf("%d:\t0x%X\n", u32DataCount, s_au32DestinationData[u32DataCount]);
     }
+
 #ifdef InterruptMode
     /* Disable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
     SPI_DisableInt(SPI0, SPI_FIFO_TXTH_INT_MASK | SPI_FIFO_RXTO_INT_MASK);
     NVIC_DisableIRQ(SPI0_IRQn);
 #endif
+
     printf("The data transfer was done.\n");
 
     printf("\n\nExit SPI driver sample code.\n");
 
     /* Reset SPI0 */
     SPI_Close(SPI0);
+
     while(1);
 }
-
-/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
-

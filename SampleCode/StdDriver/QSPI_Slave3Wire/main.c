@@ -5,14 +5,19 @@
  *           communicate with an off-chip SPI Master device with FIFO mode.
  *           This sample code needs to work with SPI_MasterFIFOMode sample code.
  *
- *
  * @copyright SPDX-License-Identifier: Apache-2.0
  * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
  ******************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
 
-#define TEST_COUNT 16
+// *** <<< Use Configuration Wizard in Context Menu >>> ***
+// <o> GPIO Slew Rate Control
+// <0=> Normal <1=> High <2=> Fast
+#define SlewRateMode    0
+// *** <<< end of configuration section >>> ***
+
+#define TEST_COUNT      16
 
 static uint32_t s_au32SourceData[TEST_COUNT];
 static uint32_t s_au32DestinationData[TEST_COUNT];
@@ -25,6 +30,7 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Enable HIRC clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
@@ -67,12 +73,24 @@ void SYS_Init(void)
     /*---------------------------------------------------------------------------------------------------------*/
     /* Init I/O Multi-function                                                                                 */
     /*---------------------------------------------------------------------------------------------------------*/
+
     /* Set multi-function pins for UART0 RXD and TXD */
     SYS->GPB_MFPH = (SYS->GPB_MFPH & (~(UART0_RXD_PB12_Msk | UART0_TXD_PB13_Msk))) | UART0_RXD_PB12 | UART0_TXD_PB13;
 
     /* Setup QSPI0 multi-function pins */
     SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC0MFP_Msk | SYS_GPC_MFPL_PC1MFP_Msk | SYS_GPC_MFPL_PC2MFP_Msk);
     SYS->GPC_MFPL |= (SYS_GPC_MFPL_PC0MFP_QSPI0_MOSI0 | SYS_GPC_MFPL_PC1MFP_QSPI0_MISO0 | SYS_GPC_MFPL_PC2MFP_QSPI0_CLK);
+
+#if (SlewRateMode == 0)
+    /* Enable QSPI0 I/O normal slew rate */
+    GPIO_SetSlewCtl(PC, BIT0 | BIT1 | BIT2, GPIO_SLEWCTL_NORMAL);
+#elif (SlewRateMode == 1)
+    /* Enable QSPI0 I/O high slew rate */
+    GPIO_SetSlewCtl(PC, BIT0 | BIT1 | BIT2, GPIO_SLEWCTL_HIGH);
+#elif (SlewRateMode == 2)
+    /* Enable QSPI0 I/O fast slew rate */
+    GPIO_SetSlewCtl(PC, BIT0 | BIT1 | BIT2, GPIO_SLEWCTL_FAST);
+#endif
 
     /* Update System Core Clock */
     /* User can use SystemCoreClockUpdate() to calculate SystemCoreClock and CyclesPerUs automatically. */
@@ -132,8 +150,8 @@ int main(void)
     getchar();
     printf("\n");
 
-    /* Set TX FIFO threshold and enable FIFO mode. */
-    QSPI_SetFIFO(QSPI0, 4, 4);
+    /* Set TX FIFO threshold */
+    QSPI_SetFIFO(QSPI0, 2, 2);
 
     /* Access TX and RX FIFO */
     while(u32RxDataCount < TEST_COUNT)
@@ -161,5 +179,3 @@ int main(void)
 
     while(1);
 }
-
-/*** (C) COPYRIGHT 2019 Nuvoton Technology Corp. ***/
