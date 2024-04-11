@@ -74,6 +74,10 @@ void CLK_EnableCKO(uint32_t u32ClkSrc, uint32_t u32ClkDiv, uint32_t u32ClkDivBy1
   */
 void CLK_PowerDown(void)
 {
+    /* Change LIRC clock to slowest frequency before entering DPD Power-down mode to prevent RTC is reset after DPD wake-up */
+    if( (CLK->PMUCTL & CLK_PMUCTL_PDMSEL_Msk) == CLK_PMUCTL_PDMSEL_DPD )
+        outpw((SYS_BASE+0x138),0x0);
+
     /* Set the processor uses deep sleep as its low power mode */
     SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 
@@ -864,6 +868,7 @@ uint32_t CLK_EnablePLL(uint32_t u32PllClkSrc, uint32_t u32PllFreq)
     }
     else
     {
+        /* Wrong frequency request. Just return default setting. */
         if(u32PllClkSrc == CLK_PLLCTL_PLLSRC_HXT)
         {
 #if (__HXT == 12000000)
@@ -890,7 +895,6 @@ uint32_t CLK_EnablePLL(uint32_t u32PllClkSrc, uint32_t u32PllFreq)
         }
         else
         {
-            /* Wrong frequency request. Just return default setting. */
             if((SYS->PLSTS & SYS_PLSTS_PLSTATUS_Msk) == SYS_PLCTL_PLSEL_PL0)
             {
                 /* Apply default PLL setting and return */
