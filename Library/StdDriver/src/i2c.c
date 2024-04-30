@@ -305,6 +305,8 @@ void I2C_SetData(I2C_T *i2c, uint8_t u8Data)
  *
  * @details    This function is used to set 7-bit slave addresses in I2C SLAVE ADDRESS REGISTER (I2CADDR0~3)
  *             and enable GC Mode.
+ *             Note: I2C does not support General Call (GC) mode for device address calling.
+ *             Therefore, ensure that the GC mode is not enabled when setting the slave address.
  *
  */
 void I2C_SetSlaveAddr(I2C_T *i2c, uint8_t u8SlaveNo, uint8_t u8SlaveAddr, uint8_t u8GCMode)
