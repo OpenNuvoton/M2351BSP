@@ -30,12 +30,7 @@ static uint8_t s_au8DeviceDescriptor[] =
     0x00, 0x03,     /* bcdDevice */
     0x01,           /* iManufacture */
     0x02,           /* iProduct */
-
-#if (VCOM_CNT >= 3)
-    0x03,
-#else
-    0x00,           /* iSerialNumber - no serial */
-#endif
+    0x03,           /* iSerialNumber */
     0x01            /* bNumConfigurations */
 };
 

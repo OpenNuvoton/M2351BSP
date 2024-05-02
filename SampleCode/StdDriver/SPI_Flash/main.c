@@ -23,7 +23,7 @@
 static uint8_t s_au8SrcArray[TEST_LENGTH];
 static uint8_t s_au8DestArray[TEST_LENGTH];
 
-uint16_t SpiFlash_ReadMidDid(void);
+uint32_t SpiFlash_ReadJedecID(void);
 void SpiFlash_ChipErase(void);
 uint8_t SpiFlash_ReadStatusReg(void);
 void SpiFlash_WriteStatusReg(uint8_t u8Value);
@@ -46,22 +46,19 @@ __STATIC_INLINE void wait_SPI_IS_BUSY(SPI_T *spi)
     }
 }
 
-uint16_t SpiFlash_ReadMidDid(void)
+uint32_t SpiFlash_ReadJedecID(void)
 {
-    uint8_t u8RxData[6], u8IDCnt = 0;
+    uint8_t u8RxData[4], u8IDCnt = 0;
 
     // /CS: active
     SPI_SET_SS_LOW(SPI_FLASH_PORT);
 
-    // send Command: 0x90, Read Manufacturer/Device ID
-    SPI_WRITE_TX(SPI_FLASH_PORT, 0x90);
+    // send Command: 0x9F, Read JEDEC ID
+    SPI_WRITE_TX(SPI_FLASH_PORT, 0x9F);
 
-    // send 24-bit '0', dummy
+    // receive 32-bit
     SPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
     SPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
-    SPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
-
-    // receive 16-bit
     SPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
     SPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
 
@@ -72,9 +69,9 @@ uint16_t SpiFlash_ReadMidDid(void)
     SPI_SET_SS_HIGH(SPI_FLASH_PORT);
 
     while(!SPI_GET_RX_FIFO_EMPTY_FLAG(SPI_FLASH_PORT))
-        u8RxData[u8IDCnt ++] = (uint8_t)SPI_READ_RX(SPI_FLASH_PORT);
+        u8RxData[u8IDCnt++] = (uint8_t)SPI_READ_RX(SPI_FLASH_PORT);
 
-    return (uint16_t)((u8RxData[4] << 8) | u8RxData[5]);
+    return (uint32_t)((u8RxData[1] << 16) | (u8RxData[2] << 8) | u8RxData[3]);
 }
 
 void SpiFlash_ChipErase(void)
@@ -283,7 +280,7 @@ void SYS_Init(void)
     /* Enable HXT clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HXTEN_Msk);
 
-    /* Wait for HXT clock ready */
+    /* Waiting for HXT clock ready */
     CLK_WaitClockReady(CLK_STATUS_HXTSTB_Msk);
 
     /* Enable PLL */
@@ -342,12 +339,12 @@ int main(void)
 {
     uint32_t u32ByteCount, u32FlashAddress, u32PageNumber;
     uint32_t u32Error = 0;
-    uint16_t u16ID;
+    uint32_t u32ID;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
 
-    /* Init System, IP clock and multi-function I/O. */
+    /* Init System, IP clock and multi-function I/O */
     SYS_Init();
 
     /* Init UART to 115200-8n1 for print message */
@@ -363,13 +360,23 @@ int main(void)
     printf("|                        SPI Sample with SPI Flash                        |\n");
     printf("+-------------------------------------------------------------------------+\n");
 
-    if((u16ID = SpiFlash_ReadMidDid()) != 0xEF14)
+    u32ID = SpiFlash_ReadJedecID();
+
+    if(u32ID == 0xEF4014)
+        printf("Flash found: W25Q80 ...\n");
+    else if(u32ID == 0xEF4015)
+        printf("Flash found: W25Q16 ...\n");
+    else if(u32ID == 0xEF4016)
+        printf("Flash found: W25Q32 ...\n");
+    else if(u32ID == 0xEF4017)
+        printf("Flash found: W25Q64 ...\n");
+    else if(u32ID == 0xEF4018)
+        printf("Flash found: W25Q128 ...\n");
+    else
     {
-        printf("Wrong ID, 0x%x\n", u16ID);
+        printf("Wrong ID, 0x%X\n", u32ID);
         goto lexit;
     }
-    else
-        printf("Flash found: W25X16 ...\n");
 
     printf("Erase chip ...");
 
@@ -419,7 +426,7 @@ int main(void)
         for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
         {
             if(s_au8DestArray[u32ByteCount] != s_au8SrcArray[u32ByteCount])
-                u32Error ++;
+                u32Error++;
         }
     }
 
