@@ -102,7 +102,7 @@ typedef struct
 } STR_VCOM_LINE_CODING;
 #pragma pack(pop)
 
-#define VCOM_CNT    3
+#define VCOM_CNT        3     /* The maximum number of virtual COM ports is (USBD_MAX_EP - 2) / 3 */
 
 /*-------------------------------------------------------------*/
 extern volatile int8_t g_i8BulkOutReady0;

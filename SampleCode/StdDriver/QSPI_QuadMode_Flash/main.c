@@ -25,7 +25,7 @@ static uint8_t s_au8DestArray[TEST_LENGTH];
 
 void D2D3_SwitchToNormalMode(void);
 void D2D3_SwitchToQuadMode(void);
-uint16_t SpiFlash_ReadMidDid(void);
+uint32_t SpiFlash_ReadJedecID(void);
 void SpiFlash_ChipErase(void);
 uint8_t SpiFlash_ReadStatusReg(void);
 uint8_t SpiFlash_ReadStatusReg2(void);
@@ -65,22 +65,19 @@ __STATIC_INLINE void wait_QSPI_IS_BUSY(QSPI_T *qspi)
     }
 }
 
-uint16_t SpiFlash_ReadMidDid(void)
+uint32_t SpiFlash_ReadJedecID(void)
 {
-    uint8_t u8RxData[6], u8IDCnt = 0;
+    uint8_t u8RxData[4], u8IDCnt = 0;
 
     // /CS: active
     QSPI_SET_SS_LOW(SPI_FLASH_PORT);
 
-    // send Command: 0x90, Read Manufacturer/Device ID
-    QSPI_WRITE_TX(SPI_FLASH_PORT, 0x90);
+    // send Command: 0x9F, Read JEDEC ID
+    QSPI_WRITE_TX(SPI_FLASH_PORT, 0x9F);
 
-    // send 24-bit '0', dummy
+    // receive 32-bit
     QSPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
     QSPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
-    QSPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
-
-    // receive 16-bit
     QSPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
     QSPI_WRITE_TX(SPI_FLASH_PORT, 0x00);
 
@@ -91,9 +88,9 @@ uint16_t SpiFlash_ReadMidDid(void)
     QSPI_SET_SS_HIGH(SPI_FLASH_PORT);
 
     while(!QSPI_GET_RX_FIFO_EMPTY_FLAG(SPI_FLASH_PORT))
-        u8RxData[u8IDCnt ++] = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
+        u8RxData[u8IDCnt++] = (uint8_t)QSPI_READ_RX(SPI_FLASH_PORT);
 
-    return (uint16_t)((u8RxData[4] << 8) | u8RxData[5]);
+    return (uint32_t)((u8RxData[1] << 16) | (u8RxData[2] << 8) | u8RxData[3]);
 }
 
 void SpiFlash_ChipErase(void)
@@ -377,7 +374,7 @@ void SYS_Init(void)
     /* Enable HXT clock */
     CLK_EnableXtalRC(CLK_PWRCTL_HXTEN_Msk);
 
-    /* Wait for HXT clock ready */
+    /* Waiting for HXT clock ready */
     CLK_WaitClockReady(CLK_STATUS_HXTSTB_Msk);
 
     /* Enable PLL */
@@ -438,7 +435,7 @@ int main(void)
 {
     uint32_t u32ByteCount, u32FlashAddress, u32PageNumber;
     uint32_t u32Error = 0;
-    uint16_t u16ID;
+    uint32_t u32ID;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -461,13 +458,23 @@ int main(void)
     printf("|                  QSPI Quad Mode with Flash Sample Code                  |\n");
     printf("+-------------------------------------------------------------------------+\n");
 
-    if((u16ID = SpiFlash_ReadMidDid()) != 0xEF14)
+    u32ID = SpiFlash_ReadJedecID();
+
+    if(u32ID == 0xEF4014)
+        printf("Flash found: W25Q80 ...\n");
+    else if(u32ID == 0xEF4015)
+        printf("Flash found: W25Q16 ...\n");
+    else if(u32ID == 0xEF4016)
+        printf("Flash found: W25Q32 ...\n");
+    else if(u32ID == 0xEF4017)
+        printf("Flash found: W25Q64 ...\n");
+    else if(u32ID == 0xEF4018)
+        printf("Flash found: W25Q128 ...\n");
+    else
     {
-        printf("Wrong ID, 0x%x\n", u16ID);
+        printf("Wrong ID, 0x%X\n", u32ID);
         goto lexit;
     }
-    else
-        printf("Flash found: W25X16 ...\n");
 
     printf("Erase chip ...");
 
@@ -485,7 +492,7 @@ int main(void)
         s_au8SrcArray[u32ByteCount] = (uint8_t)u32ByteCount;
     }
 
-    printf("Start to write data to Flash ...");
+    printf("Start to normal write data to Flash ...");
     /* Program SPI flash */
     u32FlashAddress = 0;
     for(u32PageNumber = 0; u32PageNumber < TEST_NUMBER; u32PageNumber++)
@@ -504,7 +511,7 @@ int main(void)
         s_au8DestArray[u32ByteCount] = 0;
     }
 
-    printf("Read & Compare ...");
+    printf("Quad Read & Compare ...");
 
     /* Read SPI flash */
     u32FlashAddress = 0;
@@ -517,7 +524,7 @@ int main(void)
         for(u32ByteCount = 0; u32ByteCount < TEST_LENGTH; u32ByteCount++)
         {
             if(s_au8DestArray[u32ByteCount] != s_au8SrcArray[u32ByteCount])
-                u32Error ++;
+                u32Error++;
         }
     }
 
