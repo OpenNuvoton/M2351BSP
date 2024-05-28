@@ -1,8 +1,7 @@
-// stdafx.cpp : 僅包含標準 Include 檔的原始程式檔
-// HIDTransferTest.pch 會成為先行編譯標頭檔
-// stdafx.obj 會包含先行編譯型別資訊
+// stdafx.cpp : Original program file containing only standard Include files
+// HIDTransferTest.pch : Will become a pre-compiled header file
+// stdafx.obj : Will contain lookahead compiled type information
 
 #include "stdafx.h"
 
-// TODO: 在 STDAFX.H 中參考您需要的任何其他標頭，
-// 而不要在這個檔案中參考
+// TODO: Reference any other headers you need in STDAFX.H, and do not refer to it in this file

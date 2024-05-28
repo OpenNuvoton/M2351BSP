@@ -61,86 +61,82 @@ public:
 		}
 	}
 
-	HIDP_CAPS	Capabilities;
-
 	BOOL OpenDevice(USHORT usVID, USHORT usPID)
-	{				
-        DWORD                               DeviceUsage; 
+	{
+		//CString MyDevPathName="";
 		TCHAR MyDevPathName[MAX_PATH];
-		//Get the Capabilities structure for the device.   	   
-		PHIDP_PREPARSED_DATA    PreparsedData;   
 
-		//定義一個GUID的結構體HidGuid來保存HID設備的接口類GUID。
+		//Define a GUID structure HidGuid to save the interface class GUID of the HID device.
 		GUID HidGuid;
-		//定義一個DEVINFO的句柄hDevInfoSet來保存獲取到的設備信息集合句柄。
+		//Define a DEVINFO handle hDevInfoSet to save the obtained device information set handle.
 		HDEVINFO hDevInfoSet;
-		//定義MemberIndex，表示當前搜索到第幾個設備，0表示第一個設備。
+		//Define MemberIndex, which indicates which device is currently searched, and 0 indicates the first device.
 		DWORD MemberIndex;
-		//DevInterfaceData，用來保存設備的驅動接口信息
+		//DevInterfaceData, used to save the driver interface information of the device
 		SP_DEVICE_INTERFACE_DATA DevInterfaceData;
-		//定義一個BOOL變量，保存函數調用是否返回成功
+		//Define a BOOL variable to save whether the function call returns successfully
 		BOOL Result;
-		//定義一個RequiredSize的變量，用來接收需要保存詳細信息的緩衝長度。
+		// Define a RequiredSize variable to receive the buffer length that needs to save detailed information.
 		DWORD RequiredSize;
-		//定義一個指向設備詳細信息的結構體指針。
-		PSP_DEVICE_INTERFACE_DETAIL_DATA	pDevDetailData;
-		//定義一個用來保存打開設備的句柄。
+		// Define a structure pointer pointing to device details.
+		PSP_DEVICE_INTERFACE_DETAIL_DATA 	pDevDetailData;
+		//Define a handle to save the open device.
 		HANDLE hDevHandle;
-		//定義一個HIDD_ATTRIBUTES的結構體變量，保存設備的屬性。
+		// Define a HIDD_ATTRIBUTES structure variable to save the attributes of the device.
 		HIDD_ATTRIBUTES DevAttributes;
+
+		// Initialization device not found
+		BOOL MyDevFound =FALSE;
 		
-		//初始化設備未找到
-		BOOL MyDevFound=FALSE;
-		
-		//初始化讀、寫句柄為無效句柄。
+		// Initialize read and write handles as invalid handles.
 		m_hReadHandle=INVALID_HANDLE_VALUE;
 		m_hWriteHandle=INVALID_HANDLE_VALUE;
 		
-		//對DevInterfaceData結構體的cbSize初始化為結構體大小
+		// Initialize the cbSize of the DevInterfaceData structure to the size of the structure
 		DevInterfaceData.cbSize=sizeof(DevInterfaceData);
-		//對DevAttributes結構體的Size初始化為結構體大小
+		// Initialize the Size of the DevAttributes structure to the size of the structure
 		DevAttributes.Size=sizeof(DevAttributes);
 		
-		//調用HidD_GetHidGuid函數獲取HID設備的GUID，並保存在HidGuid中。
+		// Call the HidD_GetHidGuid function to obtain the GUID of the HID device and save it in HidGuid.
 		HidD_GetHidGuid(&HidGuid);
 		
-		//根據HidGuid來獲取設備信息集合。其中Flags參數設置為
-		//DIGCF_DEVICEINTERFACE|DIGCF_PRESENT，前者表示使用的GUID為
-		//接口類GUID，後者表示只列舉正在使用的設備，因為我們這裡只
-		//查找已經連接上的設備。返回的句柄保存在hDevinfo中。注意設備
-		//信息集合在使用完畢後，要使用函數SetupDiDestroyDeviceInfoList
-		//銷毀，不然會造成內存洩漏。
+		// Acquire the device information collection based on HidGuid . The Flags parameter is set to
+		//DIGCF_DEVICEINTERFACE|DIGCF_PRESENT , the former indicates that the GUID used is
+		// Interface class GUID, the latter means that only the devices in use are listed, because we only
+		//Find connected devices. The returned handle is saved in hDevinfo. Pay attention to equipment
+		// After using the information collection, use the function SetupDiDestroyDeviceInfoList
+		// Destroy, otherwise it will cause memory leak.
 		hDevInfoSet=SetupDiGetClassDevs(&HidGuid,
 			NULL,
 			NULL,
 			DIGCF_DEVICEINTERFACE|DIGCF_PRESENT);
 		
-		//AddToInfOut("開始查找設備");
-		//然後對設備集合中每個設備進行列舉，檢查是否是我們要找的設備
-		//當找到我們指定的設備，或者設備已經查找完畢時，就退出查找。
-		//首先指向第一個設備，即將MemberIndex置為0。
+		// AddToInfOut ("Start looking for devices");
+		// Then enumerate each device in the device collection and check whether it is the device we are looking for.
+		//When the device we specified is found, or the device has been searched, exit the search.
+		//First point to the first device, that is, set MemberIndex to 0.
 		MemberIndex=0;
 		while(1)
 		{
-			//調用SetupDiEnumDeviceInterfaces在設備信息集合中獲取編號為
-			//MemberIndex的設備信息。
+			// Call SetupDiEnumDeviceInterfaces to get the number in the device information collection
+			// Device information of MemberIndex .。
 			Result=SetupDiEnumDeviceInterfaces(hDevInfoSet,
 				NULL,
 				&HidGuid,
 				MemberIndex,
 				&DevInterfaceData);
 			
-			//如果獲取信息失敗，則說明設備已經查找完畢，退出循環。
+			// If the information acquisition fails, it means that the device has been searched and the loop is exited.
 			if(Result==FALSE) break;
 			
-			//將MemberIndex指向下一個設備
+			// Point MemberIndex to the next device
 			MemberIndex++;
 			
-			//如果獲取信息成功，則繼續獲取該設備的詳細信息。在獲取設備
-			//詳細信息時，需要先知道保存詳細信息需要多大的緩衝區，這通過
-			//第一次調用函數SetupDiGetDeviceInterfaceDetail來獲取。這時
-			//提供緩衝區和長度都為NULL的參數，並提供一個用來保存需要多大
-			//緩衝區的變量RequiredSize。
+			// If the information is obtained successfully, continue to obtain the detailed information of the device. Obtaining equipment
+			// When providing detailed information, you need to first know how large a buffer is required to save the detailed information. This is done by
+			//Call the function SetupDiGetDeviceInterfaceDetail for the first time to get it. At this time
+			// Provide parameters with buffer and length both NULL, and provide a parameter to save the size needed
+			// Buffer variable RequiredSize .
 			Result=SetupDiGetDeviceInterfaceDetail(hDevInfoSet,
 				&DevInterfaceData,
 				NULL,
@@ -148,21 +144,21 @@ public:
 				&RequiredSize,
 				NULL);
 			
-			//然後，分配一個大小為RequiredSize緩衝區，用來保存設備詳細信息。
+			// Then, allocate a buffer of size RequiredSize to save device details.
 			pDevDetailData=(PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(RequiredSize);
-			if(pDevDetailData==NULL) //如果內存不足，則直接返回。
+			if(pDevDetailData==NULL) //If there is insufficient memory, return directly.
 			{
-				//MessageBox("內存不足!");
+				// MessageBox ("Insufficient memory!");
 				SetupDiDestroyDeviceInfoList(hDevInfoSet);
 				return FALSE;
 			}
 			
-			//並設置pDevDetailData的cbSize為結構體的大小（注意只是結構體大小，
-			//不包括後面緩衝區）。
+			// And set the cbSize of pDevDetailData to the size of the structure (note that it is only the size of the structure,
+			//excluding back buffer).
 			pDevDetailData->cbSize=sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 			
-			//然後再次調用SetupDiGetDeviceInterfaceDetail函數來獲取設備的
-			//詳細信息。這次調用設置使用的緩衝區以及緩衝區大小。
+			// Then call the SetupDiGetDeviceInterfaceDetail function again to get the device's
+			//details. This call sets the buffer used and the buffer size.
 			Result=SetupDiGetDeviceInterfaceDetail(hDevInfoSet,
 				&DevInterfaceData,
 				pDevDetailData,
@@ -170,19 +166,19 @@ public:
 				NULL,
 				NULL);
 			
-			//將設備路徑複製出來，然後銷毀剛剛申請的內存。
+			// Copy the device path, and then destroy the memory just applied for.
 			//MyDevPathName=pDevDetailData->DevicePath;
 			//_tcscpy(MyDevPathName, pDevDetailData->DevicePath);
 			wcscpy_s(MyDevPathName, pDevDetailData->DevicePath);
             free(pDevDetailData);
 			
-			//如果調用失敗，則查找下一個設備。
+			// If the call fails, look for the next device.。
 			if(Result==FALSE) continue;
 			
-			//如果調用成功，則使用不帶讀寫訪問的CreateFile函數
-			//來獲取設備的屬性，包括VID、PID、版本號等。
-			//對於一些獨佔設備（例如USB鍵盤），使用讀訪問方式是無法打開的，
-			//而使用不帶讀寫訪問的格式才可以打開這些設備，從而獲取設備的屬性。
+			//If the call is successful, use the CreateFile function without read and write access
+			// To obtain the device attributes, including VID, PID, version number, etc.
+			// For some exclusive devices (such as USB keyboard), they cannot be opened using read access mode.
+			// Only by using a format without read and write access can you open these devices and obtain the device properties.
 			hDevHandle=CreateFile(MyDevPathName, 
 				NULL,
 				FILE_SHARE_READ|FILE_SHARE_WRITE, 
@@ -191,42 +187,30 @@ public:
 				FILE_ATTRIBUTE_NORMAL,
 				NULL);
 			
-			//如果打開成功，則獲取設備屬性。
+			// If the opening is successful, get the device properties.
 			if(hDevHandle!=INVALID_HANDLE_VALUE)
 			{
-				//獲取設備的屬性並保存在DevAttributes結構體中
+				// Get the attributes of the device and save them in the DevAttributes structure
 				Result=HidD_GetAttributes(hDevHandle,
 					&DevAttributes);
 				
-				//關閉剛剛打開的設備
-				//CloseHandle(hDevHandle);
+				// Close the device you just opened
+				CloseHandle(hDevHandle);
 				
-				//獲取失敗，查找下一個
+				// Failed to obtain, find the next one
 				if(Result==FALSE) continue;
 				
-				//如果獲取成功，則將屬性中的VID、PID以及設備版本號與我們需要的
-				//進行比較，如果都一致的話，則說明它就是我們要找的設備。
+				//If the acquisition is successful, compare the VID, PID and device version number in the attributes with what we need
+				// Compare, if they are consistent, it means it is the device we are looking for.
 				if(DevAttributes.VendorID == usVID
 					&& DevAttributes.ProductID == usPID){
-						
-	                        // 利用HID Report Descriptor來辨識HID Transfer裝置 
-							HidD_GetPreparsedData(hDevHandle, &PreparsedData);   
-			   
-							HidP_GetCaps(PreparsedData, &Capabilities);   
-		
-							HidD_FreePreparsedData(PreparsedData);  
-							 DeviceUsage = (Capabilities.UsagePage * 256) + Capabilities.Usage;   
-   
-							if (DeviceUsage != 0xFF0001)   // Report Descriptor
-								continue;
-
-							MyDevFound=TRUE; //設置設備已經找到
-							//AddToInfOut("設備已經找到");
+							MyDevFound=TRUE; //Set the device has been found
+							//AddToInfOut(" Device has been found");
 							
-							//那麼就是我們要找的設備，分別使用讀寫方式打開之，並保存其句柄
-							//並且選擇為異步訪問方式。
+							// Then this is the device we are looking for, open it using read and write methods respectively, and save its handle
+							// And select asynchronous access mode.
 							
-							//讀方式打開設備
+							//Open the device in read mode
 							m_hReadHandle=CreateFile(MyDevPathName, 
 								GENERIC_READ,
 								FILE_SHARE_READ|FILE_SHARE_WRITE, 
@@ -235,10 +219,10 @@ public:
 								//FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED,
 								FILE_ATTRIBUTE_NORMAL,
 								NULL);
-								//if(hReadHandle!=INVALID_HANDLE_VALUE)AddToInfOut("讀訪問打開設備成功");
-								//else AddToInfOut("讀訪問打開設備失敗");
+								//if( hWriteHandle !=INVALID_HANDLE_VALUE) AddToInfOut ("Write access to open device successfully");
+								//else AddToInfOut ("Failed to open device for write access");
 							
-							//寫方式打開設備
+							// Open the device in writing mode
 							m_hWriteHandle=CreateFile(MyDevPathName, 
 								GENERIC_WRITE,
 								FILE_SHARE_READ|FILE_SHARE_WRITE, 
@@ -247,36 +231,33 @@ public:
 								//FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED,
 								FILE_ATTRIBUTE_NORMAL,
 								NULL);
-								//if(hWriteHandle!=INVALID_HANDLE_VALUE)AddToInfOut("寫訪問打開設備成功");
-								//else AddToInfOut("寫訪問打開設備失敗");
+								//if( hWriteHandle !=INVALID_HANDLE_VALUE) AddToInfOut ("Write access to open device successfully");
+								//else AddToInfOut ("Failed to open device for write access");
+							
 							
 						
-							//手動觸發事件，讓讀報告線程恢復運行。因為在這之前並沒有調用
-							//讀數據的函數，也就不會引起事件的產生，所以需要先手動觸發一
-							//次事件，讓讀報告線程恢復運行。
-							//SetEvent(ReadOverlapped.hEvent);
+							//Manually trigger the event to resume the reading report thread. Because it was not called before
+							// The function that reads data will not cause an event to be generated, so you need to manually trigger it first
+							// This event allows the read report thread to resume running.
+							// SetEvent ( ReadOverlapped.hEvent );
 							
-							//顯示設備的狀態。
-							//SetDlgItemText(IDC_DS,"設備已打開");
+							// Display the status of the device.
+							// SetDlgItemText (IDC_DS,"Device is on");
 							
-							//找到設備，退出循環。本程序只檢測一個目標設備，查找到後就退出
-							//查找了。如果你需要將所有的目標設備都列出來的話，可以設置一個
-							//數組，找到後就保存在數組中，直到所有設備都查找完畢才退出查找
+							// Find the device and exit the loop. This program only detects one target device and exits after finding it.
+							// Find. If you need to list all target devices, you can set a
+							// Array, after it is found, it will be saved in the array. It will not exit the search until all devices have been searched.
 							break;
 						}
 			}
-			//如果打開失敗，則查找下一個設備
-			else //continue;
-			{
-				CloseHandle(hDevHandle);
-				continue;
-			}
+			// If the opening fails, search for the next device
+			else continue;
 		}
 		
-		//調用SetupDiDestroyDeviceInfoList函數銷毀設備信息集合
+		// Call the SetupDiDestroyDeviceInfoList function to destroy the device information collection
 		SetupDiDestroyDeviceInfoList(hDevInfoSet);
 		
-		//如果設備已經找到，那麼應該使能各操作按鈕，並同時禁止打開設備按鈕
+		// If the device has been found, each operation button should be enabled and the device button should be disabled at the same time.
 		return MyDevFound;
 	}
 
