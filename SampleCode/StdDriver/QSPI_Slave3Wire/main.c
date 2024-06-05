@@ -21,9 +21,12 @@
 
 static uint32_t s_au32SourceData[TEST_COUNT];
 static uint32_t s_au32DestinationData[TEST_COUNT];
+static volatile uint32_t s_u32TxDataCount;
+static volatile uint32_t s_u32RxDataCount;
 
 void SYS_Init(void);
 void QSPI_Init(void);
+void QSPI0_IRQHandler(void);
 
 void SYS_Init(void)
 {
@@ -107,9 +110,46 @@ void QSPI_Init(void)
     QSPI0->CTL = QSPI_SLAVE | QSPI_MODE_0 | QSPI_CTL_SPIEN_Msk;
 }
 
+void QSPI0_IRQHandler(void)
+{
+    while(s_u32RxDataCount < TEST_COUNT)
+    {
+        /* Check RX EMPTY flag */
+        while(QSPI_GET_RX_FIFO_EMPTY_FLAG(QSPI0) == 0)
+        {
+            /* Read RX FIFO */
+            s_au32DestinationData[s_u32RxDataCount++] = QSPI_READ_RX(QSPI0);
+        }
+        /* Check TX FULL flag and TX data count */
+        while((QSPI_GET_TX_FIFO_FULL_FLAG(QSPI0) == 0) && (s_u32TxDataCount < TEST_COUNT))
+        {
+            /* Write to TX FIFO */
+            QSPI_WRITE_TX(QSPI0, s_au32SourceData[s_u32TxDataCount++]);
+
+            /* Check the Slave TX underflow interrupt flag */
+            if(QSPI_GetIntFlag(QSPI0, QSPI_TXUF_INT_MASK))
+            {
+                QSPI_DISABLE_3WIRE_MODE(QSPI0);
+                QSPI_ClearIntFlag(QSPI0, QSPI_TXUF_INT_MASK);
+                QSPI_ENABLE_3WIRE_MODE(QSPI0);
+            }
+        }
+        if(s_u32TxDataCount >= TEST_COUNT)
+            QSPI_DisableInt(QSPI0, QSPI_FIFO_TXTH_INT_MASK); /* Disable TX FIFO threshold interrupt */
+
+        /* Check the RX FIFO time-out interrupt flag */
+        if(QSPI_GetIntFlag(QSPI0, QSPI_FIFO_RXTO_INT_MASK))
+        {
+            /* If RX FIFO is not empty, read RX FIFO. */
+            while(QSPI_GET_RX_FIFO_EMPTY_FLAG(QSPI0) == 0)
+                s_au32DestinationData[s_u32RxDataCount++] = QSPI_READ_RX(QSPI0);
+        }
+    }
+}
+
 int main(void)
 {
-    volatile uint32_t u32TxDataCount, u32RxDataCount;
+    uint32_t u32DataCount;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -136,16 +176,16 @@ int main(void)
     printf("In the meanwhile the QSPI controller will receive %d data from the off-chip master device.\n", TEST_COUNT);
     printf("After the transfer is done, the %d received data will be printed out.\n", TEST_COUNT);
 
-    for(u32TxDataCount = 0; u32TxDataCount < TEST_COUNT; u32TxDataCount++)
+    for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
         /* Write the initial value to source buffer */
-        s_au32SourceData[u32TxDataCount] = 0x00AA0000 + u32TxDataCount;
+        s_au32SourceData[u32DataCount] = 0x00AA0000 + u32DataCount;
         /* Clear destination buffer */
-        s_au32DestinationData[u32TxDataCount] = 0;
+        s_au32DestinationData[u32DataCount] = 0;
     }
 
-    u32TxDataCount = 0;
-    u32RxDataCount = 0;
+    s_u32TxDataCount = 0;
+    s_u32RxDataCount = 0;
     printf("Press any key if the master device configuration is ready.\n");
     getchar();
     printf("\n");
@@ -153,23 +193,21 @@ int main(void)
     /* Set TX FIFO threshold */
     QSPI_SetFIFO(QSPI0, 2, 2);
 
-    /* Access TX and RX FIFO */
-    while(u32RxDataCount < TEST_COUNT)
-    {
-        /* Check TX FULL flag and TX data count */
-        if((QSPI_GET_TX_FIFO_FULL_FLAG(QSPI0) == 0) && (u32TxDataCount < TEST_COUNT))
-            QSPI_WRITE_TX(QSPI0, s_au32SourceData[u32TxDataCount++]); /* Write to TX FIFO */
-        /* Check RX EMPTY flag */
-        if(QSPI_GET_RX_FIFO_EMPTY_FLAG(QSPI0) == 0)
-            s_au32DestinationData[u32RxDataCount++] = QSPI_READ_RX(QSPI0); /* Read RX FIFO */
-    }
+    /* Enable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
+    QSPI_EnableInt(QSPI0, QSPI_FIFO_TXTH_INT_MASK | QSPI_FIFO_RXTO_INT_MASK);
+    NVIC_EnableIRQ(QSPI0_IRQn);
 
     /* Print the received data */
     printf("Received data:\n");
-    for(u32RxDataCount = 0; u32RxDataCount < TEST_COUNT; u32RxDataCount++)
+    for(u32DataCount = 0; u32DataCount < TEST_COUNT; u32DataCount++)
     {
-        printf("%d:\t0x%X\n", u32RxDataCount, s_au32DestinationData[u32RxDataCount]);
+        printf("%d:\t0x%X\n", u32DataCount, s_au32DestinationData[u32DataCount]);
     }
+
+    /* Disable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
+    QSPI_DisableInt(QSPI0, QSPI_FIFO_TXTH_INT_MASK | QSPI_FIFO_RXTO_INT_MASK);
+    NVIC_DisableIRQ(QSPI0_IRQn);
+
     printf("The data transfer was done.\n");
 
     printf("\n\nExit QSPI driver sample code.\n");
