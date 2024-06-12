@@ -1,19 +1,20 @@
 {
     "version": 2,
     "configurePresets": [
-        {
-            "name": "armclang",
-            "displayName": "build with armclang",
+         {
+            "name": "gcc",
+            "displayName": "build with gcc",
             "description": "",
-            "generator": "Unix Makefiles",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
+                "C_COMPILER_ID" : "GCC",
                 "CMAKE_VERBOSE_MAKEFILE" : "OFF",
                 "CMAKE_C_COMPILER_WORKS" : true,
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_TOOLCHAIN_FILE": "",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install/${presetName}"
             }
         }
+
     ]
 }

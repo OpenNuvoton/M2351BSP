@@ -1,4 +1,4 @@
-set(DRV_SRC  
+set(DRV_SRC
     acmp.c
     bpwm.c
     can.c
@@ -35,5 +35,9 @@ set(DRV_SRC
     wwdt.c
 )
 
-
 add_library(standard_driver ${DRV_SRC})
+add_library(standard_driver_trustzone ${DRV_SRC})
+target_compile_options(standard_driver_trustzone
+    PUBLIC
+    -mcmse
+)

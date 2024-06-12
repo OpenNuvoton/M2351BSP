@@ -1,3 +1,8 @@
 {
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "files.associations": {
+        "numicro.h": "c",
+        "m2351.h": "c",
+        "core_armv8mbl.h": "c"
+    }
 }

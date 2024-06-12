@@ -39,32 +39,70 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION "5")
 set(CMAKE_SYSTEM_PROCESSOR ARM)
 
-set(TOOLCHAIN_PATH C:/Keil_v5/ARM/ARMCLANG)
-find_program(ARM_CC NAMES armclang PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
-find_program(ARM_CXX NAMES armclang PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
-find_program(ARM_ASM NAMES armasm PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
-find_program(ARM_AR NAMES armar PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
-find_program(ARM_LINK NAMES armlink PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
-find_program(ARM_FROMELF NAMES fromelf PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
+if(C_COMPILER_ID STREQUAL ARMCLANG)
+    set(TOOLCHAIN_PATH C:/Keil_v5/ARM/ARMCLANG)
+    find_program(ARM_CC NAMES armclang PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_CXX NAMES armclang PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_ASM NAMES armasm PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_AR NAMES armar PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_LINK NAMES armlink PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_FROMELF NAMES fromelf PATHS ${TOOLCHAIN_PATH}/bin REQUIRED NO_DEFAULT_PATH)
 
-set(CMAKE_C_COMPILER ${ARM_CC} CACHE STRING "")
-set(CMAKE_CXX_COMPILER ${ARM_CXX} CACHE STRING "")
-set(CMAKE_ASM_COMPILER ${ARM_ASM} CACHE STRING "")
-set(CMAKE_LINKER ${ARM_LINK} CACHE STRING "")
+    set(CMAKE_C_COMPILER ${ARM_CC} CACHE STRING "")
+    set(CMAKE_CXX_COMPILER ${ARM_CXX} CACHE STRING "")
+    set(CMAKE_ASM_COMPILER ${ARM_ASM} CACHE STRING "")
+    set(CMAKE_LINKER ${ARM_LINK} CACHE STRING "")
 
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_PATH})
+    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+    set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_PATH})
 
-set(LINK_MCU_CORE "Cortex-M23")
+    set(LINK_MCU_CORE "Cortex-M23")
 
-set(C_FLAGS "--target=arm-arm-none-eabi -mcpu=${LINK_MCU_CORE} -c -fno-rtti -funsigned-char -D__MICROLIB -gdwarf-3 -O2 -fno-function-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -D__MICROLIB -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -Ic:/Keil_v5/ARM/ARMCLANG/include")
-set(CMAKE_C_FLAGS "-xc -std=c99  ${C_FLAGS}")
-set(CMAKE_CXX_FLAGS ${C_FLAGS})
-set(CMAKE_ASM_FLAGS "--cpu Cortex-M23 -g --16 --apcs=interwork --pd \"__MICROLIB SETA 1\"")
-set(CMAKE_EXECUTABLE_SUFFIX ".axf")
+    set(C_FLAGS "--target=arm-arm-none-eabi -mcpu=${LINK_MCU_CORE} -fno-rtti -funsigned-char -D__MICROLIB -O2 -fno-function-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -Ic:/Keil_v5/ARM/ARMCLANG/include")
+    set(CMAKE_C_FLAGS "-xc -c -std=c99  ${C_FLAGS}")
+    set(CMAKE_CXX_FLAGS ${C_FLAGS})
+
+    # set(CMAKE_ASM_FLAGS "--cpu Cortex-M23 -g --16 --apcs=interwork")
+    set(CMAKE_ASM_FLAGS "")
+    set(CMAKE_EXECUTABLE_SUFFIX ".axf")
+endif()
+
+# ---------------------------------------------------------------------
+if(C_COMPILER_ID STREQUAL GCC)
+    # Prevent CMake from testing the toolchain
+    set(CMAKE_C_COMPILER_FORCED 1)
+    set(CMAKE_CXX_COMPILER_FORCED 1)
+
+    set(TOOLCHAIN_PATH "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/bin")
+
+    # set(TOOLCHAIN_PATH "${ENV_USER}/.vcpkg/artifacts/fd3d78d7/compilers.arm.arm.none.eabi.gcc/12.3.1/bin")
+    find_program(ARM_CC NAMES arm-none-eabi-gcc PATHS ${TOOLCHAIN_PATH} REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_CXX NAMES arm-none-eabi-gcc PATHS ${TOOLCHAIN_PATH} REQUIRED NO_DEFAULT_PATH)
+    find_program(ARM_OBJCOPY NAMES arm-none-eabi-objcopy PATHS ${TOOLCHAIN_PATH} REQUIRED NO_DEFAULT_PATH)
+
+    set(CMAKE_C_COMPILER ${ARM_CC} CACHE STRING "")
+    set(CMAKE_CXX_COMPILER ${ARM_CXX} CACHE STRING "")
+
+    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+    set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_PATH})
+
+    set(LINK_MCU_CORE "Cortex-M23")
+
+    set(STACK_SIZE 0x4000)
+    set(HEAP_SIZE 0x20000)
+
+    set(C_FLAGS "-mcpu=${LINK_MCU_CORE} --specs=nano.specs -Wall -Wno-format -Wno-return-type -Wno-unused-but-set-variable -fdata-sections -ffunction-sections -fno-builtin -fshort-enums -funsigned-char -mthumb -std=c99 -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -I\"C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q1-update/arm-none-eabi/include\"")
+    set(CMAKE_C_FLAGS ${C_FLAGS})
+    set(CMAKE_CXX_FLAGS ${C_FLAGS})
+    set(CMAKE_ASM_FLAGS "-mcpu=Cortex-M23")
+    set(CMAKE_EXECUTABLE_SUFFIX_C ".elf")
+endif()
 
 project(m2351bsp)
 
@@ -100,6 +138,21 @@ function(create_project PRJ)
     )
 endfunction()
 
+function(target_secure_option PRJ)
+    # add flags for secure project
+    target_compile_options(${PRJ}
+        PUBLIC
+        -gdwarf-3
+    )
+
+    # add path for parition header file for secure project
+    target_include_directories(${PRJ}
+        BEFORE
+        PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/..
+    )
+endfunction()
+
 set(BSP_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 include_directories(${TOOLCHAIN_PATH}/include)
@@ -107,10 +160,12 @@ include_directories(${BSP_DIR}/Library/CMSIS/Include)
 include_directories(${BSP_DIR}/Library/Device/Nuvoton/M2351/Include)
 include_directories(${BSP_DIR}/Library/StdDriver/inc)
 include_directories(${BSP_DIR}/Library/SmartcardLib/Include)
+include_directories(${BSP_DIR}/ThirdParty/FreeRTOS/Source/include)
 
 # Build library
 add_subdirectory(${BSP_DIR}/Library/StdDriver/src)
 add_subdirectory(${BSP_DIR}/Library/Device/Nuvoton/M2351/Source)
+add_subdirectory(${BSP_DIR}/ThirdParty/FreeRTOS)
 
 # Build sample code
-add_subdirectory(${BSP_DIR}/SampleCode/StdDriver/CRYPTO_ECC_Demo)
+add_subdirectory(${BSP_DIR}/SampleCode/FreeRTOS/Blinky_ns)

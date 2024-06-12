@@ -49,7 +49,7 @@ void NSC_Init(void);
  *
  * @return   None
  *
- * @details  This function is used to set Non-secure boundary according to 
+ * @details  This function is used to set Non-secure boundary according to
  *           the configuration of partition header file
  */
 void FMC_NSBA_Setup(void)
@@ -83,7 +83,7 @@ void FMC_NSBA_Setup(void)
             FMC->ISPCMD = FMC_ISPCMD_PROGRAM;
             FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
             while(FMC->ISPTRG);
-            
+
             /* Verify new base */
             FMC->ISPDAT = 0;
             FMC->ISPCMD = FMC_ISPCMD_READ;
@@ -116,7 +116,7 @@ void SCU_Setup(void)
     SCU->PNSSET[4] = SCU_INIT_PNSSET4_VAL;
     SCU->PNSSET[5] = SCU_INIT_PNSSET5_VAL;
     SCU->PNSSET[6] = SCU_INIT_PNSSET6_VAL;
-    
+
 
     SCU->IONSSET = SCU_INIT_IONSSET_VAL;
 
@@ -127,19 +127,19 @@ void SCU_Setup(void)
     }
 
     /* Set interrupt to non-secure according to PNNSET settings */
-    if(SCU_INIT_PNSSET0_VAL & BIT9 ) NVIC->ITNS[1] |= BIT22; /* Int of USBH_INT     */
+    if(SCU_INIT_PNSSET0_VAL & BIT9) NVIC->ITNS[1] |= BIT22;  /* Int of USBH_INT     */
     if(SCU_INIT_PNSSET0_VAL & BIT13) NVIC->ITNS[2] |= BIT0 ; /* Int of SDHOST0_INT  */
     if(SCU_INIT_PNSSET0_VAL & BIT24) NVIC->ITNS[3] |= BIT2 ; /* Int of PDMA1_INT    */
     if(SCU_INIT_PNSSET1_VAL & BIT18) NVIC->ITNS[2] |= BIT7 ; /* Int of CRYPTO       */
-    if(SCU_INIT_PNSSET2_VAL & BIT2 ) NVIC->ITNS[3] |= BIT15; /* Int of EWDT_INT     */
-    if(SCU_INIT_PNSSET2_VAL & BIT2 ) NVIC->ITNS[3] |= BIT16; /* Int of EWWDT_INT    */
-    if(SCU_INIT_PNSSET2_VAL & BIT3 ) NVIC->ITNS[1] |= BIT10; /* Int of EADC0_INT    */
-    if(SCU_INIT_PNSSET2_VAL & BIT3 ) NVIC->ITNS[1] |= BIT11; /* Int of EADC1_INT    */
-    if(SCU_INIT_PNSSET2_VAL & BIT3 ) NVIC->ITNS[1] |= BIT14; /* Int of EADC2_INT    */
-    if(SCU_INIT_PNSSET2_VAL & BIT3 ) NVIC->ITNS[1] |= BIT15; /* Int of EADC3_INT    */
-    if(SCU_INIT_PNSSET2_VAL & BIT5 ) NVIC->ITNS[1] |= BIT12; /* Int of ACMP01_INT   */
-    if(SCU_INIT_PNSSET2_VAL & BIT7 ) NVIC->ITNS[1] |= BIT9 ; /* Int of DAC_INT      */
-    if(SCU_INIT_PNSSET2_VAL & BIT8 ) NVIC->ITNS[2] |= BIT4 ; /* Int of I2S0_INT     */
+    if(SCU_INIT_PNSSET2_VAL & BIT2) NVIC->ITNS[3] |= BIT15;  /* Int of EWDT_INT     */
+    if(SCU_INIT_PNSSET2_VAL & BIT2) NVIC->ITNS[3] |= BIT16;  /* Int of EWWDT_INT    */
+    if(SCU_INIT_PNSSET2_VAL & BIT3) NVIC->ITNS[1] |= BIT10;  /* Int of EADC0_INT    */
+    if(SCU_INIT_PNSSET2_VAL & BIT3) NVIC->ITNS[1] |= BIT11;  /* Int of EADC1_INT    */
+    if(SCU_INIT_PNSSET2_VAL & BIT3) NVIC->ITNS[1] |= BIT14;  /* Int of EADC2_INT    */
+    if(SCU_INIT_PNSSET2_VAL & BIT3) NVIC->ITNS[1] |= BIT15;  /* Int of EADC3_INT    */
+    if(SCU_INIT_PNSSET2_VAL & BIT5) NVIC->ITNS[1] |= BIT12;  /* Int of ACMP01_INT   */
+    if(SCU_INIT_PNSSET2_VAL & BIT7) NVIC->ITNS[1] |= BIT9 ;  /* Int of DAC_INT      */
+    if(SCU_INIT_PNSSET2_VAL & BIT8) NVIC->ITNS[2] |= BIT4 ;  /* Int of I2S0_INT     */
     if(SCU_INIT_PNSSET2_VAL & BIT13) NVIC->ITNS[1] |= BIT23; /* Int of USBOTG_INT   */
     if(SCU_INIT_PNSSET2_VAL & BIT17) NVIC->ITNS[1] |= BIT2 ; /* Int of TMR2_INT     */
     if(SCU_INIT_PNSSET2_VAL & BIT17) NVIC->ITNS[1] |= BIT3 ; /* Int of TMR3_INT     */
@@ -151,24 +151,24 @@ void SCU_Setup(void)
     if(SCU_INIT_PNSSET2_VAL & BIT25) NVIC->ITNS[0] |= BIT31; /* Int of EPWM1_P2_INT */
     if(SCU_INIT_PNSSET2_VAL & BIT26) NVIC->ITNS[2] |= BIT14; /* Int of BPWM0_INT    */
     if(SCU_INIT_PNSSET2_VAL & BIT27) NVIC->ITNS[2] |= BIT15; /* Int of BPWM1_INT    */
-    if(SCU_INIT_PNSSET3_VAL & BIT0 ) NVIC->ITNS[0] |= BIT22; /* Int of QSPI0_INT    */
-    if(SCU_INIT_PNSSET3_VAL & BIT1 ) NVIC->ITNS[0] |= BIT23; /* Int of SPI0_INT     */
-    if(SCU_INIT_PNSSET3_VAL & BIT2 ) NVIC->ITNS[1] |= BIT19; /* Int of SPI1_INT     */
-    if(SCU_INIT_PNSSET3_VAL & BIT3 ) NVIC->ITNS[1] |= BIT20; /* Int of SPI2_INT     */
-    if(SCU_INIT_PNSSET3_VAL & BIT4 ) NVIC->ITNS[1] |= BIT30; /* Int of SPI3_INT     */
+    if(SCU_INIT_PNSSET3_VAL & BIT0) NVIC->ITNS[0] |= BIT22;  /* Int of QSPI0_INT    */
+    if(SCU_INIT_PNSSET3_VAL & BIT1) NVIC->ITNS[0] |= BIT23;  /* Int of SPI0_INT     */
+    if(SCU_INIT_PNSSET3_VAL & BIT2) NVIC->ITNS[1] |= BIT19;  /* Int of SPI1_INT     */
+    if(SCU_INIT_PNSSET3_VAL & BIT3) NVIC->ITNS[1] |= BIT20;  /* Int of SPI2_INT     */
+    if(SCU_INIT_PNSSET3_VAL & BIT4) NVIC->ITNS[1] |= BIT30;  /* Int of SPI3_INT     */
     if(SCU_INIT_PNSSET3_VAL & BIT16) NVIC->ITNS[1] |= BIT4 ; /* Int of UART0_INT    */
     if(SCU_INIT_PNSSET3_VAL & BIT17) NVIC->ITNS[1] |= BIT5 ; /* Int of UART1_INT    */
     if(SCU_INIT_PNSSET3_VAL & BIT18) NVIC->ITNS[1] |= BIT16; /* Int of UART2_INT    */
     if(SCU_INIT_PNSSET3_VAL & BIT19) NVIC->ITNS[1] |= BIT17; /* Int of UART3_INT    */
     if(SCU_INIT_PNSSET3_VAL & BIT20) NVIC->ITNS[2] |= BIT10; /* Int of UART4_INT    */
     if(SCU_INIT_PNSSET3_VAL & BIT21) NVIC->ITNS[2] |= BIT11; /* Int of UART5_INT    */
-    if(SCU_INIT_PNSSET4_VAL & BIT0 ) NVIC->ITNS[1] |= BIT6 ; /* Int of I2C0_INT     */
-    if(SCU_INIT_PNSSET4_VAL & BIT1 ) NVIC->ITNS[1] |= BIT7 ; /* Int of I2C1_INT     */
-    if(SCU_INIT_PNSSET4_VAL & BIT2 ) NVIC->ITNS[2] |= BIT18; /* Int of I2C2_INT     */
+    if(SCU_INIT_PNSSET4_VAL & BIT0) NVIC->ITNS[1] |= BIT6 ;  /* Int of I2C0_INT     */
+    if(SCU_INIT_PNSSET4_VAL & BIT1) NVIC->ITNS[1] |= BIT7 ;  /* Int of I2C1_INT     */
+    if(SCU_INIT_PNSSET4_VAL & BIT2) NVIC->ITNS[2] |= BIT18;  /* Int of I2C2_INT     */
     if(SCU_INIT_PNSSET4_VAL & BIT16) NVIC->ITNS[1] |= BIT26; /* Int of SC0_INT      */
     if(SCU_INIT_PNSSET4_VAL & BIT17) NVIC->ITNS[1] |= BIT27; /* Int of SC1_INT      */
     if(SCU_INIT_PNSSET4_VAL & BIT18) NVIC->ITNS[1] |= BIT28; /* Int of SC2_INT      */
-    if(SCU_INIT_PNSSET5_VAL & BIT0 ) NVIC->ITNS[1] |= BIT24; /* Int of CAN0_INT     */
+    if(SCU_INIT_PNSSET5_VAL & BIT0) NVIC->ITNS[1] |= BIT24;  /* Int of CAN0_INT     */
     if(SCU_INIT_PNSSET5_VAL & BIT16) NVIC->ITNS[2] |= BIT20; /* Int of QEI0_INT     */
     if(SCU_INIT_PNSSET5_VAL & BIT17) NVIC->ITNS[2] |= BIT21; /* Int of QEI1_INT     */
     if(SCU_INIT_PNSSET5_VAL & BIT20) NVIC->ITNS[2] |= BIT22; /* Int of ECAP0_INT    */
@@ -176,58 +176,59 @@ void SCU_Setup(void)
     if(SCU_INIT_PNSSET5_VAL & BIT25) NVIC->ITNS[3] |= BIT5 ; /* Int of TRNG_INT     */
     if(SCU_INIT_PNSSET5_VAL & BIT27) NVIC->ITNS[3] |= BIT4 ; /* Int of LCD_INT      */
     if(SCU_INIT_PNSSET5_VAL & BIT29) NVIC->ITNS[3] |= BIT14; /* Int of TAMPER_INT   */
-    if(SCU_INIT_PNSSET6_VAL & BIT0 ) NVIC->ITNS[1] |= BIT21; /* Int of USBD_INT     */
+    if(SCU_INIT_PNSSET6_VAL & BIT0) NVIC->ITNS[1] |= BIT21;  /* Int of USBD_INT     */
     if(SCU_INIT_PNSSET6_VAL & BIT16) NVIC->ITNS[2] |= BIT12; /* Int of USCI0_INT    */
     if(SCU_INIT_PNSSET6_VAL & BIT17) NVIC->ITNS[2] |= BIT13; /* Int of USCI1_INT    */
-    if(SCU_INIT_IONSSET_VAL & BIT0 ) NVIC->ITNS[0] |= BIT16; /* Int of PA           */
-    if(SCU_INIT_IONSSET_VAL & BIT1 ) NVIC->ITNS[0] |= BIT17; /* Int of PB           */
-    if(SCU_INIT_IONSSET_VAL & BIT2 ) NVIC->ITNS[0] |= BIT18; /* Int of PC           */
-    if(SCU_INIT_IONSSET_VAL & BIT3 ) NVIC->ITNS[0] |= BIT19; /* Int of PD           */
-    if(SCU_INIT_IONSSET_VAL & BIT4 ) NVIC->ITNS[0] |= BIT20; /* Int of PE           */
-    if(SCU_INIT_IONSSET_VAL & BIT5 ) NVIC->ITNS[0] |= BIT21; /* Int of PF           */
-    if(SCU_INIT_IONSSET_VAL & BIT6 ) NVIC->ITNS[2] |= BIT8 ; /* Int of PG           */
-    if(SCU_INIT_IONSSET_VAL & BIT7 ) NVIC->ITNS[2] |= BIT24; /* Int of PH           */
+    if(SCU_INIT_IONSSET_VAL & BIT0) NVIC->ITNS[0] |= BIT16;  /* Int of PA           */
+    if(SCU_INIT_IONSSET_VAL & BIT1) NVIC->ITNS[0] |= BIT17;  /* Int of PB           */
+    if(SCU_INIT_IONSSET_VAL & BIT2) NVIC->ITNS[0] |= BIT18;  /* Int of PC           */
+    if(SCU_INIT_IONSSET_VAL & BIT3) NVIC->ITNS[0] |= BIT19;  /* Int of PD           */
+    if(SCU_INIT_IONSSET_VAL & BIT4) NVIC->ITNS[0] |= BIT20;  /* Int of PE           */
+    if(SCU_INIT_IONSSET_VAL & BIT5) NVIC->ITNS[0] |= BIT21;  /* Int of PF           */
+    if(SCU_INIT_IONSSET_VAL & BIT6) NVIC->ITNS[2] |= BIT8 ;  /* Int of PG           */
+    if(SCU_INIT_IONSSET_VAL & BIT7) NVIC->ITNS[2] |= BIT24;  /* Int of PH           */
 
 
     /* Enable SCU Int status */
-    SCU->SVIOIEN = (uint32_t)-1;
+    SCU->SVIOIEN = (uint32_t) - 1;
     NVIC_EnableIRQ(SCU_IRQn);
-    
+
 }
 
 #if defined( __ICCARM__ )
 __WEAK
 #else
-__attribute__((weak)) 
+__attribute__((weak))
 #endif
 
 void SCU_IRQHandler(void)
 {
-    char const *master[] = {"CPU", 0, 0, "PDMA0", "SDH0", "CRPT", "USBH", 0,0,0,0,"PDMA1"};
-    char const *ipname[] = {"APB0","APB1",0,0,"GPIO","EBI","USBH","CRC","SDH0",0,"PDMA0","PDMA1"
-                        ,"SRAM0","SRAM1","FMC","FLASH","SCU","SYS","CRPT"};
-    const uint8_t info[] = {0x34,0x3C,0,0, 0x44,0x4C,0x54,0x5C,0x64,0,0x74,0x7C,0x84,0x8C,0x94,0x9C,0xA4,0xAC,0xB4};
-    
+    char const *master[] = {"CPU", 0, 0, "PDMA0", "SDH0", "CRPT", "USBH", 0, 0, 0, 0, "PDMA1"};
+    char const *ipname[] = {"APB0", "APB1", 0, 0, "GPIO", "EBI", "USBH", "CRC", "SDH0", 0, "PDMA0", "PDMA1"
+                            , "SRAM0", "SRAM1", "FMC", "FLASH", "SCU", "SYS", "CRPT"
+                           };
+    const uint8_t info[] = {0x34, 0x3C, 0, 0, 0x44, 0x4C, 0x54, 0x5C, 0x64, 0, 0x74, 0x7C, 0x84, 0x8C, 0x94, 0x9C, 0xA4, 0xAC, 0xB4};
+
     uint32_t u32Reg, u32Addr;
     uint32_t i;
-    
-    /* TrustZone access policy */ 
+
+    /* TrustZone access policy */
     u32Reg = SCU->SVINTSTS;
     if(u32Reg)
     {
-        
+
         /* Get violation address and source */
-        for(i=0;i< sizeof(ipname);i++)
+        for(i = 0; i < sizeof(ipname); i++)
         {
             if(u32Reg & (1 << i))
             {
-                u32Addr = M32(SCU_BASE+info[i]+4);
-                printf("  %s(0x%08x) Alarm! illegal access by %s\n",ipname[i], u32Addr,master[M32(SCU_BASE+info[i])]);
+                u32Addr = M32(SCU_BASE + info[i] + 4);
+                printf("  %s(0x%08x) Alarm! illegal access by %s\n", ipname[i], u32Addr, master[M32(SCU_BASE + info[i])]);
                 SCU->SVINTSTS = (1 << i);
                 break;
-                
+
             }
-            
+
         }
     }
 }
@@ -242,7 +243,7 @@ void NSC_Init(void)
 {
     uint32_t u32Region;
     uint32_t u32Base, u32Limit;
-    
+
 #if defined (__ICCARM__)
 # pragma section = "NSC"
     u32Base = (uint32_t)__section_begin("NSC");
@@ -255,18 +256,23 @@ void NSC_Init(void)
     u32Base = (uint32_t)Image$$NSC_ROM$$XO$$Base;
     u32Limit = (uint32_t)Image$$NSC_ROM$$XO$$Limit;
 #pragma clang diagnostic pop
+#elif defined(__GNUC__) && !defined(__ARMCC_VERSION)
+    extern uint32_t __nsc_start[];
+    extern uint32_t __nsc_end[];
+    u32Base = (uint32_t)__nsc_start;
+    u32Limit = (uint32_t)__nsc_end;
 #else
     extern uint32_t __start_NSC[];
     extern uint32_t __end_NSC[];
     u32Base = (uint32_t)__start_NSC;
     u32Limit = (uint32_t)__end_NSC;
-#endif    
+#endif
 
     /* SAU region 3 is dedicated for NSC */
     u32Region = 3;
-    SAU->RNR  =  (u32Region & SAU_RNR_REGION_Msk);
-    SAU->RBAR =  (u32Base & SAU_RBAR_BADDR_Msk);
-    SAU->RLAR =  ((u32Limit-1) & SAU_RLAR_LADDR_Msk) | 
+    SAU->RNR  = (u32Region & SAU_RNR_REGION_Msk);
+    SAU->RBAR = (u32Base & SAU_RBAR_BADDR_Msk);
+    SAU->RLAR = ((u32Limit - 1) & SAU_RLAR_LADDR_Msk) |
                 ((1ul << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1ul;
 
 }
@@ -519,6 +525,3 @@ void __TZ_set_PRIMASK_NS(uint32_t priMask)
 
 
 #endif
-
-
-

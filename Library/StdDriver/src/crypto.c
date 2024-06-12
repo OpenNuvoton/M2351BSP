@@ -9,6 +9,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#if defined(__GNUC__) && !defined(__ARMCC_VERSION)
+#include <strings.h>
+#endif
 #include "M2351.h"
 
 #define ENABLE_DEBUG    0
@@ -236,7 +239,7 @@ void AES_SetDMATransfer(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32SrcAddr,
 
 /**
   * @brief  Open TDES encrypt/decrypt function.
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @param[in]  u32Channel   TDES channel. Must be 0~3.
   * @param[in]  u32EncDec    1: TDES encode; 0: TDES decode
   * @param[in]  Is3DES       1: TDES; 0: DES
@@ -277,7 +280,7 @@ void TDES_Open(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32EncDec, int32_t Is
 
 /**
   * @brief  Start TDES encrypt/decrypt
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32Channel  TDES channel. Must be 0~3.
   * @param[in]  u32DMAMode  TDES DMA control, including:
   *         - \ref CRYPTO_DMA_ONE_SHOT   One shop TDES encrypt/decrypt.
@@ -293,7 +296,7 @@ void TDES_Start(CRPT_T *crpt, int32_t u32Channel, uint32_t u32DMAMode)
 
 /**
   * @brief  Set TDES keys
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32Channel  TDES channel. Must be 0~3.
   * @param[in]  au32Keys    The TDES keys. au32Keys[0][0] is Key0 high word and au32Keys[0][1] is key0 low word.
   * @return None
@@ -315,7 +318,7 @@ void TDES_SetKey(CRPT_T *crpt, uint32_t u32Channel, uint32_t au32Keys[3][2])
 
 /**
   * @brief  Set TDES initial vectors
-  * @param[in]  crpt        The pointer of CRYPTO module 
+  * @param[in]  crpt        The pointer of CRYPTO module
   * @param[in]  u32Channel  TDES channel. Must be 0~3.
   * @param[in]  u32IVH      TDES initial vector high word.
   * @param[in]  u32IVL      TDES initial vector low word.
@@ -334,7 +337,7 @@ void TDES_SetInitVect(CRPT_T *crpt, uint32_t u32Channel, uint32_t u32IVH, uint32
 
 /**
   * @brief  Set TDES DMA transfer configuration.
-  * @param[in]  crpt         The pointer of CRYPTO module 
+  * @param[in]  crpt         The pointer of CRYPTO module
   * @param[in]  u32Channel   TDES channel. Must be 0~3.
   * @param[in]  u32SrcAddr   TDES DMA source address
   * @param[in]  u32DstAddr   TDES DMA destination address
@@ -700,8 +703,7 @@ static const ECC_CURVE _Curve[] =
     {
         /* NIST: Curve K-283 : y^2+xy=x^3+ax^2+b */
         CURVE_K_283,
-        71,     /* Echar */
-        "00000000000000000000000000000000000000000000000000000000000000000000000",
+        71,     /* Echar */        "00000000000000000000000000000000000000000000000000000000000000000000000",
         "00000000000000000000000000000000000000000000000000000000000000000000001",
         "503213f78ca44883f1a3b8162f188e553cd265f23c1567a16876913b0c2ac2458492836",
         "1ccda380f1c9e318d90f95d07e5426fe87e45c0e8184698e45962364e34116177dd2259",
@@ -797,7 +799,12 @@ static void dump_ecc_reg(char *str, uint32_t volatile regs[], int32_t count)
     printf("\n");
 }
 #else
-static void dump_ecc_reg(char *str, uint32_t volatile regs[], int32_t count) { (void)str; (void)regs; (void)count; }
+static void dump_ecc_reg(char *str, uint32_t volatile regs[], int32_t count)
+{
+    (void)str;
+    (void)regs;
+    (void)count;
+}
 #endif
 static char  ch2hex(char ch)
 {
@@ -1068,7 +1075,7 @@ int32_t  ECC_GeneratePublicKey(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *privat
         i32TimeOutCnt = TIMEOUT_ECC;
         while(g_ECC_done == 0UL)
         {
-            if( (i32TimeOutCnt-- <= 0) || g_ECCERR_done )
+            if((i32TimeOutCnt-- <= 0) || g_ECCERR_done)
             {
                 ret = -1;
                 break;
@@ -1150,7 +1157,7 @@ int32_t  ECC_GenerateSecretZ(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *private_
         i32TimeOutCnt = TIMEOUT_ECC;
         while(g_ECC_done == 0UL)
         {
-            if( (i32TimeOutCnt-- <= 0) || g_ECCERR_done )
+            if((i32TimeOutCnt-- <= 0) || g_ECCERR_done)
             {
                 ret = -1;
                 break;
@@ -1168,7 +1175,6 @@ int32_t  ECC_GenerateSecretZ(CRPT_T *crpt, E_ECC_CURVE ecc_curve, char *private_
 
 static int32_t run_ecc_codec(CRPT_T *crpt, uint32_t mode)
 {
-    uint32_t u32Tmp;
     int32_t i32TimeOutCnt;
 
     if((mode & CRPT_ECC_CTL_ECCOP_Msk) == ECCOP_MODULE)
@@ -1195,7 +1201,7 @@ static int32_t run_ecc_codec(CRPT_T *crpt, uint32_t mode)
     i32TimeOutCnt = TIMEOUT_ECC;
     while(g_ECC_done == 0UL)
     {
-        if( (i32TimeOutCnt-- <= 0) || g_ECCERR_done )
+        if((i32TimeOutCnt-- <= 0) || g_ECCERR_done)
         {
             return -1;
         }
@@ -1204,7 +1210,7 @@ static int32_t run_ecc_codec(CRPT_T *crpt, uint32_t mode)
     i32TimeOutCnt = TIMEOUT_ECC;
     while(crpt->ECC_STS & CRPT_ECC_STS_BUSY_Msk)
     {
-        if( i32TimeOutCnt-- <= 0)
+        if(i32TimeOutCnt-- <= 0)
         {
             return -1;
         }
@@ -3514,4 +3520,3 @@ static ECC_CURVE * get_curve(E_ECC_CURVE ecc_curve)
 /*@}*/ /* end of group Standard_Driver */
 
 /*** (C) COPYRIGHT 2017-2020 Nuvoton Technology Corp. ***/
-
