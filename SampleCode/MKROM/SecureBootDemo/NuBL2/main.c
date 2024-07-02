@@ -12,11 +12,11 @@
 #include "NuMicro.h"
 #include "NuBL2.h"
 
-#define SET_SECURE_BOOT     (0) // Set 1 to support modify CFG0[5] MBS 0 for booting from Secure Bootloader 
+#define SET_SECURE_BOOT     (0) // Set 1 to support modify CFG0[5] MBS 0 for booting from Secure Bootloader
 #define ENABLE_XOM0_REGION  (0) // Set 1 to configure VerifyNuBL3x.c code in XOM0 region, and cannot trace VerifyNuBL3x.c flow in ICE debug mode
 
 
-static volatile FW_INFO_T  s_NuBL3xFwInfo; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
+__ALIGNED(4) static volatile FW_INFO_T s_NuBL3xFwInfo; // Allocate a FWINFO buffer for storing NuBL32/NuBL33 FWINFO data
 
 int32_t EnableXOM0(void);
 void SYS_Init(void);
@@ -36,15 +36,15 @@ static int32_t CheckBootingStatus(void)
 
     /* Enable FMC ISP function */
     FMC_ENABLE_ISP();
-    
+
     u32CFG0 = FMC_Read(FMC_USER_CONFIG_0);
     printf("Current CFG0: 0x%x.\n\n", u32CFG0);
-    
-    if((u32CFG0&BIT5) == BIT5)
-    {              
-        printf("Device is booting from %s. NOT booting from Secure Bootloader(NuBL1).\n\n", 
-            FMC_GetBootSource()==0?"APROM":"LDROM");
-        
+
+    if((u32CFG0 & BIT5) == BIT5)
+    {
+        printf("Device is booting from %s. NOT booting from Secure Bootloader(NuBL1).\n\n",
+               FMC_GetBootSource() == 0 ? "APROM" : "LDROM");
+
 #if (SET_SECURE_BOOT == 1) // enable to configure booting from Secure Bootloader
         {
             char ch;
@@ -53,26 +53,26 @@ static int32_t CheckBootingStatus(void)
             if((ch == 's') || (ch == 'S'))
             {
                 FMC_ENABLE_CFG_UPDATE();
-                FMC_Write(FMC_USER_CONFIG_0, (u32CFG0&~BIT5));
-                
+                FMC_Write(FMC_USER_CONFIG_0, (u32CFG0 & ~BIT5));
+
                 /* Reset chip to enable booting from Secure Bootloader. */
                 SYS_ResetChip();
                 while(1) {};
             }
         }
-#endif        
+#endif
 
         return -1;
     }
-    
+
     printf("[Device is successfully booting from Secure Bootloader(NuBL1) and device PID is 0x%08x]\n\n", FMC_ReadPID());
-    
+
     /*
         Notes of NuBL2 ECC public key and its SHA-256 Key hash:
         * Public Key 1 = 755B3819F05A3E9F32D4D599062834AAC5220F75955378414A8F63716A152CE2
           Public Key 2 = 91C413F1915ED7B47473FD797647BA3D83E8224377909AF5B30C530EAAD79FD7
         * The Key hash = 145e73e48865222fa4d9741671c0c670ed45fe06b24cdb5dd507d7ab35ee9363
-        * Stored in M2351 OTP0~3 for identification in secure boot are: 
+        * Stored in M2351 OTP0~3 for identification in secure boot are:
                 Index   Low word    High word
             --------------------------------------
                 OTP0:   0xe4735e14, 0x2f226588
@@ -80,31 +80,31 @@ static int32_t CheckBootingStatus(void)
                 OTP2:   0x06fe45ed, 0x5ddb4cb2
                 OTP3:   0xabd707d5, 0x6393ee35
     */
-    
+
     /* Read NuBL2 ECC public key hash */
     FMC_Read_OTP(0, &au32OTP[0], &au32OTP[1]);
     FMC_Read_OTP(1, &au32OTP[2], &au32OTP[3]);
     FMC_Read_OTP(2, &au32OTP[4], &au32OTP[5]);
     FMC_Read_OTP(3, &au32OTP[6], &au32OTP[7]);
     printf("NuBL2 ECC public key hash are:\n");
-    for(i=0; i<8; i++)
+    for(i = 0; i < 8; i++)
     {
         printf("    0x%08x\n", au32OTP[i]);
     }
     printf("\n");
-    
-    
+
+
     /* Show NuBL2 F/W info data */
     pu32Info = (uint32_t *)(uint32_t)g_InitialFWInfo;
     u32Size = sizeof(FW_INFO_T);
-    
+
     printf("NuBL2 F/W info in 0x%08x.\nData are:\n", (uint32_t)pu32Info);
-    for(i=0; i<(u32Size/4); i+=4)
+    for(i = 0; i < (u32Size / 4); i += 4)
     {
-        printf("    0x%08x", pu32Info[i+0]);
-        printf("    0x%08x", pu32Info[i+1]);
-        printf("    0x%08x", pu32Info[i+2]);
-        printf("    0x%08x", pu32Info[i+3]);
+        printf("    0x%08x", pu32Info[i + 0]);
+        printf("    0x%08x", pu32Info[i + 1]);
+        printf("    0x%08x", pu32Info[i + 2]);
+        printf("    0x%08x", pu32Info[i + 3]);
         printf("\n");
     }
     printf("\n");
@@ -124,7 +124,7 @@ int32_t EnableXOM0(void)
     /* Enable FMC ISP function and enable APROM active */
     FMC_ENABLE_ISP();
     FMC_ENABLE_AP_UPDATE();
-    
+
     if((FMC->XOMSTS & 0x1) != 0x1)
     {
         printf("\nXOM0 base: 0x%x, page count: %d.\n\n", u32Base, u8Page);
@@ -239,12 +239,12 @@ int main(void)
 #if (ENABLE_XOM0_REGION == 1)
 
     /* Enable XOM0, and all the functions in VerifyNuBL3x.c cannot trace in ICE debug mode  */
-    if( EnableXOM0() < 0 ) goto lexit;
+    if(EnableXOM0() < 0) goto lexit;
 #endif
 
     /* Verify NuBL32 identity and F/W integrity */
-    memcpy((void *)(uint32_t)&s_NuBL3xFwInfo, (void *)NUBL32_FW_INFO_BASE, sizeof(FW_INFO_T));
-    if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL32_FW_INFO_BASE) == -1)
+    memcpy((void *)((uint32_t)&s_NuBL3xFwInfo), (void *)NUBL32_FW_INFO_BASE, sizeof(FW_INFO_T));
+    if(VerifyNuBL3x((uint32_t *)((uint32_t)&s_NuBL3xFwInfo), NUBL32_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL32 FAIL.\n");
         goto lexit;
@@ -257,8 +257,8 @@ int main(void)
 
 
     /* Verify NuBL33 identity and F/W integrity */
-    memcpy((void *)(uint32_t)&s_NuBL3xFwInfo, (void *)NUBL33_FW_INFO_BASE, sizeof(FW_INFO_T));
-    if(VerifyNuBL3x((uint32_t *)(uint32_t)&s_NuBL3xFwInfo, NUBL33_FW_INFO_BASE) == -1)
+    memcpy((void *)(uint32_t)((uint32_t)&s_NuBL3xFwInfo), (void *)NUBL33_FW_INFO_BASE, sizeof(FW_INFO_T));
+    if(VerifyNuBL3x((uint32_t *)((uint32_t)&s_NuBL3xFwInfo), NUBL33_FW_INFO_BASE) == -1)
     {
         printf("\n\nNuBL2 verifies NuBL33 FAIL.\n");
         goto lexit;
@@ -273,7 +273,7 @@ int main(void)
     printf("\nJump to execute NuBL32...\n");
     u32TimeOutCnt = SystemCoreClock; /* 1 second time-out */
     UART_WAIT_TX_EMPTY((UART_T *)DEBUG_PORT)
-        if(--u32TimeOutCnt == 0) break;
+    if(--u32TimeOutCnt == 0) break;
 
     /* Disable all interrupt */
     __set_PRIMASK(1);

@@ -83,7 +83,7 @@ int32_t Cal_SHA256_Flash(uint32_t u32Addr, uint32_t u32Bytes, uint32_t *pu32Dige
                         return -1;
                 }
 
-                for(i=0; i<8; i++)
+                for(i = 0; i < 8; i++)
                     pu32Digest[i] = *(uint32_t *)((uint32_t) & (CRPT->HMAC_DGST[0]) + (uint32_t)(i * 4));
             }
         }
@@ -187,16 +187,16 @@ static int32_t IdentifyNuBL3xPubKey(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
         /* Get encrypted NuBL32 public key and verify its hash value */
         extern uint32_t g_NuBL32KeyStart, g_NuBL32KeyEnd;           // declared in NuBL3xKeyStorage.s
         extern uint32_t g_NuBL32KeyHashStart, g_NuBL32KeyHashEnd;   // declared in NuBL3xKeyStorage.s
-        memcpy((void *)&PubKey, (void *)&g_NuBL32KeyStart, ((uint32_t)&g_NuBL32KeyEnd-(uint32_t)&g_NuBL32KeyStart));
-        memcpy((void *)&au32Hash0, (void *)&g_NuBL32KeyHashStart, ((uint32_t)&g_NuBL32KeyHashEnd-(uint32_t)&g_NuBL32KeyHashStart));
+        memcpy((void *)&PubKey, (void *)&g_NuBL32KeyStart, ((uint32_t)&g_NuBL32KeyEnd - (uint32_t)&g_NuBL32KeyStart));
+        memcpy((void *)&au32Hash0, (void *)&g_NuBL32KeyHashStart, ((uint32_t)&g_NuBL32KeyHashEnd - (uint32_t)&g_NuBL32KeyHashStart));
     }
-    else if (u32InfoBase == NUBL33_FW_INFO_BASE)
+    else if(u32InfoBase == NUBL33_FW_INFO_BASE)
     {
         /* Get encrypted NuBL33 public key and verify its hash value */
         extern uint32_t g_NuBL33KeyStart, g_NuBL33KeyEnd;           // declared in NuBL3xKeyStorage.s
         extern uint32_t g_NuBL33KeyHashStart, g_NuBL33KeyHashEnd;   // declared in NuBL3xKeyStorage.s
-        memcpy((void *)&PubKey, (void *)&g_NuBL33KeyStart, ((uint32_t)&g_NuBL33KeyEnd-(uint32_t)&g_NuBL33KeyStart));
-        memcpy((void *)&au32Hash0, (void *)&g_NuBL33KeyHashStart, ((uint32_t)&g_NuBL33KeyHashEnd-(uint32_t)&g_NuBL33KeyHashStart));
+        memcpy((void *)&PubKey, (void *)&g_NuBL33KeyStart, ((uint32_t)&g_NuBL33KeyEnd - (uint32_t)&g_NuBL33KeyStart));
+        memcpy((void *)&au32Hash0, (void *)&g_NuBL33KeyHashStart, ((uint32_t)&g_NuBL33KeyHashEnd - (uint32_t)&g_NuBL33KeyHashStart));
     }
     else
     {
@@ -231,7 +231,7 @@ static int32_t IdentifyNuBL3xPubKey(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
     printf("    0x%08x\n", PubKey.au32Key1[5]);
     printf("    0x%08x\n", PubKey.au32Key1[6]);
     printf("    0x%08x\n", PubKey.au32Key1[7]);
-#endif    
+#endif
 
 
     /* Get NuBL3x F/W info */
@@ -301,11 +301,11 @@ int32_t VerifyNuBL3x(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
 
     /* Get NuBL3x F/W info */
     pFwInfo = (FW_INFO_T *)pu32FwInfo;
-        
+
     /*---------------------------------------------------------------------------------------------------------*/
     /*  Verify NuBL3x identity (check NuBL3x public key)                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
-    if(IdentifyNuBL3xPubKey((uint32_t *)(uint32_t)pFwInfo, u32InfoBase) < 0)
+    if(IdentifyNuBL3xPubKey(pu32FwInfo, u32InfoBase) < 0)
     {
         printf("\n\tIdentify F/W public key FAIL!!\n");
         return -1;
@@ -350,7 +350,7 @@ int32_t VerifyNuBL3x(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
     memcpy((void*)tmp, (uint32_t *)pFwInfo->sign.au32S, sizeof(tmp));
     BytesSwap((char*)tmp,  sizeof(tmp));
     XECC_Reg2Hex(64, tmp, S);
-    
+
 #if (DBG_EN == 1) // enable for debug
     printf("Input:\n");
     printf(" m\t%s\n", m);
@@ -358,7 +358,7 @@ int32_t VerifyNuBL3x(uint32_t *pu32FwInfo, uint32_t u32InfoBase)
     printf(" Qy\t%s\n", Qy);
     printf(" R\t%s\n", R);
     printf(" S\t%s\n", S);
-#endif    
+#endif
 
     ECC_ENABLE_INT(CRPT);
     if(XECC_VerifySignature(XCRPT, CURVE_P_256, m, Qx, Qy, R, S) < 0)

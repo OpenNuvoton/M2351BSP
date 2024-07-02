@@ -76,6 +76,7 @@ if(C_COMPILER_ID STREQUAL GCC)
     set(CMAKE_C_COMPILER_FORCED 1)
     set(CMAKE_CXX_COMPILER_FORCED 1)
 
+    # set(TOOLCHAIN_PATH "C:/Users/wschang0/.vcpkg/artifacts/vcpkg-ce-default/compilers.arm.none.eabi.gcc/10.3.1-2021.10/bin")
     set(TOOLCHAIN_PATH "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/bin")
 
     # set(TOOLCHAIN_PATH "${ENV_USER}/.vcpkg/artifacts/fd3d78d7/compilers.arm.arm.none.eabi.gcc/12.3.1/bin")
@@ -97,7 +98,7 @@ if(C_COMPILER_ID STREQUAL GCC)
     set(STACK_SIZE 0x4000)
     set(HEAP_SIZE 0x20000)
 
-    set(C_FLAGS "-mcpu=${LINK_MCU_CORE} --specs=nano.specs -Wall -Wno-format -Wno-return-type -Wno-unused-but-set-variable -fdata-sections -ffunction-sections -fno-builtin -fshort-enums -funsigned-char -mthumb -std=c99 -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -I\"C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q1-update/arm-none-eabi/include\"")
+    set(C_FLAGS "-mcpu=${LINK_MCU_CORE} --specs=nano.specs -Wall -Wno-format -Wno-return-type -Wno-unused-but-set-variable -fdata-sections -ffunction-sections -fno-builtin -fshort-enums -funsigned-char -mthumb -std=c99 -DMBEDTLS_CONFIG_FILE=mbedtls_config.h -I\"${TOOLCHAIN_PATH}/../arm-none-eabi/include\"")
     set(CMAKE_C_FLAGS ${C_FLAGS})
     set(CMAKE_CXX_FLAGS ${C_FLAGS})
     set(CMAKE_ASM_FLAGS "-mcpu=Cortex-M23")
@@ -110,32 +111,49 @@ function(create_project PRJ)
     add_executable(${PRJ} ${ARGN})
     target_link_libraries(${PRJ} system_startup standard_driver)
 
-    target_link_options(${PRJ}
-        PUBLIC
-        --cpu=Cortex-M23
-        --library_type=microlib
-        --ro-base 0x00000000
-        --rw-base 0x20000000
-        --entry Reset_Handler
-        --first __Vectors
-        --strict
-        --map
-        --datacompressor=off
-        --info=inline
-        --entry Reset_Handler
-        --summary_stderr
-        --info totals
-        --map
-        --load_addr_map_info
-        --xref
-        --callgraph
-        --symbols
-    )
+    if(C_COMPILER_ID STREQUAL ARMCLANG)
+        target_link_options(${PRJ}
+            PUBLIC
+            --cpu=Cortex-M23
+            --library_type=microlib
+            --ro-base 0x00000000
+            --rw-base 0x20000000
+            --entry Reset_Handler
+            --first __Vectors
+            --strict
+            --map
+            --datacompressor=off
+            --info=inline
+            --entry Reset_Handler
+            --summary_stderr
+            --info totals
+            --map
+            --load_addr_map_info
+            --xref
+            --callgraph
+            --symbols
+        )
 
-    add_custom_command(TARGET ${PRJ} POST_BUILD
-        COMMAND ${ARM_FROMELF} --bin --output ${PRJ}.bin ${PRJ}.elf
-        VERBATIM
-    )
+        add_custom_command(TARGET ${PRJ} POST_BUILD
+            COMMAND ${ARM_FROMELF} --bin --output ${PRJ}.bin ${PRJ}.elf
+            VERBATIM
+        )
+    endif()
+
+    if(C_COMPILER_ID STREQUAL GCC)
+        target_link_options(${PRJ}
+            PUBLIC
+            -Xlinker
+            --gc-sections
+            -Wl,-Map=${PRJ}.map
+            -gdwarf-3
+        )
+
+        add_custom_command(TARGET ${PRJ} POST_BUILD
+            COMMAND ${ARM_OBJCOPY} -O binary ${PRJ} ${PRJ}.bin
+            VERBATIM
+        )
+    endif()
 endfunction()
 
 function(target_secure_option PRJ)
@@ -165,7 +183,8 @@ include_directories(${BSP_DIR}/ThirdParty/FreeRTOS/Source/include)
 # Build library
 add_subdirectory(${BSP_DIR}/Library/StdDriver/src)
 add_subdirectory(${BSP_DIR}/Library/Device/Nuvoton/M2351/Source)
-add_subdirectory(${BSP_DIR}/ThirdParty/FreeRTOS)
 
-# Build sample code
+add_subdirectory(${BSP_DIR}/ThirdParty/FreeRTOS) # Build sample code
+
 add_subdirectory(${BSP_DIR}/SampleCode/FreeRTOS/Blinky_ns)
+add_subdirectory(${BSP_DIR}/SampleCode/MKROM/SecureBootDemo/)

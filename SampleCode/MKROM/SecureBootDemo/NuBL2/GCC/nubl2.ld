@@ -1,8 +1,10 @@
 /* Linker script to configure memory regions. */
+
+
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x80000   /* 512k */
-  RAM (rwx)  : ORIGIN = 0x20000000, LENGTH = 0x18000   /* 96k */
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x40000   /* 256k */
+  RAM (rwx)  : ORIGIN = 0x20000000, LENGTH = 0x08000   /* 32k */
 }
 
 /* Library configurations */
@@ -64,11 +66,11 @@ SECTIONS
 		*(.ctors)
 
 		/* .dtors */
- 		*crtbegin.o(.dtors)
- 		*crtbegin?.o(.dtors)
- 		*(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
- 		*(SORT(.dtors.*))
- 		*(.dtors)
+		*crtbegin.o(.dtors)
+		*crtbegin?.o(.dtors)
+		*(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+		*(SORT(.dtors.*))
+		*(.dtors)
 
 		*(.rodata*)
 
@@ -121,23 +123,16 @@ SECTIONS
 	} > FLASH
 	*/
 
-
+	. = ALIGN(32);
 	__nsc_start = .;
-	.gnu.sgstubs : 
+	.gnu.sgstubs :
 	{
-	    . = ALIGN(4);
-	    *(.gnu.sgstubs.*)
-	
+		. = ALIGN(32);
+		*(.gnu.sgstubs*)
 	} > FLASH
 	__nsc_end = .;
-	
-
 
 	__etext = .;
-
-
-
-
 
 	.data : AT (__etext)
 	{
@@ -202,20 +197,10 @@ SECTIONS
 
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */
-	/*
 	__StackTop = ORIGIN(RAM) + LENGTH(RAM);
 	__StackLimit = __StackTop - SIZEOF(.stack_dummy);
-	*/
-	
-	__StackTop = __HeapLimit + SIZEOF(.stack_dummy);
-	__StackLimit = __HeapLimit;
-	
 	PROVIDE(__stack = __StackTop);
 
 	/* Check if data + heap + stack exceeds RAM limit */
 	ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
-    
-    
-	
-
 }
