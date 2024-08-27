@@ -256,16 +256,11 @@ void NSC_Init(void)
     u32Base = (uint32_t)Image$$NSC_ROM$$XO$$Base;
     u32Limit = (uint32_t)Image$$NSC_ROM$$XO$$Limit;
 #pragma clang diagnostic pop
-#elif defined(__GNUC__) && !defined(__ARMCC_VERSION)
+#elif defined(__GNUC__)
     extern uint32_t __nsc_start[];
     extern uint32_t __nsc_end[];
     u32Base = (uint32_t)__nsc_start;
     u32Limit = (uint32_t)__nsc_end;
-#else
-    extern uint32_t __start_NSC[];
-    extern uint32_t __end_NSC[];
-    u32Base = (uint32_t)__start_NSC;
-    u32Limit = (uint32_t)__end_NSC;
 #endif
 
     /* SAU region 3 is dedicated for NSC */

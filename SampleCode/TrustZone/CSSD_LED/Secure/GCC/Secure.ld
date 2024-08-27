@@ -121,14 +121,14 @@ SECTIONS
 	} > FLASH
 	*/
 
-	__start_NSC = .;
+	__nsc_start = .;
 	.gnu.sgstubs :
 	{
 	    . = ALIGN(4);
 	    *(.gnu.sgstubs.*)
 
 	} > FLASH
-	__end_NSC = .;
+	__nsc_end = .;
 
 	__etext = .;
 
