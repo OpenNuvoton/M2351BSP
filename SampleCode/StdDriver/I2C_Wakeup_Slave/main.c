@@ -152,7 +152,21 @@ void I2C_SlaveTRx(uint32_t u32Status)
     {
         /* TO DO */
         printf("Status 0x%x is NOT processed\n", u32Status);
+        if(u32Status == 0x68)                  /* Slave receive arbitration lost, clear SI */
+        {
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
+        }
+        else if(u32Status == 0xB0)             /* Address transmit arbitration lost, clear SI  */
+        {
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI_AA);
+        }
+        else                                   /* Slave bus error, stop I2C and clear SI */
+        {
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_STO_SI);
+            I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
+	    }
     }
+    I2C_WAIT_SI_CLEAR(I2C0);
 }
 
 void SYS_Init(void)

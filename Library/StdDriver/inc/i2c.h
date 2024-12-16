@@ -108,6 +108,18 @@ extern int32_t g_I2C_i32ErrCode;
 #define I2C_WAIT_READY(i2c)     while(!((i2c)->CTL0 & I2C_CTL0_SI_Msk))
 
 /**
+ *    @brief        The macro is used to wait for the I2C bus status to be cleared.
+ *
+ *    @param[in]    i2c        Specify I2C port
+ *
+ *    @return       None
+ *
+ *    @details      When the interrupt task is completed, the SI flag will be set and cleared.
+ *
+ */
+#define I2C_WAIT_SI_CLEAR(i2c)  while(((i2c)->CTL0 & I2C_CTL0_SI_Msk) == I2C_CTL0_SI_Msk)
+
+/**
  *    @brief        The macro is used to Read I2C Bus Data Register
  *
  *    @param[in]    i2c        Specify I2C port

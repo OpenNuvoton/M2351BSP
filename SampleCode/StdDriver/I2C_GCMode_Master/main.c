@@ -132,6 +132,7 @@ void I2C_MasterTx(uint32_t u32Status)
         I2C_SET_CONTROL_REG(I2C0, I2C_CTL_SI);
         while(I2C0->CTL0 & I2C_CTL0_SI_Msk);
     }
+    I2C_WAIT_SI_CLEAR(I2C0);
 }
 
 void SYS_Init(void)
