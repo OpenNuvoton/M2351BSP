@@ -1,6 +1,6 @@
 /******************************************************************************
  * @file     descriptors.c
- * @brief    M2351 series USBD descriptor
+ * @brief    USBD descriptor
  *
  * @note
  * @copyright SPDX-License-Identifier: Apache-2.0

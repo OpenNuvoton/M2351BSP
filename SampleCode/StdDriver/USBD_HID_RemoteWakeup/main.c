@@ -2,7 +2,7 @@
  * @file     main.c
  * @version  V1.00
  * @brief    Demonstrate how to implement a USB mouse device.
- *           It use PA0 ~ PA5 to control mouse direction and mouse key.
+ *           It uses PA0 ~ PA5 to control mouse direction and mouse key.
  *           It also supports USB suspend and remote wakeup.
  *
  * @copyright SPDX-License-Identifier: Apache-2.0

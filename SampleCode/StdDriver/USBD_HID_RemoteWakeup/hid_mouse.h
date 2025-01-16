@@ -1,6 +1,6 @@
 /******************************************************************************
  * @file     hid_mouse.h
- * @brief    USB HID mouse header file
+ * @brief    USBD HID mouse header file
  *
  * @note
  * @copyright SPDX-License-Identifier: Apache-2.0
