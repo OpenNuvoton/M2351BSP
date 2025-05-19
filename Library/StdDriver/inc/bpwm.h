@@ -213,6 +213,17 @@ extern "C"
 #define BPWM_SET_CMR(bpwm, u32ChannelNum, u32CMR) ((bpwm)->CMPDAT[(u32ChannelNum)] = (u32CMR))
 
 /**
+ * @brief This macro set the duty of the selected BPWM channel
+ * @param[in] bpwm The pointer of the specified BPWM module
+ * @param[in] u32ChannelNum BPWM channel number. Valid values are between 0~5
+ * @param[in] u32CMR Duty of specified BPWM channel. Valid values are between 0~0xFFFF
+ * @return None
+ * @note Equivalent to the BPWM_SET_CMR() macro. Created to improve understandability.
+ * \hideinitializer
+ */
+#define BPWM_SET_DUTY_COUNT(pwm, u32ChannelNum, u32Duty) BPWM_SET_CMR(pwm, u32ChannelNum, u32Duty)
+
+/**
  * @brief This macro get the duty of the selected channel
  * @param[in] bpwm The pointer of the specified BPWM module
  * @param[in] u32ChannelNum BPWM channel number. Valid values are between 0~5
@@ -223,10 +234,20 @@ extern "C"
 #define BPWM_GET_CMR(bpwm, u32ChannelNum) ((bpwm)->CMPDAT[(u32ChannelNum)])
 
 /**
+ * @brief This macro get the duty of the selected BPWM channel
+ * @param[in] bpwm The pointer of the specified BPWM module
+ * @param[in] u32ChannelNum BPWM channel number. Valid values are between 0~5
+ * @return Return the comparator of specified BPWM channel. Valid values are between 0~0xFFFF
+ * @note Equivalent to the BPWM_GET_CMR() macro. Created to improve understandability.
+ * \hideinitializer
+ */
+#define BPWM_GET_DUTY_COUNT(pwm, u32ChannelNum) BPWM_GET_CMR(pwm, u32ChannelNum)
+
+/**
  * @brief This macro set the period of all channels
  * @param[in] bpwm The pointer of the specified BPWM module
  * @param[in] u32ChannelNum BPWM channel number. This parameter is not used.
- * @param[in] u32CNR Period of specified channel. Valid values are between 0~0xFFFF
+ * @param[in] u32CNR Period of specified BPWM module. Valid values are between 0~0xFFFF
  * @return None
  * @note This new setting will take effect on next BPWM period
  * @note BPWM counter will stop if period length set to 0
@@ -235,13 +256,35 @@ extern "C"
 #define BPWM_SET_CNR(bpwm, u32ChannelNum, u32CNR) ((bpwm)->PERIOD = (u32CNR))
 
 /**
+ * @brief This macro set the period of all channels
+ * @param[in] bpwm The pointer of the specified BPWM module
+ * @param[in] u32ChannelNum BPWM channel number. This parameter is not used.
+ * @param[in] u32CNR Period of specified BPWM module. Valid values are between 0~0xFFFF
+ * @return None
+ * @note Equivalent to the BPWM_SET_CNR() macro. Created to improve understandability.
+ * \hideinitializer
+ */
+#define BPWM_SET_PERIOD_COUNT(pwm, u32ChannelNum, u32Period) BPWM_SET_CNR(pwm, u32ChannelNum, u32Period)
+
+/**
  * @brief This macro get the period of all channels
  * @param[in] bpwm The pointer of the specified BPWM module
  * @param[in] u32ChannelNum BPWM channel number. This parameter is not used.
+ * @return Return the period of specified BPWM module. Valid values are between 0~0xFFFF
  * @return None
  * \hideinitializer
  */
 #define BPWM_GET_CNR(bpwm, u32ChannelNum) ((bpwm)->PERIOD)
+
+/**
+ * @brief This macro get the period of all channels
+ * @param[in] bpwm The pointer of the specified BPWM module
+ * @param[in] u32ChannelNum BPWM channel number. This parameter is not used.
+ * @return Return the period of specified BPWM module. Valid values are between 0~0xFFFF
+ * @note Equivalent to the BPWM_GET_CNR() macro. Created to improve understandability.
+ * \hideinitializer
+ */
+#define BPWM_GET_PERIOD_COUNT(pwm, u32ChannelNum) BPWM_GET_CNR(pwm, u32ChannelNum)
 
 /**
  * @brief This macro set the BPWM aligned type

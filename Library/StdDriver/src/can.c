@@ -1200,7 +1200,8 @@ void CAN_CLR_INT_PENDING_BIT(CAN_T *tCAN, uint8_t u32MsgNum)
         u32MsgIfNum = 0UL;
     }
 
-    tCAN->IF[u32MsgIfNum].CMASK = CAN_IF_CMASK_CLRINTPND_Msk | CAN_IF_CMASK_TXRQSTNEWDAT_Msk;
+    tCAN->IF[u32MsgIfNum].CMASK = ((tCAN->IF[u32MsgIfNum].CMASK & CAN_IF_CMASK_WRRD_Msk) |
+                                   CAN_IF_CMASK_CLRINTPND_Msk | CAN_IF_CMASK_TXRQSTNEWDAT_Msk);
     tCAN->IF[u32MsgIfNum].CREQ = 1UL + u32MsgNum;
 
     ReleaseIF(tCAN, u32MsgIfNum);
