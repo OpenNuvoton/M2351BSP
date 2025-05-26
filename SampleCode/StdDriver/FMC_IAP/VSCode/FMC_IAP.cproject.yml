@@ -1,0 +1,47 @@
+project:
+  packs:
+    - pack: Nuvoton::NuMicroM23_DFP
+  misc:
+    - for-compiler: AC6
+      C: [-std=c99, -fno-rtti, -funsigned-char, -fshort-enums, -fshort-wchar, -ffunction-sections, -fdata-sections, -D__MICROLIB, -gdwarf-4]
+      ASM: [-D__MICROLIB, -DBINFILE='"$SolutionDir()$/out/fmc_ld_code/ARMCLANG/debug/fmc_ld_code.bin"']
+      Link: [--library_type=microlib, --map, --load_addr_map_info, --symbols, --info sizes, --info totals, --entry Reset_Handler, --summary_stderr, --info summarysizes, --diag_suppress=6314]
+    - for-compiler: GCC
+      C: [-std=gnu11, --specs=nano.specs, -Wall -Wno-format, -Wno-return-type, -Wno-unused-but-set-variable, -fdata-sections, -ffunction-sections, -fno-builtin,
+          -fshort-enums, -funsigned-char, -mthumb, -Wno-main, -gdwarf-4]
+      ASM: [-DBINFILE='"$SolutionDir()$/out/fmc_ld_code/GNUC/debug/fmc_ld_code.bin"']
+      Link:
+        - -Xlinker
+        - --gc-sections
+        - -Wl,--gc-sections,-Map="$elf()$.map"
+  linker:
+      - for-compiler: GCC
+        script: FMC_IAP.ld
+      - for-compiler: AC6
+        script: scatter.scf
+  setups:
+    - output:
+        type: ["elf", "bin"]
+  add-path:
+    - ../../../../Library/Device/Nuvoton/M2351/Include
+    - ../../../../Library/StdDriver/inc
+    - ../../../../Library/CMSIS/Include
+  groups:
+    - group: CMSIS
+      files:
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/ARM/startup_M2351.S
+          for-compiler: AC6
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/GCC/startup_M2351.S
+          for-compiler: GCC
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/system_M2351.c
+    - group: Library
+      files:
+        - file: ../../../../Library/StdDriver/src/clk.c
+        - file: ../../../../Library/StdDriver/src/sys.c
+        - file: ../../../../Library/StdDriver/src/uart.c
+        - file: ../../../../Library/StdDriver/src/retarget.c
+        - file: ../../../../Library/StdDriver/src/fmc.c
+    - group: User
+      files:
+        - file: ../main.c
+        - file: ../ld_code.c

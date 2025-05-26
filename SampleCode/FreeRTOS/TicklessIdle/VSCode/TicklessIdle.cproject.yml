@@ -1,0 +1,52 @@
+project:
+  packs:
+    - pack: Nuvoton::NuMicroM23_DFP
+  misc:
+    - for-compiler: AC6
+      C: [-std=c99, -fno-rtti, -funsigned-char, -fshort-enums, -fshort-wchar, -ffunction-sections, -fdata-sections, -D__MICROLIB, -o0, -gdwarf-4]
+      ASM: [-D__MICROLIB]
+      Link: [--library_type=microlib, --map, --load_addr_map_info, --symbols, --info sizes, --info totals, --entry Reset_Handler, --summary_stderr, --info summarysizes, --diag_suppress=6314]
+  setups:
+    - output:
+        type: ["elf", "bin"]
+  add-path:
+    - ..
+    - ../../../../ThirdParty/FreeRTOS/Source/portable/GCC/ARM_CM0
+    - ../../../../ThirdParty/FreeRTOS/Source/include
+    - ../../../../ThirdParty/FreeRTOS/Demo/Common/include
+    - ../../../../Library/Device/Nuvoton/M2351/Include
+    - ../../../../Library/StdDriver/inc
+    - ../../../../Library/CMSIS/Include
+  groups:
+    - group: System
+      files:
+        - file: ../../../../Library/StdDriver/src/sys.c
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/ARM/startup_M2351.S
+          for-compiler: AC6
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/system_M2351.c
+        - file: ../../../../Library/StdDriver/src/retarget.c
+        - file: ../../../../Library/StdDriver/src/clk.c
+        - file: ../../../../Library/StdDriver/src/uart.c
+        - file: ../../../../Library/StdDriver/src/rtc.c
+        - file: ../../../../Library/StdDriver/src/gpio.c
+    - group: FreeRTOS source
+      files:
+        - file: ../../../../ThirdParty/FreeRTOS/Source/timers.c
+        - file: ../../../../ThirdParty/FreeRTOS/Source/list.c
+        - file: ../../../../ThirdParty/FreeRTOS/Source/queue.c
+        - file: ../../../../ThirdParty/FreeRTOS/Source/tasks.c
+        - file: ../../../../ThirdParty/FreeRTOS/Source/portable/MemMang/heap_4.c
+    - group: Demo App Source
+      files:
+        - file: ../main.c
+        - file: ../FreeRTOSConfig.h
+        - file: ../port.c
+        - file: ../ParTest.c
+    - group: Common Demo Tasks
+      files:
+        - file: ../../../../ThirdParty/FreeRTOS/Demo/Common/Minimal/dynamic.c
+        - file: ../../../../ThirdParty/FreeRTOS/Demo/Common/Minimal/recmutex.c
+        - file: ../../../../ThirdParty/FreeRTOS/Demo/Common/Minimal/blocktim.c
+        - file: ../../../../ThirdParty/FreeRTOS/Demo/Common/Minimal/countsem.c
+        - file: ../../../../ThirdParty/FreeRTOS/Demo/Common/Minimal/QueueSet.c
+        - file: ../../../../ThirdParty/FreeRTOS/Demo/Common/Minimal/QueueOverwrite.c

@@ -281,7 +281,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
     extern void SCU_IRQHandler(void);
     uint32_t *sp = 0ul;
     uint32_t i;
-    uint32_t inst, addr,taddr = 0ul,tdata;
+    uint32_t inst = 0, addr = 0,taddr = 0ul,tdata;
     int32_t secure;
     uint32_t rm,rn,rt, imm5, imm8;
     int32_t eFlag;

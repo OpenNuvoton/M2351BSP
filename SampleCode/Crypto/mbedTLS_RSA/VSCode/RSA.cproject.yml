@@ -1,0 +1,124 @@
+project:
+  packs:
+    - pack: Nuvoton::NuMicroM23_DFP
+  misc:
+    - for-compiler: AC6
+      C: [-std=c99, -fno-rtti, -funsigned-char, -fshort-enums, -fshort-wchar, -ffunction-sections, -fdata-sections, -D__MICROLIB, -o0, -gdwarf-4]
+      ASM: [-D__MICROLIB]
+      Link: [--library_type=microlib, --map, --load_addr_map_info, --symbols, --info sizes, --info totals, --entry Reset_Handler, --summary_stderr, --info summarysizes, --diag_suppress=6314]
+    - for-compiler: GCC
+      C: [-std=gnu11, --specs=nano.specs, -Wno-return-type, -Wno-unused-but-set-variable, -fdata-sections, -ffunction-sections, -fno-builtin, -fshort-enums, -funsigned-char, -mthumb, -Wno-main, -gdwarf-4]
+      Link:
+        - -Xlinker
+        - --gc-sections
+        - --specs=nano.specs
+        - -Wl,-Map,"$OutDir()$/$Project$.map"
+  setups:
+    - output:
+        type: ["elf", "bin"]
+  linker:
+    - for-compiler: GCC
+      script: ../GCC/RSA.ld
+  add-path:
+        - ../../../../Library/Device/Nuvoton/M2351/Include
+        - ../../../../Library/CMSIS/Include
+        - ../../../../Library/StdDriver/inc
+        - ../../../../ThirdParty/mbedTLS/include/mbedtls
+        - ..
+  groups:
+    - group: CMSIS
+      files:
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/ARM/startup_M2351.S
+          for-compiler: AC6
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/GCC/startup_M2351.S
+          for-compiler: GCC
+        - file: ../../../../Library/Device/Nuvoton/M2351/Source/system_M2351.c
+    - group: User
+      files:
+        - file: ../main.c
+        - file: ../rsa_test.c
+    - group: Library
+      files:
+        - file: ../../../../Library/StdDriver/src/retarget.c
+        - file: ../../../../Library/StdDriver/src/clk.c
+        - file: ../../../../Library/StdDriver/src/uart.c
+    - group: mbedTLS
+      files:
+        - file: ../../../../ThirdParty/mbedTLS/library/aes.c
+        - file: ../../../../ThirdParty/mbedTLS/library/arc4.c
+        - file: ../../../../ThirdParty/mbedTLS/library/aria.c
+        - file: ../../../../ThirdParty/mbedTLS/library/asn1parse.c
+        - file: ../../../../ThirdParty/mbedTLS/library/asn1write.c
+        - file: ../../../../ThirdParty/mbedTLS/library/base64.c
+        - file: ../../../../ThirdParty/mbedTLS/library/bignum.c
+        - file: ../../../../ThirdParty/mbedTLS/library/blowfish.c
+        - file: ../../../../ThirdParty/mbedTLS/library/camellia.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ccm.c
+        - file: ../../../../ThirdParty/mbedTLS/library/certs.c
+        - file: ../../../../ThirdParty/mbedTLS/library/chacha20.c
+        - file: ../../../../ThirdParty/mbedTLS/library/chachapoly.c
+        - file: ../../../../ThirdParty/mbedTLS/library/cipher.c
+        - file: ../../../../ThirdParty/mbedTLS/library/cipher_wrap.c
+        - file: ../../../../ThirdParty/mbedTLS/library/cmac.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ctr_drbg.c
+        - file: ../../../../ThirdParty/mbedTLS/library/debug.c
+        - file: ../../../../ThirdParty/mbedTLS/library/des.c
+        - file: ../../../../ThirdParty/mbedTLS/library/dhm.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ecdh.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ecdsa.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ecjpake.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ecp.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ecp_curves.c
+        - file: ../../../../ThirdParty/mbedTLS/library/entropy.c
+        - file: ../../../../ThirdParty/mbedTLS/library/entropy_poll.c
+        - file: ../../../../ThirdParty/mbedTLS/library/error.c
+        - file: ../../../../ThirdParty/mbedTLS/library/gcm.c
+        - file: ../../../../ThirdParty/mbedTLS/library/havege.c
+        - file: ../../../../ThirdParty/mbedTLS/library/hkdf.c
+        - file: ../../../../ThirdParty/mbedTLS/library/hmac_drbg.c
+        - file: ../../../../ThirdParty/mbedTLS/library/md.c
+        - file: ../../../../ThirdParty/mbedTLS/library/md_wrap.c
+        - file: ../../../../ThirdParty/mbedTLS/library/md2.c
+        - file: ../../../../ThirdParty/mbedTLS/library/md4.c
+        - file: ../../../../ThirdParty/mbedTLS/library/md5.c
+        - file: ../../../../ThirdParty/mbedTLS/library/memory_buffer_alloc.c
+        - file: ../../../../ThirdParty/mbedTLS/library/net_sockets.c
+        - file: ../../../../ThirdParty/mbedTLS/library/nist_kw.c
+        - file: ../../../../ThirdParty/mbedTLS/library/oid.c
+        - file: ../../../../ThirdParty/mbedTLS/library/padlock.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pem.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pk.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pk_wrap.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pkcs5.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pkcs11.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pkcs12.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pkparse.c
+        - file: ../../../../ThirdParty/mbedTLS/library/pkwrite.c
+        - file: ../../../../ThirdParty/mbedTLS/library/platform.c
+        - file: ../../../../ThirdParty/mbedTLS/library/platform_util.c
+        - file: ../../../../ThirdParty/mbedTLS/library/poly1305.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ripemd160.c
+        - file: ../../../../ThirdParty/mbedTLS/library/rsa.c
+        - file: ../../../../ThirdParty/mbedTLS/library/rsa_internal.c
+        - file: ../../../../ThirdParty/mbedTLS/library/sha1.c
+        - file: ../../../../ThirdParty/mbedTLS/library/sha256.c
+        - file: ../../../../ThirdParty/mbedTLS/library/sha512.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_cache.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_ciphersuites.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_cli.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_cookie.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_srv.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_ticket.c
+        - file: ../../../../ThirdParty/mbedTLS/library/ssl_tls.c
+        - file: ../../../../ThirdParty/mbedTLS/library/threading.c
+        - file: ../../../../ThirdParty/mbedTLS/library/timing.c
+        - file: ../../../../ThirdParty/mbedTLS/library/version.c
+        - file: ../../../../ThirdParty/mbedTLS/library/version_features.c
+        - file: ../../../../ThirdParty/mbedTLS/library/x509.c
+        - file: ../../../../ThirdParty/mbedTLS/library/x509_create.c
+        - file: ../../../../ThirdParty/mbedTLS/library/x509_crl.c
+        - file: ../../../../ThirdParty/mbedTLS/library/x509_csr.c
+        - file: ../../../../ThirdParty/mbedTLS/library/x509write_crt.c
+        - file: ../../../../ThirdParty/mbedTLS/library/x509write_csr.c
+        - file: ../../../../ThirdParty/mbedTLS/library/xtea.c
+        - file: ../../../../ThirdParty/mbedTLS/library/aesni.c

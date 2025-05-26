@@ -134,15 +134,11 @@ _ISP:
     {
         if (u8I2cDataReady == 1)
         {
-            /* Disabled I2C IRQ until ParseCmd() is completed to prevent ISP from triggering an interrupt and fetching data prematurely. */
-            NVIC_DisableIRQ(I2C1_IRQn);
             /* Get command from I2C receive buffer */
             memcpy(au8CmdBuff, au8I2cRcvBuf, 64);
             u8I2cDataReady = 0;
             /* Parse the current command */
             ParseCmd((unsigned char *)au8CmdBuff, 64);
-            /* Restored I2C IRQ settings. */
-            NVIC_EnableIRQ(I2C1_IRQn);
         }
     }
 

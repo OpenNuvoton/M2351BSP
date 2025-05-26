@@ -1,533 +1,477 @@
-;/**************************************************************************//**
-; * @file     mystartup_M2351_Keil.s
-; * @version  V2.00
-; * @brief   Startup Source File
-; *
-; * @note
-; * @copyright SPDX-License-Identifier: Apache-2.0
-; *
-; * @copyright Copyright (C) 2017-2020 Nuvoton Technology Corp. All rights reserved.
-; ******************************************************************************/
+/**************************************************************************//**
+ * @file     startup_M2351_Keil.S
+ * @version  V3.00
+ * @brief    M2351 Series Startup Source File
+ *
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2024 Nuvoton Technology Corp. All rights reserved.
+ ***************************************************************************
 		
-		
-;/*
-;//-------- <<< Use Configuration Wizard in Context Menu >>> ------------------
-;*/
-; <h> Stack Configuration
-;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
-; </h>
-
-    IF :LNOT: :DEF: Stack_Size
-Stack_Size      EQU     0x00000800
-    ENDIF
-
-                AREA    STACK, NOINIT, READWRITE, ALIGN=3
-Stack_Mem       SPACE   Stack_Size
-__initial_sp
+***/
+/*
+//-------- <<< Use Configuration Wizard in Context Menu >>> ------------------
+*/
 
 
-; <h> Heap Configuration
-;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
-; </h>
+    .section .bss.STACK, "aw", %nobits
+    .align 3
 
-    IF :LNOT: :DEF: Heap_Size
-Heap_Size       EQU     0x00000000
-    ENDIF
-
-                AREA    HEAP, NOINIT, READWRITE, ALIGN=3
-__heap_base
-Heap_Mem        SPACE   Heap_Size
-__heap_limit
-
-
-                PRESERVE8
-                THUMB
+    .global __initial_sp
+#ifndef Stack_Size
+// <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
+    .equ    Stack_Size, 0x00000800
+#endif
+Stack_Mem:
+    .space   Stack_Size
+__initial_sp:
 
 
-; Vector Table Mapped to Address 0 at Reset
+    .section .bss.HEAP, "aw", %nobits
+    .align  3
+    .global Heap_Mem
+    .global __heap_base
+    .global __heap_limit
+#ifndef Heap_Size
+// <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
+    .equ    Heap_Size, 0x00000000
+#endif
+__heap_base:
+Heap_Mem:
+    .space  Heap_Size
+__heap_limit:
 
-                AREA    RESET, DATA, READONLY
-                EXPORT  __Vectors
-                EXPORT  __Vectors_End
-                EXPORT  __Vectors_Size
-				IMPORT  SendChar_ToUART
+    .eabi_attribute Tag_ABI_align_preserved, 1
+    .thumb
 
-__Vectors       DCD     __initial_sp               ;     Top of Stack
-                DCD     Reset_Handler              ;     Reset Handler
-                DCD     NMI_Handler                ;     NMI Handler
-                DCD     HardFault_Handler          ;     Hard Fault Handler
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     SVC_Handler                ;     SVCall Handler
-                DCD     0                          ;     Reserved
-                DCD     0                          ;     Reserved
-                DCD     PendSV_Handler             ;     PendSV Handler
-                DCD     SysTick_Handler            ;     SysTick Handler
+//*** <<< end of configuration section >>>    ***
 
-                ; External Interrupts
-                                                   ; maximum of 32 External Interrupts are possible
-                DCD     BOD_IRQHandler		       ; 0  
-                DCD     IRC_IRQHandler             ; 1  
-                DCD     PWRWU_IRQHandler           ; 2  
-                DCD     SRAM_IRQHandler            ; 3  
-                DCD     CLKFAIL_IRQHandler         ; 4  
-                DCD     DEFAULT_IRQHandler         ; 5  
-                DCD     RTC_IRQHandler             ; 6  
-                DCD     TAMPER_IRQHandler          ; 7  
-                DCD     WDT_IRQHandler             ; 8  
-                DCD     WWDT_IRQHandler            ; 9  
-                DCD     EINT0_IRQHandler           ; 10 
-                DCD     EINT1_IRQHandler           ; 11 
-                DCD     EINT2_IRQHandler           ; 12 
-                DCD     EINT3_IRQHandler           ; 13 
-                DCD     EINT4_IRQHandler           ; 14 
-                DCD     EINT5_IRQHandler           ; 15 
-                DCD     GPA_IRQHandler             ; 16 
-                DCD     GPB_IRQHandler             ; 17 
-                DCD     GPC_IRQHandler             ; 18 
-                DCD     GPD_IRQHandler             ; 19 
-                DCD     GPE_IRQHandler             ; 20 
-                DCD     GPF_IRQHandler             ; 21 
-                DCD     QSPI0_IRQHandler           ; 22 
-                DCD     SPI0_IRQHandler            ; 23 
-                DCD     BRAKE0_IRQHandler          ; 24 
-                DCD     EPWM0_P0_IRQHandler        ; 25 
-                DCD     EPWM0_P1_IRQHandler        ; 26 
-                DCD     EPWM0_P2_IRQHandler        ; 27 
-                DCD     BRAKE1_IRQHandler          ; 28 
-                DCD     EPWM1_P0_IRQHandler        ; 29 
-                DCD     EPWM1_P1_IRQHandler        ; 30 
-                DCD     EPWM1_P2_IRQHandler        ; 31 
-                DCD     TMR0_IRQHandler            ; 32 
-                DCD     TMR1_IRQHandler            ; 33 
-                DCD     TMR2_IRQHandler            ; 34 
-                DCD     TMR3_IRQHandler            ; 35 
-                DCD     UART0_IRQHandler           ; 36 
-                DCD     UART1_IRQHandler           ; 37 
-                DCD     I2C0_IRQHandler            ; 38 
-                DCD     I2C1_IRQHandler            ; 39 
-                DCD     PDMA0_IRQHandler           ; 40 
-                DCD     DAC_IRQHandler             ; 41 
-                DCD     EADC0_IRQHandler           ; 42 
-                DCD     EADC1_IRQHandler           ; 43 
-                DCD     ACMP01_IRQHandler          ; 44 
-                DCD     DEFAULT_IRQHandler         ; 45 
-                DCD     EADC2_IRQHandler           ; 46 
-                DCD     EADC3_IRQHandler           ; 47 
-                DCD     UART2_IRQHandler           ; 48 
-                DCD     UART3_IRQHandler           ; 49 
-                DCD     DEFAULT_IRQHandler         ; 50 
-                DCD     SPI1_IRQHandler            ; 51 
-                DCD     SPI2_IRQHandler            ; 52 
-                DCD     USBD_IRQHandler            ; 53 
-                DCD     USBH_IRQHandler            ; 54 
-                DCD     USBOTG_IRQHandler          ; 55 
-                DCD     CAN0_IRQHandler            ; 56 
-                DCD     DEFAULT_IRQHandler         ; 57 
-                DCD     SC0_IRQHandler             ; 58 
-                DCD     SC1_IRQHandler             ; 59 
-                DCD     SC2_IRQHandler             ; 60 
-                DCD     DEFAULT_IRQHandler         ; 61 
-                DCD     SPI3_IRQHandler            ; 62 
-                DCD     DEFAULT_IRQHandler         ; 63 
-                DCD     SDH0_IRQHandler            ; 64 
-                DCD     DEFAULT_IRQHandler         ; 65 
-                DCD     DEFAULT_IRQHandler         ; 66 
-                DCD     DEFAULT_IRQHandler         ; 67 
-                DCD     I2S0_IRQHandler            ; 68 
-                DCD     DEFAULT_IRQHandler         ; 69 
-                DCD     OPA0_IRQHandler            ; 70 
-                DCD     CRPT_IRQHandler            ; 71 
-                DCD     GPG_IRQHandler             ; 72 
-                DCD     EINT6_IRQHandler           ; 73 
-                DCD     UART4_IRQHandler           ; 74 
-                DCD     UART5_IRQHandler           ; 75 
-                DCD     USCI0_IRQHandler           ; 76 
-                DCD     USCI1_IRQHandler           ; 77 
-                DCD     BPWM0_IRQHandler           ; 78 
-                DCD     BPWM1_IRQHandler           ; 79 
-                DCD     DEFAULT_IRQHandler         ; 80 
-                DCD     DEFAULT_IRQHandler         ; 81 
-                DCD     I2C2_IRQHandler            ; 82 
-                DCD     DEFAULT_IRQHandler         ; 83 
-                DCD     QEI0_IRQHandler            ; 84 
-                DCD     QEI1_IRQHandler            ; 85 
-                DCD     ECAP0_IRQHandler           ; 86 
-                DCD     ECAP1_IRQHandler           ; 87 
-                DCD     GPH_IRQHandler             ; 88 
-                DCD     EINT7_IRQHandler           ; 89 
-                DCD     DEFAULT_IRQHandler         ; 90 
-                DCD     DEFAULT_IRQHandler         ; 91 
-                DCD     DEFAULT_IRQHandler         ; 92 
-                DCD     DEFAULT_IRQHandler         ; 93 
-                DCD     DEFAULT_IRQHandler         ; 94 
-                DCD     DEFAULT_IRQHandler         ; 95 
-                DCD     DEFAULT_IRQHandler         ; 96 
-                DCD     DEFAULT_IRQHandler         ; 97 
-                DCD     PDMA1_IRQHandler           ; 98 
-                DCD     SCU_IRQHandler             ; 99 
-                DCD     DEFAULT_IRQHandler         ; 100
-                DCD     TRNG_IRQHandler            ; 101
+
+// ; Vector Table Mapped to Address 0 at Reset
+    .section RESET, "ax"
+    .global     __Vectors
+    .global     __Vectors_End
+    .global     __Vectors_Size
+
+
+__Vectors:
+    .word     __initial_sp              //; Top of Stack
+    .word     Reset_Handler             //; Reset Handler
+    .word     NMI_Handler               //; NMI Handler
+    .word     HardFault_Handler         //; Hard Fault Handler
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     SVC_Handler               //; SVCall Handler
+    .word     0                         //; Reserved
+    .word     0                         //; Reserved
+    .word     PendSV_Handler            //; PendSV Handler
+    .word     SysTick_Handler           //; SysTick Handler
+
+    //; External Interrupts
+    //; maximum of 32 External Interrupts are 
+    .word     BOD_IRQHandler		     //; 0
+    .word     IRC_IRQHandler             //; 1
+    .word     PWRWU_IRQHandler           //; 2
+    .word     SRAM_IRQHandler            //; 3
+    .word     CLKFAIL_IRQHandler         //; 4
+    .word     DEFAULT_IRQHandler         //; 5
+    .word     RTC_IRQHandler             //; 6
+    .word     TAMPER_IRQHandler          //; 7
+    .word     WDT_IRQHandler             //; 8
+    .word     WWDT_IRQHandler            //; 9
+    .word     EINT0_IRQHandler           //; 10
+    .word     EINT1_IRQHandler           //; 11
+    .word     EINT2_IRQHandler           //; 12
+    .word     EINT3_IRQHandler           //; 13
+    .word     EINT4_IRQHandler           //; 14
+    .word     EINT5_IRQHandler           //; 15
+    .word     GPA_IRQHandler             //; 16
+    .word     GPB_IRQHandler             //; 17
+    .word     GPC_IRQHandler             //; 18
+    .word     GPD_IRQHandler             //; 19
+    .word     GPE_IRQHandler             //; 20
+    .word     GPF_IRQHandler             //; 21
+    .word     QSPI0_IRQHandler           //; 22
+    .word     SPI0_IRQHandler            //; 23
+    .word     BRAKE0_IRQHandler          //; 24
+    .word     EPWM0_P0_IRQHandler        //; 25
+    .word     EPWM0_P1_IRQHandler        //; 26
+    .word     EPWM0_P2_IRQHandler        //; 27
+    .word     BRAKE1_IRQHandler          //; 28
+    .word     EPWM1_P0_IRQHandler        //; 29
+    .word     EPWM1_P1_IRQHandler        //; 30
+    .word     EPWM1_P2_IRQHandler        //; 31
+    .word     TMR0_IRQHandler            //; 32
+    .word     TMR1_IRQHandler            //; 33
+    .word     TMR2_IRQHandler            //; 34
+    .word     TMR3_IRQHandler            //; 35
+    .word     UART0_IRQHandler           //; 36
+    .word     UART1_IRQHandler           //; 37
+    .word     I2C0_IRQHandler            //; 38
+    .word     I2C1_IRQHandler            //; 39
+    .word     PDMA0_IRQHandler           //; 40
+    .word     DAC_IRQHandler             //; 41
+    .word     EADC0_IRQHandler           //; 42
+    .word     EADC1_IRQHandler           //; 43
+    .word     ACMP01_IRQHandler          //; 44
+    .word     DEFAULT_IRQHandler         //; 45
+    .word     EADC2_IRQHandler           //; 46
+    .word     EADC3_IRQHandler           //; 47
+    .word     UART2_IRQHandler           //; 48
+    .word     UART3_IRQHandler           //; 49
+    .word     DEFAULT_IRQHandler         //; 50
+    .word     SPI1_IRQHandler            //; 51
+    .word     SPI2_IRQHandler            //; 52
+    .word     USBD_IRQHandler            //; 53
+    .word     USBH_IRQHandler            //; 54
+    .word     USBOTG_IRQHandler          //; 55
+    .word     CAN0_IRQHandler            //; 56
+    .word     DEFAULT_IRQHandler         //; 57
+    .word     SC0_IRQHandler             //; 58
+    .word     SC1_IRQHandler             //; 59
+    .word     SC2_IRQHandler             //; 60
+    .word     DEFAULT_IRQHandler         //; 61
+    .word     SPI3_IRQHandler            //; 62
+    .word     DEFAULT_IRQHandler         //; 63
+    .word     SDH0_IRQHandler            //; 64
+    .word     DEFAULT_IRQHandler         //; 65
+    .word     DEFAULT_IRQHandler         //; 66
+    .word     DEFAULT_IRQHandler         //; 67
+    .word     I2S0_IRQHandler            //; 68
+    .word     DEFAULT_IRQHandler         //; 69
+    .word     OPA0_IRQHandler            //; 70
+    .word     CRPT_IRQHandler            //; 71
+    .word     GPG_IRQHandler             //; 72
+    .word     EINT6_IRQHandler           //; 73
+    .word     UART4_IRQHandler           //; 74
+    .word     UART5_IRQHandler           //; 75
+    .word     USCI0_IRQHandler           //; 76
+    .word     USCI1_IRQHandler           //; 77
+    .word     BPWM0_IRQHandler           //; 78
+    .word     BPWM1_IRQHandler           //; 79
+    .word     DEFAULT_IRQHandler         //; 80
+    .word     DEFAULT_IRQHandler         //; 81
+    .word     I2C2_IRQHandler            //; 82
+    .word     DEFAULT_IRQHandler         //; 83
+    .word     QEI0_IRQHandler            //; 84
+    .word     QEI1_IRQHandler            //; 85
+    .word     ECAP0_IRQHandler           //; 86
+    .word     ECAP1_IRQHandler           //; 87
+    .word     GPH_IRQHandler             //; 88
+    .word     EINT7_IRQHandler           //; 89
+    .word     DEFAULT_IRQHandler         //; 90
+    .word     DEFAULT_IRQHandler         //; 91
+    .word     DEFAULT_IRQHandler         //; 92
+    .word     DEFAULT_IRQHandler         //; 93
+    .word     DEFAULT_IRQHandler         //; 94
+    .word     DEFAULT_IRQHandler         //; 95
+    .word     DEFAULT_IRQHandler         //; 96
+    .word     DEFAULT_IRQHandler         //; 97
+    .word     PDMA1_IRQHandler           //; 98
+    .word     SCU_IRQHandler             //; 99
+    .word     DEFAULT_IRQHandler         //; 100
+    .word     TRNG_IRQHandler            //; 101
 					
 					
                                                      
-__Vectors_End
+__Vectors_End:
+    .equ    __Vectors_Size, __Vectors_End - __Vectors
 
-__Vectors_Size  EQU     __Vectors_End - __Vectors
-
-                AREA    |.text|, CODE, READONLY
+    .section .text, "ax"
 
 
-; Reset Handler
+// ; Reset Handler
 
-Reset_Handler   PROC
-                EXPORT  Reset_Handler             [WEAK]
-                IMPORT  SystemInit
-                IMPORT  __main
-					
-                LDR     r0, =0x40000294 ; Check RTC wake-up from SPD flag
+    .global Reset_Handler
+    .global  SystemInit
+    .global  __main
+    .type   Reset_Handler, "function"
+Reset_Handler:
+
+                LDR     r0, =0x40000294 /* Check RTC wake-up from SPD flag */
                 LDR     r0, [r0, #0]
                 MOVS    r1, #4
                 ANDS    r0, r0, r1
                 BEQ     NORMAL
-SPD                                     ; Wake-up from SPD
+SPD:                                    /* Wake-up from SPD */
                 SUB     sp, sp, #12
-                POP     {PC}            ; Execute __SPD_Wakeup
-NORMAL                                  ; Normal Power-on process
-                MOV     r0, #0          ; Reserve 3 words stack space to retain data
+                POP     {PC}            /* Execute __SPD_Wakeup */
+
+NORMAL:                                 /* Normal Power-on process */
+                MOVS    r0, #0          /* Reserve 3 words stack space to retain data */
                 PUSH    {r0}
                 PUSH    {r0}
-                PUSH    {r0}                    
-                                                        
+                PUSH    {r0}
+
                 LDR     R0, =SystemInit
                 BLX     R0
                 LDR     R0, =__main
                 BX      R0
-                ENDP
 
 
-; Dummy Exception Handlers (infinite loops which can be modified)
 
-NMI_Handler     PROC
-                EXPORT  NMI_Handler               [WEAK]
-                B       .
-                ENDP
-HardFault_Handler\
-                PROC
-                IMPORT  ProcessHardFault
-                EXPORT  HardFault_Handler         [WEAK]
-                MOV     R0, LR                 
-                MRS     R1, MSP                
-                MRS     R2, PSP                
-                LDR     R3, =ProcessHardFault 
-                BLX     R3                     
-                BX      R0                     
-                ENDP
-ProcessHardFaultx\
-                PROC
-                EXPORT  ProcessHardFaultx          [WEAK]
-                B       .
-                ENDP
-SVC_Handler     PROC
-                EXPORT  SVC_Handler               [WEAK]
-                B       .
-                ENDP
-PendSV_Handler  PROC
-                EXPORT  PendSV_Handler            [WEAK]
-                B       .
-                ENDP
-SysTick_Handler PROC
-                EXPORT  SysTick_Handler           [WEAK]
-                B       .
-                ENDP
+// ; Dummy Exception Handlers (infinite loops which can be modified)
+    .weak   NMI_Handler
+    .type   NMI_Handler, "function"
+NMI_Handler:
+        B       .
 
-Default_Handler PROC
+    .weak   HardFault_Handler
+    .type   HardFault_Handler, "function"
+	
+HardFault_Handler:
+        MOV     R0, LR
+        MRS     R1, MSP
+        MRS     R2, PSP
+        LDR     R3, =ProcessHardFault
+        BLX     R3
+        BX      R0
 
-                EXPORT  BOD_IRQHandler		  [WEAK] ; 0  
-                EXPORT  IRC_IRQHandler            [WEAK] ; 1  
-                EXPORT  PWRWU_IRQHandler          [WEAK] ; 2  
-                EXPORT  SRAM_IRQHandler           [WEAK] ; 3  
-                EXPORT  CLKFAIL_IRQHandler        [WEAK] ; 4  
-               ;EXPORT  0                         [WEAK] ; 5  
-                EXPORT  RTC_IRQHandler            [WEAK] ; 6  
-                EXPORT  TAMPER_IRQHandler         [WEAK] ; 7  
-                EXPORT  WDT_IRQHandler            [WEAK] ; 8  
-                EXPORT  WWDT_IRQHandler           [WEAK] ; 9  
-                EXPORT  EINT0_IRQHandler          [WEAK] ; 10 
-                EXPORT  EINT1_IRQHandler          [WEAK] ; 11 
-                EXPORT  EINT2_IRQHandler          [WEAK] ; 12 
-                EXPORT  EINT3_IRQHandler          [WEAK] ; 13 
-                EXPORT  EINT4_IRQHandler          [WEAK] ; 14 
-                EXPORT  EINT5_IRQHandler          [WEAK] ; 15 
-                EXPORT  GPA_IRQHandler            [WEAK] ; 16 
-                EXPORT  GPB_IRQHandler            [WEAK] ; 17 
-                EXPORT  GPC_IRQHandler            [WEAK] ; 18 
-                EXPORT  GPD_IRQHandler            [WEAK] ; 19 
-                EXPORT  GPE_IRQHandler            [WEAK] ; 20 
-                EXPORT  GPF_IRQHandler            [WEAK] ; 21 
-                EXPORT  QSPI0_IRQHandler          [WEAK] ; 22 
-                EXPORT  SPI0_IRQHandler           [WEAK] ; 23 
-                EXPORT  BRAKE0_IRQHandler         [WEAK] ; 24 
-                EXPORT  EPWM0_P0_IRQHandler       [WEAK] ; 25 
-                EXPORT  EPWM0_P1_IRQHandler       [WEAK] ; 26 
-                EXPORT  EPWM0_P2_IRQHandler       [WEAK] ; 27 
-                EXPORT  BRAKE1_IRQHandler         [WEAK] ; 28 
-                EXPORT  EPWM1_P0_IRQHandler       [WEAK] ; 29 
-                EXPORT  EPWM1_P1_IRQHandler       [WEAK] ; 30 
-                EXPORT  EPWM1_P2_IRQHandler       [WEAK] ; 31 
-                EXPORT  TMR0_IRQHandler           [WEAK] ; 32 
-                EXPORT  TMR1_IRQHandler           [WEAK] ; 33 
-                EXPORT  TMR2_IRQHandler           [WEAK] ; 34 
-                EXPORT  TMR3_IRQHandler           [WEAK] ; 35 
-                EXPORT  UART0_IRQHandler          [WEAK] ; 36 
-                EXPORT  UART1_IRQHandler          [WEAK] ; 37 
-                EXPORT  I2C0_IRQHandler           [WEAK] ; 38 
-                EXPORT  I2C1_IRQHandler           [WEAK] ; 39 
-                EXPORT  PDMA0_IRQHandler          [WEAK] ; 40 
-                EXPORT  DAC_IRQHandler            [WEAK] ; 41 
-                EXPORT  EADC0_IRQHandler          [WEAK] ; 42 
-                EXPORT  EADC1_IRQHandler          [WEAK] ; 43 
-                EXPORT  ACMP01_IRQHandler         [WEAK] ; 44 
-               ;EXPORT  0                         [WEAK] ; 45 
-                EXPORT  EADC2_IRQHandler          [WEAK] ; 46 
-                EXPORT  EADC3_IRQHandler          [WEAK] ; 47 
-                EXPORT  UART2_IRQHandler          [WEAK] ; 48 
-                EXPORT  UART3_IRQHandler          [WEAK] ; 49 
-               ;EXPORT  0                         [WEAK] ; 50 
-                EXPORT  SPI1_IRQHandler           [WEAK] ; 51 
-                EXPORT  SPI2_IRQHandler           [WEAK] ; 52 
-                EXPORT  USBD_IRQHandler           [WEAK] ; 53 
-                EXPORT  USBH_IRQHandler           [WEAK] ; 54 
-                EXPORT  USBOTG_IRQHandler         [WEAK] ; 55 
-                EXPORT  CAN0_IRQHandler           [WEAK] ; 56 
-                EXPORT  CAN1_IRQHandler           [WEAK] ; 57 
-                EXPORT  SC0_IRQHandler            [WEAK] ; 58 
-                EXPORT  SC1_IRQHandler            [WEAK] ; 59 
-                EXPORT  SC2_IRQHandler            [WEAK] ; 60 
-                EXPORT  SC3_IRQHandler            [WEAK] ; 61 
-                EXPORT  SPI3_IRQHandler           [WEAK] ; 62 
-               ;EXPORT  0                         [WEAK] ; 63 
-                EXPORT  SDH0_IRQHandler           [WEAK] ; 64 
-               ;EXPORT  0                         [WEAK] ; 65 
-               ;EXPORT  0                         [WEAK] ; 66 
-               ;EXPORT  0                         [WEAK] ; 67 
-                EXPORT  I2S0_IRQHandler           [WEAK] ; 68 
-               ;EXPORT  0                         [WEAK] ; 69 
-                EXPORT  OPA0_IRQHandler           [WEAK] ; 70 
-                EXPORT  CRPT_IRQHandler           [WEAK] ; 71 
-                EXPORT  GPG_IRQHandler            [WEAK] ; 72 
-                EXPORT  EINT6_IRQHandler          [WEAK] ; 73 
-                EXPORT  UART4_IRQHandler          [WEAK] ; 74 
-                EXPORT  UART5_IRQHandler          [WEAK] ; 75 
-                EXPORT  USCI0_IRQHandler          [WEAK] ; 76 
-                EXPORT  USCI1_IRQHandler          [WEAK] ; 77 
-                EXPORT  BPWM0_IRQHandler          [WEAK] ; 78 
-                EXPORT  BPWM1_IRQHandler          [WEAK] ; 79 
-               ;EXPORT  0                         [WEAK] ; 80 
-               ;EXPORT  0                         [WEAK] ; 81 
-                EXPORT  I2C2_IRQHandler           [WEAK] ; 82 
-               ;EXPORT  0                         [WEAK] ; 83 
-                EXPORT  QEI0_IRQHandler           [WEAK] ; 84 
-                EXPORT  QEI1_IRQHandler           [WEAK] ; 85 
-                EXPORT  ECAP0_IRQHandler          [WEAK] ; 86 
-                EXPORT  ECAP1_IRQHandler          [WEAK] ; 87 
-                EXPORT  GPH_IRQHandler            [WEAK] ; 88 
-               EXPORT   EINT7_IRQHandler          [WEAK] ; 89 
-                EXPORT  SDH1_IRQHandler           [WEAK] ; 90 
-               ;EXPORT  0                         [WEAK] ; 91 
-               ;EXPORT  USBH_IRQHandler           [WEAK] ; 92 
-               ;EXPORT  0                         [WEAK] ; 93 
-               ;EXPORT  0                         [WEAK] ; 94 
-               ;EXPORT  0                         [WEAK] ; 95 
-               ;EXPORT  0                         [WEAK] ; 96 
-               ;EXPORT  0                         [WEAK] ; 97 
-                EXPORT  PDMA1_IRQHandler          [WEAK] ; 98 
-                EXPORT  SCU_IRQHandler            [WEAK] ; 99 
-               ;EXPORT  0                         [WEAK] ; 100
-                EXPORT  TRNG_IRQHandler           [WEAK] ; 101
-				
+    .weak   SVC_Handler, "function"
+SVC_Handler:
+        B       .
+
+    .weak   PendSV_Handler, "function"
+PendSV_Handler:
+        B       .
+
+    .weak   SysTick_Handler, "function"
+SysTick_Handler:
+        B       .
+
+    .weak  BOD_IRQHandler,"function"//; 0
+    .weak  IRC_IRQHandler,"function"//; 1
+    .weak  PWRWU_IRQHandler,"function"//; 2
+    .weak  SRAM_IRQHandler,"function"//; 3
+    .weak  CLKFAIL_IRQHandler,"function"//; 4
+    //;.weak  0,"function" ; 5
+    .weak  RTC_IRQHandler,"function"//; 6
+    .weak  TAMPER_IRQHandler,"function"//; 7
+    .weak  WDT_IRQHandler,"function"//; 8
+    .weak  WWDT_IRQHandler,"function"//; 9
+    .weak  EINT0_IRQHandler,"function"//; 10
+    .weak  EINT1_IRQHandler,"function"//; 11
+    .weak  EINT2_IRQHandler,"function"//; 12
+    .weak  EINT3_IRQHandler,"function"//; 13
+    .weak  EINT4_IRQHandler,"function"//; 14
+    .weak  EINT5_IRQHandler,"function"//; 15
+    .weak  GPA_IRQHandler,"function"//; 16
+    .weak  GPB_IRQHandler,"function"//; 17
+    .weak  GPC_IRQHandler,"function"//; 18
+    .weak  GPD_IRQHandler,"function"//; 19
+    .weak  GPE_IRQHandler,"function"//; 20
+    .weak  GPF_IRQHandler,"function"//; 21
+    .weak  QSPI0_IRQHandler,"function"//; 22
+    .weak  SPI0_IRQHandler,"function"//; 23
+    .weak  BRAKE0_IRQHandler,"function"//; 24
+    .weak  EPWM0_P0_IRQHandler,"function"//; 25
+    .weak  EPWM0_P1_IRQHandler,"function"//; 26
+    .weak  EPWM0_P2_IRQHandler,"function"//; 27
+    .weak  BRAKE1_IRQHandler,"function"//; 28
+    .weak  EPWM1_P0_IRQHandler,"function"//; 29
+    .weak  EPWM1_P1_IRQHandler,"function"//; 30
+    .weak  EPWM1_P2_IRQHandler,"function"//; 31
+    .weak  TMR0_IRQHandler,"function"//; 32
+    .weak  TMR1_IRQHandler,"function"//; 33
+    .weak  TMR2_IRQHandler,"function"//; 34
+    .weak  TMR3_IRQHandler,"function"//; 35
+    .weak  UART0_IRQHandler,"function"//; 36
+    .weak  UART1_IRQHandler,"function"//; 37
+    .weak  I2C0_IRQHandler,"function"//; 38
+    .weak  I2C1_IRQHandler,"function"//; 39
+    .weak  PDMA0_IRQHandler,"function"//; 40
+    .weak  DAC_IRQHandler,"function"//; 41
+    .weak  EADC0_IRQHandler,"function"//; 42
+    .weak  EADC1_IRQHandler,"function"//; 43
+    .weak  ACMP01_IRQHandler,"function"//; 44
+    //;.weak  0,"function" ; 45
+    .weak  EADC2_IRQHandler,"function"//; 46
+    .weak  EADC3_IRQHandler,"function"//; 47
+    .weak  UART2_IRQHandler,"function"//; 48
+    .weak  UART3_IRQHandler,"function"//; 49
+    //;.weak  0,"function" ; 50
+    .weak  SPI1_IRQHandler,"function"//; 51
+    .weak  SPI2_IRQHandler,"function"//; 52
+    .weak  USBD_IRQHandler,"function"//; 53
+    .weak  USBH_IRQHandler,"function"//; 54
+    .weak  USBOTG_IRQHandler,"function"//; 55
+    .weak  CAN0_IRQHandler,"function"//; 56
+    .weak  CAN1_IRQHandler,"function"//; 57
+    .weak  SC0_IRQHandler,"function"//; 58
+    .weak  SC1_IRQHandler,"function"//; 59
+    .weak  SC2_IRQHandler,"function"//; 60
+    .weak  SC3_IRQHandler,"function"//; 61
+    .weak  SPI3_IRQHandler,"function"//; 62
+    //;.weak  0,"function"; 63
+    .weak  SDH0_IRQHandler,"function"//; 64
+    //;.weak  0,"function" ; 65
+    //;.weak  0,"function" ; 66
+    //;.weak  0,"function" ; 67
+    .weak  I2S0_IRQHandler,"function"//; 68
+    //;.weak  0,"function" ; 69
+    .weak  OPA0_IRQHandler,"function"//; 70
+    .weak  CRPT_IRQHandler,"function"//; 71
+    .weak  GPG_IRQHandler,"function"//; 72
+    .weak  EINT6_IRQHandler,"function"//; 73
+    .weak  UART4_IRQHandler,"function"//; 74
+    .weak  UART5_IRQHandler,"function"//; 75
+    .weak  USCI0_IRQHandler,"function"//; 76
+    .weak  USCI1_IRQHandler,"function"//; 77
+    .weak  BPWM0_IRQHandler,"function"//; 78
+    .weak  BPWM1_IRQHandler,"function"//; 79
+    //;.weak  0,"function"; 80
+    //;.weak  0,"function"; 81
+    .weak  I2C2_IRQHandler,"function"//; 82
+    //;.weak  0,"function"; 83
+    .weak  QEI0_IRQHandler,"function"//; 84
+    .weak  QEI1_IRQHandler,"function"//; 85
+    .weak  ECAP0_IRQHandler,"function"//; 86
+    .weak  ECAP1_IRQHandler,"function"//; 87
+    .weak  GPH_IRQHandler,"function"//; 88
+    .weak  EINT7_IRQHandler,"function"//; 89
+    .weak  SDH1_IRQHandler,"function"//; 90
+    //;.weak  0,"function"; 91
+    //;.weak  USBH_IRQHandler,"function"; 92
+    //;.weak  0,"function"; 93
+    //;.weak  0,"function"; 94
+    //;.weak  0,"function"; 95
+    //;.weak  0,"function"; 96
+    //;.weak  0,"function"; 97
+    .weak  PDMA1_IRQHandler,"function"//; 98
+    //;.weak  SCU_IRQHandler ,"function"; 99
+    //;.weak  0,"function"; 100
+    .weak  TRNG_IRQHandler,"function"//; 101
 
 
-                EXPORT	DEFAULT_IRQHandler		  [WEAK]                                                
-                                                                
-BOD_IRQHandler		   ; 0  
-IRC_IRQHandler             ; 1  
-PWRWU_IRQHandler           ; 2  
-SRAM_IRQHandler            ; 3  
-CLKFAIL_IRQHandler         ; 4  
-;0                          ; 5  
-RTC_IRQHandler             ; 6  
-TAMPER_IRQHandler          ; 7  
-WDT_IRQHandler             ; 8  
-WWDT_IRQHandler            ; 9  
-EINT0_IRQHandler           ; 10 
-EINT1_IRQHandler           ; 11 
-EINT2_IRQHandler           ; 12 
-EINT3_IRQHandler           ; 13 
-EINT4_IRQHandler           ; 14 
-EINT5_IRQHandler           ; 15 
-GPA_IRQHandler             ; 16 
-GPB_IRQHandler             ; 17 
-GPC_IRQHandler             ; 18 
-GPD_IRQHandler             ; 19 
-GPE_IRQHandler             ; 20 
-GPF_IRQHandler             ; 21 
-QSPI0_IRQHandler           ; 22 
-SPI0_IRQHandler            ; 23 
-BRAKE0_IRQHandler          ; 24 
-EPWM0_P0_IRQHandler        ; 25 
-EPWM0_P1_IRQHandler        ; 26 
-EPWM0_P2_IRQHandler        ; 27 
-BRAKE1_IRQHandler          ; 28 
-EPWM1_P0_IRQHandler        ; 29 
-EPWM1_P1_IRQHandler        ; 30 
-EPWM1_P2_IRQHandler        ; 31 
-TMR0_IRQHandler            ; 32 
-TMR1_IRQHandler            ; 33 
-TMR2_IRQHandler            ; 34 
-TMR3_IRQHandler            ; 35 
-UART0_IRQHandler           ; 36 
-UART1_IRQHandler           ; 37 
-I2C0_IRQHandler            ; 38 
-I2C1_IRQHandler            ; 39 
-PDMA0_IRQHandler           ; 40 
-DAC_IRQHandler             ; 41 
-EADC0_IRQHandler           ; 42 
-EADC1_IRQHandler           ; 43 
-ACMP01_IRQHandler          ; 44 
-;0                          ; 45 
-EADC2_IRQHandler           ; 46 
-EADC3_IRQHandler           ; 47 
-UART2_IRQHandler           ; 48 
-UART3_IRQHandler           ; 49 
-;0                          ; 50 
-SPI1_IRQHandler            ; 51 
-SPI2_IRQHandler            ; 52 
-USBD_IRQHandler            ; 53 
-USBH_IRQHandler            ; 54 
-USBOTG_IRQHandler          ; 55 
-CAN0_IRQHandler            ; 56 
-CAN1_IRQHandler            ; 57 
-SC0_IRQHandler             ; 58 
-SC1_IRQHandler             ; 59 
-SC2_IRQHandler             ; 60 
-SC3_IRQHandler             ; 61 
-SPI3_IRQHandler            ; 62 
-;0                          ; 63 
-SDH0_IRQHandler            ; 64 
-;0                          ; 65 
-;0                          ; 66 
-;0                          ; 67 
-I2S0_IRQHandler            ; 68 
-;0                          ; 69 
-OPA0_IRQHandler            ; 70 
-CRPT_IRQHandler            ; 71 
-GPG_IRQHandler             ; 72 
-EINT6_IRQHandler           ; 73 
-UART4_IRQHandler           ; 74 
-UART5_IRQHandler           ; 75 
-USCI0_IRQHandler           ; 76 
-USCI1_IRQHandler           ; 77 
-BPWM0_IRQHandler           ; 78 
-BPWM1_IRQHandler           ; 79 
-;0                          ; 80 
-;0                          ; 81 
-I2C2_IRQHandler            ; 82 
-;0                          ; 83 
-QEI0_IRQHandler            ; 84 
-QEI1_IRQHandler            ; 85 
-ECAP0_IRQHandler           ; 86 
-ECAP1_IRQHandler           ; 87 
-GPH_IRQHandler             ; 88 
-EINT7_IRQHandler           ; 89 
-SDH1_IRQHandler            ; 90 
-;0                          ; 91 
-;USBH_IRQHandler            ; 92 
-;0                          ; 93 
-;0                          ; 94 
-;0                          ; 95 
-;0                          ; 96 
-;0                          ; 97 
-PDMA1_IRQHandler           ; 98 
-SCU_IRQHandler             ; 99 
-;0                         ; 100
-TRNG_IRQHandler            ; 101
-DEFAULT_IRQHandler
-                B       .
-                ENDP
+BOD_IRQHandler:		        //; 0
+IRC_IRQHandler:             //; 1
+PWRWU_IRQHandler:           //; 2
+SRAM_IRQHandler:            //; 3
+CLKFAIL_IRQHandler:         //; 4
+//;0                          ; 5
+RTC_IRQHandler:             //; 6
+TAMPER_IRQHandler:         //; 7
+WDT_IRQHandler:             //; 8
+WWDT_IRQHandler:           //; 9
+EINT0_IRQHandler:           //; 10
+EINT1_IRQHandler:           //; 11
+EINT2_IRQHandler:           //; 12
+EINT3_IRQHandler:           //; 13
+EINT4_IRQHandler:           //; 14
+EINT5_IRQHandler:           //; 15
+GPA_IRQHandler:           //; 16
+GPB_IRQHandler:             //; 17
+GPC_IRQHandler:             //; 18
+GPD_IRQHandler:             //; 19
+GPE_IRQHandler:             //; 20
+GPF_IRQHandler:             //; 21
+QSPI0_IRQHandler:           //; 22
+SPI0_IRQHandler:            //; 23
+BRAKE0_IRQHandler:          //; 24
+EPWM0_P0_IRQHandler:        //; 25
+EPWM0_P1_IRQHandler:        //; 26
+EPWM0_P2_IRQHandler:        //; 27
+BRAKE1_IRQHandler:          //; 28
+EPWM1_P0_IRQHandler:        //; 29
+EPWM1_P1_IRQHandler:        //; 30
+EPWM1_P2_IRQHandler:        //; 31
+TMR0_IRQHandler:            //; 32
+TMR1_IRQHandler:            //; 33
+TMR2_IRQHandler:            //; 34
+TMR3_IRQHandler:            //; 35
+UART0_IRQHandler:           //; 36
+UART1_IRQHandler:           //; 37
+I2C0_IRQHandler:            //; 38
+I2C1_IRQHandler:            //; 39
+PDMA0_IRQHandler:           //; 40
+DAC_IRQHandler:             //; 41
+EADC0_IRQHandler:           //; 42
+EADC1_IRQHandler:           //; 43
+ACMP01_IRQHandler:          //; 44
+//;0                          ; 45
+EADC2_IRQHandler:           //; 46
+EADC3_IRQHandler:           //; 47
+UART2_IRQHandler:           //; 48
+UART3_IRQHandler:           //; 49
+//;0                          ; 50
+SPI1_IRQHandler:            //; 51
+SPI2_IRQHandler:            //; 52
+USBD_IRQHandler:            //; 53
+//USBH_IRQHandler:            //; 54
+USBOTG_IRQHandler:          //; 55
+CAN0_IRQHandler:            //; 56
+CAN1_IRQHandler:            //; 57
+SC0_IRQHandler:             //; 58
+SC1_IRQHandler:             //; 59
+SC2_IRQHandler:             //; 60
+SC3_IRQHandler:             //; 61
+SPI3_IRQHandler:            //; 62
+//;0                          ; 63
+SDH0_IRQHandler:            //; 64
+//;0                          ; 65
+//;0                          ; 66
+//;0                          ; 67
+I2S0_IRQHandler:            //; 68
+//;0                          ; 69
+OPA0_IRQHandler:            //; 70
+CRPT_IRQHandler:            //; 71
+GPG_IRQHandler:             //; 72
+EINT6_IRQHandler:           //; 73
+UART4_IRQHandler:           //; 74
+UART5_IRQHandler:           //; 75
+USCI0_IRQHandler:           //; 76
+USCI1_IRQHandler:           //; 77
+BPWM0_IRQHandler:           //; 78
+BPWM1_IRQHandler:           //; 79
+//;0                          ; 80
+//;0                          ; 81
+I2C2_IRQHandler:            //; 82
+//;0                          ; 83
+QEI0_IRQHandler:            //; 84
+QEI1_IRQHandler:            //; 85
+ECAP0_IRQHandler:           //; 86
+ECAP1_IRQHandler:           //; 87
+GPH_IRQHandler:             //; 88
+EINT7_IRQHandler:           //; 89
+SDH1_IRQHandler:            //; 90
+//;0                          ; 91
+//;USBH_IRQHandler:            //; 92
+//;0                          ; 93
+//;0                          ; 94
+//;0                          ; 95
+//;0                          ; 96
+//;0                          ; 97
+PDMA1_IRQHandler:           //; 98
+//;SCU_IRQHandler:            ; 99
+//;0                         ; 100
+TRNG_IRQHandler:            //; 101
+DEFAULT_IRQHandler:
+         B       .
 
-                ALIGN
-
-
-; User Initial Stack & Heap
-
-                IF      :DEF:__MICROLIB
-
-                EXPORT  __initial_sp
-                EXPORT  __heap_base
-                EXPORT  __heap_limit
-
-                ELSE
-
-                IMPORT  __use_two_region_memory
-                EXPORT  __user_initial_stackheap
-
-__user_initial_stackheap PROC
-                LDR     R0, = Heap_Mem
-                LDR     R1, = (Stack_Mem + Stack_Size)
-                LDR     R2, = (Heap_Mem +  Heap_Size)
-                LDR     R3, = Stack_Mem
-				BX      LR
-                ENDP
-
-
-                ALIGN
-
-                ENDIF
-
-;int32_t SH_DoCommand(int32_t n32In_R0, int32_t n32In_R1, int32_t *pn32Out_R0)
-SH_DoCommand    PROC
-    
-                EXPORT      SH_DoCommand
-                IMPORT      SH_Return
-                    
-                BKPT   0xAB                ; Wait ICE or HardFault
-                LDR    R3, =SH_Return 
-                MOV    R4, lr          
-                BLX    R3                  ; Call SH_Return. The return value is in R0
-                BX     R4                  ; Return value = R0
-                
-                ENDP
-
-__PC            PROC
-                EXPORT      __PC
-                
+    .global __PC
+    .type   __PC, "function"
+__PC: 
                 MOV     r0, lr
                 BLX     lr
-                ALIGN
-                    
-                ENDP
-                    
-__Enter_SPD     PROC                        ; Enter to PD
-                EXPORT      __Enter_SPD
-                    
-                LDR     r0, =__SPD_Wakeup   ; Save SP, LR and __SPD_Wakeup
+
+    .global __Enter_SPD
+    .type   __Enter_SPD, "function"
+__Enter_SPD:                                /* Enter to PD */
+                LDR     r0, =__SPD_Wakeup   /* Save SP, LR and __SPD_Wakeup */
+                ADDS    r0, #1
                 MOV     r1, lr
                 MOV     r2, sp
-                MOV     r3, #0
+                MOVS    r3, #0
                 LDR     r3, [r3]
                 MOV     sp, r3
                 PUSH    {r0-r2}
                 WFI
-                POP     {PC}                ; Execute __SPD_Wakeup
-__SPD_Wakeup                                ; Restore SP and LR
+                POP     {PC}                /* Execute __SPD_Wakeup */
+__SPD_Wakeup:                               /* Restore SP and LR */
                 POP     {r1,r2}
                 MOV     sp, r2
-                BX      r1                    
-                                        
-                ENDP
+                BX      r1

@@ -1,0 +1,24 @@
+LOAD_ROM 0x0
+{
+    APROM 0x0 
+    {        
+        startup_M2351.o(RESET, +First)
+        anon$$obj.o
+        init.o
+        entry*.o
+        handlers.o
+        startup_M2351.o
+        system_M2351.o
+    }
+
+    SRAM2 0x20002000
+    {
+        * (+RO)	
+        * (+RW)
+    }
+
+	ZI +0
+	{
+		*(+ZI)
+	}
+}
