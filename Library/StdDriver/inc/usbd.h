@@ -268,7 +268,7 @@ extern const S_USBD_INFO_T gsInfo;
   *
   * @return   None
   *
-  * @details  Set DRVSE0 bit of USB_DRVSE0 register to enable software-disconnect function. Force USB PHY transceiver to drive SE0 to bus.
+  * @details  Set SE0 bit of USB_SE0 register to enable software-disconnect function. Force USB PHY transceiver to drive SE0 to bus.
   *
   */
 #define USBD_SET_SE0()              (((__PC() & NS_OFFSET) == NS_OFFSET)? ((uint32_t)(USBD_NS->SE0 |= USBD_DRVSE0)):((uint32_t)(USBD->SE0 |= USBD_DRVSE0)))
@@ -280,10 +280,34 @@ extern const S_USBD_INFO_T gsInfo;
   *
   * @return   None
   *
-  * @details  Clear DRVSE0 bit of USB_DRVSE0 register to disable software-disconnect function.
+  * @details  Clear SE0 bit of USB_SE0 register to disable software-disconnect function.
   *
   */
 #define USBD_CLR_SE0()              (((__PC() & NS_OFFSET) == NS_OFFSET)? ((uint32_t)(USBD_NS->SE0 &= ~USBD_DRVSE0)):((uint32_t)(USBD->SE0 &= ~USBD_DRVSE0)))
+
+/**
+  * @brief    Disconnect from the USB host using software settings
+  *
+  * @param    None
+  *
+  * @return   None
+  *
+  * @details  Set USB_SE0 register to enable SE0 to disconnect USBD from the USB host.
+  *
+  */
+#define USBD_SwDisconnect()         (((__PC() & NS_OFFSET) == NS_OFFSET)? ((uint32_t)(USBD_NS->SE0 |= USBD_DRVSE0)):((uint32_t)(USBD->SE0 |= USBD_DRVSE0)))
+
+/**
+  * @brief    Reconnect to the USB host using software settings
+  *
+  * @param    None
+  *
+  * @return   None
+  *
+  * @details  Clear USB_SE0 register to disable SE0 to reconnect USBD to the USB host.
+  *
+  */
+#define USBD_SwReconnect()          (((__PC() & NS_OFFSET) == NS_OFFSET)? ((uint32_t)(USBD_NS->SE0 &= ~USBD_DRVSE0)):((uint32_t)(USBD->SE0 &= ~USBD_DRVSE0)))
 
 /**
   * @brief       Set USB device address
