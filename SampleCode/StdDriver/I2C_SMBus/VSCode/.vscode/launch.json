@@ -17,6 +17,7 @@
             "runToEntryPoint": "main",
 			"overrideLaunchCommands": [
             "monitor reset halt"
+            ]
         }
     ]
 }

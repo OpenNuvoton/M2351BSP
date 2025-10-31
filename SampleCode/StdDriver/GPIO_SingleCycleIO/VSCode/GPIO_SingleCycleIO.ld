@@ -51,9 +51,7 @@ SECTIONS
 		__Vectors_Size = __Vectors_End - __Vectors;
 		__end__ = .;
 
-		/* *(.text*) */
-
-        *(EXCLUDE_FILE(*exeinsram.c.obj) .text*)
+		*(.text*)
 
 		KEEP(*(.init))
 		KEEP(*(.fini))
@@ -72,9 +70,7 @@ SECTIONS
  		*(SORT(.dtors.*))
  		*(.dtors)
 
-		/* *(.rodata*) */
-
-        *(EXCLUDE_FILE(*exeinsram.c.obj) .rodata*)
+		*(.rodata*)
 
 		KEEP(*(.eh_frame*))
 	} > FLASH
@@ -145,11 +141,6 @@ SECTIONS
 	.data : AT (__etext)
 	{
 		__data_start__ = .;
-		
-		*exeinsram.c.obj (.text*) 
-		*(.fastcode) 
-		*exeinsram.c.obj (.rodata*)
-		
 		*(vtable)
 		*(.data*)
 

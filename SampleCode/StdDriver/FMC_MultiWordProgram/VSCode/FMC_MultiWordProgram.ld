@@ -51,8 +51,7 @@ SECTIONS
 		__Vectors_Size = __Vectors_End - __Vectors;
 		__end__ = .;
 
-		/* *(.text*) */
-		*(EXCLUDE_FILE(*/fmc.c.obj) .text*)
+		*(.text*)
 
 		KEEP(*(.init))
 		KEEP(*(.fini))

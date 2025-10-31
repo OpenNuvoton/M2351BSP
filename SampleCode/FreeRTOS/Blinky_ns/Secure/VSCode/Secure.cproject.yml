@@ -20,7 +20,7 @@ project:
         endian: little
         trustzone: secure
     - define:
-        __ARM_FEATURE_CMSE: "3"
+       - __ARM_FEATURE_CMSE: "3"
   linker:
     - for-compiler: GCC
       script: Secure.ld

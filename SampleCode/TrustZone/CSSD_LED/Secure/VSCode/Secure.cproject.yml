@@ -20,7 +20,7 @@ project:
         endian: little
         trustzone: secure
     - define:
-        DEBUG_PORT: UART0_NS
+        - DEBUG_PORT: UART0_NS
   linker:
     - for-compiler: GCC
       script: Secure.ld

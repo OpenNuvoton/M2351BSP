@@ -54,6 +54,12 @@ void CAN_Init(void);
 void ProcessHardFault(void);
 void SH_Return(void);
 
+/* Add implementations to fix linker warnings from the newlib-nano C library in VSCode-GCC14.3.1 */
+void _close(void) {}
+void _lseek(void) {}
+void _read_r(void) {}
+void _write_r(void) {}
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                                       */
 /*---------------------------------------------------------------------------------------------------------*/

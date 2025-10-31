@@ -21,6 +21,12 @@ int32_t SYS_Init(void);
 void ProcessHardFault(void) {}
 void SH_Return(void) {}
 
+/* Add implementations to fix linker warnings from the newlib-nano C library in VSCode-GCC14.3.1 */
+void _close(void) {}
+void _lseek(void) {}
+void _read_r(void) {}
+void _write_r(void) {}
+
 uint32_t CLK_GetPLLClockFreq(void)
 {
     return 128000000;
