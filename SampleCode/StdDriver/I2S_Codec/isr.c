@@ -23,9 +23,6 @@ void I2S0_IRQHandler(void)
     uint32_t u32Len, i;
     uint32_t *pBuffTx, *pBuffRx;
 
-    // enable sound output
-    PA4 = 0;
-
     u32Reg = I2S_GET_INT_FLAG(I2S0, I2S_STATUS0_TXTHIF_Msk | I2S_STATUS0_RXTHIF_Msk);
 
     if(u32Reg & I2S_STATUS0_TXTHIF_Msk)
