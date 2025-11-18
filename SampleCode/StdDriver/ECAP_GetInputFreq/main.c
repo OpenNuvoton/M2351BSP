@@ -16,8 +16,8 @@
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
-static uint32_t s_u32Status;
-static uint32_t s_u32IC0Hold;
+static volatile uint32_t s_u32Status;
+static volatile uint32_t s_u32IC0Hold;
 
 
 void TMR0_IRQHandler(void);

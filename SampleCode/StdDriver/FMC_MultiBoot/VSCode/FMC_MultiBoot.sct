@@ -9,15 +9,15 @@
 #endif
 
 #ifndef FLASH_SIZE
-    #define FLASH_SIZE      0x00100000
+    #define FLASH_SIZE      0x00040000
 #endif
 
 #ifndef SRAM_SIZE
-    #define SRAM_SIZE       0x00040000
+    #define SRAM_SIZE       0x00008000
 #endif
 
 #ifndef STACK_SIZE
-    #define STACK_SIZE      0x00001800
+    #define STACK_SIZE      0x00001000
 #endif
 
 #ifndef HEAP_SIZE

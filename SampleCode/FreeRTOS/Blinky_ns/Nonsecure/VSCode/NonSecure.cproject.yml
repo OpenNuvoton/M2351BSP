@@ -22,6 +22,8 @@ project:
     - define:
         - DEBUG_PORT: UART1_NS
   linker:
+    - for-compiler: AC6
+      script: Nonsecure.sct
     - for-compiler: GCC
       script: Nonsecure.ld
   add-path:

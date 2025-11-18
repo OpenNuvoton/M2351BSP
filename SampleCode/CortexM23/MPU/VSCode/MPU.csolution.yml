@@ -6,7 +6,7 @@ solution:
     - compiler: GCC@>=10.3.1
   build-types:
     - type: debug
-      optimize: debug
+      optimize: none
     - type: release
       optimize: balanced
   target-types:

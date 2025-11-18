@@ -93,8 +93,8 @@
 // <h> Stack / Heap Configuration
 //   <o0> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 //   <o1> Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
-#define __STACK_SIZE 0x00000000
-#define __HEAP_SIZE 0x00003800
+#define __STACK_SIZE 0x00000800
+#define __HEAP_SIZE 0x00001000
 // </h>
 
 // <n> Resources that are not allocated to linker regions

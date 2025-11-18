@@ -13,10 +13,11 @@ project:
         - --gc-sections
         - --specs=nano.specs
         - -Wl,-Map,"$OutDir()$/$Project$.map"
-
   setups:
     - output:
         type: ["elf", "bin"]
+  define:
+    - DEBUG_PORT: UUART0
   linker:
     - for-compiler: GCC
       script: ../GCC/USCI_UART_TxRxFunction.ld
@@ -35,10 +36,10 @@ project:
     - group: User
       files:
         - file: ../main.c
+        - file: ../myretarget.c
     - group: Library
       files:
         - file: ../../../../Library/StdDriver/src/clk.c
-        - file: ../../../../Library/StdDriver/src/retarget.c
         - file: ../../../../Library/StdDriver/src/sys.c
         - file: ../../../../Library/StdDriver/src/uart.c
         - file: ../../../../Library/StdDriver/src/usci_uart.c
