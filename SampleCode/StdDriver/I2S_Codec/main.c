@@ -323,11 +323,6 @@ int32_t main(void)
     /* Init I2C2 to access Codec */
     I2C2_Init();
 
-    // Plug-In DET
-    SYS->GPA_MFPL = (SYS->GPA_MFPL & ~(SYS_GPA_MFPL_PA4MFP_Msk));
-    GPIO_SetMode(PA, BIT4, GPIO_MODE_OUTPUT);
-    PA4 = 1;
-
 #if (!NAU8822)
     /* Reset NAU88L25 codec */
     NAU88L25_Reset();
@@ -336,6 +331,11 @@ int32_t main(void)
     /* Open I2S0 interface and set to slave mode, stereo channel, I2S format */
     I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_STEREO, I2S_FORMAT_I2S);
     NVIC_EnableIRQ(I2S0_IRQn);
+
+    /* Set PC5 low to enable phone jack on NuMaker board. */
+    SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC5MFP_Msk);
+    GPIO_SetMode(PC, BIT5, GPIO_MODE_OUTPUT);
+    PC5 = 0;
 
     /* select source from HXT(12MHz) */
     CLK_SetModuleClock(I2S0_MODULE, CLK_CLKSEL3_I2S0SEL_HXT, 0);

@@ -399,7 +399,7 @@ UART3_IRQHandler:           //; 49
 SPI1_IRQHandler:            //; 51
 SPI2_IRQHandler:            //; 52
 USBD_IRQHandler:            //; 53
-//USBH_IRQHandler:            //; 54
+USBH_IRQHandler:            //; 54
 USBOTG_IRQHandler:          //; 55
 CAN0_IRQHandler:            //; 56
 CAN1_IRQHandler:            //; 57

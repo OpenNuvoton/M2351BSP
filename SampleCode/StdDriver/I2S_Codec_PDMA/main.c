@@ -19,7 +19,6 @@ static uint32_t s_au32PcmTxBuff[2][BUFF_LEN] = {{0}};
 static DMA_DESC_T DMA_TXDESC[2] = {0}, DMA_RXDESC[2] = {0};
 
 static volatile uint8_t s_u8TxIdx = 0, s_u8RxIdx = 0;
-static volatile uint8_t s_u8CopyData = 0;
 
 void PDMA0_IRQHandler(void);
 void SYS_Init(void);
@@ -37,8 +36,6 @@ void NAU88L25_Setup(void);
 
 void PDMA0_IRQHandler(void)
 {
-    PA4 = 0;
-
     uint32_t u32Status = PDMA_GET_INT_STATUS(PDMA0);
 
     if(u32Status & 0x2)
@@ -46,7 +43,7 @@ void PDMA0_IRQHandler(void)
         if(PDMA_GET_TD_STS(PDMA0) & 0x4)              /* channel 2 done */
         {
             /* Copy RX data to TX buffer */
-            s_u8CopyData = 1;
+            memcpy(&s_au32PcmTxBuff[s_u8TxIdx ^ 1], &s_au32PcmRxBuff[s_u8RxIdx], BUFF_LEN * 4);
             s_u8RxIdx ^= 1;
             PDMA_CLR_TD_FLAG(PDMA0, PDMA_TDSTS_TDIF2_Msk);
         }
@@ -393,11 +390,6 @@ int32_t main(void)
     /* Init I2C2 to access NAU8822 */
     I2C2_Init();
 
-    // Plug-In DET
-    SYS->GPA_MFPL = (SYS->GPA_MFPL & ~(SYS_GPA_MFPL_PA4MFP_Msk));
-    GPIO_SetMode(PA, BIT4, GPIO_MODE_OUTPUT);
-    PA4 = 1;
-
 #if (!NAU8822)
     /* Reset NAU88L25 codec */
     NAU88L25_Reset();
@@ -405,6 +397,11 @@ int32_t main(void)
 
     /* Open I2S0 interface and set to slave mode, stereo channel, I2S format */
     I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_STEREO, I2S_FORMAT_I2S);
+
+    /* Set PC5 low to enable phone jack on NuMaker board. */
+    SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC5MFP_Msk);
+    GPIO_SetMode(PC, BIT5, GPIO_MODE_OUTPUT);
+    PC5 = 0;
 
     /* select source from HXT(12MHz) */
     CLK_SetModuleClock(I2S0_MODULE, CLK_CLKSEL3_I2S0SEL_HXT, 0);
@@ -432,13 +429,7 @@ int32_t main(void)
     I2S_ENABLE_TXDMA(I2S0);
     I2S_ENABLE_TX(I2S0);
 
-    while(1)
-    {
-        if(s_u8CopyData)
-        {
-            memcpy(&s_au32PcmTxBuff[s_u8TxIdx ^ 1], &s_au32PcmRxBuff[s_u8RxIdx], BUFF_LEN * 4);
-        }
-    }
+    while(1);
 }
 
 /*** (C) COPYRIGHT 2016 Nuvoton Technology Corp. ***/
