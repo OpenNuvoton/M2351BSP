@@ -287,11 +287,11 @@ void RS485_FunctionTest()
             2.The received byte, parity bit is '1' , is considered "ADDRESS".
             3.The received byte, parity bit is '0' , is considered "DATA".  (Default)
             4.AAD: The slave will ignore any data until ADDRESS match address match value.
-              When RLS and RDA interrupt is happened,it means the ADDRESS is received.
+              When RLS and RDA interrupt is happened, it means the ADDRESS is received.
               Check if RS485 address byte detect flag is set and read RX FIFO data to clear ADDRESS stored in RX FIFO.
 
               NMM: The slave will ignore data byte until RXOFF is disabled.
-              When RLS and RDA interrupt is happened,it means the ADDRESS is received.
+              When RLS and RDA interrupt is happened, it means the ADDRESS is received.
               Check the ADDRESS is match or not by user in UART_IRQHandler.
               If the ADDRESS is match, clear RXOFF bit to receive data byte.
               If the ADDRESS is not match, set RXOFF bit to avoid data byte stored in FIFO.

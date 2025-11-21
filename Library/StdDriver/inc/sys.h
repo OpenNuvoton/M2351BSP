@@ -2626,11 +2626,11 @@ Example: If user want to set PA.1 as UART0_TXD and PA.0 as UART0_RXD in initial 
 #define TM3_PB2_Msk             SYS_GPB_MFPL_PB2MFP_Msk        /*<! TM3             PB2      MFP Mask */
 #define TM3_EXT_PA8_Msk         SYS_GPA_MFPH_PA8MFP_Msk        /*<! TM3_EXT         PA8      MFP Mask */
 #define TM3_EXT_PB12_Msk        SYS_GPB_MFPH_PB12MFP_Msk       /*<! TM3_EXT         PB12     MFP Mask */
-#define TRACE_CLK_PE12_Msk      SYS_GPE_MFPH_PE12MFP_Msk        /*<! TRACE_CLK       PE12     MFP Mask */
-#define TRACE_DATA0_PE11_Msk    SYS_GPE_MFPH_PE11MFP_Msk        /*<! TRACE_DATA0     PE11     MFP Mask */
+#define TRACE_CLK_PE12_Msk      SYS_GPE_MFPH_PE12MFP_Msk       /*<! TRACE_CLK       PE12     MFP Mask */
+#define TRACE_DATA0_PE11_Msk    SYS_GPE_MFPH_PE11MFP_Msk       /*<! TRACE_DATA0     PE11     MFP Mask */
 #define TRACE_DATA1_PE10_Msk    SYS_GPE_MFPH_PE10MFP_Msk       /*<! TRACE_DATA1     PE10     MFP Mask */
-#define TRACE_DATA2_PE9_Msk     SYS_GPE_MFPH_PE9MFP_Msk       /*<! TRACE_DATA2     PE9      MFP Mask */
-#define TRACE_DATA3_PE8_Msk     SYS_GPE_MFPH_PE8MFP_Msk       /*<! TRACE_DATA3     PE8      MFP Mask */
+#define TRACE_DATA2_PE9_Msk     SYS_GPE_MFPH_PE9MFP_Msk        /*<! TRACE_DATA2     PE9      MFP Mask */
+#define TRACE_DATA3_PE8_Msk     SYS_GPE_MFPH_PE8MFP_Msk        /*<! TRACE_DATA3     PE8      MFP Mask */
 #define UART0_RXD_PD2_Msk       SYS_GPD_MFPL_PD2MFP_Msk        /*<! UART0_RXD       PD2      MFP Mask */
 #define UART0_RXD_PB8_Msk       SYS_GPB_MFPH_PB8MFP_Msk        /*<! UART0_RXD       PB8      MFP Mask */
 #define UART0_RXD_PA0_Msk       SYS_GPA_MFPL_PA0MFP_Msk        /*<! UART0_RXD       PA0      MFP Mask */

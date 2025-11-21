@@ -75,7 +75,7 @@ int FMC_Proc(uint32_t u32Cmd, uint32_t addr_start, uint32_t addr_end, uint32_t *
  * @note
  *             Please make sure that Register Write-Protection Function has been disabled
  *             before using this function. User can check the status of
- *             Register Write-Protection Function with DrvSYS_IsProtectedRegLocked().
+ *             Register Write-Protection Function with SYS_IsRegLocked().
  */
 int FMC_Write_User(uint32_t u32Addr, uint32_t u32Data)
 {
@@ -94,7 +94,7 @@ int FMC_Write_User(uint32_t u32Addr, uint32_t u32Data)
  * @note
  *              Please make sure that Register Write-Protection Function has been disabled
  *              before using this function. User can check the status of
- *              Register Write-Protection Function with DrvSYS_IsProtectedRegLocked().
+ *              Register Write-Protection Function with SYS_IsRegLocked().
  */
 int FMC_Read_User(uint32_t u32Addr, uint32_t *data)
 {
@@ -112,7 +112,7 @@ int FMC_Read_User(uint32_t u32Addr, uint32_t *data)
  * @note
  *             Please make sure that Register Write-Protection Function has been disabled
  *             before using this function. User can check the status of
- *             Register Write-Protection Function with DrvSYS_IsProtectedRegLocked().
+ *             Register Write-Protection Function with SYS_IsRegLocked().
  */
 int FMC_Erase_User(uint32_t u32Addr)
 {

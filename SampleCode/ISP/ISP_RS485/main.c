@@ -82,7 +82,7 @@ int32_t SYS_Init(void)
     /* Init I/O Multi-function                                                                                 */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Set multi-function pins for UART1 RXD and, TXD and nRTS */
+    /* Set multi-function pins for UART1 RXD, TXD and nRTS */
     PE->MODE = (PE->MODE & (~GPIO_MODE_MODE12_Msk)) | (GPIO_MODE_OUTPUT << GPIO_MODE_MODE12_Pos);
     nRTSPin = REVEIVE_MODE;
     SYS->GPC_MFPH = (SYS->GPC_MFPH & ~(SYS_GPC_MFPH_PC8MFP_Msk)) | SYS_GPC_MFPH_PC8MFP_UART1_RXD;
@@ -123,11 +123,11 @@ int32_t main(void)
     SysTick->LOAD = 300000 * CyclesPerUs;
     SysTick->VAL  = (0x00);
     SysTick->CTRL = SysTick->CTRL | SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;   /* Use CPU clock */
-    
+
     /* Wait for CMD_CONNECT command until Systick time-out */
     while (1)
-    {       
-        /* Wait for CMD_CONNECT command */        
+    {
+        /* Wait for CMD_CONNECT command */
         if ((g_u8bufhead >= 4) || (g_u8bUartDataReady == TRUE))
         {
             uint32_t u32lcmd;

@@ -160,7 +160,7 @@ void IrDA_FunctionTest(void)
     printf("+-----------------------------------------------------------+\n");
     printf("|  ______                                          _______  |\n");
     printf("| |      |                                        |       | |\n");
-    printf("| |Master|--UART1_TXD(PB.7) <==> UART1_RXD(PB.6)--|Slave  | |\n");
+    printf("| |Master|--UART1_TXD(PB.7)      UART1_RXD(PB.6)--|Slave  | |\n");
     printf("| |      |                                        |       | |\n");
     printf("| |______|                                        |_______| |\n");
     printf("|                                                           |\n");

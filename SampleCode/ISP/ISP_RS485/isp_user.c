@@ -93,7 +93,7 @@ int ParseCmd(uint8_t *pu8Buffer, uint8_t u8len)
         {
             u32StartAddress = g_u32DataFlashAddr;
 
-            if(g_u32DataFlashSize)    
+            if(g_u32DataFlashSize)
             {
                 EraseAP(g_u32DataFlashAddr, g_u32DataFlashSize);
             }

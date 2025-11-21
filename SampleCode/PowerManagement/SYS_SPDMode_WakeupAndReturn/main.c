@@ -25,7 +25,7 @@ void RTC_IRQHandler(void);
 
 void PowerDownFunction(void)
 {
- 
+
     /* Select SPD Power-down mode */
     CLK_SetPowerDownMode(CLK_PMUCTL_PDMSEL_SPD);
 
@@ -102,7 +102,7 @@ int32_t RTC_Init(void)
     CLK_EnableModuleClock(RTC_MODULE);
 
     /* RTC clock source select LXT */
-    CLK_SetModuleClock(RTC_MODULE, CLK_CLKSEL3_RTCSEL_LXT, 0);    
+    CLK_SetModuleClock(RTC_MODULE, CLK_CLKSEL3_RTCSEL_LXT, 0);
 
     /* Initial RTC if it is not initialed before */
     if(RTC->INIT != RTC_INIT_ACTIVE_Msk)

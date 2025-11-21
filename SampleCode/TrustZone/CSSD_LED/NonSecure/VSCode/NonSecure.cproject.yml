@@ -46,4 +46,7 @@ project:
       files:
         - file: ../../../../../Library/StdDriver/src/retarget.c
         - file: ../../../../../Library/StdDriver/src/gpio.c
-        - file: ../../Secure/lib/nsclib.o
+        - file: ../../Secure/lib/nsclib_Secure_vscode.o
+          for-compiler: AC6
+        - file: ../../Secure/lib/libnsc_vscode.a
+          for-compiler: GCC

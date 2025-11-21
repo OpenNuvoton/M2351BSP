@@ -33,7 +33,7 @@ void UART1_IRQHandler(void)
     /* RDA FIFO interrupt and RDA timeout interrupt */
     if (u32IntSrc & (UART_INTSTS_RXTOIF_Msk|UART_INTSTS_RDAIF_Msk) )
     {
-        /* Read data until RX FIFO is empty or data is over maximum packet size */ 
+        /* Read data until RX FIFO is empty or data is over maximum packet size */
         while (((UART1->FIFOSTS & UART_FIFOSTS_RXEMPTY_Msk) == 0) && (g_u8bufhead < MAX_PKT_SIZE))
         {
             g_au8uart_rcvbuf[g_u8bufhead++] = (uint8_t)UART1->DAT;
@@ -63,7 +63,7 @@ void PutString(void)
         /* Wait for TX not full */
         while ((UART1->FIFOSTS & UART_FIFOSTS_TXFULL_Msk));
 
-        /* UART send data */        
+        /* UART send data */
         UART1->DAT = g_au8ResponseBuff[i];
     }
 }
