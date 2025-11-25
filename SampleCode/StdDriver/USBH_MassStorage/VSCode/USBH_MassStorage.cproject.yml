@@ -19,8 +19,6 @@ project:
     - output:
         type: ["elf", "bin"]
   linker:
-    - for-compiler: AC6
-      script: USBH_MassStorage.sct
     - for-compiler: GCC
       script: ../GCC/USBH_MassStorage.ld
   add-path:

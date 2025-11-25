@@ -57,8 +57,8 @@
 //   <i> Contains uninitialized RAM, Stack, and Heap
 #define __RAM0_BASE 0x20000000
 //   <o> Region size [bytes] <0x0-0xFFFFFFFF:8>
-//   <i> Defines size of memory region. Default: 0x00008000
-#define __RAM0_SIZE 0x00008000
+//   <i> Defines size of memory region. Default: 0x00018000
+#define __RAM0_SIZE 0x00018000
 // </h>
 
 // <h> __RAM1 (unused)
@@ -96,11 +96,6 @@
 #define __STACK_SIZE 0x00000800
 #define __HEAP_SIZE 0x00004000
 // </h>
-
-// <n> Resources that are not allocated to linker regions
-// <i> rx ROM:   IROM2 from DFP:  BASE: 0x10000000  SIZE: 0x80000
-// <i> rx ROM:   IROM3 from DFP:  BASE: 0x00100000  SIZE: 0x1000
-// <i> rwx RAM:  IRAM2 from DFP:  BASE: 0x30008000  SIZE: 0x10000
 
 
 #endif /* REGIONS_M2351KIAAE_H */
