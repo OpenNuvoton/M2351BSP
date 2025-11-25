@@ -46,8 +46,8 @@ project:
       files:
         - file: ../../../../../Library/StdDriver/src/retarget.c
         - file: ../../../../../Library/StdDriver/src/MKROMLib_Keil.lib
-        - file: ../../Secure/lib/nsclib_Secure.o
+        - file: ../../Secure/lib/nsclib_Secure_vscode.o
           for-compiler: AC6
         - file: ../../../../../Library/StdDriver/src/libmkrom.a
-        - file: ../../../../../SampleCode/MKROM/NSCLibDemo/Secure/lib/libnsc.a
+        - file: ../../../../../SampleCode/MKROM/NSCLibDemo/Secure/lib/libnsc_vscode.a
           for-compiler: GCC
