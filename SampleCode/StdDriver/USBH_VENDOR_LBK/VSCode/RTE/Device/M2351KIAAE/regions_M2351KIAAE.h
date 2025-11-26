@@ -57,8 +57,8 @@
 //   <i> Contains uninitialized RAM, Stack, and Heap
 #define __RAM0_BASE 0x20000000
 //   <o> Region size [bytes] <0x0-0xFFFFFFFF:8>
-//   <i> Defines size of memory region. Default: 0x00008000
-#define __RAM0_SIZE 0x00008000
+//   <i> Defines size of memory region. Default: 0x00018000
+#define __RAM0_SIZE 0x00018000
 // </h>
 
 // <h> __RAM1 (unused)

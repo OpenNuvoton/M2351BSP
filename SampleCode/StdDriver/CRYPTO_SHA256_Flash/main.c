@@ -196,6 +196,6 @@ int main(void)
     for(i=0;i<12;i++)
         printf("%08x",hash[i]);
     
-
+    printf("\n");
     while(1);
 }

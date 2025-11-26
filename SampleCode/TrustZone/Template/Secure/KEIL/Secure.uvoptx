@@ -162,9 +162,9 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\..\..\..\..\Library\Device\Nuvoton\M2351\Source\ARM\startup_M2351.s</Filename>
+          <Filename>..\..\..\..\..\Library\Device\Nuvoton\M2351\Source\ARM\startup_M2351.S</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Secure\../../../../../Library/Device/Nuvoton/M2351/Source/ARM/startup_M2351.s\221</Expression>
+          <Expression>\\Secure\../../../../../Library/Device/Nuvoton/M2351/Source/ARM/startup_M2351.S\221</Expression>
         </Bp>
       </Breakpoint>
       <MemoryWindow1>
@@ -245,8 +245,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\..\Library\Device\Nuvoton\M2351\Source\ARM\startup_M2351.s</PathWithFileName>
-      <FilenameWithoutPath>startup_M2351.s</FilenameWithoutPath>
+      <PathWithFileName>..\..\..\..\..\Library\Device\Nuvoton\M2351\Source\ARM\startup_M2351.S</PathWithFileName>
+      <FilenameWithoutPath>startup_M2351.S</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
