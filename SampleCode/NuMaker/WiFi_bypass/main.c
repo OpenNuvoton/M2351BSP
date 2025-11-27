@@ -97,6 +97,7 @@ void WIFI_PORT_Init()
 
 int main()
 {
+    int32_t i;
 
     SYS_UnlockReg();
 
@@ -123,15 +124,25 @@ int main()
     IOCTL_INIT;
     LED_OFF = 1;
     PWR_OFF = 1;
-    FW_UPDATE_OFF = 1;
-
-    CLK_SysTickLongDelay(3000000);
-
     //FW_UPDATE_OFF = 0; // Set 0 to enable WIFI module firmware update.
     FW_UPDATE_OFF = 1; // Set 1 to Disable WIFI module firmware update.
+    
+    printf("Waiting .");
+    CLK_SysTickLongDelay(3000000);
+
+    putchar('.');
     CLK_SysTickLongDelay(1000000);
     LED_OFF = 0;
     PWR_OFF = 0;
+
+    /* Waiting for module ready */
+    for(i = 0; i < 5; i++)
+    {
+        CLK_SysTickLongDelay(1000000);
+        putchar('.');
+    }
+    printf(" Done\n");
+    WIFI_PORT->FIFO |= UART_FIFO_RXRST_Msk | UART_FIFO_TXRST_Msk;
 
     /* Bypass AT commands from debug port to WiFi port */
     while(1)
@@ -145,7 +156,7 @@ int main()
         if((BYPASS_PORT->FIFOSTS & UART_FIFOSTS_RXEMPTY_Msk) == 0)
         {
             while(WIFI_PORT->FIFOSTS & UART_FIFOSTS_TXFULL_Msk);
-            WIFI_PORT->DAT = BYPASS_PORT->DAT;
+			WIFI_PORT->DAT = BYPASS_PORT->DAT;            
         }
     }
 }
