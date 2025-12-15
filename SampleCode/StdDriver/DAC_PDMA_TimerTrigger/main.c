@@ -74,6 +74,7 @@ void SYS_Init(void)
       Note:
             Because VCOM pins(UART0_RXD_PB12 and UART0_TXD_PB13) of NuMaker-PFM-M2351 board are conflict to DAC0_OUT_PB12 and DAC1_OUT_PB13 pins.
             So, this DAC sample code takes UART0_RXD_PA0 and UART0_TXD_PA1 as debug port.
+            Please turn off the Nu-Link2-Me VCOM switch no.1 and 2 on NuMaker-PFM-M2351 board.
     */
     /* Set multi-function pins for UART0 RXD and TXD */
     SYS->GPA_MFPL = (SYS->GPA_MFPL & (~(UART0_RXD_PA0_Msk | UART0_TXD_PA1_Msk))) | UART0_RXD_PA0 | UART0_TXD_PA1;
