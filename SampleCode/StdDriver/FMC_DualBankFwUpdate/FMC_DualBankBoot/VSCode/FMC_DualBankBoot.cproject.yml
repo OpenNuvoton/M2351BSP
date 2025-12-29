@@ -18,8 +18,10 @@ project:
     - output:
         type: ["elf", "bin"]
   linker:
-    - for-compiler: GCC
-      script: ../GCC/FMC_DualBankBoot.ld
+    - script: ./FMC_DualBankBoot.sct
+      for-compiler: AC6
+    - script: ../GCC/FMC_DualBankBoot.ld
+      for-compiler: GCC
   add-path:
     - ../../../../../Library/Device/Nuvoton/M2351/Include
     - ../../../../../Library/StdDriver/inc
