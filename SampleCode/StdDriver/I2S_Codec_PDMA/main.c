@@ -96,9 +96,23 @@ void NAU8822_Setup()
     I2C_WriteNAU8822(1,  0x02F);
     I2C_WriteNAU8822(2,  0x1B3);   /* Enable L/R Headphone, ADC Mix/Boost, ADC */
     I2C_WriteNAU8822(3,  0x07F);   /* Enable L/R main mixer, DAC */
+#if ENABLE_I2S_24BIT_DATA
+#if (I2S_FIFO_24BIT_FORMAT == I2S_FORMAT_I2S_MSB)
+    I2C_WriteNAU8822(4,  0x048);   /* 24-bit word length, MSB format, Stereo */
+#elif (I2S_FIFO_24BIT_FORMAT == I2S_FORMAT_I2S_LSB)
+    I2C_WriteNAU8822(4,  0x040);   /* 24-bit word length, LSB format, Stereo */
+#else
+    I2C_WriteNAU8822(4,  0x050);   /* 24-bit word length, I2S format, Stereo */
+#endif
+#else
     I2C_WriteNAU8822(4,  0x010);   /* 16-bit word length, I2S format, Stereo */
+#endif
     I2C_WriteNAU8822(5,  0x000);   /* Companding control and loop back mode (all disable) */
-    I2C_WriteNAU8822(6,  0x14D);   /* Divide by 2, 48K */
+#if ENABLE_I2S_24BIT_DATA
+    I2C_WriteNAU8822(6,  0x149);   /* MCLK divide by 2, BCLK devide by 4, 48K, channel width 32-bit */
+#else
+    I2C_WriteNAU8822(6,  0x14D);   /* MCLK divide by 2, BCLK devide by 8, 48K, channel width 16-bit */
+#endif
     I2C_WriteNAU8822(7,  0x000);   /* 48K for internal filter coefficients */
     I2C_WriteNAU8822(10, 0x008);   /* DAC soft mute is disabled, DAC oversampling rate is 128x */
     I2C_WriteNAU8822(14, 0x108);   /* ADC HP filter is disabled, ADC oversampling rate is 128x */
@@ -110,6 +124,11 @@ void NAU8822_Setup()
     I2C_WriteNAU8822(48, 0x050);   /* RLIN connected, and its Gain value */
     I2C_WriteNAU8822(50, 0x001);   /* Left DAC connected to LMIX */
     I2C_WriteNAU8822(51, 0x001);   /* Right DAC connected to RMIX */
+
+    I2C_WriteNAU8822(36, 0x008);   /* 12.288Mhz */
+    I2C_WriteNAU8822(37, 0x00C);
+    I2C_WriteNAU8822(38, 0x093);
+    I2C_WriteNAU8822(39, 0x0E9);
 
     printf("[OK]\n");
 }
@@ -199,8 +218,19 @@ void NAU88L25_Setup(void)
     I2C_WriteNAU88L25(0x0019,  0x0000);
     I2C_WriteNAU88L25(0x001A,  0x0000);
     I2C_WriteNAU88L25(0x001B,  0x0000);
+#if ENABLE_I2S_24BIT_DATA
+#if (I2S_FIFO_24BIT_FORMAT == I2S_FORMAT_I2S_MSB)
+    I2C_WriteNAU88L25(0x001C,  0x0009);
+#elif (I2S_FIFO_24BIT_FORMAT == I2S_FORMAT_I2S_LSB)
+    I2C_WriteNAU88L25(0x001C,  0x0008);
+#else
+    I2C_WriteNAU88L25(0x001C,  0x000A);
+#endif
+    I2C_WriteNAU88L25(0x001D,  0x2019);   //2019:Master, BCLK_DIV=12.288M/4=3.072M, LRC_DIV=3.072M/64=48K
+#else
     I2C_WriteNAU88L25(0x001C,  0x0002);
     I2C_WriteNAU88L25(0x001D,  0x301A);   //301A:Master, BCLK_DIV=12.288M/8=1.536M, LRC_DIV=1.536M/32=48K
+#endif
     I2C_WriteNAU88L25(0x001E,  0x0000);
     I2C_WriteNAU88L25(0x001F,  0x0000);
     I2C_WriteNAU88L25(0x0020,  0x0000);
@@ -395,9 +425,22 @@ int32_t main(void)
     NAU88L25_Reset();
 #endif
 
+#if ENABLE_I2S_24BIT_DATA
+    /* Open I2S0 interface and set to slave mode, stereo channel, I2S format */
+    I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_24, I2S_STEREO, I2S_FIFO_24BIT_FORMAT);
+    I2S0->CTL0 &= ~(I2S_CTL0_ORDER_Msk);
+#if (I2S_FIFO_24BIT_FORMAT == I2S_FORMAT_I2S_MSB)
+    /* MSB of 24-bit audio data in each channel is aligned to left side in 32-bit FIFO entries. */
+    I2S0->CTL0 |= I2S_ORDER_AT_MSB;
+#elif (I2S_FIFO_24BIT_FORMAT == I2S_FORMAT_I2S_LSB)
+    /* LSB of 24-bit audio data in each channel is aligned to right side in 32-bit FIFO entries. */
+    I2S0->CTL0 |= I2S_ORDER_AT_LSB;
+#endif
+    I2S0->CTL0 = (I2S0->CTL0 & ~I2S_CTL0_CHWIDTH_Msk) | I2S_CHWIDTH_32;
+#else
     /* Open I2S0 interface and set to slave mode, stereo channel, I2S format */
     I2S_Open(I2S0, I2S_MODE_SLAVE, 48000, I2S_DATABIT_16, I2S_STEREO, I2S_FORMAT_I2S);
-
+#endif
     /* Set PC5 low to enable phone jack on NuMaker board. */
     SYS->GPC_MFPL &= ~(SYS_GPC_MFPL_PC5MFP_Msk);
     GPIO_SetMode(PC, BIT5, GPIO_MODE_OUTPUT);

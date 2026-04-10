@@ -47,8 +47,8 @@ extern "C"
 #define I2S_FORMAT_PCM_LSB      (6UL << I2S_CTL0_FORMAT_Pos)         /*!< PCM LSB data format  \hideinitializer */
 
 /* I2S Data Format */
-#define I2S_ORDER_AT_MSB        0UL                                  /*!< Channel data is at MSB  \hideinitializer */
-#define I2S_ORDER_AT_LSB        I2S_CTL0_ORDER_Msk                   /*!< Channel data is at LSB  \hideinitializer */
+#define I2S_ORDER_AT_LSB        0UL                                  /*!< Channel data is at LSB  \hideinitializer */
+#define I2S_ORDER_AT_MSB        I2S_CTL0_ORDER_Msk                   /*!< Channel data is at MSB  \hideinitializer */
 
 /* I2S TDM Channel Number */
 #define I2S_TDM_2CH             0UL                                  /*!< Use TDM 2 channel  \hideinitializer */
