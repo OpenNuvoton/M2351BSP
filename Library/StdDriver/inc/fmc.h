@@ -62,7 +62,7 @@ extern "C"
 
 #define FMC_FLASH_PAGE_SIZE     0x800UL         /*!< Flash Page Size (2048 Bytes) */
 #define FMC_PAGE_ADDR_MASK      0xFFFFF800UL    /*!< Flash page address mask      */
-#define FMC_MULTI_WORD_PROG_LEN 512UL           /*!< The maximum length of a multi-word program.  */
+#define FMC_MULTI_WORD_PROG_LEN 256UL           /*!< The maximum length of a multi-word program.  */
 
 #define FMC_APROM_SIZE          FMC_APROM_END   /*!< APROM Size                  */
 #define FMC_BANK_SIZE           (FMC_APROM_SIZE/2UL) /*!< APROM Bank Size             */
